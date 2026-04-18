@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>MASSUP</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="bg-fx"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
+
+<div class="app">
+  <header>
+    <div class="logo">MASS<em>UP</em></div>
+    <div class="hdate" id="hdate"></div>
+  </header>
+
+  <!-- ═══ VIEW: SÉANCES ═══ -->
+  <div class="view active" id="view-seances">
+    <div class="slbl">Choisir une séance</div>
+    <div class="sgrid" id="sgrid"></div>
+    <div id="panels"></div>
+  </div>
+
+  <!-- ═══ VIEW: HISTORIQUE ═══ -->
+  <div class="view" id="view-histo">
+    <button class="log-btn-add" onclick="openLogModal()">＋ Enregistrer une séance</button>
+    <div class="slbl">Calendrier</div>
+    <div class="chart-section" style="margin-bottom:1.5rem;">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="calPrev()">‹</button>
+        <div class="cal-month" id="calMonth"></div>
+        <button class="cal-nav-btn" onclick="calNext()">›</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+    <div class="slbl">Séances passées</div>
+    <div class="log-entries" id="logEntries"></div>
+  </div>
+
+  <!-- ═══ VIEW: GRAPHIQUES ═══ -->
+  <div class="view" id="view-charts">
+    <div class="slbl">Mes stats</div>
+    <div class="stats-grid" id="statsGrid"></div>
+    <div class="slbl">Évolution des poids</div>
+    <div class="chart-section">
+      <select class="chart-select" id="chartSelect" onchange="renderWeightChart()"></select>
+      <div class="chart-wrap"><canvas id="weightChart"></canvas></div>
+    </div>
+    <div class="slbl">Fréquence d'entraînement</div>
+    <div class="chart-section">
+      <div class="chart-sub">Séances par semaine (8 dernières semaines)</div>
+      <div class="chart-wrap"><canvas id="freqChart"></canvas></div>
+    </div>
+    <div class="slbl">Alertes progression</div>
+    <div class="prog-list" id="progList"></div>
+  </div>
+
+  <!-- EXTRAS VIEW -->
+  <div class="view" id="view-extras">
+    <div class="slbl">Exercices bonus</div>
+    <p style="font-size:.78rem;color:var(--mut);margin-bottom:1.5rem;line-height:1.6;">En <strong style="color:var(--txt)">complement</strong> de tes seances &mdash; selon ton energie et le temps dispo.</p>
+    <div class="exlist" id="extras-list"></div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bnav">
+  <button class="bni active" onclick="switchView('seances',this)"><span class="bni-ico">🏋️</span><span class="bni-lbl">Séances</span></button>
+  <button class="bni" onclick="switchView('histo',this)"><span class="bni-ico">📅</span><span class="bni-lbl">Historique</span></button>
+  <button class="bni" onclick="switchView('charts',this)"><span class="bni-ico">📊</span><span class="bni-lbl">Progrès</span></button>
+  <button class="bni" onclick="switchView('extras',this)"><span class="bni-ico">⚡</span><span class="bni-lbl">Bonus</span></button>
+</nav>
+
+<!-- LOG MODAL -->
+<div class="modal-overlay" id="logModal">
+  <div class="modal">
+    <div class="modal-title">Nouvelle séance <button class="modal-close" onclick="closeLogModal()">✕</button></div>
+    <div class="form-row">
+      <label class="form-lbl">Date</label>
+      <input class="form-input" type="date" id="logDate"/>
+    </div>
+    <div class="form-row">
+      <label class="form-lbl">Heure</label>
+      <input class="form-input" type="time" id="logTime"/>
+    </div>
+    <div class="form-row">
+      <label class="form-lbl">Séance(s) effectuée(s)</label>
+      <div class="seance-checkboxes" id="seanceCheckboxes"></div>
+    </div>
+    <div class="form-row">
+      <label class="form-lbl" style="display:flex;align-items:center;gap:.5rem;cursor:pointer;">
+        <input type="checkbox" id="autreCheck" style="width:16px;height:16px;accent-color:var(--acc);cursor:pointer;" onchange="toggleAutreSport()">
+        Autre sport (boxe, escalade...)
+      </label>
+      <input class="form-input" type="text" id="autreSport" placeholder="Ex: Boxe, Escalade, Course à pied..." style="display:none;margin-top:.5rem;" />
+    </div>
+    <div class="form-row">
+      <label class="form-lbl">Commentaire (optionnel)</label>
+      <textarea class="form-input" id="logComment" rows="3" placeholder="Comment tu t'es senti, ce qui a bien marché..."></textarea>
+    </div>
+    <button class="btn-primary" onclick="saveLog()">Enregistrer ✓</button>
+  </div>
+</div>
+
+<!-- DAY DETAIL MODAL -->
+<div class="modal-overlay" id="dayModal">
+  <div class="modal">
+    <div class="modal-title" id="dayModalTitle">Séances du jour <button class="modal-close" onclick="closeDayModal()">✕</button></div>
+    <div id="dayModalContent"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>
