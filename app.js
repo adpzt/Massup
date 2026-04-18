@@ -43,7 +43,10 @@ function loadDB(){
     if(s){ var d=JSON.parse(s); if(d.weights) DB.weights=d.weights; if(d.logs) DB.logs=d.logs; if(d.weightSetDate) DB.weightSetDate=d.weightSetDate; }
   }catch(e){}
 }
-function saveDB(){ try{ localStorage.setItem('massup_db',JSON.stringify(DB)); }catch(e){} }
+function saveDB(){
+  try{ localStorage.setItem('massup_db',JSON.stringify(DB)); }catch(e){}
+  if(typeof syncToSupabase==='function') syncToSupabase();
+}
 
 // ══════════════════════════════════════════════════
 // PROGRAMME DATA
