@@ -808,8 +808,6 @@ function xChangeWeight(key,delta,ei,unite){
 }
 
 // ══════════════════════════════════════════════════
-// BOOT
+// BOOT — déclenché par supabase.js après vérif auth
 // ══════════════════════════════════════════════════
-try { init(); } catch(e) {
-  document.querySelector('.app').innerHTML = '<div style="padding:2rem;color:#ff6b6b;font-family:monospace;font-size:.8rem;background:#0e1220;border-radius:12px;border:1px solid #ff6b6b33;"><strong>Erreur JS :</strong><br>' + e.message + '<br><br>' + (e.stack||'') + '</div>';
-}
+initAuth();

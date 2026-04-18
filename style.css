@@ -312,4 +312,12 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 
 /* TIMER RING GLOW */
 @keyframes ring-pulse{0%,100%{opacity:1;}50%{opacity:.6;}}
+
+/* ═══════════════════════════════
+   LOGIN SCREEN
+═══════════════════════════════ */
+#login-screen{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:var(--bg);}
+.login-card{position:relative;z-index:1;background:var(--glass);border:1px solid var(--gb);border-radius:24px;padding:2.5rem 2rem;width:100%;max-width:360px;margin:1.5rem;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);text-align:center;}
+.login-sub{font-size:.78rem;color:var(--mut);margin:.5rem 0 1.5rem;line-height:1.5;}
+.login-sent-msg{background:rgba(125,249,194,.07);border:1px solid rgba(125,249,194,.2);border-radius:12px;padding:1.25rem 1rem;font-size:.9rem;color:var(--acc);line-height:1.6;}
 .rt-circle.urgent circle.fg{animation:ring-pulse .5s ease-in-out infinite;stroke:var(--yellow)!important;}

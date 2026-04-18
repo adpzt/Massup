@@ -5,15 +5,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>MASSUP</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="bg-fx"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
 
-<div class="app">
+<!-- ═══ ÉCRAN DE CONNEXION ═══ -->
+<div id="login-screen" style="display:none">
+  <div class="login-card">
+    <div class="logo" style="font-family:'Syne',system-ui,sans-serif;font-size:1.8rem;font-weight:800;letter-spacing:-.02em;margin-bottom:.35rem">MASS<em style="color:var(--acc);font-style:normal">UP</em></div>
+    <p class="login-sub">Connexion par lien magique</p>
+    <div id="login-form">
+      <input class="form-input" type="email" id="login-email" placeholder="ton@email.com" onkeydown="loginOnEnter(event)" autocomplete="email" />
+      <button id="login-btn" class="btn-primary" onclick="sendMagicLink()" style="margin-top:.75rem">
+        Envoyer le lien &#x2192;
+      </button>
+    </div>
+    <div id="login-sent" style="display:none">
+      <div class="login-sent-msg">
+        &#x2713; Lien envoy&#xE9; !<br>
+        <span style="font-size:.78rem;color:var(--mut);display:block;margin-top:.4rem">V&#xE9;rifie ta bo&#xEE;te mail et clique sur le lien.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="app" id="main-app" style="display:none">
   <header>
     <div class="logo">MASS<em>UP</em></div>
-    <div class="hdate" id="hdate"></div>
+    <div style="display:flex;align-items:center;gap:.75rem">
+      <div class="hdate" id="hdate"></div>
+      <button onclick="signOut()" title="D&#xE9;connexion" style="background:none;border:1px solid var(--gb);color:var(--mut);border-radius:8px;padding:.3rem .6rem;font-size:.65rem;cursor:pointer;font-family:'Manrope',system-ui,sans-serif">&#x2192; Exit</button>
+    </div>
   </header>
 
   <!-- ═══ VIEW: SÉANCES ═══ -->
@@ -66,7 +90,7 @@
 </div>
 
 <!-- BOTTOM NAV -->
-<nav class="bnav">
+<nav class="bnav" id="main-nav" style="display:none">
   <button class="bni active" onclick="switchView('seances',this)"><span class="bni-ico">🏋️</span><span class="bni-lbl">Séances</span></button>
   <button class="bni" onclick="switchView('histo',this)"><span class="bni-ico">📅</span><span class="bni-lbl">Historique</span></button>
   <button class="bni" onclick="switchView('charts',this)"><span class="bni-ico">📊</span><span class="bni-lbl">Progrès</span></button>
@@ -114,6 +138,7 @@
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
+<script src="supabase.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
