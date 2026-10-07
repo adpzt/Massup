@@ -1,0 +1,144 @@
+/* ============================================================
+   QUIZ POLITIQUE 2027 — tokens.css · Direction A « Le quotidien de référence »
+   Remplace intégralement les blocs :root, :root[data-theme="dark"]
+   et le bloc @media (prefers-color-scheme: dark) du style.css actuel.
+   Aucun jeton renommé — uniquement des ajouts (--pol-sp-*, --pol-th-*,
+   --pol-focus) et une scission de rôle : --pol-blue = texte interactif,
+   --pol-acc = fond d'action (mêmes valeurs en clair).
+   Contrastes indiqués : WCAG, vérifiés contre le fond cité.
+   ============================================================ */
+:root {
+  /* ── FONDS — papier chaud ── */
+  --pol-bg: #F6F4EF;        /* fond de page. --pol-txt dessus : 13,9:1 */
+  --pol-bg-2: #EEEBE2;      /* creux : pistes, inputs, chips neutres */
+  --pol-surface: #FFFFFF;   /* carte (rare : objets manipulables) */
+  --pol-surface-2: #FBFAF6; /* carte secondaire, zébrage, détail déplié */
+  --pol-line: #E6E2D8;      /* filet standard */
+  --pol-line-2: #D5D0C2;    /* filet appuyé : inputs, chips */
+  /* ── ENCRE ── */
+  --pol-txt: #151D31;       /* encre bleu-nuit. Sur surface 15,4:1 */
+  --pol-txt-2: #49536B;     /* secondaire. 7,2:1 */
+  --pol-mut: #6F7789;       /* légendes ≥ 12,8px. Sur surface 4,9:1 · sur bg 4,6:1 */
+  /* ── BLEU — unique couleur d'action ── */
+  --pol-blue: #1B4DE4;      /* liens, texte interactif. 5,6:1 */
+  --pol-blue-deep: #10328F; /* rubriques, hover. 9,6:1 */
+  --pol-blue-bright: #4F7BFF; /* décoratif SVG uniquement — jamais du texte */
+  --pol-blue-soft: #EBEFFC; /* fond sélection. --pol-blue dessus 5,2:1 */
+  --pol-acc: #1B4DE4;       /* fond bouton primaire. Blanc dessus 5,6:1 */
+  --pol-acc-soft: #EBEFFC;
+  /* ── ROUGE — signal rare ── */
+  --pol-red: #BE2B38;       /* 5,9:1 (ex #E1000F, criard) */
+  --pol-red-soft: #F9ECEB;
+  --pol-white: #FFFFFF;
+  /* ── SÉMANTIQUE ── */
+  --pol-ok: #18753C;        /* sur surface 5,1:1 · sur ok-soft 4,6:1 */
+  --pol-ok-soft: #E9F4ED;  --pol-ok-line: #C6E2D0;
+  --pol-warn: #9A5410;      /* sur surface 5,7:1 · sur warn-soft 5,0:1 */
+  --pol-warn-soft: #FAF1E0; --pol-warn-line: #EAD9B4; --pol-warn-deep: #7A4A00;
+  --pol-amber: #E29A0C;     /* décoratif uniquement */
+  --pol-violet: #5B21B6;    --pol-violet-soft: #F0EBFB;
+  --pol-pink: #AD1457;      --pol-pink-soft: #FBEAF2;
+  --pol-gold: #8C6A14;      /* sur gold-soft 4,8:1 (ex #D4A017 : 2,2:1 !) */
+  --pol-gold-soft: #F7F2E2;
+  /* ── DRAPEAU — filet, jamais aplat ── */
+  --pol-flag-blue: #10328F; --pol-flag-white: #FFFFFF; --pol-flag-red: #BE2B38;
+  --pol-left: #A1152A;  --pol-right: #10328F;
+  /* ── POSITION — 7 crans double usage : texte sur surface ≥4,5:1
+        ET fond avec --pol-on-pos dessus ≥4,5:1 ── */
+  --pol-pos-dr: #122E7E; --pol-pos-d: #2650C8; --pol-pos-cd: #4A639C;
+  --pol-pos-c: #62687A;  --pol-pos-cg: #A6485C; --pol-pos-g: #B02532;
+  --pol-pos-gr: #7E1120; --pol-on-pos: #FFFFFF;
+  /* ── 9 THÈMES — L/C fixes, seule la teinte varie. Texte ≥4,6:1 ── */
+  --pol-th-eco: oklch(0.47 0.13 255); --pol-th-soc: oklch(0.47 0.13 5);
+  --pol-th-imm: oklch(0.47 0.11 210); --pol-th-sec: oklch(0.47 0.11 55);
+  --pol-th-env: oklch(0.47 0.12 150); --pol-th-eur: oklch(0.47 0.13 290);
+  --pol-th-ins: oklch(0.47 0.12 235); --pol-th-val: oklch(0.47 0.12 330);
+  --pol-th-edu: oklch(0.47 0.11 85);
+  /* ── STRUCTURE ── */
+  --pol-radius: 14px;   --pol-radius-sm: 8px;
+  --pol-shadow-sm: 0 1px 2px rgba(21, 29, 49, .05);  /* N1 : carte */
+  --pol-shadow: 0 10px 30px rgba(21, 29, 49, .10);   /* N2 : flottant */
+  --pol-header-h: 58px; /* VERROUILLÉ : le header reçoit height: var(--pol-header-h) */
+  --pol-lift: 0%;
+  /* ── AJOUTS ── */
+  --pol-sp-1: 4px;  --pol-sp-2: 8px;  --pol-sp-3: 12px; --pol-sp-4: 16px;
+  --pol-sp-5: 24px; --pol-sp-6: 32px; --pol-sp-7: 48px; --pol-sp-8: 64px;
+  --pol-focus: 0 0 0 3px color-mix(in srgb, var(--pol-blue) 30%, transparent);
+  --pol-header-bg: rgba(246, 244, 239, .92);
+  --pol-nav-bg: rgba(255, 255, 255, .97);
+  --pol-body-glow: transparent; /* le glow radial disparaît */
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --pol-bg: #0C111E; --pol-bg-2: #111828; --pol-surface: #151C2E; --pol-surface-2: #1A2338;
+  --pol-line: #262F47; --pol-line-2: #37425F;
+  --pol-txt: #E9ECF4;   /* 13,6:1 */
+  --pol-txt-2: #B0B8CC; /* 7,4:1 */
+  --pol-mut: #8B93A9;   /* 4,7:1 (relevé vs #7F8BAA : 4,1) */
+  --pol-blue: #8CA2FF;      /* texte interactif 6,2:1 */
+  --pol-blue-deep: #B9C7FF; /* 8,9:1 */
+  --pol-blue-bright: #6E89F7;
+  --pol-blue-soft: #1E2A4E;
+  --pol-acc: #3D5FE0;       /* fond bouton. Blanc dessus 4,9:1 */
+  --pol-acc-soft: #1E2A4E;
+  --pol-red: #FF8494; --pol-red-soft: #332027;
+  --pol-ok: #67CC96; --pol-ok-soft: #14291F; --pol-ok-line: #23483A;
+  --pol-warn: #EDB264; --pol-warn-soft: #2E2412; --pol-warn-line: #55401D; --pol-warn-deep: #F7D9A6;
+  --pol-amber: #EDB264;
+  --pol-violet: #C6B7F8; --pol-violet-soft: #262047;
+  --pol-pink: #F3A9C8; --pol-pink-soft: #321F2B;
+  --pol-gold: #DFBE62; --pol-gold-soft: #2A2310;
+  --pol-flag-blue: #46599F; --pol-flag-white: #4E5A76; --pol-flag-red: #99464F;
+  --pol-left: #FF8291; --pol-right: #92AAFF;
+  /* position : chips claires, encre sombre dessus */
+  --pol-pos-dr: #8FA6FF; --pol-pos-d: #A3B4FF; --pol-pos-cd: #B6C3EC;
+  --pol-pos-c: #A9B0C2;  --pol-pos-cg: #EDACBA; --pol-pos-g: #FF8B99;
+  --pol-pos-gr: #F3A6AE; --pol-on-pos: #0C111E;
+  --pol-th-eco: oklch(0.80 0.09 255); --pol-th-soc: oklch(0.80 0.09 5);
+  --pol-th-imm: oklch(0.80 0.08 210); --pol-th-sec: oklch(0.80 0.08 55);
+  --pol-th-env: oklch(0.80 0.09 150); --pol-th-eur: oklch(0.80 0.09 290);
+  --pol-th-ins: oklch(0.80 0.09 235); --pol-th-val: oklch(0.80 0.09 330);
+  --pol-th-edu: oklch(0.80 0.08 85);
+  --pol-shadow-sm: 0 1px 2px rgba(0, 0, 0, .35);
+  --pol-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+  --pol-lift: 55%; /* texte couleur-candidat : color-mix(in oklab, var(--c), white var(--pol-lift)) */
+  --pol-header-bg: rgba(12, 17, 30, .92);
+  --pol-nav-bg: rgba(21, 28, 46, .97);
+  --pol-body-glow: transparent;
+}
+
+/* Réglage système — copie exacte du bloc sombre ci-dessus */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --pol-bg: #0C111E; --pol-bg-2: #111828; --pol-surface: #151C2E; --pol-surface-2: #1A2338;
+    --pol-line: #262F47; --pol-line-2: #37425F;
+    --pol-txt: #E9ECF4; --pol-txt-2: #B0B8CC; --pol-mut: #8B93A9;
+    --pol-blue: #8CA2FF; --pol-blue-deep: #B9C7FF; --pol-blue-bright: #6E89F7;
+    --pol-blue-soft: #1E2A4E; --pol-acc: #3D5FE0; --pol-acc-soft: #1E2A4E;
+    --pol-red: #FF8494; --pol-red-soft: #332027;
+    --pol-ok: #67CC96; --pol-ok-soft: #14291F; --pol-ok-line: #23483A;
+    --pol-warn: #EDB264; --pol-warn-soft: #2E2412; --pol-warn-line: #55401D; --pol-warn-deep: #F7D9A6;
+    --pol-amber: #EDB264;
+    --pol-violet: #C6B7F8; --pol-violet-soft: #262047;
+    --pol-pink: #F3A9C8; --pol-pink-soft: #321F2B;
+    --pol-gold: #DFBE62; --pol-gold-soft: #2A2310;
+    --pol-flag-blue: #46599F; --pol-flag-white: #4E5A76; --pol-flag-red: #99464F;
+    --pol-left: #FF8291; --pol-right: #92AAFF;
+    --pol-pos-dr: #8FA6FF; --pol-pos-d: #A3B4FF; --pol-pos-cd: #B6C3EC;
+    --pol-pos-c: #A9B0C2; --pol-pos-cg: #EDACBA; --pol-pos-g: #FF8B99;
+    --pol-pos-gr: #F3A6AE; --pol-on-pos: #0C111E;
+    --pol-th-eco: oklch(0.80 0.09 255); --pol-th-soc: oklch(0.80 0.09 5);
+    --pol-th-imm: oklch(0.80 0.08 210); --pol-th-sec: oklch(0.80 0.08 55);
+    --pol-th-env: oklch(0.80 0.09 150); --pol-th-eur: oklch(0.80 0.09 290);
+    --pol-th-ins: oklch(0.80 0.09 235); --pol-th-val: oklch(0.80 0.09 330);
+    --pol-th-edu: oklch(0.80 0.08 85);
+    --pol-shadow-sm: 0 1px 2px rgba(0, 0, 0, .35);
+    --pol-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+    --pol-lift: 55%;
+    --pol-header-bg: rgba(12, 17, 30, .92);
+    --pol-nav-bg: rgba(21, 28, 46, .97);
+    --pol-body-glow: transparent;
+  }
+}

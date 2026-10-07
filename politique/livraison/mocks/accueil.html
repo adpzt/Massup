@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mock — Accueil</title><link rel="stylesheet" href="mock.css"></head>
+<body>
+<div class="page-h"><div class="k">⑨ Mock · Accueil — direction A</div><h1>Héros, chiffres clés, récap &amp; fil d'actu</h1></div>
+<div class="frames">
+<div><p class="frame-lbl">Desktop 1280 · clair</p><div class="frame w1280" data-theme="light" id="f1"></div></div>
+<div><p class="frame-lbl">Desktop 1280 · sombre</p><div class="frame w1280" data-theme="dark" id="f2"></div></div>
+<div><p class="frame-lbl">Mobile 390 · clair</p><div class="frame w390" data-theme="light" id="f3"></div></div>
+<div><p class="frame-lbl">Mobile 390 · sombre</p><div class="frame w390" data-theme="dark" id="f4"></div></div>
+</div>
+
+<template id="tpl-desktop">
+<div class="flag"></div>
+<div class="hd">
+  <div class="brand"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect x="3" y="12" width="20" height="10" rx="2" stroke="var(--pol-blue)" stroke-width="2"></rect><rect x="10" y="10" width="6" height="2" fill="var(--pol-blue)"></rect><path d="M13 3v6" stroke="var(--pol-blue)" stroke-width="2" stroke-linecap="round"></path><path d="M9.5 6 13 9.5 16.5 6" stroke="var(--pol-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"></path></svg>
+  <div><div class="brand-name">Quiz <em>Politique</em> 2027</div><div class="brand-sub">Présidentielle · 18 avril 2027</div></div></div>
+  <nav class="topnav"><span class="on">Accueil</span><span>Le quiz</span><span>Mes résultats</span><span>Candidats</span><span>Comparer</span><span>Méthodologie</span><span>Profil</span></nav>
+  <span class="icobtn"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="4" stroke="currentColor" stroke-width="1.75" fill="none"></circle><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6 13 13M13 3l-1.4 1.4M4.4 11.6 3 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg></span>
+</div>
+<div class="wrap" style="padding-top:56px;text-align:center">
+  <div style="display:inline-flex;align-items:center;gap:14px"><span style="width:24px;height:1px;background:var(--pol-line-2)"></span><span class="ov">Présidentielle 2027 · J-229 avant le 1er tour</span><span style="width:24px;height:1px;background:var(--pol-line-2)"></span></div>
+  <h1 class="h-display" style="font-size:46px;max-width:640px;margin:20px auto 16px">Pour qui voter en 2027&nbsp;?</h1>
+  <p class="body-t" style="max-width:560px;margin:0 auto">108 questions, 26 candidats en course, et pour chacun une position <strong>sourcée question par question</strong>. Réponds, pondère ce qui compte pour toi, et découvre de qui tes idées sont vraiment les plus proches.</p>
+  <div style="display:flex;justify-content:center;align-items:center;gap:24px;margin-top:28px">
+    <span class="btn pri" style="min-width:220px">Voir mes résultats</span>
+    <span class="link" style="font-size:14.5px">Revoir mes réponses →</span>
+  </div>
+  <div style="display:flex;justify-content:center;align-items:stretch;gap:32px;margin:48px auto 0;max-width:760px">
+    <div style="flex:1"><div class="data-xl" style="font-size:38px">108</div><div class="cap" style="margin-top:2px">questions · 9 thèmes</div></div>
+    <div style="width:1px;background:var(--pol-line-2)"></div>
+    <div style="flex:1"><div class="data-xl" style="font-size:38px">26</div><div class="cap" style="margin-top:2px">candidats en course</div></div>
+    <div style="width:1px;background:var(--pol-line-2)"></div>
+    <div style="flex:1"><div class="data-xl" style="font-size:38px">244</div><div class="cap" style="margin-top:2px">prises de position datées</div></div>
+    <div style="width:1px;background:var(--pol-line-2)"></div>
+    <div style="flex:1"><div class="data-xl" style="font-size:38px">2376</div><div class="cap" style="margin-top:2px">positions renseignées</div></div>
+  </div>
+</div>
+<div class="wrap" style="padding-top:64px;padding-bottom:72px;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:0 64px;align-items:start">
+  <div>
+    <h2 class="h-sec">Ton récap</h2>
+    <div class="card" style="padding:24px">
+      <div style="display:flex;align-items:center;gap:14px">
+        <span style="display:inline-block;border-radius:999px;padding:8px 18px;font-size:16px;font-weight:800;background:var(--pol-pos-cg);color:var(--pol-on-pos)">Centre-gauche</span>
+        <span class="cap">Profil complet · 108/108 · pertinences réglées</span>
+      </div>
+      <div style="margin-top:16px">
+        <div class="crow"><span class="rank">1</span><span class="avatar" style="width:36px;height:36px;font-size:12px">RG</span><div><div class="nm">Raphaël Glucksmann</div><div class="pt">Place publique</div></div><span class="pct">73&nbsp;%</span></div>
+        <div class="crow"><span class="rank">2</span><span class="avatar" style="width:36px;height:36px;font-size:12px">KB</span><div><div class="nm">Karim Bouamrane</div><div class="pt">PS · La France humaine et forte</div></div><span class="pct">73&nbsp;%</span></div>
+        <div class="crow"><span class="rank">3</span><span class="avatar" style="width:36px;height:36px;font-size:12px">OF</span><div><div class="nm">Olivier Faure</div><div class="pt">Parti socialiste (PS)</div></div><span class="pct">72&nbsp;%</span></div>
+      </div>
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--pol-line);display:flex;align-items:center;justify-content:space-between;gap:16px">
+        <span class="btn pri sm" style="flex:1">Voir mes résultats</span>
+        <span class="link" style="font-size:13.5px;white-space:nowrap">Revoir / affiner</span>
+        <span class="link" style="font-size:13.5px;white-space:nowrap">Mes réponses</span>
+      </div>
+    </div>
+    <h2 class="h-sec" style="margin-top:48px">Comment ça marche</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 24px">
+      <div style="display:flex;gap:12px"><span style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--pol-blue-soft);color:var(--pol-blue-deep);font-size:12.8px;font-weight:800;display:flex;align-items:center;justify-content:center">1</span><p class="body-t" style="font-size:14px;margin:0;line-height:1.6"><strong>Tu réponds à 108 questions</strong> — 4 ou 5 options, de la droite radicale à la gauche radicale, avec le contexte 2026-2027.</p></div>
+      <div style="display:flex;gap:12px"><span style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--pol-blue-soft);color:var(--pol-blue-deep);font-size:12.8px;font-weight:800;display:flex;align-items:center;justify-content:center">2</span><p class="body-t" style="font-size:14px;margin:0;line-height:1.6"><strong>Tu règles la pertinence</strong> — ce qui compte pour toi pèse plus dans le résultat (×1 à ×10).</p></div>
+      <div style="display:flex;gap:12px"><span style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--pol-blue-soft);color:var(--pol-blue-deep);font-size:12.8px;font-weight:800;display:flex;align-items:center;justify-content:center">3</span><p class="body-t" style="font-size:14px;margin:0;line-height:1.6"><strong>On compare question par question</strong> — concordance de +1 à −1, jamais une moyenne de camp.</p></div>
+      <div style="display:flex;gap:12px"><span style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--pol-blue-soft);color:var(--pol-blue-deep);font-size:12.8px;font-weight:800;display:flex;align-items:center;justify-content:center">4</span><p class="body-t" style="font-size:14px;margin:0;line-height:1.6"><strong>Tu explores</strong> — classement, comparateur de deux candidats, fil d'actu daté pour vérifier chaque position.</p></div>
+    </div>
+  </div>
+  <div>
+    <h2 class="h-sec" style="display:flex;align-items:baseline;justify-content:space-between">Fil d'actu <span class="cap" style="font-family:Manrope;font-weight:700">244 prises de position</span></h2>
+    <div style="position:relative;padding-left:20px">
+      <span style="position:absolute;left:3.5px;top:8px;bottom:8px;width:1px;background:var(--pol-line)"></span>
+      <div style="position:relative;padding-bottom:20px">
+        <span class="dot" style="position:absolute;left:-20px;top:6px;background:var(--pol-pos-dr)"></span>
+        <div class="cap" style="margin-bottom:3px">31 août · Société &amp; Valeurs · <span class="tag ok" style="font-size:10.5px;padding:2px 6px">Accord</span></div>
+        <div style="font-size:14.5px;font-weight:700;line-height:1.4">Zemmour abonde dans le sens du RN sur l'interdiction du voile</div>
+        <p class="body-t" style="font-size:13.5px;margin:4px 0 0;line-height:1.6">Il y voit la preuve d'une « islamisation » que seule sa candidature… <span class="link" style="border:none">Lire →</span></p>
+      </div>
+      <div style="position:relative;padding-bottom:20px">
+        <span class="dot" style="position:absolute;left:-20px;top:6px;background:var(--pol-pos-cd)"></span>
+        <div class="cap" style="margin-bottom:3px">31 août · Éducation · <span class="tag proche" style="font-size:10.5px;padding:2px 6px">Proche</span></div>
+        <div style="font-size:14.5px;font-weight:700;line-height:1.4">Rentrée scolaire : Attal visite une école d'Issy-les-Moulineaux</div>
+        <p class="body-t" style="font-size:13.5px;margin:4px 0 0;line-height:1.6">Il réaffirme l'interdiction des smartphones à l'école… <span class="link" style="border:none">Lire →</span></p>
+      </div>
+      <div style="position:relative">
+        <span class="dot" style="position:absolute;left:-20px;top:6px;background:var(--pol-pos-cd)"></span>
+        <div class="cap" style="margin-bottom:3px">30 août · Société &amp; Valeurs · <span class="tag ecart" style="font-size:10.5px;padding:2px 6px">Écart</span></div>
+        <div style="font-size:14.5px;font-weight:700;line-height:1.4">Attal en « radical désaccord » avec la proposition RN sur le voile</div>
+      </div>
+    </div>
+    <div style="margin-top:20px"><span class="btn sec sm" style="width:100%;box-sizing:border-box">Tout le fil d'actu (244)</span></div>
+    <h2 class="h-sec" style="margin-top:48px">Prochaines étapes</h2>
+    <div>
+      <div class="crow" style="padding:10px 0"><span class="cap" style="min-width:46px;font-weight:800;color:var(--pol-blue-deep)">J-1</span><span style="font-size:13.5px;color:var(--pol-txt-2);line-height:1.5">2 sept. · Livre-programme de Sarah Knafo, « Le Casse du siècle »</span></div>
+      <div class="crow" style="padding:10px 0"><span class="cap" style="min-width:46px;font-weight:800;color:var(--pol-blue-deep)">J-2</span><span style="font-size:13.5px;color:var(--pol-txt-2);line-height:1.5">3 sept. · Livre-programme de François Hollande, « Unir »</span></div>
+      <div class="crow" style="padding:10px 0"><span class="cap" style="min-width:46px;font-weight:800;color:var(--pol-blue-deep)">J-4</span><span style="font-size:13.5px;color:var(--pol-txt-2);line-height:1.5">5 sept. · Jean-Luc Mélenchon à la braderie de Lille</span></div>
+    </div>
+  </div>
+</div>
+<div class="ft"><div class="wrap" style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:40px">
+  <div><div class="brand-name" style="font-size:15px">Quiz <em>Politique</em> 2027</div><p class="body-t" style="font-size:13px;line-height:1.6;margin:8px 0 0">Outil <strong>personnel</strong> de positionnement pour la présidentielle des 18 avril et 2 mai 2027. Ni site officiel, ni affiliation — résultat indicatif.</p></div>
+  <div><div class="ft-t">Explorer</div><span class="lk">Le quiz (108 questions)</span><span class="lk">Mes résultats</span><span class="lk">Comparer deux candidats</span><span class="lk">Méthodologie &amp; transparence</span></div>
+  <div><div class="ft-t">Données</div><span class="lk">Positions au 1er septembre 2026</span><span class="lk">Fil d'actu : 244 prises de position</span><span class="lk">Sondages fin août 2026</span></div>
+</div></div>
+</template>
+
+<template id="tpl-mobile">
+<div class="flag"></div>
+<div class="hd">
+  <div class="brand"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><rect x="3" y="12" width="20" height="10" rx="2" stroke="var(--pol-blue)" stroke-width="2"></rect><rect x="10" y="10" width="6" height="2" fill="var(--pol-blue)"></rect><path d="M13 3v6" stroke="var(--pol-blue)" stroke-width="2" stroke-linecap="round"></path><path d="M9.5 6 13 9.5 16.5 6" stroke="var(--pol-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"></path></svg>
+  <span class="brand-name">Quiz <em>Politique</em> 2027</span></div>
+  <span class="icobtn"><svg width="14" height="14" viewBox="0 0 16 16"><circle cx="8" cy="8" r="4" stroke="currentColor" stroke-width="1.75" fill="none"></circle><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6 13 13M13 3l-1.4 1.4M4.4 11.6 3 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg></span>
+</div>
+<div class="wrap" style="padding-top:40px;padding-bottom:40px;text-align:center">
+  <span class="ov">Présidentielle 2027 · J-229</span>
+  <h1 class="h-display" style="font-size:34px;margin:14px 0 12px">Pour qui voter en 2027&nbsp;?</h1>
+  <p class="body-t" style="font-size:15px;margin:0">108 questions, 26 candidats, une position <strong>sourcée</strong> pour chacun. Découvre de qui tes idées sont les plus proches.</p>
+  <div style="margin-top:24px"><span class="btn pri" style="width:100%;box-sizing:border-box">Voir mes résultats</span></div>
+  <div style="margin-top:14px"><span class="link" style="font-size:14px">Revoir mes réponses →</span></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:40px;text-align:center">
+    <div><div class="data-xl" style="font-size:32px">108</div><div class="cap" style="font-size:12px">questions · 9 thèmes</div></div>
+    <div><div class="data-xl" style="font-size:32px">26</div><div class="cap" style="font-size:12px">candidats en course</div></div>
+    <div><div class="data-xl" style="font-size:32px">244</div><div class="cap" style="font-size:12px">positions datées</div></div>
+    <div><div class="data-xl" style="font-size:32px">2376</div><div class="cap" style="font-size:12px">positions renseignées</div></div>
+  </div>
+</div>
+<div class="wrap" style="padding-bottom:32px">
+  <h2 class="h-sec">Ton récap</h2>
+  <div class="card">
+    <span style="display:inline-block;border-radius:999px;padding:7px 16px;font-size:15px;font-weight:800;background:var(--pol-pos-cg);color:var(--pol-on-pos)">Centre-gauche</span>
+    <div class="cap" style="margin-top:8px">Profil complet · 108/108</div>
+    <div style="margin-top:8px">
+      <div class="crow"><span class="rank">1</span><span class="avatar" style="width:32px;height:32px;font-size:11px">RG</span><div><div class="nm" style="font-size:13.5px">Raphaël Glucksmann</div></div><span class="pct">73&nbsp;%</span></div>
+      <div class="crow"><span class="rank">2</span><span class="avatar" style="width:32px;height:32px;font-size:11px">KB</span><div><div class="nm" style="font-size:13.5px">Karim Bouamrane</div></div><span class="pct">73&nbsp;%</span></div>
+      <div class="crow"><span class="rank">3</span><span class="avatar" style="width:32px;height:32px;font-size:11px">OF</span><div><div class="nm" style="font-size:13.5px">Olivier Faure</div></div><span class="pct">72&nbsp;%</span></div>
+    </div>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--pol-line)">
+      <span class="btn pri sm" style="width:100%;box-sizing:border-box">Voir mes résultats</span>
+      <div style="display:flex;justify-content:center;gap:24px;margin-top:12px"><span class="link" style="font-size:13.5px">Revoir / affiner</span><span class="link" style="font-size:13.5px">Mes réponses</span></div>
+    </div>
+  </div>
+</div>
+<div class="bnav">
+  <span class="on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 11 12 4l8 7v9h-6v-5h-4v5H4Z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"></path></svg><span class="l">Accueil</span></span>
+  <span><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><rect x="3" y="12" width="20" height="10" rx="2" stroke="currentColor" stroke-width="2"></rect><rect x="10" y="10" width="6" height="2" fill="currentColor"></rect><path d="M13 3v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M9.5 6 13 9.5 16.5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"></path></svg><span class="l">Quiz</span></span>
+  <span><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 20v-8M12 20V5M19 20v-6" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"></path></svg><span class="l">Résultats</span></span>
+  <span><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="9" r="3.2" stroke="currentColor" stroke-width="1.75"></circle><path d="M3.5 19c.7-3 2.8-4.5 5.5-4.5s5.3 1.5 6 4.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" fill="none"></path><circle cx="17" cy="10" r="2.6" stroke="currentColor" stroke-width="1.75"></circle><path d="M16.5 14.8c2.3.2 3.6 1.5 4.1 3.7" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" fill="none"></path></svg><span class="l">Candidats</span></span>
+  <span><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="1.75"></circle><path d="M5 20c.9-3.6 3.4-5.4 7-5.4s6.1 1.8 7 5.4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" fill="none"></path></svg><span class="l">Profil</span></span>
+</div>
+</template>
+
+<script>
+const d = document.getElementById('tpl-desktop').innerHTML, m = document.getElementById('tpl-mobile').innerHTML;
+document.getElementById('f1').innerHTML = d; document.getElementById('f2').innerHTML = d;
+document.getElementById('f3').innerHTML = m; document.getElementById('f4').innerHTML = m;
+</script>
+</body></html>

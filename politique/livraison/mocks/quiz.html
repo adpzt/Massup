@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mock — Quiz</title><link rel="stylesheet" href="mock.css"></head>
+<body>
+<div class="page-h"><div class="k">⑨ Mock · Quiz — direction A</div><h1>Question standard (1280) &amp; test express avec jauge (390)</h1></div>
+<div class="frames">
+
+<!-- ══ DESKTOP ══ -->
+<div><p class="frame-lbl">Desktop 1280 · clair</p>
+<div class="frame w1280" data-theme="light" id="dq-light"></div></div>
+<div><p class="frame-lbl">Desktop 1280 · sombre</p>
+<div class="frame w1280" data-theme="dark" id="dq-dark"></div></div>
+
+<!-- ══ MOBILE ══ -->
+<div><p class="frame-lbl">Mobile 390 · clair · express</p>
+<div class="frame w390" data-theme="light" id="mq-light"></div></div>
+<div><p class="frame-lbl">Mobile 390 · sombre · express</p>
+<div class="frame w390" data-theme="dark" id="mq-dark"></div></div>
+</div>
+
+<template id="tpl-desktop">
+<div class="flag"></div>
+<div class="hd">
+  <div class="brand">
+    <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect x="3" y="12" width="20" height="10" rx="2" stroke="var(--pol-blue)" stroke-width="2"></rect><rect x="10" y="10" width="6" height="2" fill="var(--pol-blue)"></rect><path d="M13 3v6" stroke="var(--pol-blue)" stroke-width="2" stroke-linecap="round"></path><path d="M9.5 6 13 9.5 16.5 6" stroke="var(--pol-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"></path></svg>
+    <div><div class="brand-name">Quiz <em>Politique</em> 2027</div><div class="brand-sub">Présidentielle · 18 avril 2027</div></div>
+  </div>
+  <nav class="topnav"><span>Accueil</span><span class="on">Le quiz</span><span>Mes résultats</span><span>Candidats</span><span>Comparer</span><span>Méthodologie</span><span>Profil</span></nav>
+  <span class="icobtn"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="4" stroke="currentColor" stroke-width="1.75" fill="none"></circle><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6 13 13M13 3l-1.4 1.4M4.4 11.6 3 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg></span>
+</div>
+<div class="prog"><div class="wrap">
+  <div class="prog-meta"><span class="cap">Question 1 / 108</span><span class="cap" style="color:var(--pol-blue);font-weight:700">Sommaire</span><span class="cap">108 répondues · 100 %</span></div>
+  <div class="prog-track"><div class="prog-fill" style="width:100%"></div></div>
+</div></div>
+<div class="wrap" style="padding-top:40px;padding-bottom:72px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:0 64px;align-items:start">
+  <div>
+    <div class="ov" style="display:flex;align-items:center;gap:10px">Économie<span style="width:28px;height:1px;background:var(--pol-line-2)"></span><span class="dim">Question 1</span></div>
+    <h1 class="h-display" style="font-size:36px;margin:14px 0 20px">Impôts&nbsp;: en France, on paye trop ou pas assez&nbsp;?</h1>
+    <p class="body-t" style="margin:0">Les <strong>impôts</strong> sont les sommes que les citoyens et les entreprises versent à l'État pour financer les services publics. En France, l'ensemble des prélèvements représente environ <strong>43 à 45&nbsp;% de la richesse produite chaque année</strong> (le PIB), l'un des taux les plus élevés au monde. Pour la <strong>droite et les libéraux</strong>, ce niveau est trop lourd&nbsp;: il découragerait le travail et l'investissement. Pour la <strong>gauche</strong>, ces impôts financent un modèle social protecteur et permettent de réduire les inégalités. Le débat oppose donc liberté économique et solidarité collective.</p>
+    <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--pol-line)"><span class="link" style="font-size:14px">Qui répond quoi&nbsp;? — position des candidats</span></div>
+  </div>
+  <div>
+    <div class="opts">
+      <div class="opt"><span class="radio"></span><span>Beaucoup trop. Baisse massive pour libérer l'économie.</span></div>
+      <div class="opt"><span class="radio"></span><span>Trop. Une baisse ciblée et progressive serait bienvenue.</span></div>
+      <div class="opt sel"><span class="radio"></span><span>À peu près correct, avec quelques ajustements.</span></div>
+      <div class="opt"><span class="radio"></span><span>Bien calibré. Nos impôts financent des services essentiels.</span></div>
+      <div class="opt"><span class="radio"></span><span>Pas assez pour les plus riches et les grandes entreprises.</span></div>
+    </div>
+    <div class="card" style="margin-top:32px;padding:16px 20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px">
+        <span style="font-size:13px;font-weight:700;color:var(--pol-txt-2)">Pertinence pour l'avenir de la France</span>
+        <span class="tag gold">Essentielle</span>
+      </div>
+      <div class="scale5"><span>1</span><span>2</span><span class="on">3</span><span>4</span><span>5</span></div>
+      <div style="display:flex;justify-content:space-between;margin-top:8px"><span class="cap" style="font-size:12px">1 · peu</span><span class="cap" style="font-size:12px">5 · cruciale</span></div>
+    </div>
+    <div class="cap" style="text-align:center;margin:16px 0">Sauvegarde automatique sur cet appareil</div>
+    <div class="btn-row"><span class="btn sec">Passer</span><span class="btn pri">Suivante →</span></div>
+  </div>
+</div>
+</template>
+
+<template id="tpl-mobile">
+<div class="flag"></div>
+<div class="hd">
+  <div class="brand">
+    <svg width="22" height="22" viewBox="0 0 26 26" fill="none"><rect x="3" y="12" width="20" height="10" rx="2" stroke="var(--pol-blue)" stroke-width="2"></rect><rect x="10" y="10" width="6" height="2" fill="var(--pol-blue)"></rect><path d="M13 3v6" stroke="var(--pol-blue)" stroke-width="2" stroke-linecap="round"></path><path d="M9.5 6 13 9.5 16.5 6" stroke="var(--pol-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"></path></svg>
+    <span class="brand-name">Quiz <em>Politique</em> 2027</span>
+  </div>
+  <span class="icobtn"><svg width="14" height="14" viewBox="0 0 16 16"><circle cx="8" cy="8" r="4" stroke="currentColor" stroke-width="1.75" fill="none"></circle><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6 13 13M13 3l-1.4 1.4M4.4 11.6 3 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg></span>
+</div>
+<div class="prog"><div class="wrap">
+  <div class="prog-meta"><span class="cap">Question 1 / 28</span><span class="cap" style="color:var(--pol-blue);font-weight:700">Sommaire</span></div>
+  <div class="prog-track"><div class="prog-fill" style="width:4%"></div></div>
+</div></div>
+<div class="wrap" style="padding-top:24px;padding-bottom:32px">
+  <div style="display:flex;align-items:center;gap:8px"><span class="tag ecart" style="text-transform:uppercase">Express</span><span class="ov">Économie</span></div>
+  <h1 class="h-display" style="font-size:27px;line-height:1.22;margin:12px 0">Impôts&nbsp;: en France, on paye trop ou pas assez&nbsp;?</h1>
+  <p class="body-t" style="font-size:15px;margin:0 0 20px">Les prélèvements représentent 43 à 45&nbsp;% du PIB, l'un des taux les plus élevés au monde. La <strong>droite</strong> y voit un frein au travail, la <strong>gauche</strong> le prix d'un modèle social protecteur. <span class="link" style="border:none;white-space:nowrap">Lire le contexte →</span></p>
+  <div class="opts">
+    <div class="opt"><span class="radio"></span><span>Beaucoup trop. Baisse massive pour libérer l'économie.</span></div>
+    <div class="opt sel"><span class="radio"></span><span>À peu près correct, avec quelques ajustements.</span></div>
+    <div class="opt"><span class="radio"></span><span>Pas assez pour les plus riches et les grandes entreprises.</span></div>
+  </div>
+  <div class="card" style="margin-top:28px;padding:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px">
+      <span style="font-size:13px;font-weight:700;color:var(--pol-txt-2)">Ce sujet compte pour toi&nbsp;?</span>
+      <span class="tag gold">Essentielle</span>
+    </div>
+    <div class="gauge-track">
+      <div class="gauge-fill" style="width:50%"></div>
+      <span class="gauge-dot" style="left:25%"></span><span class="gauge-dot" style="left:75%"></span>
+      <span class="gauge-thumb" style="left:50%"></span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:14px">
+      <span class="cap" style="font-size:12px">Peu</span>
+      <span style="font-size:14.5px;font-weight:800;color:var(--pol-blue)">3 · Important</span>
+      <span class="cap" style="font-size:12px">Crucial</span>
+    </div>
+  </div>
+  <div class="btn-row" style="margin-top:24px"><span class="btn sec">Passer</span><span class="btn pri">Suivante →</span></div>
+</div>
+<div class="bnav">
+  <span><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 11 12 4l8 7v9h-6v-5h-4v5H4Z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"></path></svg><span class="l">Accueil</span></span>
+  <span class="on"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><rect x="3" y="12" width="20" height="10" rx="2" stroke="currentColor" stroke-width="2"></rect><rect x="10" y="10" width="6" height="2" fill="currentColor"></rect><path d="M13 3v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M9.5 6 13 9.5 16.5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"></path></svg><span class="l">Quiz</span></span>
+  <span><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 20v-8M12 20V5M19 20v-6" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"></path></svg><span class="l">Résultats</span></span>
+  <span><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="9" r="3.2" stroke="currentColor" stroke-width="1.75"></circle><path d="M3.5 19c.7-3 2.8-4.5 5.5-4.5s5.3 1.5 6 4.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" fill="none"></path><circle cx="17" cy="10" r="2.6" stroke="currentColor" stroke-width="1.75"></circle><path d="M16.5 14.8c2.3.2 3.6 1.5 4.1 3.7" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" fill="none"></path></svg><span class="l">Candidats</span></span>
+  <span><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="1.75"></circle><path d="M5 20c.9-3.6 3.4-5.4 7-5.4s6.1 1.8 7 5.4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" fill="none"></path></svg><span class="l">Profil</span></span>
+</div>
+</template>
+
+<script>
+const d = document.getElementById('tpl-desktop').innerHTML, m = document.getElementById('tpl-mobile').innerHTML;
+document.getElementById('dq-light').innerHTML = d; document.getElementById('dq-dark').innerHTML = d;
+document.getElementById('mq-light').innerHTML = m; document.getElementById('mq-dark').innerHTML = m;
+</script>
+</body></html>

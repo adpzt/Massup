@@ -1,0 +1,112 @@
+/* ═══ NUTRI+ (29/09/2026) — mes plats · ma semaine + courses · gestes goût ═══
+   Commun aux deux modes Nutrition : #nutri (Melati, nutrition.css) et #nutria (Adrien, nutria.css).
+   Tout passe par les variables de CHAQUE thème (avec repli) : le rendu suit la DA de l'app hôte. */
+:is(#nutri,#nutria){
+  --np-line:var(--line,var(--gb,rgba(255,255,255,.12)));
+  --np-card:var(--card,var(--x-glass,rgba(255,255,255,.05)));
+  --np-card2:var(--card2,var(--x-glass-quiet,rgba(255,255,255,.035)));
+  --np-ink2:var(--ink2,var(--mut,rgba(255,255,255,.7)));
+  --np-ink3:var(--ink3,var(--mut,rgba(255,255,255,.5)));
+  --np-acc:var(--butter,var(--acc,#FFD37A));
+  --np-accs:var(--butter-s,var(--x-acc-15,rgba(255,211,122,.15)));
+  --np-ok:var(--leaf,#8FDBA8);
+  --np-warn:var(--coral,#FF8A7A);
+}
+:is(#nutri,#nutria) .np-create{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;margin:0 0 10px;padding:11px 14px;border-radius:16px;
+  border:1.5px dashed var(--np-acc);background:var(--np-accs);color:var(--np-acc);font-weight:800;font-size:13.5px;text-align:left;cursor:pointer;}
+:is(#nutri,#nutria) .np-create small{font-size:10.5px;font-weight:700;color:var(--np-ink2);}
+:is(#nutri,#nutria) .np-create:active{transform:scale(.98);}
+:is(#nutri,#nutria) .np-sh{padding:14px 20px 44px;}
+:is(#nutri,#nutria) .np-h2{font-size:19px;margin:0 0 10px;}
+:is(#nutri,#nutria) .np-mut{font-weight:600;letter-spacing:0;text-transform:none;color:var(--np-ink3);}
+:is(#nutri,#nutria) .np-photo{display:block;width:100%;aspect-ratio:16/10;border-radius:18px;overflow:hidden;border:1.5px dashed var(--np-line);background:var(--np-card2);cursor:pointer;}
+:is(#nutri,#nutria) .np-photo img{width:100%;height:100%;object-fit:cover;display:block;}
+:is(#nutri,#nutria) .np-photo span{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:30px;color:var(--np-ink2);}
+:is(#nutri,#nutria) .np-photo span b{font-size:13px;} :is(#nutri,#nutria) .np-photo span small{font-size:10.5px;color:var(--np-ink3);font-weight:600;}
+:is(#nutri,#nutria) .np-in{width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--np-line);background:var(--np-card2);color:inherit;font:inherit;font-size:14px;font-weight:600;outline:none;-webkit-appearance:none;appearance:none;}
+:is(#nutri,#nutria) .np-in:focus{border-color:var(--np-acc);}
+:is(#nutri,#nutria) .np-ta{resize:vertical;min-height:96px;line-height:1.5;font-weight:500;}
+:is(#nutri,#nutria) .np-steps2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
+:is(#nutri,#nutria) .np-stp{display:flex;align-items:center;justify-content:space-between;gap:6px;background:var(--np-card2);border:1px solid var(--np-line);border-radius:12px;padding:4px;}
+:is(#nutri,#nutria) .np-stp button{width:32px;height:32px;border-radius:10px;background:var(--np-card);border:1px solid var(--np-line);color:inherit;font-size:16px;font-weight:800;}
+:is(#nutri,#nutria) .np-stp b{font-size:12.5px;white-space:nowrap;}
+:is(#nutri,#nutria) .np-irow{display:grid;grid-template-columns:1fr 74px 14px 30px;align-items:center;gap:6px;padding:6px 0;border-bottom:1px dotted var(--np-line);}
+:is(#nutri,#nutria) .np-iname{font-size:12.5px;font-weight:700;min-width:0;}
+:is(#nutri,#nutria) .np-iname em{font-style:normal;font-size:10px;color:var(--np-ink3);margin-left:4px;}
+:is(#nutri,#nutria) .np-g{padding:7px 8px;text-align:right;font-variant-numeric:tabular-nums;}
+:is(#nutri,#nutria) .np-u{font-size:11px;color:var(--np-ink3);font-weight:700;}
+:is(#nutri,#nutria) .np-x{width:30px;height:30px;border-radius:10px;border:1px solid var(--np-line);background:none;color:var(--np-warn);font-size:12px;}
+:is(#nutri,#nutria) .np-free{grid-column:1/-1;font-size:10.5px;color:var(--np-ink2);font-weight:600;display:flex;flex-wrap:wrap;align-items:center;gap:5px;}
+:is(#nutri,#nutria) .np-free .np-in{width:64px;padding:5px 6px;font-size:12px;}
+:is(#nutri,#nutria) .np-free small{width:100%;color:var(--np-ink3);}
+:is(#nutri,#nutria) .np-search{margin-top:10px;}
+:is(#nutri,#nutria) .np-search input{width:100%;}
+:is(#nutri,#nutria) .np-found{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;}
+:is(#nutri,#nutria) .np-found .np-freebtn{border-style:dashed;}
+:is(#nutri,#nutria) .np-mac{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:16px;text-align:center;}
+:is(#nutri,#nutria) .np-mac span{background:var(--np-card2);border:1px solid var(--np-line);border-radius:12px;padding:8px 2px;font-size:10px;font-weight:700;color:var(--np-ink2);display:flex;flex-direction:column;}
+:is(#nutri,#nutria) .np-mac b{font-size:17px;color:inherit;font-variant-numeric:tabular-nums;}
+:is(#nutri,#nutria) .np-mac em{grid-column:1/-1;font-style:normal;font-size:10px;color:var(--np-ink3);font-weight:600;}
+:is(#nutri,#nutria) .np-save{margin-top:14px;}
+:is(#nutri,#nutria) .np-link{display:block;margin:10px auto 0;background:none;border:0;color:var(--np-ink3);font-size:12px;font-weight:700;text-decoration:underline;cursor:pointer;}
+:is(#nutri,#nutria) .np-del{display:block;width:100%;margin-top:10px;padding:10px;border-radius:13px;border:1px solid rgba(255,120,120,.4);background:none;color:var(--np-warn);font-weight:800;font-size:12.5px;}
+:is(#nutri,#nutria) .np-del.arm{background:rgba(255,120,120,.14);}
+:is(#nutri,#nutria) .np-editbtn{display:block;width:100%;margin-top:18px;padding:11px;border-radius:14px;border:1px solid var(--np-acc);background:var(--np-accs);color:var(--np-acc);font-weight:800;font-size:13px;}
+/* ── Gestes goût ── */
+:is(#nutri,#nutria) .np-gout{margin-top:20px;padding:12px 13px;border-radius:16px;background:linear-gradient(160deg,rgba(255,150,80,.10),var(--np-card) 60%);border:1px solid rgba(255,150,80,.28);}
+:is(#nutri,#nutria) .np-gout .eyebrow{margin-bottom:6px;}
+:is(#nutri,#nutria) .np-gt{display:flex;gap:9px;align-items:flex-start;padding:6px 0;}
+:is(#nutri,#nutria) .np-gt+.np-gt{border-top:1px dotted var(--np-line);}
+:is(#nutri,#nutria) .np-gi{font-size:17px;line-height:1.2;flex:none;}
+:is(#nutri,#nutria) .np-gt p{margin:0;font-size:12px;line-height:1.5;color:var(--np-ink2);}
+:is(#nutri,#nutria) .np-gt p b{color:inherit;filter:brightness(1.3);}
+/* ── Ma semaine ── */
+:is(#nutri,#nutria) .np-days{display:flex;gap:5px;margin-top:6px;}
+:is(#nutri,#nutria) .np-days button{flex:1;padding:8px 0;}
+:is(#nutri,#nutria) .np-wkhead .go{margin-top:14px;}
+:is(#nutri,#nutria) .np-sum{display:flex;gap:6px;margin:12px 0 10px;}
+:is(#nutri,#nutria) .np-sum span{flex:1;text-align:center;background:var(--np-card2);border:1px solid var(--np-line);border-radius:12px;padding:7px 2px;font-size:10px;font-weight:700;color:var(--np-ink2);}
+:is(#nutri,#nutria) .np-sum b{display:block;font-size:16px;color:inherit;}
+:is(#nutri,#nutria) .np-day .slot-h h4 small{font-weight:600;opacity:.6;font-size:11px;margin-left:4px;}
+:is(#nutri,#nutria) .np-meal{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px dotted var(--np-line);}
+:is(#nutri,#nutria) .np-ml{flex:none;width:52px;font-size:10.5px;font-weight:800;color:var(--np-ink3);}
+:is(#nutri,#nutria) .np-mn{flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--np-ink2);text-align:left;}
+:is(#nutri,#nutria) .np-open{display:flex;align-items:center;gap:8px;background:none;border:0;padding:0;color:inherit;cursor:pointer;}
+:is(#nutri,#nutria) .np-open b{display:block;font-size:12.5px;line-height:1.25;color:var(--txt,inherit);}
+:is(#nutri,#nutria) .np-open small{display:block;font-size:10px;font-weight:700;color:var(--np-ink3);margin-top:1px;}
+:is(#nutri,#nutria) .np-th{width:36px;height:36px;border-radius:10px;object-fit:cover;flex:none;background:var(--np-accs);}
+:is(#nutri,#nutria) .np-emo{display:grid;place-items:center;font-size:20px;}
+:is(#nutri,#nutria) .pickrow .np-th{width:38px;height:38px;}
+:is(#nutri,#nutria) .np-acts{display:flex;gap:4px;flex:none;}
+:is(#nutri,#nutria) .np-b{min-width:30px;height:30px;padding:0 7px;border-radius:10px;border:1px solid var(--np-line);background:var(--np-card2);color:inherit;font-size:12px;font-weight:800;}
+:is(#nutri,#nutria) .np-b.on{border-color:var(--np-acc);background:var(--np-accs);}
+:is(#nutri,#nutria) .np-meal.rest .np-mn{font-size:11px;opacity:.8;} :is(#nutri,#nutria) .np-meal.rest small{opacity:.7;}
+:is(#nutri,#nutria) .np-meal.off .np-mn{font-style:italic;opacity:.7;}
+:is(#nutri,#nutria) .np-shopbtn{margin-top:14px;}
+:is(#nutri,#nutria) .np-shop{display:flex;align-items:center;gap:10px;width:100%;padding:9px 2px;border:0;border-bottom:1px dotted var(--np-line);background:none;color:inherit;text-align:left;font-size:13px;cursor:pointer;}
+:is(#nutri,#nutria) .np-ck{flex:none;width:20px;height:20px;border-radius:6px;border:1.5px solid var(--np-line);display:grid;place-items:center;font-size:12px;font-weight:900;color:var(--np-ok);}
+:is(#nutri,#nutria) .np-sn{flex:1;min-width:0;font-weight:600;}
+:is(#nutri,#nutria) .np-shop b{flex:none;font-variant-numeric:tabular-nums;font-size:12.5px;}
+:is(#nutri,#nutria) .np-shop.on{opacity:.45;} :is(#nutri,#nutria) .np-shop.on .np-sn{text-decoration:line-through;}
+:is(#nutri,#nutria) .np-shop.on .np-ck{border-color:var(--np-ok);}
+:is(#nutri,#nutria) .np-sheet{z-index:560;}
+:is(#nutri,#nutria) .np-gsub{margin:-4px 0 6px;font-size:11px;font-weight:600;color:var(--np-ink3);}
+
+
+/* ═══ Mode clair — correctifs contraste (07/10/2026) ═══
+   Le dark mode n'est PAS touché : tout est sous prefers-color-scheme: light. */
+@media (prefers-color-scheme: light){
+  /* 2. Correctifs ciblés */
+  /* #nutri (Melati) est volontairement DARK même quand l'iPhone est en clair : cette règle lisait
+     var(--txt) (global, qui passe à #12151C en light) → texte sombre sur fond sombre. */
+  #nutri .np-open b{color:var(--ink);}
+  /* #nutria (Adrien) suit le thème clair : ces règles doivent vivre ICI (nutriplus.css est chargé après
+     nutria.css, ses sélecteurs :is(#nutri,#nutria) gagneraient à spécificité égale). */
+  #nutria .np-gt p b{filter:none;color:var(--txt);}
+  #nutria .np-gout{background:linear-gradient(160deg,rgba(196,98,40,0.08),var(--np-card) 60%);border-color:rgba(196,98,40,0.25);}
+  #nutria .np-del{border-color:rgba(194,43,64,0.4);}
+  #nutria .np-del.arm{background:rgba(194,43,64,0.10);}
+  #nutria .np-meal.rest .np-mn,#nutria .np-meal.rest small,#nutria .np-meal.off .np-mn{opacity:1;}
+  #nutria .np-day .slot-h h4 small{opacity:.9;}
+  #nutria{--np-ok:var(--acc);--np-warn:var(--red);}
+}

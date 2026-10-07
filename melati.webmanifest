@@ -1,0 +1,18 @@
+{
+  "name": "Melati",
+  "short_name": "Melati",
+  "description": "Sport & nutrition de Melati",
+  "start_url": "/melati.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0B0D12",
+  "theme_color": "#0B0D12",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/imgs/melati_icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

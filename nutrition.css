@@ -1,0 +1,324 @@
+/* ═══ NUTRITI·ON — mode nutrition Melati (v3 — 24/08/2026) ═══
+   Ambiance CUISINE cozy (chaleur bois/crème/feuille, esprit Animal Crossing) sur fond
+   sombre chaud — volontairement distincte de l'ambiance sport. Compact (retour Adrien :
+   « tout est trop gros »). v3 : COULEUR & DYNAMISME (retour Adrien : « trop vert kaki,
+   aucun bloc n'attire l'œil ») — accent par onglet (feuille/beurre/rose/ciel), cartes
+   teintées, vignettes par température, héros du bilan, verdict du calcul.
+   Scopé #nutri. Zéro animation infinie (règle batterie). */
+
+#nutri{
+  --n-bg:#171310; --card:#231B14; --card2:#2E241B; --line:rgba(255,224,178,.14);
+  --ink:#F6EFE4; --ink2:rgba(246,239,228,.62); --ink3:rgba(246,239,228,.4);
+  --leaf:#8FDBA8; --leaf-d:#B4EAC6; --leaf-s:rgba(143,219,168,.15);
+  --peach:#FFA98A; --peach-s:rgba(255,169,138,.15);
+  --butter:#FFD37A; --butter-s:rgba(255,211,122,.14);
+  --sky:#93C9EA; --sky-s:rgba(147,201,234,.15);
+  --berry:#FF95BE; --berry-s:rgba(255,149,190,.14);
+  --coral:#FF8B7E; --coral-s:rgba(255,139,126,.16);
+  --shadow:inset 0 1px 0 rgba(255,224,178,.07), 0 8px 20px rgba(0,0,0,.35);
+  position:fixed;inset:0;z-index:500;
+  background:
+    radial-gradient(110% 46% at 108% -6%, rgba(255,149,190,.075), transparent 62%),
+    radial-gradient(110% 46% at -8% 30%, rgba(143,219,168,.06), transparent 60%),
+    radial-gradient(120% 50% at 50% 112%, rgba(255,211,122,.055), transparent 62%),
+    var(--n-bg);
+  overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+  touch-action:pan-y;
+  display:none;color:var(--ink);font-family:'Manrope',system-ui,sans-serif;
+  font-weight:500;line-height:1.5;-webkit-font-smoothing:antialiased;
+}
+#nutri.on{display:block;}
+#nutri *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;min-width:0;}
+#nutri button{font:inherit;font-family:inherit;color:inherit;cursor:pointer;border:0;background:none;font-weight:600;}
+#nutri h1,#nutri h2,#nutri h3,#nutri h4{margin:0;font-weight:800;letter-spacing:-.012em;text-wrap:balance;}
+#nutri .num{font-variant-numeric:tabular-nums;}
+
+#nutri .shell{max-width:460px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;position:relative;overflow-x:hidden;}
+/* header : mêmes marges que le reste de l'app, carte compacte, zéro déco parasite */
+#nutri .top{display:flex;align-items:center;justify-content:space-between;gap:.6rem;
+  margin:calc(env(safe-area-inset-top) + 14px) 14px 0;padding:.75rem 1rem;
+  background:linear-gradient(160deg,rgba(143,219,168,.10),var(--card));
+  border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);}
+#nutri .brand{font-family:'Saira',system-ui,sans-serif;font-style:italic;font-size:19px;font-weight:800;letter-spacing:-.02em;white-space:nowrap;}
+#nutri .brand span{background:linear-gradient(100deg,#8FDBA8,#FFD37A);-webkit-background-clip:text;background-clip:text;color:transparent;}
+#nutri .backapp{display:flex;align-items:center;gap:5px;background:var(--card2);border:1px solid var(--line);
+  border-radius:99px;padding:6px 12px;font-size:11.5px;font-weight:800;color:var(--ink2);flex:none;}
+#nutri .backapp:active{transform:scale(.94);}
+#nutri main{flex:1;padding:14px 14px 104px;}
+#nutri .pane{display:none;}
+#nutri .pane.on{display:block;}
+#nutri .pane.on>*{animation:nutpop .4s cubic-bezier(.22,1.18,.36,1) backwards;}
+#nutri .pane.on>*:nth-child(1){animation-delay:.02s}#nutri .pane.on>*:nth-child(2){animation-delay:.07s}
+#nutri .pane.on>*:nth-child(3){animation-delay:.12s}#nutri .pane.on>*:nth-child(4){animation-delay:.17s}
+#nutri .pane.on>*:nth-child(5){animation-delay:.22s}
+@keyframes nutpop{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
+
+#nutri .tabs{position:fixed;bottom:0;left:0;right:0;z-index:530;display:flex;justify-content:center;
+  background:linear-gradient(to top,var(--n-bg) 55%,transparent);
+  padding:8px 14px calc(10px + env(safe-area-inset-bottom));}
+#nutri .tabs-in{display:flex;gap:4px;width:100%;max-width:380px;background:rgba(30,24,18,.94);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--line);border-radius:20px;padding:5px;box-shadow:var(--shadow);}
+#nutri .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 2px 6px;
+  border-radius:15px;font-size:10px;font-weight:700;color:var(--ink3);transition:.22s cubic-bezier(.22,1.2,.36,1);}
+#nutri .tab svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round;transition:transform .3s cubic-bezier(.22,1.6,.36,1);}
+#nutri .tab.on svg{transform:translateY(-2px) scale(1.1);}
+/* chaque onglet a SA couleur (retour Adrien : « trop vert kaki partout ») */
+#nutri .tab[data-p="profil"].on{background:var(--leaf-s);color:var(--leaf);}
+#nutri .tab[data-p="recettes"].on{background:var(--butter-s);color:var(--butter);}
+#nutri .tab[data-p="journee"].on{background:var(--berry-s);color:var(--berry);}
+#nutri .tab[data-p="calcul"].on{background:var(--sky-s);color:var(--sky);}
+
+#nutri .card{background:linear-gradient(168deg,rgba(255,224,178,.06),var(--card) 42%);
+  border:1px solid var(--line);border-radius:20px;padding:14px;box-shadow:var(--shadow);}
+#nutri .eyebrow{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin:0 0 10px;}
+/* accents par onglet : cartes teintées + eyebrows colorés */
+#nutri #n-p-profil .card{background:linear-gradient(168deg,var(--leaf-s),var(--card) 46%);border-color:rgba(143,219,168,.24);}
+#nutri #n-p-profil .eyebrow{color:var(--leaf);}
+#nutri #n-p-recettes .eyebrow{color:var(--butter);}
+#nutri #n-p-journee .eyebrow{color:var(--berry);}
+#nutri #n-p-calcul .card{background:linear-gradient(168deg,var(--sky-s),var(--card) 46%);border-color:rgba(147,201,234,.22);}
+#nutri #n-p-calcul .eyebrow{color:var(--sky);}
+#nutri .hint{font-size:12px;color:var(--ink2);line-height:1.5;font-weight:500;}
+
+/* profil */
+#nutri .wline{margin:0;font-size:14px;font-weight:700;color:var(--ink);}
+#nutri .wline b{font-family:'Saira',system-ui,sans-serif;font-style:italic;font-size:19px;font-weight:800;color:var(--leaf);}
+#nutri .tg{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:12px;}
+#nutri .t{border-radius:14px;padding:9px 12px;}
+#nutri .t b{display:block;font-family:'Saira',system-ui,sans-serif;font-style:italic;font-size:18px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums;}
+#nutri .t small{display:block;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.75;margin-top:1px;}
+#nutri .t.a{background:var(--leaf-s);color:var(--leaf);}
+#nutri .t.b{background:var(--peach-s);color:var(--peach);}
+#nutri .t.c{background:var(--butter-s);color:var(--butter);}
+#nutri .t.d{background:var(--sky-s);color:var(--sky);}
+#nutri .note{display:flex;gap:9px;align-items:flex-start;background:var(--butter-s);border:1px solid rgba(255,211,122,.25);
+  border-radius:16px;padding:11px 13px;font-size:12px;line-height:1.5;margin-top:11px;}
+#nutri .note b{font-weight:800;}
+#nutri .note .ic{font-size:15px;flex:none;line-height:1.3;}
+#nutri .split{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;}
+#nutri .sm{background:var(--card2);border-radius:13px;padding:9px 11px;}
+#nutri .sm b{display:block;font-family:'Saira',system-ui,sans-serif;font-style:italic;font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;}
+#nutri .sm small{font-size:9px;font-weight:700;color:var(--ink3);letter-spacing:.05em;text-transform:uppercase;}
+#nutri .acc{border-top:1px solid var(--line);padding-top:11px;margin-top:11px;}
+#nutri .acc:first-of-type{border:0;padding-top:0;margin-top:0;}
+#nutri .acc h4{font-size:13px;margin-bottom:2px;}
+#nutri .acc p{margin:0;font-size:11.8px;color:var(--ink2);line-height:1.5;font-weight:500;}
+
+/* filtres */
+#nutri .seg{display:flex;background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:4px;gap:4px;}
+#nutri .seg button{flex:1;padding:8px 5px;border-radius:12px;font-size:12.5px;font-weight:700;color:var(--ink2);
+  transition:.2s cubic-bezier(.22,1.2,.36,1);}
+#nutri .seg button.on{background:var(--leaf-s);color:var(--leaf);box-shadow:inset 0 0 0 1px rgba(143,219,168,.3);}
+#nutri #n-p-recettes .seg button.on{background:var(--butter-s);color:var(--butter);box-shadow:inset 0 0 0 1px rgba(255,211,122,.35);}
+#nutri #n-p-calcul .seg button.on{background:var(--sky-s);color:var(--sky);box-shadow:inset 0 0 0 1px rgba(147,201,234,.35);}
+#nutri .sheet .seg button.on{background:var(--butter-s);color:var(--butter);box-shadow:inset 0 0 0 1px rgba(255,211,122,.35);}
+/* 5 filtres sur UNE seule ligne (demande Adrien), chacun sa couleur */
+#nutri .chips{display:flex;flex-wrap:nowrap;gap:6px;margin-top:10px;}
+#nutri .chip{flex:1;min-width:0;padding:8px 2px;border-radius:99px;border:1px solid var(--line);background:var(--card);
+  font-size:10.5px;font-weight:800;color:var(--ink2);text-align:center;white-space:nowrap;
+  transition:.18s cubic-bezier(.22,1.4,.36,1);}
+#nutri .chip:active{transform:scale(.92);}
+#nutri .chip.on.ex{background:var(--butter);border-color:var(--butter);color:#3E2E08;}
+#nutri .chip.on.ch{background:var(--peach);border-color:var(--peach);color:#3D1B10;}
+#nutri .chip.on.fr{background:var(--sky);border-color:var(--sky);color:#0E2836;}
+#nutri .chip.on.pr{background:var(--berry);border-color:var(--berry);color:#3D0F22;}
+#nutri .chip.fv{flex:0 0 44px;font-size:15px;line-height:1;color:#FF7A93;padding:6px 0 7px;}
+#nutri .chip.fv.on{background:rgba(255,122,147,.18);border-color:#FF7A93;}
+#nutri .hrt{font-style:normal;color:#FF7A93;font-size:.85em;}
+#nutri .count{font-size:11px;font-weight:700;color:var(--ink3);margin:13px 0 8px;}
+#nutri .search{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);
+  border-radius:14px;padding:8px 12px;margin-top:10px;}
+#nutri .search svg{width:14px;height:14px;stroke:var(--ink3);fill:none;stroke-width:2.4;stroke-linecap:round;flex:none;}
+#nutri .search input{flex:1;border:0;background:transparent;font:inherit;font-size:12.5px;font-weight:600;color:var(--ink);min-width:0;}
+#nutri .search input:focus{outline:none;}
+#nutri .search input::placeholder{color:var(--ink3);}
+
+/* cartes recettes */
+#nutri .list{display:flex;flex-direction:column;gap:8px;}
+#nutri .rc{width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:18px;
+  padding:9px;display:flex;gap:10px;align-items:center;box-shadow:var(--shadow);
+  transition:transform .18s cubic-bezier(.22,1.4,.36,1);animation:nutpop .35s cubic-bezier(.22,1.18,.36,1) backwards;}
+#nutri .rc:active{transform:scale(.97);}
+#nutri .thumb{width:58px;height:58px;border-radius:15px;flex:none;display:grid;place-items:center;
+  background:var(--butter-s);overflow:hidden;}
+/* vignettes teintées : chaud pêche · froid ciel · sucré rose — de la couleur dans les listes */
+#nutri .thumb.th,#nutri .disc.th{background:var(--peach-s);}
+#nutri .thumb.tf,#nutri .disc.tf{background:var(--sky-s);}
+#nutri .thumb.ts,#nutri .disc.ts{background:var(--berry-s);}
+#nutri .thumb img{width:94%;height:94%;object-fit:contain;}
+#nutri .rb{flex:1;min-width:0;}
+#nutri .rtop{display:flex;align-items:flex-start;gap:6px;}
+#nutri .rtop h3{flex:1;font-size:13px;line-height:1.25;}
+#nutri .stars{flex:none;font-size:8.5px;letter-spacing:.5px;color:var(--butter);opacity:.85;padding-top:2px;}
+#nutri .meta{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;}
+#nutri .tag{font-size:9px;font-weight:800;padding:2px 7px;border-radius:99px;background:var(--card2);color:var(--ink3);}
+#nutri .tag.h{background:var(--peach-s);color:var(--peach);}
+#nutri .tag.c{background:var(--sky-s);color:var(--sky);}
+#nutri .tag.e{background:var(--butter-s);color:var(--butter);}
+#nutri .tag.p{background:var(--berry-s);color:var(--berry);}
+#nutri .kc{font-size:11px;font-weight:700;color:var(--ink2);margin-top:5px;font-variant-numeric:tabular-nums;}
+#nutri .kc b{color:var(--ink);font-weight:800;}
+#nutri .kc b.kp{color:var(--berry);}
+
+/* sheet fiche recette */
+#nutri .veil{position:fixed;inset:0;background:rgba(10,7,4,.62);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  opacity:0;pointer-events:none;transition:opacity .3s;z-index:540;}
+#nutri .veil.on{opacity:1;pointer-events:auto;}
+#nutri .sheet{position:fixed;left:0;right:0;bottom:0;z-index:550;max-width:460px;margin:0 auto;background:#1D1712;
+  border-radius:26px 26px 0 0;max-height:92dvh;overflow-y:auto;overflow-x:hidden;transform:translateY(103%);
+  transition:transform .42s cubic-bezier(.22,1.06,.28,1);border:1px solid var(--line);border-bottom:0;}
+#nutri .sheet.on{transform:none;}
+#nutri .grab{width:40px;height:4px;border-radius:99px;background:var(--line);margin:9px auto 0;}
+#nutri .hero{padding:2px 20px 0;text-align:center;position:relative;}
+#nutri .disc{width:112px;height:112px;margin:6px auto 0;border-radius:50%;display:grid;place-items:center;
+  background:var(--butter-s);border:1px solid rgba(255,211,122,.2);}
+#nutri .disc img{width:88%;height:88%;object-fit:contain;}
+#nutri .x{position:absolute;top:0;right:16px;width:32px;height:32px;border-radius:50%;background:var(--card);
+  border:1px solid var(--line);display:grid;place-items:center;font-size:14px;font-weight:800;color:var(--ink2);z-index:2;}
+#nutri .fav{position:absolute;top:0;left:16px;width:32px;height:32px;border-radius:50%;background:var(--card);
+  border:1px solid var(--line);display:grid;place-items:center;font-size:15px;line-height:1;color:var(--ink3);z-index:2;transition:.15s;}
+#nutri .fav.on{background:rgba(255,122,147,.16);border-color:#FF7A93;color:#FF7A93;}
+#nutri .fav:active{transform:scale(.88);}
+#nutri .sh{padding:12px 18px 36px;}
+#nutri .sh h2{font-size:18px;line-height:1.25;text-align:center;}
+#nutri .shstars{text-align:center;font-size:10px;color:var(--butter);margin-top:4px;letter-spacing:1px;}
+#nutri .why{font-size:11.8px;color:var(--ink2);background:var(--card);border:1px solid var(--line);border-radius:15px;
+  padding:10px 13px;line-height:1.5;margin-top:11px;font-weight:500;}
+#nutri .macros{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:11px 0;}
+#nutri .m{border-radius:13px;padding:8px 3px;text-align:center;}
+#nutri .m b{display:block;font-family:'Saira',system-ui,sans-serif;font-style:italic;font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;}
+#nutri .m small{font-size:8.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;opacity:.75;}
+#nutri .ing{display:flex;justify-content:space-between;gap:12px;align-items:baseline;padding:7px 0;
+  border-bottom:1px dotted var(--line);font-size:12.5px;font-weight:600;}
+#nutri .ing:last-of-type{border-bottom:0;}
+#nutri .ing i{font-style:normal;color:var(--ink2);font-weight:600;}
+#nutri .ing b{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--ink);}
+#nutri .ing b.u{font-weight:700;color:var(--ink2);}
+#nutri .adj{font-size:10px;font-weight:700;color:var(--ink3);text-align:right;margin-top:7px;}
+#nutri ol.steps{margin:5px 0 0;padding-left:18px;font-size:12px;color:var(--ink2);line-height:1.58;font-weight:500;}
+#nutri ol.steps li{margin-bottom:7px;padding-left:2px;}
+#nutri ol.steps li::marker{color:var(--leaf);font-weight:800;}
+
+/* journée — chaque créneau a sa couleur */
+#nutri .slot{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:11px;box-shadow:var(--shadow);}
+#nutri .slot+.slot{margin-top:8px;}
+#nutri #n-slot-dej{background:linear-gradient(168deg,var(--butter-s),var(--card) 52%);border-color:rgba(255,211,122,.3);}
+#nutri #n-slot-din{background:linear-gradient(168deg,var(--peach-s),var(--card) 52%);border-color:rgba(255,169,138,.3);}
+#nutri #n-slot-col{background:linear-gradient(168deg,var(--leaf-s),var(--card) 52%);border-color:rgba(143,219,168,.3);}
+#nutri #n-slot-ext{background:linear-gradient(168deg,var(--berry-s),var(--card) 52%);border-color:rgba(255,149,190,.3);}
+#nutri #n-slot-dej .slot-h h4{color:var(--butter);}
+#nutri #n-slot-din .slot-h h4{color:var(--peach);}
+#nutri #n-slot-col .slot-h h4{color:var(--leaf);}
+#nutri #n-slot-ext .slot-h h4{color:var(--berry);}
+#nutri .slot-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+#nutri .slot-h h4{font-size:12.5px;}
+#nutri .slot-h small{font-size:9.5px;font-weight:700;color:var(--ink3);}
+#nutri .slot-add{width:100%;border:1.5px dashed var(--line);border-radius:13px;padding:11px;color:var(--ink3);
+  font-size:11.8px;font-weight:700;transition:.15s;}
+#nutri .slot-add:active{transform:scale(.97);}
+#nutri .slot-r{display:flex;gap:9px;align-items:center;}
+#nutri .slot-r img{width:42px;height:42px;border-radius:11px;background:var(--butter-s);object-fit:contain;flex:none;}
+#nutri .slot-b{flex:1;min-width:0;}
+#nutri .slot-b b{display:block;font-size:12px;line-height:1.25;}
+#nutri .slot-b span{font-size:10.5px;font-weight:700;color:var(--ink2);font-variant-numeric:tabular-nums;}
+#nutri .slot-x{width:26px;height:26px;border-radius:50%;background:var(--card2);color:var(--ink2);
+  font-weight:800;font-size:11px;flex:none;}
+#nutri .fchip{margin-top:7px;display:inline-block;padding:4px 10px;border-radius:99px;border:1px solid var(--line);
+  font-size:10px;font-weight:700;color:var(--ink2);}
+#nutri .fchip.on{background:var(--butter);border-color:var(--butter);color:#3E2E08;}
+#nutri .bilan{margin-top:11px;background:linear-gradient(168deg,var(--berry-s),var(--card) 40%);border-color:rgba(255,149,190,.26);}
+/* héros du bilan : la note et les calories en GRAND (retour Adrien) */
+#nutri .jhero{display:flex;gap:12px;align-items:stretch;margin:2px 0 12px;}
+#nutri .jnote{flex:0 0 92px;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;}
+#nutri .jnote b{font-family:'Saira',system-ui,sans-serif;font-style:italic;font-size:46px;font-weight:800;line-height:.95;}
+#nutri .jnote small{font-size:11px;font-weight:800;opacity:.8;margin-top:2px;}
+#nutri .jnote.g{background:var(--leaf-s);color:var(--leaf);box-shadow:0 0 26px rgba(143,219,168,.28), inset 0 0 0 1px rgba(143,219,168,.4);}
+#nutri .jnote.y{background:var(--butter-s);color:var(--butter);box-shadow:0 0 26px rgba(255,211,122,.25), inset 0 0 0 1px rgba(255,211,122,.4);}
+#nutri .jnote.r{background:var(--coral-s);color:var(--coral);box-shadow:0 0 26px rgba(255,139,126,.25), inset 0 0 0 1px rgba(255,139,126,.4);}
+#nutri .jkcal{flex:1;min-width:0;border-radius:20px;background:var(--card2);padding:10px 14px;display:flex;flex-direction:column;justify-content:center;}
+#nutri .jkcal b{font-family:'Saira',system-ui,sans-serif;font-style:italic;font-size:30px;font-weight:800;line-height:1.05;}
+#nutri .jkcal span{font-size:12px;font-weight:800;color:var(--ink2);}
+#nutri .jkcal em{font-style:normal;font-size:9.5px;font-weight:700;color:var(--ink3);margin-top:4px;}
+#nutri .jkcal.ok b{color:var(--leaf);} #nutri .jkcal.ok{box-shadow:inset 0 0 0 1px rgba(143,219,168,.3);}
+#nutri .jkcal.low b{color:var(--butter);} #nutri .jkcal.low{box-shadow:inset 0 0 0 1px rgba(255,211,122,.3);}
+#nutri .jkcal.high b{color:var(--coral);} #nutri .jkcal.high{box-shadow:inset 0 0 0 1px rgba(255,139,126,.35);}
+/* macros « atteint / cible » : vert = ok, jaune = un peu court, corail = trop au-dessus */
+#nutri .jmacros{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+#nutri .jmacros:has(> :nth-child(4)){grid-template-columns:repeat(2,1fr);}
+#nutri .jm{border-radius:14px;padding:9px 10px;}
+#nutri .jm b{display:block;font-family:'Saira',system-ui,sans-serif;font-style:italic;font-size:19px;font-weight:800;line-height:1.1;}
+#nutri .jm b i{font-style:normal;font-size:12px;font-weight:800;opacity:.55;}
+#nutri .jm small{display:block;font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;opacity:.75;margin-top:1px;}
+#nutri .jm.ok{background:var(--leaf-s);color:var(--leaf);}
+#nutri .jm.low{background:var(--butter-s);color:var(--butter);}
+#nutri .jm.high{background:var(--coral-s);color:var(--coral);}
+/* débrief : une carte aérée par message (fini la boîte serrée) */
+#nutri .jdebrief{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
+#nutri .jd{display:flex;gap:10px;align-items:flex-start;border-radius:14px;padding:11px 13px;background:var(--card2);}
+#nutri .jd p{margin:0;font-size:12px;font-weight:600;line-height:1.55;color:var(--ink2);}
+#nutri .jd .jdi{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;
+  font-size:12px;font-weight:800;margin-top:1px;}
+#nutri .jd.ok .jdi{background:var(--leaf-s);color:var(--leaf);}
+#nutri .jd.warn .jdi{background:var(--peach-s);color:var(--peach);}
+#nutri .jd.warn{box-shadow:inset 0 0 0 1px rgba(255,169,138,.25);}
+/* verdict du calculateur : impossible de ne pas comprendre */
+#nutri .verdict{display:flex;gap:11px;align-items:flex-start;border-radius:15px;padding:13px 14px;}
+#nutri .verdict p{margin:0;font-size:12.5px;font-weight:600;line-height:1.55;}
+#nutri .verdict b{font-weight:800;}
+#nutri .verdict .vi{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:800;}
+#nutri .verdict.v-ok{background:var(--leaf-s);color:var(--leaf-d);box-shadow:inset 0 0 0 1px rgba(143,219,168,.4);}
+#nutri .verdict.v-ok .vi{background:var(--leaf);color:#14200F;}
+#nutri .verdict.v-low{background:var(--butter-s);color:#FFE3A8;box-shadow:inset 0 0 0 1px rgba(255,211,122,.4);}
+#nutri .verdict.v-low .vi{background:var(--butter);color:#3E2E08;}
+#nutri .verdict.v-high{background:var(--coral-s);color:#FFC4BC;box-shadow:inset 0 0 0 1px rgba(255,139,126,.45);}
+#nutri .verdict.v-high .vi{background:var(--coral);color:#3D120C;}
+#nutri .pickrow{width:100%;text-align:left;display:flex;gap:9px;align-items:center;padding:7px 4px;
+  border-bottom:1px dotted var(--line);}
+#nutri .pickrow img{width:38px;height:38px;border-radius:10px;background:var(--butter-s);object-fit:contain;flex:none;}
+#nutri .pickrow b{display:block;font-size:12px;line-height:1.25;}
+#nutri .pickrow span{font-size:10.5px;font-weight:700;color:var(--ink2);font-variant-numeric:tabular-nums;}
+
+/* calcul */
+#nutri .grp{margin-top:12px;}
+#nutri .grp h4{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin:0 0 6px;}
+#nutri .pick{display:flex;flex-wrap:wrap;gap:5px;}
+#nutri .pick button{padding:6px 11px;border-radius:99px;border:1px solid var(--line);background:var(--card);
+  font-size:11px;font-weight:700;color:var(--ink2);transition:.18s cubic-bezier(.22,1.4,.36,1);}
+#nutri .pick button:active{transform:scale(.92);}
+#nutri .pick button.on{background:var(--sky);border-color:var(--sky);color:#0E2836;}
+#nutri .go{width:100%;margin-top:15px;padding:12px;border-radius:15px;background:linear-gradient(100deg,var(--leaf),var(--butter));
+  color:#22200D;font-family:'Saira',system-ui,sans-serif;font-style:italic;font-size:13.5px;font-weight:800;
+  box-shadow:0 6px 20px rgba(143,219,168,.22);transition:.12s;}
+#nutri .go:active{transform:translateY(2px);}
+#nutri .go:disabled{opacity:.38;box-shadow:none;cursor:not-allowed;transform:none;}
+#nutri .empty{font-size:12px;font-weight:600;color:var(--ink3);text-align:center;padding:30px 12px;line-height:1.6;}
+#nutri .empty .big{font-size:30px;display:block;margin-bottom:6px;}
+
+@media(prefers-reduced-motion:reduce){#nutri *{animation:none!important;transition-duration:.01s!important;}}
+
+/* ── Suggestion « dernier repas » du picker (24/08, parité MASSUP) ── */
+#nutri .pickrow.sug{background:var(--berry-s);box-shadow:inset 0 0 0 1px rgba(255,149,190,.3);border-radius:14px;border-bottom:0;padding:9px 10px;margin-bottom:6px;}
+#nutri .sugwhy{display:block;font-style:normal;font-size:9.5px;font-weight:700;color:var(--berry);margin-top:2px;line-height:1.4;}
+
+/* 24/08 — filtre « Sans féculent » (remplace Express), bouton « Retirer cette recette » à double confirmation, ↺ restauration */
+#nutri .chip.sf{flex:1.45;font-size:10px;}
+#nutri .chip.on.sf{background:var(--leaf);border-color:var(--leaf);color:#0F2E1A;}
+#nutri .rm{display:block;width:100%;margin-top:26px;padding:11px 12px;border-radius:14px;border:1px dashed var(--line);background:transparent;
+  font:inherit;font-size:11.5px;font-weight:800;color:var(--ink3);transition:.18s;}
+#nutri .rm.arm{border-style:solid;border-color:var(--coral);background:var(--coral-s);color:var(--coral);}
+#nutri .rm:active{transform:scale(.97);}
+#nutri .undo{margin-left:6px;padding:2px 9px;border-radius:99px;border:1px solid var(--line);background:var(--card);font:inherit;font-size:10px;font-weight:800;color:var(--ink2);}
+
+/* ── 29/08 : 🧺 « ce que j'ai sous la main » + variantes (tags 🔁 / il manque) ── */
+#nutri .pantry-btn{display:flex;align-items:center;gap:8px;width:100%;margin-top:10px;padding:10px 14px;border-radius:14px;border:1px dashed var(--line);background:var(--card);font:inherit;font-size:12px;font-weight:800;color:var(--ink2);text-align:left;transition:.18s;}
+#nutri .pantry-btn .pb-arr{margin-left:auto;font-size:11px;color:var(--ink3);}
+#nutri .pantry-btn.on{border-style:solid;background:var(--leaf-s);border-color:rgba(143,219,168,.45);color:var(--leaf);}
+#nutri .pantry-btn.open{border-bottom-left-radius:6px;border-bottom-right-radius:6px;}
+#nutri .pantry{background:var(--card);border:1px solid var(--line);border-top:0;border-radius:0 0 14px 14px;padding:10px 12px 12px;margin-top:-2px;}
+#nutri .pantry .grp{margin-top:9px;}
+#nutri .pantry .pick button.on{background:var(--leaf-s);border-color:rgba(143,219,168,.5);color:var(--leaf);}
+#nutri .pclear{display:block;margin:12px auto 0;background:none;border:0;font:inherit;font-size:11px;font-weight:800;color:var(--ink3);text-decoration:underline;}
+#nutri .tag.v{background:var(--leaf-s);color:var(--leaf);}
+#nutri .tag.miss{background:rgba(255,122,147,.14);color:#c9445f;}

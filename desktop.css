@@ -1,0 +1,68 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   MASSUP — DESKTOP (26/08/2026). Couche « ordinateur » AJOUTÉE par-dessus style.css /
+   melati.css. Chargée avec <link media="(min-width:1000px)"> : sous 1000 px de large
+   (tous les iPhone, même en paysage : 932 px max) le navigateur N'APPLIQUE PAS cette
+   feuille. La version mobile est donc verrouillée — rien ici ne peut la modifier.
+   Règle : toute évolution « ordinateur » se fait UNIQUEMENT dans ce fichier, jamais dans
+   style.css / melati.css (hashes surveillés par tools/mobile_lock.js).
+   Mêmes classes, mêmes tokens --x-* : la palette (menthe Adrien / rose Melati) suit.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (min-width:1000px){
+  :root{--dk-w:1180px;}
+  html{font-size:17px;}
+  .app{max-width:var(--dk-w);padding:1.75rem 2.25rem 6.5rem;}
+  header{padding:1.1rem 1.75rem;}
+  .hdate{font-size:.85rem;}
+
+  /* ── Nav : la pilule reste en bas, avec ses étiquettes ── */
+  .bnav{bottom:1.25rem;padding:.55rem .7rem;gap:.35rem;}
+  .bni{flex-direction:row;align-items:center;gap:.55rem;padding:.55rem 1.05rem;border-radius:100px;}
+  .bni:hover{opacity:.8;}
+  .bni.active{background:rgba(255,255,255,.06);}
+  .bni-ico{font-size:1.25rem;}
+  .bni-lbl{display:inline;font-family:'Saira',system-ui,sans-serif;font-style:italic;font-weight:800;font-size:.8rem;letter-spacing:.04em;text-transform:uppercase;}
+
+  /* ── Bilan : bento 2 colonnes ── */
+  #view-sante.active{display:grid;grid-template-columns:1fr 1fr;gap:0 1.5rem;align-items:start;}
+  #view-sante>*{min-width:0;}
+  #view-sante>div:empty{display:none;}
+  #view-sante>#weeklyRecapWidget,#view-sante>.slbl,#view-sante>.chart-section,#view-sante>.bubble-toggle,
+  #view-sante>#santeHistoSection,#view-sante>#bilanPartner,#view-sante>#bilanRecords,#view-sante>#bilanNotes,#view-sante>#bilanLastWeek,#view-sante>#bilanSaison{grid-column:1/-1;}
+  #view-sante .wn-card,#view-sante .bp-card,#view-sante .mel-season{height:100%;}
+  #view-sante .chart-wrap{height:280px;}
+
+  /* ── Séances : choix à gauche, séance ouverte à droite ── */
+  #view-seances.active{display:grid;grid-template-columns:400px minmax(0,1fr);grid-template-rows:auto auto auto auto 1fr;gap:0 1.75rem;align-items:start;}
+  #view-seances>#gymGreet,#view-seances>.slbl,#view-seances>.sgrid-main,#view-seances>.sgrid-mini{grid-column:1;}
+  #view-seances>#panels{grid-column:2;grid-row:1/span 5;}
+  .sc:hover{border-color:var(--x-acc-45);transform:translateY(-2px);}
+  .exinner{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);}
+  .demo{min-height:240px;}
+
+  /* ── Progression : colonne lisible, calendrier borné ── */
+  #view-progression.active{max-width:860px;margin:0 auto;}
+  #view-progression .cal-grid{max-width:560px;margin:0 auto;}
+  #view-progression .chart-wrap{height:300px;}
+
+  /* ── Modaux : centrés, en carte, plus en tiroir du bas ── */
+  .modal-overlay{align-items:center;padding:2rem;}
+  .modal{border-radius:var(--x-r-xl);max-width:680px;max-height:86vh;transform:translateY(24px) scale(.98);transition:transform .28s cubic-bezier(.22,1.15,.36,1);}
+  .modal-overlay.open .modal{transform:none;}
+  .modal-overlay.modal-center .modal{max-width:600px;}
+
+  /* ── Plein écran (LiveUp, Détente, bilan hebdo, mot 💌) : cadre centré plus large ── */
+  .as-body{max-width:680px;padding:1.25rem 1.5rem;}
+  .lm-stage{max-width:600px;}
+  .dz-det-vid{width:min(60vw,420px);max-height:320px;}
+  .dz-det-img{width:min(60vw,320px);height:min(60vw,320px);}
+
+  /* ── Nutrition (les deux modes) : shell plus large ── */
+  #nutria .shell,#nutri .shell,#nutria .sheet,#nutri .sheet{max-width:720px;}
+  #nutria .tabs-in,#nutri .tabs-in{max-width:460px;}
+
+  /* ── Divers ── */
+  .login-card{max-width:420px;padding:3rem 2.5rem;}
+  .toast{bottom:104px;font-size:.9rem;}
+  .bubble-toggle:hover,.wn-tile:hover,.pv-d.has:hover,.dz-logbtn:hover,.dz-dcard:hover{border-color:var(--x-acc-45);}
+  button,.cal-day,.sc,.wn-tile{cursor:pointer;}
+}

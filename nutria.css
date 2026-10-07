@@ -1,0 +1,468 @@
+/* ════════════════════════════════════════════════════════════════
+   MASSUP · NUTRITI·ON — nutria.css · DA « Cuisine Bento » (24/08/2026)
+   Drop-in complet, scopé #nutria. Dark only. Zéro animation infinie.
+   Même DOM, mêmes classes — remplace intégralement l'ancien bloc.
+
+   Direction : le mode sport est froid (graphite, menthe→cyan→indigo) ;
+   côté cuisine on garde le verre bento MASSUP mais on ALLUME LA PLAQUE :
+   halo cuivré en haut d'écran, braise abricot→corail réservée à
+   l'identité (brand, plaques de cuisson, moments signature), emojis
+   servis sur de vraies ASSIETTES (radial + jonc), et une hiérarchie
+   nette : kcal = jauge maîtresse, glucides = héros menthe.
+   Codes sémantiques inchangés : gluc=menthe · prot=cyan · lip=jaune/rouge.
+   ════════════════════════════════════════════════════════════════ */
+
+#nutria{
+  /* ---- tokens locaux --na-* (identité cuisine) ---- */
+  --na-heat:#FFB37A;                                   /* abricot cuivré — texte 10.2:1 sur --bg ✅ */
+  --na-heat-08:rgba(255,163,110,0.08);
+  --na-heat-14:rgba(255,163,110,0.14);
+  --na-heat-35:rgba(255,163,110,0.35);
+  --na-ember:linear-gradient(100deg,#FFDCA3,#FFA06B,#FF7A93);   /* braise — brand + signatures */
+  --na-glass-warm:linear-gradient(165deg,rgba(255,186,140,0.075),rgba(255,255,255,0.03) 55%);
+  --na-plate:radial-gradient(circle at 34% 28%,rgba(255,255,255,0.17),rgba(255,255,255,0.055) 58%,rgba(255,255,255,0.02));
+  --na-plate-rim:inset 0 0 0 1.5px rgba(255,255,255,0.16), inset 0 -8px 14px rgba(0,0,0,0.28);
+  --na-sheet:#14101A;                                  /* fond sheet légèrement réchauffé */
+  --na-ink:#2A1608;                                    /* texte posé sur --na-heat / braise */
+
+  position:fixed;inset:0;z-index:500;
+  background:
+    radial-gradient(130% 42% at 82% -6%,rgba(255,158,107,0.11),transparent 62%),
+    radial-gradient(80% 34% at -12% 26%,rgba(113,255,180,0.05),transparent 70%),
+    var(--bg);
+  overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;
+  display:none;color:var(--txt);font-family:'Manrope',system-ui,sans-serif;font-weight:500;line-height:1.5;-webkit-font-smoothing:antialiased;
+}
+#nutria.on{display:block;}
+#nutria *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;min-width:0;}
+#nutria button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;font-weight:600;}
+#nutria h1,#nutria h2,#nutria h3,#nutria h4{margin:0;font-weight:800;letter-spacing:-.012em;}
+#nutria .num{font-family:'Saira',system-ui,sans-serif;font-style:italic;font-variant-numeric:tabular-nums;}
+#nutria a{color:var(--na-heat);}#nutria a:hover{color:#FFDCA3;}
+
+/* ═══ 1. CHROME · TOP BAR · TABS ═══ */
+#nutria .shell{max-width:460px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;position:relative;overflow-x:hidden;}
+#nutria .top{display:flex;align-items:center;justify-content:space-between;gap:.6rem;
+  margin:calc(env(safe-area-inset-top) + 14px) 14px 0;padding:.75rem 1rem;
+  background:var(--na-glass-warm),var(--x-glass);box-shadow:var(--x-inset);
+  border:1px solid rgba(255,186,140,0.22);border-radius:var(--x-r-lg);}
+#nutria .brand{font-family:'Saira',system-ui,sans-serif;font-style:italic;font-size:19px;font-weight:900;letter-spacing:-.02em;white-space:nowrap;}
+#nutria .brand span{background:var(--na-ember);-webkit-background-clip:text;background-clip:text;color:transparent;}
+#nutria .backapp{display:flex;align-items:center;gap:5px;background:var(--x-metal);border:0;
+  border-radius:var(--x-r-pill);padding:8px 13px;font-size:11.5px;font-weight:800;color:var(--x-on-metal);flex:none;
+  box-shadow:0 2px 8px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.7);transition:transform .15s;}
+#nutria .backapp:active{transform:scale(.94);}
+#nutria main{flex:1;padding:14px 14px 104px;}
+#nutria .pane{display:none;}
+#nutria .pane.on{display:block;}
+#nutria .pane.on>*{animation:napop .4s cubic-bezier(.22,1.18,.36,1) backwards;}
+#nutria .pane.on>*:nth-child(1){animation-delay:.02s}#nutria .pane.on>*:nth-child(2){animation-delay:.07s}
+#nutria .pane.on>*:nth-child(3){animation-delay:.12s}#nutria .pane.on>*:nth-child(4){animation-delay:.17s}
+@keyframes napop{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
+
+#nutria .tabs{position:fixed;bottom:0;left:0;right:0;z-index:530;display:flex;justify-content:center;
+  background:linear-gradient(to top,var(--bg) 55%,transparent);padding:8px 14px calc(10px + env(safe-area-inset-bottom));}
+#nutria .tabs-in{display:flex;gap:4px;width:100%;max-width:380px;background:rgba(17,13,11,.93);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(255,186,140,0.18);border-radius:var(--x-r-lg);padding:5px;box-shadow:var(--x-shadow-card);}
+#nutria .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 7px;
+  border-radius:var(--x-r-md);font-size:10px;font-weight:800;color:var(--mut);transition:.22s cubic-bezier(.22,1.2,.36,1);}
+#nutria .tab svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+#nutria .tab.on{box-shadow:inset 0 1px 0 rgba(255,255,255,.12);}
+#nutria .tab[data-p="profil"].on{background:var(--x-acc-15);color:var(--acc);}
+#nutria .tab[data-p="recettes"].on{background:var(--na-heat-14);color:var(--na-heat);}
+#nutria .tab[data-p="journee"].on{background:var(--x-acc2-15);color:var(--acc2);}
+#nutria .tab[data-p="calcul"].on{background:rgba(91,124,255,.16);color:#9BB0FF;}
+
+/* ═══ 2. CARTES · COMMUN ═══ */
+#nutria .card{background:var(--x-glass);box-shadow:var(--x-inset);border:1px solid var(--gb);border-radius:var(--x-r-lg);padding:13px 14px;}
+#nutria .card.hero{background:linear-gradient(168deg,var(--x-acc-08),transparent 45%),var(--na-glass-warm),var(--x-glass);border-color:var(--x-acc-30);padding:19px 17px 17px;}
+#nutria .eyebrow{display:flex;align-items:center;gap:8px;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin:0 0 8px;}
+#nutria .eyebrow::after{content:"";flex:1;height:1px;background:linear-gradient(to right,var(--gb),transparent);}
+#nutria #na-p-profil .eyebrow{color:var(--acc);}
+#nutria #na-p-recettes .eyebrow{color:var(--na-heat);}
+#nutria #na-p-journee .eyebrow{color:var(--acc2);}
+#nutria #na-p-calcul .eyebrow{color:#9BB0FF;}
+#nutria .hint{font-size:12px;color:var(--mut);line-height:1.5;font-weight:500;}
+#nutria .li{padding:5.5px 0;border-bottom:1px dotted var(--gb);font-size:12px;font-weight:600;}
+#nutria .li:last-of-type{border-bottom:0;}
+#nutria .li.dim{color:var(--mut);font-weight:500;font-size:12px;}
+
+/* ═══ 3. PROFIL ═══ */
+#nutria .na-kbig{display:flex;align-items:baseline;gap:9px;margin-top:4px;}
+#nutria .na-kbig b{font-size:52px;font-weight:900;line-height:.95;color:var(--acc);text-shadow:0 0 24px rgba(113,255,180,.3);}
+#nutria .na-kbig span{font-size:11px;font-weight:800;color:var(--mut);letter-spacing:.04em;text-transform:uppercase;}
+#nutria .na-sub{font-size:11.5px;color:var(--mut);line-height:1.6;margin-top:10px;}
+#nutria .na-sub b{color:var(--txt);}
+/* cibles : plus de boxes — 4 données typographiques, la couleur du chiffre porte le code */
+#nutria .tg{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 16px;margin-top:14px;border-top:1px dotted var(--gb);padding-top:13px;}
+#nutria .t{padding:2px 0;}
+#nutria .t b{display:block;font-family:'Saira',system-ui,sans-serif;font-style:italic;font-size:17px;font-weight:800;line-height:1.15;}
+#nutria .t small{display:block;font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);margin-top:1px;}
+#nutria .t.a{color:var(--acc);}
+#nutria .t.b{color:var(--acc2);}
+#nutria .t.c{color:#9BB0FF;}
+#nutria .t.d{color:var(--yellow);}
+#nutria .t.d.over{color:var(--red);}
+/* retirés de la DA (demande Adrien 24/08) : les encarts .note (🧭 supprimé côté JS ;
+   🌸📏🚨🎯 encore générés mais non stylés dans cette DA → masqués). Carte « Ma journée
+   type » supprimée côté JS, sa règle :has() retirée. */
+#nutria .note{display:none;}
+#nutria .split{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+#nutria .sm{padding:2px 0;}
+#nutria .sm+.sm{border-left:1px dotted var(--gb);padding-left:10px;}
+#nutria .sm b{display:block;font-family:'Saira',system-ui,sans-serif;font-style:italic;font-size:16px;font-weight:800;}
+#nutria .sm small{font-size:8.5px;font-weight:700;color:var(--mut);letter-spacing:.04em;text-transform:uppercase;}
+#nutria .acc{border-top:1px solid var(--gb);padding-top:11px;margin-top:11px;}
+#nutria .acc:first-of-type{border:0;padding-top:0;margin-top:0;}
+#nutria .acc h4{font-size:13px;margin-bottom:2px;}
+#nutria .acc p{margin:0;font-size:11.5px;color:var(--mut);line-height:1.5;font-weight:500;}
+
+/* macro-tiles kcal/G/P/L — étiquettes : liseré couleur en tête, chiffre Saira */
+/* macro-strip : 4 chiffres, tick couleur au-dessus — pas de boxes */
+#nutria .macros{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:11px 0 0;border-top:1px dotted var(--gb);padding-top:9px;}
+#nutria .m{padding:2px;text-align:center;position:relative;}
+#nutria .m::before{content:"";display:block;width:16px;height:2.5px;border-radius:2px;margin:0 auto 4px;background:currentColor;opacity:.9;}
+#nutria .m b{display:block;font-family:'Saira',system-ui,sans-serif;font-style:italic;font-size:16px;font-weight:800;}
+#nutria .m small{font-size:8px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--mut);}
+#nutria .m.t.c b{font-size:18px;} /* kcal = jauge maîtresse */
+
+/* ═══ 4. RECETTES · LISTE ═══ */
+#nutria .seg{display:flex;background:var(--x-glass-quiet);border:1px solid var(--gb);border-radius:var(--x-r-md);padding:4px;gap:4px;}
+#nutria .seg button{flex:1;padding:8px 5px;border-radius:var(--x-r-sm);font-size:12px;font-weight:800;color:var(--mut);transition:.2s;}
+#nutria .seg button.on{background:var(--na-heat-14);color:var(--na-heat);box-shadow:inset 0 0 0 1px var(--na-heat-35), inset 0 1px 0 rgba(255,255,255,.1);}
+#nutria .search{display:flex;align-items:center;gap:8px;background:var(--x-glass);border:1px solid var(--gb);
+  border-radius:var(--x-r-md);padding:10px 12px;margin-top:10px;box-shadow:var(--x-inset);}
+#nutria .search svg{width:14px;height:14px;stroke:var(--mut);fill:none;stroke-width:2.4;stroke-linecap:round;flex:none;}
+#nutria .search input{flex:1;border:0;background:transparent;font:inherit;font-size:12.5px;font-weight:600;color:var(--txt);min-width:0;}
+#nutria .search input:focus{outline:none;}
+#nutria .search input::placeholder{color:var(--mut);}
+/* filtres : rail horizontal scrollable, pills à leur largeur naturelle (plus de texte clippé) */
+#nutria .chips{display:flex;flex-wrap:nowrap;gap:6px;margin:10px -14px 0;padding:0 14px;overflow-x:auto;scrollbar-width:none;}
+#nutria .chips::-webkit-scrollbar{display:none;}
+#nutria .chip{flex:none;padding:9px 13px;border-radius:var(--x-r-pill);border:1px solid var(--gb);background:var(--x-glass-quiet);
+  font-size:11px;font-weight:800;color:var(--mut);text-align:center;white-space:nowrap;transition:.18s;}
+#nutria .chip:active{transform:scale(.92);}
+#nutria .chip.on{background:var(--x-acc-15);border-color:var(--x-acc-45);color:var(--acc);}
+#nutria .chip.on[data-f="riz"],#nutria .chip.on[data-f="pates"]{background:var(--na-heat-14);border-color:var(--na-heat-35);color:var(--na-heat);}
+#nutria .chip.on[data-f="leger"]{background:var(--x-acc2-15);border-color:rgba(63,217,255,.4);color:var(--acc2);}
+#nutria .chip.fv{flex:0 0 42px;font-size:15px;line-height:1;color:#FF7A93;padding:8px 0 9px;}
+#nutria .chip.fv.on{background:rgba(255,122,147,.16);border-color:#FF7A93;}
+#nutria .hrt{font-style:normal;color:#FF7A93;font-size:.85em;}
+#nutria .count{font-size:11px;font-weight:800;color:var(--na-heat);margin:14px 0 8px;letter-spacing:.02em;}
+#nutria .list{display:flex;flex-direction:column;gap:9px;}
+
+/* carte recette — l'assiette d'abord, kcal en chiffre fort */
+#nutria .rc{width:100%;text-align:left;background:var(--x-glass);box-shadow:var(--x-inset);border:1px solid var(--gb);border-radius:var(--x-r-lg);
+  padding:10px 12px 10px 10px;display:flex;gap:12px;align-items:center;transition:transform .18s;animation:napop .35s cubic-bezier(.22,1.18,.36,1) backwards;}
+#nutria .rc:active{transform:scale(.97);background:var(--ghov);}
+#nutria .thumb{width:58px;height:58px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:28px;
+  background:var(--na-plate);box-shadow:var(--na-plate-rim), 0 6px 14px rgba(0,0,0,.35);}
+#nutria .thumb.tr{box-shadow:var(--na-plate-rim), 0 0 0 1.5px var(--x-acc-30), 0 6px 14px rgba(0,0,0,.35);}
+#nutria .thumb.tp{box-shadow:var(--na-plate-rim), 0 0 0 1.5px var(--na-heat-35), 0 6px 14px rgba(0,0,0,.35);}
+#nutria .rb{flex:1;min-width:0;}
+#nutria .rtop h3{font-size:13.5px;line-height:1.28;font-weight:800;}
+#nutria .meta{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;}
+#nutria .tag{font-size:9px;font-weight:800;padding:2.5px 7px;border-radius:var(--x-r-pill);background:var(--x-glass-quiet);color:var(--mut);letter-spacing:.03em;}
+#nutria .tag.n{background:rgba(91,124,255,.15);color:#9BB0FF;}
+#nutria .tag.e{background:var(--x-acc-15);color:var(--acc);}
+#nutria .tag.r{background:var(--na-heat-08);color:var(--na-heat);}
+#nutria .tag.p{background:rgba(255,201,77,.13);color:var(--yellow);}
+#nutria .tag.w{background:rgba(255,107,122,.13);color:var(--red);}
+#nutria .tag.inc{background:rgba(255,201,77,.13);color:var(--yellow);border:1px dashed rgba(255,201,77,.5);}
+#nutria .kc{display:block;font-size:11px;font-weight:700;color:var(--mut);margin-top:6px;font-variant-numeric:tabular-nums;}
+#nutria .kc b{color:var(--txt);font-weight:800;font-family:'Saira',system-ui,sans-serif;font-style:italic;font-size:13px;}
+#nutria .kc b.kg{color:var(--acc);}
+#nutria .empty{font-size:12px;font-weight:600;color:var(--mut);text-align:center;padding:30px 12px;line-height:1.6;}
+#nutria .empty .big{font-size:30px;display:block;margin-bottom:6px;}
+
+/* sauces & snacks */
+#nutria .srow{display:flex;gap:11px;align-items:flex-start;padding:10px 0;border-bottom:1px dotted var(--gb);}
+#nutria .srow:last-of-type{border-bottom:0;}
+#nutria .sl{flex:none;min-width:54px;border-radius:var(--x-r-sm);padding:7px 8px;text-align:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.07);}
+#nutria .sl b{display:block;font-family:'Saira',system-ui,sans-serif;font-style:italic;font-size:17px;font-weight:800;line-height:1;}
+#nutria .sl small{font-size:8px;font-weight:700;text-transform:uppercase;opacity:.8;}
+#nutria .sl.ok{background:var(--x-acc-15);color:var(--acc);}
+#nutria .sl.mid{background:rgba(255,201,77,.13);color:var(--yellow);}
+#nutria .sl.hi{background:rgba(255,107,122,.14);color:var(--red);}
+#nutria .sb{flex:1;min-width:0;}
+#nutria .sb b{display:block;font-size:12.5px;line-height:1.3;}
+#nutria .sb b i{font-style:normal;color:var(--yellow);font-size:10px;font-weight:800;}
+#nutria .sb span{display:block;font-size:11px;color:var(--mut);line-height:1.45;margin-top:2px;}
+#nutria .drow{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px dotted var(--gb);font-size:12px;}
+#nutria .drow:last-of-type{border-bottom:0;}
+#nutria .drow b{font-weight:700;flex:none;}
+#nutria .drow span{color:var(--mut);text-align:right;}
+
+/* ═══ 5. FICHE RECETTE · SHEET ═══ */
+#nutria .veil{position:fixed;inset:0;background:rgba(6,4,10,.68);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  opacity:0;pointer-events:none;transition:opacity .3s;z-index:540;}
+#nutria .veil.on{opacity:1;pointer-events:auto;}
+#nutria .sheet{position:fixed;left:0;right:0;bottom:0;z-index:550;max-width:460px;margin:0 auto;
+  background:radial-gradient(120% 30% at 50% 0%,rgba(255,163,110,.09),transparent 70%),var(--na-sheet);
+  border-radius:var(--x-r-xl) var(--x-r-xl) 0 0;max-height:92dvh;overflow-y:auto;overflow-x:hidden;transform:translateY(103%);
+  transition:transform .42s cubic-bezier(.22,1.06,.28,1);border:1px solid rgba(255,186,140,0.2);border-bottom:0;}
+#nutria .sheet.on{transform:none;}
+#nutria .grab{width:40px;height:4px;border-radius:99px;background:rgba(255,255,255,.22);margin:9px auto 0;}
+#nutria .hero{padding:2px 20px 0;text-align:center;position:relative;}
+#nutria .disc{width:104px;height:104px;margin:8px auto 0;border-radius:50%;display:grid;place-items:center;font-size:48px;
+  background:var(--na-plate);box-shadow:var(--na-plate-rim), 0 0 0 1.5px rgba(255,255,255,.1), 0 14px 30px rgba(0,0,0,.45);}
+#nutria .disc.tr{box-shadow:var(--na-plate-rim), 0 0 0 1.5px var(--x-acc-30), 0 14px 30px rgba(0,0,0,.45), 0 0 34px rgba(113,255,180,.14);}
+#nutria .disc.tp{box-shadow:var(--na-plate-rim), 0 0 0 1.5px var(--na-heat-35), 0 14px 30px rgba(0,0,0,.45), 0 0 34px rgba(255,163,110,.16);}
+#nutria .x,#nutria .fav{position:absolute;top:0;width:36px;height:36px;border-radius:50%;background:var(--x-glass-quiet);
+  border:1px solid var(--gb);display:grid;place-items:center;color:var(--mut);z-index:2;}
+#nutria .x{right:16px;font-size:14px;font-weight:800;}
+#nutria .fav{left:16px;font-size:16px;line-height:1;transition:.15s;}
+#nutria .x::after,#nutria .fav::after{content:"";position:absolute;inset:-6px;border-radius:50%;} /* zone tactile ≥44px */
+#nutria .fav.on{background:rgba(255,122,147,.16);border-color:#FF7A93;color:#FF7A93;}
+#nutria .sh{padding:12px 18px 40px;}
+#nutria .sh h2{font-size:19px;line-height:1.25;text-align:center;letter-spacing:-.015em;}
+#nutria .warnbox{background:rgba(255,201,77,.1);border:1px solid rgba(255,201,77,.35);border-radius:var(--x-r-md);
+  padding:11px 13px;font-size:11.8px;line-height:1.5;margin-top:12px;color:var(--txt);}
+#nutria .adj{font-size:10px;font-weight:700;color:var(--mut);text-align:right;margin-top:7px;font-style:italic;}
+
+/* étapes — badges de plaque rc/N1/N2/N3 : la jauge de feu, signature produit */
+#nutria .steps{display:flex;flex-direction:column;gap:9px;}
+#nutria .step{display:flex;gap:11px;align-items:flex-start;}
+#nutria .step p{margin:0;font-size:12px;color:var(--txt);line-height:1.55;font-weight:500;flex:1;padding-top:3px;}
+#nutria .lvl{flex:none;min-width:40px;display:flex;flex-direction:column;align-items:center;gap:3px;border-radius:var(--x-r-sm);padding:5px 6px 5px;
+  font-family:'Saira',system-ui,sans-serif;font-style:italic;font-size:12.5px;font-weight:800;line-height:1.1;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08);}
+#nutria .lvl::after{content:"";width:26px;height:3px;border-radius:2px;
+  background:linear-gradient(to right,currentColor var(--na-fire,0%),rgba(255,255,255,.14) var(--na-fire,0%));}
+#nutria .lvl.n1{background:var(--x-acc2-15);color:var(--acc2);--na-fire:34%;}
+#nutria .lvl.n2{background:rgba(255,201,77,.14);color:var(--yellow);--na-fire:67%;}
+#nutria .lvl.n3{background:rgba(255,107,122,.15);color:var(--red);--na-fire:100%;}
+#nutria .lvl.rc{background:var(--x-acc-15);color:var(--acc);font-size:14px;font-style:normal;--na-fire:0%;}
+#nutria .lvl.z{background:var(--x-glass-quiet);color:var(--mut);}
+#nutria .lvl.z::after{display:none;}
+
+/* ═══ 6. JOURNÉE · SLOTS ═══ */
+#nutria .slot{background:var(--x-glass);box-shadow:var(--x-inset);border:1px solid var(--gb);border-radius:var(--x-r-lg);padding:12px;}
+#nutria .slot+.slot{margin-top:8px;}
+#nutria #na-slot-pdj{background:linear-gradient(168deg,var(--x-acc-08),transparent 52%),var(--x-glass);border-color:var(--x-acc-30);}
+#nutria #na-slot-dej{background:linear-gradient(168deg,var(--na-heat-08),transparent 52%),var(--x-glass);border-color:var(--na-heat-35);}
+#nutria #na-slot-din{background:linear-gradient(168deg,rgba(91,124,255,.1),transparent 52%),var(--x-glass);border-color:rgba(91,124,255,.32);}
+#nutria #na-slot-snacks{background:linear-gradient(168deg,var(--x-acc2-08),transparent 52%),var(--x-glass);border-color:rgba(63,217,255,.3);}
+#nutria #na-slot-pdj .slot-h h4{color:var(--acc);}
+#nutria #na-slot-dej .slot-h h4{color:var(--na-heat);}
+#nutria #na-slot-din .slot-h h4{color:#9BB0FF;}
+#nutria #na-slot-snacks .slot-h h4{color:var(--acc2);}
+#nutria .slot-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px;gap:8px;}
+#nutria .slot-h h4{font-size:12.5px;}
+#nutria .slot-h small{font-size:9.5px;font-weight:700;color:var(--mut);text-align:right;}
+#nutria .slot-add{width:100%;border:1.5px dashed var(--gb);border-radius:var(--x-r-md);padding:12px;color:var(--mut);
+  font-size:11.8px;font-weight:700;transition:.15s;text-align:center;}
+#nutria .slot-add:active{transform:scale(.97);}
+#nutria .slot-add.done{border-style:solid;border-color:var(--x-acc-45);background:var(--x-acc-08);color:var(--acc);}
+#nutria .slot-r{display:flex;gap:10px;align-items:center;}
+#nutria .mini{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-size:21px;flex:none;
+  background:var(--na-plate);box-shadow:var(--na-plate-rim);}
+#nutria .mini.tr{box-shadow:var(--na-plate-rim), 0 0 0 1px var(--x-acc-30);}
+#nutria .mini.tp{box-shadow:var(--na-plate-rim), 0 0 0 1px var(--na-heat-35);}
+#nutria .slot-b{flex:1;min-width:0;}
+#nutria .slot-b b{display:block;font-size:12px;line-height:1.25;}
+#nutria .slot-b span{font-size:10.5px;font-weight:700;color:var(--mut);font-variant-numeric:tabular-nums;}
+#nutria .slot-x{width:30px;height:30px;border-radius:50%;background:var(--x-glass-quiet);color:var(--mut);font-weight:800;font-size:11px;flex:none;position:relative;}
+#nutria .slot-x::after{content:"";position:absolute;inset:-6px;border-radius:50%;} /* tactile ≥42px */
+#nutria .snchips{display:flex;flex-wrap:wrap;gap:6px;}
+#nutria .snchip{padding:9px 11px;border-radius:var(--x-r-pill);border:1px solid var(--gb);background:var(--x-glass-quiet);
+  font-size:10.5px;font-weight:700;color:var(--mut);transition:.15s;}
+#nutria .snchip.on{background:var(--x-acc2-15);border-color:rgba(63,217,255,.45);color:var(--acc2);}
+#nutria .snchip:active{transform:scale(.93);}
+#nutria .snclear{margin-top:2px;font-size:10px;font-weight:700;color:var(--mut);text-decoration:underline;padding:14px 8px 12px;}
+
+/* ═══ 7. BILAN · LE MOMENT WOW ═══ */
+#nutria .bilan{margin-top:12px;background:linear-gradient(168deg,var(--x-acc2-08),transparent 40%),var(--na-glass-warm),var(--x-glass);border-color:rgba(63,217,255,.28);}
+#nutria .jhero{display:flex;gap:12px;align-items:stretch;margin:4px 0 13px;}
+/* la note /10 : une assiette-médaille ronde, chiffre Saira 900 */
+#nutria .jnote{flex:0 0 96px;aspect-ratio:1;align-self:center;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;
+  background:var(--na-plate);}
+#nutria .jnote b{font-family:'Saira',system-ui,sans-serif;font-style:italic;font-size:44px;font-weight:900;line-height:.9;}
+#nutria .jnote small{font-size:11px;font-weight:800;opacity:.8;margin-top:2px;}
+#nutria .jnote.g{color:var(--acc);box-shadow:var(--na-plate-rim), 0 0 0 2px var(--x-acc-45), 0 0 30px rgba(113,255,180,.3);}
+#nutria .jnote.y{color:var(--yellow);box-shadow:var(--na-plate-rim), 0 0 0 2px rgba(255,201,77,.5), 0 0 30px rgba(255,201,77,.22);}
+#nutria .jnote.r{color:var(--red);box-shadow:var(--na-plate-rim), 0 0 0 2px rgba(255,107,122,.5), 0 0 30px rgba(255,107,122,.22);}
+/* kcal = la jauge maîtresse */
+#nutria .jkcal{flex:1;min-width:0;border-radius:var(--x-r-lg);background:var(--x-glass-quiet);padding:12px 14px;display:flex;flex-direction:column;justify-content:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.07);}
+#nutria .jkcal b{font-family:'Saira',system-ui,sans-serif;font-style:italic;font-size:34px;font-weight:900;line-height:1;}
+#nutria .jkcal span{font-size:12px;font-weight:800;color:var(--mut);}
+#nutria .jkcal em{font-style:normal;font-size:9.5px;font-weight:700;color:var(--mut);margin-top:5px;letter-spacing:.03em;text-transform:uppercase;}
+#nutria .jkcal.ok b{color:var(--acc);} #nutria .jkcal.ok{box-shadow:inset 0 1px 0 rgba(255,255,255,.07), inset 0 0 0 1px var(--x-acc-30);}
+#nutria .jkcal.low b{color:var(--yellow);} #nutria .jkcal.low{box-shadow:inset 0 1px 0 rgba(255,255,255,.07), inset 0 0 0 1px rgba(255,201,77,.35);}
+#nutria .jkcal.high b{color:var(--red);} #nutria .jkcal.high{box-shadow:inset 0 1px 0 rgba(255,255,255,.07), inset 0 0 0 1px rgba(255,107,122,.35);}
+#nutria .jmacros{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+#nutria .jmacros:has(> :nth-child(4)){grid-template-columns:repeat(2,1fr);}
+#nutria .jm{border-radius:var(--x-r-md);padding:10px;position:relative;overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.06);}
+#nutria .jm::before{content:"";position:absolute;inset:0 0 auto 0;height:2.5px;background:currentColor;opacity:.85;}
+#nutria .jm b{display:block;font-family:'Saira',system-ui,sans-serif;font-style:italic;font-size:20px;font-weight:800;line-height:1.1;}
+#nutria .jm b i{font-style:italic;font-size:12px;font-weight:800;opacity:.55;}
+#nutria .jm small{display:block;font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;opacity:.8;margin-top:2px;}
+#nutria .jm.ok{background:var(--x-acc-15);color:var(--acc);}
+#nutria .jm.low{background:rgba(255,201,77,.13);color:var(--yellow);}
+#nutria .jm.high{background:rgba(255,107,122,.14);color:var(--red);}
+#nutria .jdebrief{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
+#nutria .jd{display:flex;gap:10px;align-items:flex-start;border-radius:var(--x-r-md);padding:11px 13px;background:var(--x-glass-quiet);}
+#nutria .jd p{margin:0;font-size:12px;font-weight:600;line-height:1.55;color:var(--mut);}
+#nutria .jd .jdi{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;margin-top:1px;}
+#nutria .jd.ok .jdi{background:var(--x-acc-15);color:var(--acc);}
+#nutria .jd.warn .jdi{background:rgba(255,201,77,.15);color:var(--yellow);}
+#nutria .jd.warn{box-shadow:inset 0 0 0 1px rgba(255,201,77,.25);}
+#nutria .pickrow{width:100%;text-align:left;display:flex;gap:10px;align-items:center;padding:9px 4px;border-bottom:1px dotted var(--gb);transition:background .15s;border-radius:var(--x-r-sm);}
+#nutria .pickrow:active{background:var(--ghov);}
+#nutria .pickrow b{display:block;font-size:12px;line-height:1.25;}
+#nutria .pickrow span{display:block;font-size:10.5px;font-weight:700;color:var(--mut);font-variant-numeric:tabular-nums;}
+#nutria .pickrow .mini{display:grid;place-items:center;font-size:21px;line-height:1;color:var(--txt);}
+
+/* ═══ 8. CALCUL ═══ */
+#nutria .cgrp{margin-top:15px;}
+#nutria .cgrp:first-of-type{margin-top:0;}
+#nutria .cgrp h4{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:0 0 7px;}
+#nutria .cgrp h4 b{color:var(--txt);font-family:'Saira',system-ui,sans-serif;font-style:italic;font-size:13px;}
+#nutria .cgrp h4 i{font-style:normal;font-size:9.5px;color:var(--acc);text-transform:none;letter-spacing:0;}
+#nutria .pick{display:flex;flex-wrap:wrap;gap:5px;}
+#nutria .pick button{padding:9px 12px;border-radius:var(--x-r-pill);border:1px solid var(--gb);background:var(--x-glass-quiet);
+  font-size:11px;font-weight:700;color:var(--mut);transition:.18s;}
+#nutria .pick button:active{transform:scale(.92);}
+#nutria .pick button.on{background:rgba(91,124,255,.18);border-color:rgba(91,124,255,.5);color:#B8C6FF;box-shadow:inset 0 1px 0 rgba(255,255,255,.1);}
+#nutria .stepr{display:flex;align-items:center;gap:12px;margin-top:9px;}
+#nutria .stepr button{width:40px;height:40px;border-radius:50%;background:var(--x-metal);color:var(--x-on-metal);
+  font-size:19px;font-weight:800;display:grid;place-items:center;border:0;flex:none;line-height:1;
+  box-shadow:0 2px 8px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.7);transition:transform .15s;}
+#nutria .stepr button:active{transform:scale(.88);}
+#nutria .stepr span{font-family:'Saira',system-ui,sans-serif;font-style:italic;font-size:17px;font-weight:800;min-width:80px;text-align:center;}
+#nutria .verdict{display:flex;gap:11px;align-items:flex-start;border-radius:var(--x-r-md);padding:13px 14px;}
+#nutria .verdict p{margin:0;font-size:12.5px;font-weight:600;line-height:1.55;}
+#nutria .verdict b{font-weight:800;}
+#nutria .verdict .vi{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:800;}
+#nutria .verdict.v-ok{background:var(--x-acc-08);color:var(--acc);box-shadow:inset 0 0 0 1px var(--x-acc-45);}
+#nutria .verdict.v-ok .vi{background:var(--acc);color:var(--x-on-grad);}
+#nutria .verdict.v-low{color:#FFE3A8;
+  background:linear-gradient(#161119,#161119) padding-box,linear-gradient(100deg,rgba(255,201,77,.65),var(--na-heat-35)) border-box;
+  border:1.5px solid transparent;box-shadow:0 8px 24px rgba(255,180,90,.1);}
+#nutria .verdict.v-low .vi{background:var(--yellow);color:#3E2E08;}
+#nutria .verdict.v-high{background:rgba(255,107,122,.1);color:#FFC4BC;box-shadow:inset 0 0 0 1px rgba(255,107,122,.45);}
+#nutria .verdict.v-high .vi{background:var(--red);color:#3D0C12;}
+/* encart suggestion shaker (verdict v-low du bilan) : le CTA règle le déficit → menthe pleine */
+#nutria .verdict .slot-add{border:0;background:var(--x-grad-2);color:var(--x-on-grad);font-weight:800;
+  font-family:'Saira',system-ui,sans-serif;font-style:italic;font-size:13px;letter-spacing:.01em;
+  padding:12px;border-radius:var(--x-r-md);box-shadow:var(--x-glow-cta);}
+#nutria .verdict .slot-add:active{transform:scale(.97);}
+
+/* NB : le bouton d'entrée .nutria-open (modal Paramètres, hors #nutria)
+   reste dans le CSS app existant — non repris ici (scope #nutria strict). */
+
+/* ═══ 9. ADDENDUM 24/08 soir — retours Adrien (post-DA, mêmes tokens, zéro anim infinie) ═══ */
+/* Cartes recettes plus compactes (« comme Melati, plus agréable ») */
+#nutria .list{gap:7px;}
+#nutria .rc{padding:8px 10px;gap:10px;}
+#nutria .thumb{width:46px;height:46px;font-size:23px;}
+#nutria .rtop h3{font-size:12.5px;}
+#nutria .meta{margin-top:3px;gap:3px;}
+#nutria .tag{font-size:8.5px;padding:2px 6px;}
+#nutria .kc{font-size:10.5px;margin-top:4px;}
+#nutria .kc b{font-size:12px;}
+/* Petit-déj composable : lignes élément + mini-stepper */
+#nutria .pdjgrid{margin-top:9px;border-top:1px dotted var(--gb);}
+#nutria .pdjrow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px dotted var(--gb);}
+#nutria .pdjrow:last-child{border-bottom:0;}
+#nutria .pdjrow.off .pdjn{opacity:.45;}
+#nutria .pdjn{flex:1;min-width:0;font-size:11.5px;font-weight:700;}
+#nutria .pdjn small{color:var(--mut);font-weight:700;font-size:9.5px;}
+#nutria .pstep{display:flex;align-items:center;gap:7px;flex:none;}
+#nutria .pstep button{width:30px;height:30px;border-radius:50%;background:var(--x-glass-quiet);border:1px solid var(--gb);
+  color:var(--txt);font-size:15px;font-weight:800;display:grid;place-items:center;position:relative;transition:transform .12s;}
+#nutria .pstep button::after{content:"";position:absolute;inset:-7px;border-radius:50%;} /* tactile ≥44px */
+#nutria .pstep button:active{transform:scale(.88);}
+#nutria .pstep b{min-width:18px;text-align:center;font-size:14px;font-weight:800;}
+/* Fix iOS réel (screenshot 24/08 19h37) : le badge 🍚 rc gonflait sur toute la largeur et
+   poussait le texte de l'étape hors écran — même artefact que le rendu headless du snapshot.
+   Largeur verrouillée + text-size-adjust neutralisé (Safari inflatait le texte du sheet). */
+#nutria{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+#nutria .lvl{max-width:44px;}
+/* Fiche : la sauce / l'assaisonnement séparée des ingrédients principaux, en box compacte */
+#nutria .scebox{margin-top:10px;background:var(--x-glass-quiet);border:1px dashed rgba(255,186,140,0.3);border-radius:var(--x-r-md);padding:9px 11px 7px;}
+#nutria .sce-t{margin:0 0 7px;font-size:9.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--na-heat);}
+#nutria .sci{display:inline-block;font-size:10.5px;font-weight:700;color:var(--txt);background:var(--x-glass);
+  border:1px solid var(--gb);border-radius:var(--x-r-pill);padding:3.5px 9px;margin:0 4px 5px 0;}
+/* Picker : plats conseillés pour finir la journée */
+#nutria .pickrow.sug{background:var(--x-acc-08);box-shadow:inset 0 0 0 1px var(--x-acc-30);border-radius:var(--x-r-md);border-bottom:0;padding:9px 10px;margin-bottom:6px;}
+#nutria .sugwhy{display:block;font-style:normal;font-size:9.5px;font-weight:700;color:var(--acc);margin-top:2px;line-height:1.4;}
+
+@media(prefers-reduced-motion:reduce){#nutria *{animation:none!important;transition-duration:.01s!important;}}
+
+/* ── 29/08 : 🧺 « ce que j'ai sous la main » + variantes en liste (ajout, hors drop-in Claude Design) ── */
+#nutria .pantry-btn{display:flex;align-items:center;gap:8px;width:100%;margin-top:10px;padding:11px 14px;border-radius:var(--x-r-md);border:1px dashed var(--gb);background:var(--x-glass-quiet);font:inherit;font-size:12px;font-weight:800;color:var(--mut);text-align:left;transition:.18s;}
+#nutria .pantry-btn .pb-arr{margin-left:auto;font-size:11px;color:var(--mut);}
+#nutria .pantry-btn.on{border-style:solid;background:var(--x-acc-15);border-color:var(--x-acc-45);color:var(--acc);}
+#nutria .pantry-btn.open{border-bottom-left-radius:6px;border-bottom-right-radius:6px;}
+#nutria .pantry{background:var(--x-glass);box-shadow:var(--x-inset);border:1px solid var(--gb);border-top:0;border-radius:0 0 var(--x-r-md) var(--x-r-md);padding:10px 12px 12px;margin-top:-2px;}
+#nutria .pantry .cgrp{margin-top:10px;}
+#nutria .pantry .pick button.on{background:var(--x-acc-15);border-color:var(--x-acc-45);color:var(--acc);}
+#nutria .pclear{display:block;margin:12px auto 0;background:none;border:0;font:inherit;font-size:11px;font-weight:800;color:var(--mut);text-decoration:underline;}
+#nutria .tag.v{background:var(--x-acc-15);color:var(--acc);}
+#nutria .tag.miss{background:rgba(255,107,122,.13);color:var(--red);}
+
+
+/* ═══ Mode clair — correctifs contraste (07/10/2026) ═══
+   Le dark mode n'est PAS touché : tout est sous prefers-color-scheme: light. */
+@media (prefers-color-scheme: light){
+  /* 2. Correctifs ciblés */
+  /* Le mode Nutrition (« Dark only » à l'origine) suit déjà les tokens globaux qui basculent en light :
+     on bascule aussi ses tokens locaux --na-* et ses quelques fonds codés en dur. */
+  #nutria{
+    --na-heat:#A3470E;                                   /* cuivre assombri — 5.6:1 sur carte claire */
+    --na-heat-08:rgba(196,98,40,0.08);
+    --na-heat-14:rgba(196,98,40,0.13);
+    --na-heat-35:rgba(196,98,40,0.38);
+    --na-ember:linear-gradient(100deg,#C2701A,#C2471C,#B3264A);
+    --na-glass-warm:linear-gradient(165deg,rgba(255,170,120,0.12),rgba(255,255,255,0) 55%);
+    --na-plate:radial-gradient(circle at 34% 28%,#FFFFFF,#F4F5F8 58%,#E9ECF1);
+    --na-plate-rim:inset 0 0 0 1.5px rgba(18,21,28,0.08), inset 0 -6px 12px rgba(18,21,28,0.05);
+    --na-sheet:#FBF9F7;
+  }
+  #nutria a:hover{color:#7A3509;}
+  #nutria .top{border-color:rgba(196,98,40,0.22);}
+  /* barre d'onglets : était une pilule noire rgba(17,13,11,.93) → icônes/labels --mut invisibles */
+  #nutria .tabs-in{background:rgba(255,255,255,0.94);border-color:rgba(196,98,40,0.2);}
+  #nutria .tab.on{box-shadow:inset 0 0 0 1px rgba(18,21,28,0.06);}
+  #nutria .tab[data-p="semaine"].on{background:rgba(18,21,28,0.06);color:var(--txt);}
+  #nutria .tab[data-p="calcul"].on{background:rgba(30,98,200,0.12);}
+  /* sheets (fiche recette, choix d'un plat, Créer mon plat, courses) : fond #14101A → clair */
+  #nutria .veil{background:rgba(18,21,28,0.38);}
+  #nutria .sheet{border-color:rgba(196,98,40,0.18);box-shadow:0 -12px 40px rgba(18,21,28,0.14);
+    background:radial-gradient(120% 30% at 50% 0%,rgba(255,163,110,0.10),transparent 70%),var(--na-sheet);}
+  #nutria .grab{background:rgba(18,21,28,0.18);}
+  #nutria .thumb{box-shadow:var(--na-plate-rim), 0 4px 10px rgba(18,21,28,0.10);}
+  #nutria .thumb.tr{box-shadow:var(--na-plate-rim), 0 0 0 1.5px var(--x-acc-30), 0 4px 10px rgba(18,21,28,0.10);}
+  #nutria .thumb.tp{box-shadow:var(--na-plate-rim), 0 0 0 1.5px var(--na-heat-35), 0 4px 10px rgba(18,21,28,0.10);}
+  #nutria .disc{box-shadow:var(--na-plate-rim), 0 0 0 1.5px rgba(18,21,28,0.06), 0 10px 24px rgba(18,21,28,0.12);}
+  #nutria .disc.tr{box-shadow:var(--na-plate-rim), 0 0 0 1.5px var(--x-acc-30), 0 10px 24px rgba(18,21,28,0.12);}
+  #nutria .disc.tp{box-shadow:var(--na-plate-rim), 0 0 0 1.5px var(--na-heat-35), 0 10px 24px rgba(18,21,28,0.12);}
+  #nutria .lvl::after{background:linear-gradient(to right,currentColor var(--na-fire,0%),rgba(18,21,28,0.12) var(--na-fire,0%));}
+  #nutria .na-kbig b{text-shadow:none;}
+  #nutria .tag.n{background:rgba(30,98,200,0.10);}
+  #nutria .pick button.on{background:rgba(79,65,201,0.10);border-color:rgba(79,65,201,0.45);}
+  #nutria .chip.fv.on,#nutria .fav.on{background:rgba(194,43,64,0.10);border-color:rgba(194,43,64,0.5);}
+  #nutria .chip.on[data-f="leger"]{border-color:var(--x-acc2-45);}
+  #nutria #na-slot-din{background:linear-gradient(168deg,rgba(30,98,200,0.08),transparent 52%),var(--x-glass);border-color:rgba(30,98,200,0.28);}
+  #nutria #na-slot-snacks{border-color:var(--x-acc2-45);}
+  #nutria .bilan{border-color:var(--x-acc2-45);}
+  /* verdicts du Calcul / bilan */
+  #nutria .verdict.v-ok .vi{color:#FFFFFF;}
+  #nutria .verdict.v-low{color:#5C4100;
+    background:linear-gradient(#FFF8E6,#FFF8E6) padding-box,linear-gradient(100deg,rgba(138,97,0,0.55),var(--na-heat-35)) border-box;
+    box-shadow:0 6px 18px rgba(138,97,0,0.08);}
+  #nutria .verdict.v-low .vi{color:#FFF8E6;}
+  #nutria .verdict.v-high{color:#9E1F33;background:rgba(194,43,64,0.07);}
+  #nutria .verdict.v-high .vi{color:#FFFFFF;}
+  #nutria .jm b i{opacity:.8;}
+  #nutria .jm small{opacity:1;}
+  #nutria .pdjrow.off .pdjn{opacity:.6;}
+  /* 3. Couleurs codées en dur pour le dark (#71FFB4, #FFC94D, rgba(255,255,255,.x)…) → équivalents light
+     des tokens (texte : --acc/--red/--yellow… versions sombres ; voiles blancs → voiles graphite). */
+  #nutria a:hover{color:#B34310;}
+  #nutria .tab[data-p="calcul"].on,#nutria #na-p-calcul .eyebrow,#nutria .t.c,#nutria .tag.n,#nutria #na-slot-din .slot-h h4{color:#1E62C8;}
+  #nutria .chip.fv,#nutria .hrt,#nutria .fav.on,#nutria .verdict.v-high{color:#C22B40;}
+  #nutria .pick button.on{color:#4F41C9;}
+}

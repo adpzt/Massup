@@ -2,24 +2,40 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>MASSUP</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0B0D12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MASSUP">
+<link rel="apple-touch-icon" href="/imgs/icon-192.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="nutria.css">
+<link rel="stylesheet" href="nutriplus.css">
+<link rel="stylesheet" href="steps.css">
+<link rel="stylesheet" href="sleep.css">
+<!-- Version ORDINATEUR : appliquée uniquement ≥ 1000 px de large — jamais sur iPhone (desktop.css) -->
+<link rel="stylesheet" href="desktop.css" media="(min-width: 1000px)">
 </head>
-<body>
+<body class="palette-sober">
 <div class="bg-fx"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
 
 <!-- ═══ ÉCRAN DE CONNEXION ═══ -->
 <div id="login-screen" style="display:none">
   <div class="login-card">
-    <div class="logo" style="font-family:'Syne',system-ui,sans-serif;font-size:1.8rem;font-weight:800;letter-spacing:-.02em;margin-bottom:.35rem">MASS<em style="color:var(--acc);font-style:normal">UP</em></div>
-    <p class="login-sub">Connexion par lien magique</p>
+    <div class="logo" style="font-size:1.8rem;margin-bottom:.35rem">MASS<em>UP</em></div>
+    <p class="login-sub">Connexion</p>
     <div id="login-form">
-      <input class="form-input" type="email" id="login-email" placeholder="ton@email.com" onkeydown="loginOnEnter(event)" autocomplete="email" />
-      <button id="login-btn" class="btn-primary" onclick="sendMagicLink()" style="margin-top:.75rem">
-        Envoyer le lien &#x2192;
+      <input class="form-input" type="email" id="login-email" value="poizatadrien25@gmail.com" placeholder="ton@email.com" autocomplete="email" />
+      <input class="form-input" type="password" id="login-password" placeholder="Mot de passe" onkeydown="loginOnEnter(event)" autocomplete="current-password" style="margin-top:.5rem" />
+      <div id="login-err" style="display:none;color:#ff6b6b;font-size:.78rem;margin-top:.5rem"></div>
+      <button id="login-btn" class="btn-primary" onclick="signInPassword()" style="margin-top:.75rem">
+        Se connecter &#x2192;
+      </button>
+      <button onclick="sendMagicLink()" style="margin-top:.6rem;background:none;border:none;color:var(--mut);font-size:.75rem;cursor:pointer;text-decoration:underline">
+        ou recevoir un lien magique par mail
       </button>
     </div>
     <div id="login-sent" style="display:none">
@@ -33,23 +49,31 @@
 
 <div class="app" id="main-app" style="display:none">
   <header>
-    <div class="logo">MASS<em>UP</em></div>
-    <div style="display:flex;align-items:center;gap:.75rem">
+    <div>
+      <div class="logo">MASS<em>UP</em></div>
       <div class="hdate" id="hdate"></div>
-      <button onclick="signOut()" title="D&#xE9;connexion" style="background:none;border:1px solid var(--gb);color:var(--mut);border-radius:8px;padding:.3rem .6rem;font-size:.65rem;cursor:pointer;font-family:'Manrope',system-ui,sans-serif">&#x2192; Exit</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:.4rem">
+      <button class="hdr-nutri" onclick="nutriAOpen()">&#x1F373; Nutrition</button>
     </div>
   </header>
 
+  <!-- ═══ VIEW: ACCUEIL ═══ -->
+  <div class="view" id="view-accueil">
+    <div id="dashContent"></div>
+  </div>
+
   <!-- ═══ VIEW: SÉANCES ═══ -->
-  <div class="view active" id="view-seances">
+  <div class="view" id="view-seances">
+    <div class="gym-greet" id="gymGreet"></div>
     <div class="slbl">Choisir une séance</div>
-    <div class="sgrid" id="sgrid"></div>
+    <div class="sgrid-main" id="sgridMain"></div>
+    <div class="sgrid-mini" id="sgridMini"></div>
     <div id="panels"></div>
   </div>
 
-  <!-- ═══ VIEW: HISTORIQUE ═══ -->
-  <div class="view" id="view-histo">
-    <button class="log-btn-add" onclick="openLogModal()">＋ Enregistrer une séance</button>
+  <!-- ═══ VIEW: PROGRESSION ═══ -->
+  <div class="view" id="view-progression">
     <div class="slbl">Calendrier</div>
     <div class="chart-section" style="margin-bottom:1.5rem;">
       <div class="cal-nav">
@@ -58,60 +82,208 @@
         <button class="cal-nav-btn" onclick="calNext()">›</button>
       </div>
       <div class="cal-grid" id="calGrid"></div>
+      <div class="freq-mini-wrap">
+        <div class="freq-mini-title">Séances / semaine</div>
+        <div class="freq-mini-bars" id="freqMiniBars"></div>
+        <div id="weekStreakInfo" class="freq-streak"></div>
+      </div>
+    </div>
+    <!-- MODE GEL : bloc autonome — vacances / blessure → rank protégé, jours en style glace sur le calendrier.
+         Pas de liste ici : les périodes gelées se voient sur le calendrier, et se dégèlent en touchant un jour ❄. -->
+    <div class="gel-zone" style="margin-bottom:1.5rem;">
+      <div class="gel-title">&#x2744; Mode gel <span class="gel-hint">vacances / blessure &#x2014; d&#xE8;s 2 j gel&#xE9;s&#x202F;: objectif de la semaine plafonn&#xE9; &#xE0; 3 &#xB7; reprise apr&#xE8;s 3 j+ jug&#xE9;e avec indulgence</span></div>
+      <div class="gel-form">
+        <select class="form-input" id="rpType">
+          <option value="vacances">&#x1F3D6; Vacances</option>
+          <option value="blessure">&#x1FA79; Blessure</option>
+        </select>
+        <input class="form-input" type="date" id="rpStart"/>
+        <input class="form-input" type="date" id="rpEnd"/>
+        <button class="gel-add" onclick="addRankPause()" title="Geler la p&#xE9;riode">+</button>
+      </div>
+    </div>
+    <!-- (Mini-courbe RP supprimée le 14/08 — demande Adrien : « elle ne sert à rien ») -->
+    <!-- « Ton niveau » (radar/araignée) mis de côté le 15/08 — se réactive via FEATURE_RADAR (app.js) -->
+    <div class="slbl" id="lblNiveau">Ton niveau</div>
+    <div class="chart-section" id="secNiveau" style="margin-bottom:1.5rem;">
+      <div class="radar-wrap"><canvas id="radarChart"></canvas></div>
+      <div class="radar-note" id="radarNote"></div>
+    </div>
+    <!-- Hypertrophie hebdo : séries dures par muscle, navigable semaine par semaine -->
+    <div class="slbl mv-slbl">Hypertrophie
+      <span class="mv-ranges"><button class="mv-range-btn active" id="mvRangeWeek" onclick="mvSetRange('week')">Semaine</button><button class="mv-range-btn" id="mvRangeMonth" onclick="mvSetRange('month')">30 jours</button></span>
+      <span class="mv-nav" id="mvNav"><button class="mv-nav-btn" onclick="mvNav(-1)">&#x2039;</button><button class="mv-nav-btn" id="mvNavFwd" onclick="mvNav(1)">&#x203A;</button></span>
+    </div>
+    <div class="chart-section" id="muscleVolume" style="margin-bottom:1.5rem;padding:.9rem 1rem;"></div>
+    <div class="slbl">Évolution des poids</div>
+    <div class="chart-section" style="margin-bottom:1.5rem;">
+      <input class="chart-search" id="chartSearch" placeholder="&#x1F50D; Chercher un exercice..." oninput="filterChartSelect(this.value)"/>
+      <select class="chart-select" id="chartSelect" onchange="renderWeightChart()"></select>
+      <div id="weightStats" class="weight-stats-row" style="display:none;"></div>
+      <div class="chart-expand-row"><button class="chart-expand-btn" onclick="openFullscreenChart()" title="Plein écran">&#x26F6; Agrandir</button></div>
+      <div class="chart-wrap"><canvas id="weightChart"></canvas></div>
+      <div id="weightChartEmpty" style="display:none;">
+        <div class="empty-state">
+          <div class="empty-state-ico">&#x1F3CB;</div>
+          <div class="empty-state-title">Aucune donnée</div>
+          <div class="empty-state-sub">Enregistre ton premier poids pour cet exercice dans l'onglet Séances</div>
+        </div>
+      </div>
+      <div id="weightHistory"></div>
+      <div id="weightAlert"></div>
+    </div>
+    <!-- Objectifs de poids mis de côté le 15/08 — se réactivent via FEATURE_GOALS (app.js) -->
+    <div class="slbl" id="lblObjectifs">&#x1F3AF; Objectifs &amp; repères &#x2014; 1er janvier</div>
+    <div id="objectifs" style="margin-bottom:1.5rem;"></div>
+    <div class="slbl slbl-toggle" id="progTableToggle" onclick="toggleProgTable()">Toutes les progressions <span class="toggle-arr">&#x25B8;</span></div>
+    <div class="chart-section expand-anim" id="progTableSection" style="padding:0;overflow:hidden;margin-bottom:1.5rem;">
+      <div id="progTable"></div>
     </div>
     <div class="slbl">Séances passées</div>
-    <div class="log-entries" id="logEntries"></div>
+    <div id="logSummary" class="log-summary" style="margin-bottom:1.5rem;"></div>
+    <div class="slbl">Export données</div>
+    <div class="chart-section" style="margin-bottom:2rem;">
+      <button class="btn-export btn-export-main" onclick="exportCoachCSV()">&#x1F4CB; Tout pour le coach (CSV complet)</button>
+      <div class="export-hint">Toutes tes données à jour : force, séances, composition, nutrition — en un seul fichier.</div>
+      <div class="export-row" style="margin-top:.75rem;">
+        <button class="btn-export" onclick="exportSeancesCSV()">&#x1F4C4; Séances</button>
+        <button class="btn-export" onclick="exportPoidsCSV()">&#x1F4CA; Poids + repères</button>
+      </div>
+      <div class="export-row" style="margin-top:.75rem;">
+        <button class="btn-export" onclick="exportBackupJSON()">&#x1F4E6; Backup JSON</button>
+        <button class="btn-export" onclick="importBackupJSON()">&#x1F4E5; Restaurer un backup</button>
+      </div>
+    </div>
+    <button class="prog-profile-btn" onclick="openSettings()">&#x2699;&#xFE0F; Profil &amp; objectif de la semaine</button>
   </div>
 
-  <!-- ═══ VIEW: GRAPHIQUES ═══ -->
-  <div class="view" id="view-charts">
-    <div class="slbl">Mes stats</div>
-    <div class="stats-grid" id="statsGrid"></div>
-    <div class="slbl">Évolution des poids</div>
-    <div class="chart-section">
-      <select class="chart-select" id="chartSelect" onchange="renderWeightChart()"></select>
-      <div class="chart-wrap"><canvas id="weightChart"></canvas></div>
-    </div>
-    <div class="slbl">Fréquence d'entraînement</div>
-    <div class="chart-section">
-      <div class="chart-sub">Séances par semaine (8 dernières semaines)</div>
-      <div class="chart-wrap"><canvas id="freqChart"></canvas></div>
-    </div>
-    <div class="slbl">Alertes progression</div>
-    <div class="prog-list" id="progList"></div>
+  <!-- ═══ VIEW: NUTRITION ═══ -->
+  <div class="view" id="view-nutrition">
+    <div id="nutritionContent"></div>
   </div>
 
-  <!-- EXTRAS VIEW -->
-  <div class="view" id="view-extras">
-    <div class="slbl">Exercices bonus</div>
-    <p style="font-size:.78rem;color:var(--mut);margin-bottom:1.5rem;line-height:1.6;">En <strong style="color:var(--txt)">complement</strong> de tes seances &mdash; selon ton energie et le temps dispo.</p>
-    <div class="exlist" id="extras-list"></div>
+  <!-- ═══ VIEW: BILAN ═══ -->
+  <div class="view active" id="view-sante">
+    <!-- Bilan de la semaine : widget d'appel (lundi, tant que non déclaré) (JS) -->
+    <div id="weeklyRecapWidget"></div>
+    <!-- Carte profil (JS) -->
+    <div id="bilanProfile"></div>
+    <!-- Cette semaine : compteurs quotidiens petit-déj / shaker (JS) — confirmés au bilan du lundi -->
+    <div id="bilanWeekNut"></div>
+    <!-- Notes /20 des semaines et des mois (15/08 — remplace l'affichage rank des bilans) (JS) -->
+    <div id="bilanNotes"></div>
+    <!-- RANK APEX : saison en cours + groupes + historique (JS) -->
+    <div id="bilanRank"></div>
+    <!-- Hero pesée (JS) -->
+    <div id="bilanHero"></div>
+    <!-- Stats dérivées du poids : Δ7j / Δ30j / rythme / repère (JS) -->
+    <div class="bw-stats-row" id="bwStatsRow"></div>
+    <!-- Évolution -->
+    <div class="slbl" style="margin-bottom:.5rem;">Évolution du poids</div>
+    <div class="chart-section" style="margin-bottom:1.5rem;">
+      <div class="chart-wrap"><canvas id="santeChart"></canvas></div>
+    </div>
+    <!-- Historique pesées (bulle dépliable) -->
+    <div class="bubble-toggle" id="santeHistoToggle" onclick="toggleSanteHisto()"><span>&#x1F4CB; Historique pesées</span><span class="toggle-arr">&#x25B8;</span></div>
+    <div id="santeHistoSection" class="expand-anim" style="margin-bottom:2rem;">
+      <div class="chart-section" id="santeHisto" style="padding:.25rem 0;"></div>
+    </div>
+    <!-- NOUS DEUX 💞 (26/08) : progression de Melati en lecture seule + petit mot (partner.js) -->
+    <div id="bilanPartner" style="margin-bottom:2rem;"></div>
+  </div>
+
+
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <div class="modal-title">Profil <button class="modal-close" onclick="closeSettings()">✕</button></div>
+    <div class="form-row">
+      <label class="form-lbl">Prénom</label>
+      <input class="form-input" type="text" id="settingsName" placeholder="Ton prénom"/>
+    </div>
+    <div class="form-row">
+      <label class="form-lbl">Taille (cm)</label>
+      <input class="form-input" type="number" id="settingsHeight" placeholder="172" min="100" max="250"/>
+    </div>
+    <div class="form-row">
+      <label class="form-lbl">Âge</label>
+      <input class="form-input" type="number" id="settingsAge" placeholder="21" min="10" max="99"/>
+    </div>
+    <div class="form-row">
+      <label class="form-lbl">Objectif</label>
+      <select class="form-input" id="settingsGoal">
+        <option value="masse">Prise de masse</option>
+        <option value="force">Force</option>
+        <option value="seche">Sèche</option>
+        <option value="maintien">Maintien</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label class="form-lbl">Séances / semaine (objectif)</label>
+      <select class="form-input" id="settingsWeekGoal">
+        <option value="2">2 / semaine</option>
+        <option value="3">3 / semaine (période récup / blessure)</option>
+        <option value="4">4 / semaine</option>
+        <option value="5">5 / semaine</option>
+      </select>
+    </div>
+    <div class="form-row" style="margin-top:1.1rem;padding-top:1rem;border-top:1px solid var(--gb);">
+      <label class="form-lbl">Rappels et notifications</label>
+      <div id="reminderSettings"></div>
+    </div>
+    <button class="btn-primary" onclick="saveSettings()">Sauvegarder &#x2713;</button>
+    <!-- (27/08) Compte : le compte a été créé par lien magique → jamais eu de mot de passe.
+         Ici on le pose/change depuis une session ouverte (updateUser), sans passer par Supabase. -->
+    <div class="form-row" style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--gb);">
+      <label class="form-lbl">Compte <span id="acctEmail" style="color:var(--mut);font-weight:600;"></span></label>
+      <input class="form-input" type="password" id="acctPw" placeholder="Nouveau mot de passe (6 caractères min.)" autocomplete="new-password"/>
+      <div id="acctMsg" style="display:none;font-size:.74rem;margin-top:.45rem;"></div>
+      <div style="display:flex;gap:.5rem;margin-top:.6rem;">
+        <button class="btn-primary" style="flex:1;margin:0;" onclick="setAccountPassword()">Définir mon mot de passe</button>
+        <button onclick="signOut()" style="background:none;border:1px solid var(--gb);color:var(--mut);border-radius:12px;padding:0 .9rem;font-size:.74rem;cursor:pointer;">Se déconnecter</button>
+      </div>
+    </div>
   </div>
 </div>
 
 <!-- BOTTOM NAV -->
 <nav class="bnav" id="main-nav" style="display:none">
-  <button class="bni active" onclick="switchView('seances',this)"><span class="bni-ico">🏋️</span><span class="bni-lbl">Séances</span></button>
-  <button class="bni" onclick="switchView('histo',this)"><span class="bni-ico">📅</span><span class="bni-lbl">Historique</span></button>
-  <button class="bni" onclick="switchView('charts',this)"><span class="bni-ico">📊</span><span class="bni-lbl">Progrès</span></button>
-  <button class="bni" onclick="switchView('extras',this)"><span class="bni-ico">⚡</span><span class="bni-lbl">Bonus</span></button>
+  <button class="bni active" onclick="switchView('sante',this)"><span class="bni-ico">&#x1FAC0;</span><span class="bni-lbl">Bilan</span></button>
+  <button class="bni" onclick="switchView('seances',this)"><span class="bni-ico">&#x1F3CB;</span><span class="bni-lbl">Séances</span></button>
+  <button class="bni" onclick="switchView('progression',this)"><span class="bni-ico">&#x1F4CA;</span><span class="bni-lbl">Progression</span></button>
+  <!-- Nutrition mise de côté (juil. 2026) — vue + code conservés, réactivable en remettant ce bouton :
+  <button class="bni" onclick="switchView('nutrition',this)"><span class="bni-ico">&#x1F957;</span><span class="bni-lbl">Nutrition</span></button> -->
 </nav>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js');});
+}
+</script>
 
 <!-- LOG MODAL -->
 <div class="modal-overlay" id="logModal">
   <div class="modal">
     <div class="modal-title">Nouvelle séance <button class="modal-close" onclick="closeLogModal()">✕</button></div>
     <div class="form-row">
-      <label class="form-lbl">Date</label>
-      <input class="form-input" type="date" id="logDate"/>
+      <div class="datetime-grid">
+        <div class="dt-field">
+          <label class="form-lbl">Date</label>
+          <input class="form-input dt-input" type="date" id="logDate"/>
+        </div>
+        <div class="dt-field">
+          <label class="form-lbl">Heure</label>
+          <input class="form-input dt-input" type="time" id="logTime"/>
+        </div>
+      </div>
     </div>
     <div class="form-row">
-      <label class="form-lbl">Heure</label>
-      <input class="form-input" type="time" id="logTime"/>
-    </div>
-    <div class="form-row">
-      <label class="form-lbl">Séance(s) effectuée(s)</label>
+      <label class="form-lbl">Qu'as-tu fait&#x202F;?</label>
+      <div class="form-hint">Touche une séance pour la valider en entier. Ouvre <span class="form-hint-chev">Exercices</span> pour cocher seulement les exos que tu as faits.</div>
+      <div id="templateChips" class="template-chips" style="display:none;"></div>
       <div class="seance-checkboxes" id="seanceCheckboxes"></div>
+      <button class="tpl-save-btn" style="margin-top:.5rem;" onclick="saveCurrentAsTemplate()">☆ Enregistrer ce combo</button>
     </div>
     <div class="form-row">
       <label class="form-lbl" style="display:flex;align-items:center;gap:.5rem;cursor:pointer;">
@@ -120,25 +292,184 @@
       </label>
       <input class="form-input" type="text" id="autreSport" placeholder="Ex: Boxe, Escalade, Course à pied..." style="display:none;margin-top:.5rem;" />
     </div>
-    <div class="form-row">
-      <label class="form-lbl">Commentaire (optionnel)</label>
-      <textarea class="form-input" id="logComment" rows="3" placeholder="Comment tu t'es senti, ce qui a bien marché..."></textarea>
+    <button class="details-toggle" id="logDetailsToggle" onclick="toggleLogDetails()">Détails <span class="darr">&#x25BE;</span></button>
+    <div id="logDetailsSection" style="display:none;">
+      <div class="form-row">
+        <label class="form-lbl">&#x26A1; Énergie avant la séance</label>
+        <div class="rating-scale-hint"><span>À plat</span><span>En feu</span></div>
+        <div class="rating-row" id="energyRating">
+          <button class="rating-btn" data-val="1" onclick="setRating('energy',1)">1</button>
+          <button class="rating-btn" data-val="2" onclick="setRating('energy',2)">2</button>
+          <button class="rating-btn" data-val="3" onclick="setRating('energy',3)">3</button>
+          <button class="rating-btn" data-val="4" onclick="setRating('energy',4)">4</button>
+          <button class="rating-btn" data-val="5" onclick="setRating('energy',5)">5</button>
+          <span class="rating-lbl" id="energyLbl"></span>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-lbl">&#x2B50; Ressenti de la séance</label>
+        <div class="rating-scale-hint"><span>Très dur</span><span>Parfaite</span></div>
+        <div class="rating-row" id="feelingRating">
+          <button class="rating-btn" data-val="1" onclick="setRating('feeling',1)">1</button>
+          <button class="rating-btn" data-val="2" onclick="setRating('feeling',2)">2</button>
+          <button class="rating-btn" data-val="3" onclick="setRating('feeling',3)">3</button>
+          <button class="rating-btn" data-val="4" onclick="setRating('feeling',4)">4</button>
+          <button class="rating-btn" data-val="5" onclick="setRating('feeling',5)">5</button>
+          <span class="rating-lbl" id="feelingLbl"></span>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-lbl">&#x23F1; Durée (optionnel)</label>
+        <div class="duration-row">
+          <input class="form-input" type="number" id="logDuration" placeholder="45" min="1" max="300" style="width:90px;flex-shrink:0;"/>
+          <span class="duration-unit">min</span>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-lbl">Commentaire (optionnel)</label>
+        <textarea class="form-input" id="logComment" rows="3" placeholder="Comment tu t'es senti, ce qui a bien marché..."></textarea>
+      </div>
     </div>
     <button class="btn-primary" onclick="saveLog()">Enregistrer ✓</button>
   </div>
 </div>
 
-<!-- DAY DETAIL MODAL -->
-<div class="modal-overlay" id="dayModal">
-  <div class="modal">
-    <div class="modal-title" id="dayModalTitle">Séances du jour <button class="modal-close" onclick="closeDayModal()">✕</button></div>
+<!-- DAY DETAIL MODAL — overlay centré, carte aérée -->
+<div class="modal-overlay modal-center" id="dayModal">
+  <div class="modal day-modal">
+    <div class="dm-header" id="dayModalTitle"></div>
     <div id="dayModalContent"></div>
   </div>
 </div>
 
+<!-- PESÉE MODAL (saisie manuelle simple) -->
+<div class="modal-overlay" id="peseeModal">
+  <div class="modal">
+    <div class="modal-title">Nouvelle pesée <button class="modal-close" onclick="closePeseeModal()">&#x2715;</button></div>
+    <div class="form-row">
+      <label class="form-lbl">Date</label>
+      <input class="form-input" type="date" id="peseeDate"/>
+    </div>
+    <div class="form-row">
+      <label class="form-lbl">Poids (kg)</label>
+      <div style="display:flex;align-items:center;gap:.6rem;">
+        <button class="wbtn minus" style="width:52px;height:52px;" onclick="peseeAdjust(-0.1)">&#x2212;</button>
+        <input class="form-input" type="number" id="peseeWeight" inputmode="decimal" step="0.1" min="30" max="200" style="text-align:center;font-size:1.35rem;font-weight:800;font-family:'Saira',system-ui,sans-serif;font-style:italic;"/>
+        <button class="wbtn plus" style="width:52px;height:52px;" onclick="peseeAdjust(0.1)">+</button>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="savePesee()" style="margin-top:.5rem;">Enregistrer &#x2713;</button>
+  </div>
+</div>
+
+<!-- FULLSCREEN CHART -->
+<div class="fs-overlay" id="fsOverlay">
+  <div class="fs-header">
+    <div class="fs-title" id="fsTitle">Évolution</div>
+    <button class="fs-close" onclick="closeFullscreenChart()">&#x2715;</button>
+  </div>
+  <div class="fs-chart-wrap"><canvas id="fsChart"></canvas></div>
+</div>
+
+<!-- MODE SÉANCE ACTIVE -->
+<button class="as-bubble" id="asBubble" style="display:none" onclick="asShowOverlay()"></button>
+<div class="as-overlay" id="asOverlay">
+  <div class="as-frame" aria-hidden="true"></div>
+  <div class="as-body" id="asBody"></div>
+</div>
+
+<!-- ÉDITEUR DE SÉANCE (plein écran, création + modification) -->
+<div class="as-overlay" id="edOverlay">
+  <div class="as-frame ed-frame" aria-hidden="true"></div>
+  <div class="as-body" id="edBody"></div>
+</div>
+
+<!-- ESPACE DÉTENTE 🧘 (posture quotidienne + étirements sur mesure) -->
+<div class="as-overlay" id="dzOverlay">
+  <div class="as-frame ed-frame" aria-hidden="true"></div>
+  <div class="as-body" id="dzBody"></div>
+</div>
+
+<!-- BILAN DE LA SEMAINE (plein écran, slides animées — cadre lumineux comme le LiveUp) -->
+<div class="as-overlay" id="wrOverlay">
+  <div class="as-frame" aria-hidden="true"></div>
+  <div class="as-body" id="wrBody"></div>
+</div>
+
+<!-- RÉCAP DE SAISON (popup) -->
+<div class="modal-overlay" id="seasonModal">
+  <div class="modal" id="seasonModalBody"></div>
+</div>
+
+<!-- 💌 PETIT MOT de Melati — animation plein écran juste avant le GO (partner.js) -->
+<div class="lm-overlay" id="lmOverlay"></div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
+<!-- ═══ MODE NUTRITION ADRIEN (overlay plein écran — prise de masse, ouvert depuis Paramètres) ═══ -->
+<div id="nutria">
+  <div class="shell">
+    <header class="top">
+      <div class="brand">🍳 NUTRITI<span>ON</span></div>
+      <button class="backapp" onclick="nutriAClose()">🏋️ Sport</button>
+    </header>
+    <main>
+      <section class="pane on" id="na-p-profil"></section>
+      <section class="pane" id="na-p-recettes">
+        <div class="seg">
+          <button class="on" data-fam="plats">Plats</button>
+          <button data-fam="sauces">Sauces</button>
+          <button data-fam="snacks">Snacks</button>
+        </div>
+        <div id="na-plats">
+          <div class="search">
+            <svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m19.5 19.5-4.4-4.4"/></svg>
+            <input id="na-q" type="search" placeholder="Chercher un plat…" autocomplete="off">
+          </div>
+          <div class="chips" id="na-filters">
+            <button class="chip" data-f="express">Express</button>
+            <button class="chip" data-f="prot">💪 Protéiné</button>
+            <button class="chip fv" data-f="favs" aria-label="Favoris">♥</button>
+          </div>
+          <button class="pantry-btn" id="na-have" type="button">🧺 Ce que j’ai sous la main<span class="pb-arr">▾</span></button>
+          <div class="pantry" id="na-pantry" style="display:none"></div>
+          <p class="count" id="na-count"></p>
+          <div class="list" id="na-list"></div>
+        </div>
+        <div id="na-sauces" style="display:none;margin-top:12px"></div>
+        <div id="na-snacks" style="display:none;margin-top:12px"></div>
+      </section>
+      <section class="pane" id="na-p-journee">
+        <div class="slot" id="na-slot-pdj"></div>
+        <div class="slot" id="na-slot-dej"></div>
+        <div class="slot" id="na-slot-din"></div>
+        <div class="slot" id="na-slot-snacks"></div>
+        <div class="slot" id="na-slot-resto"></div>
+        <div class="slot" id="na-slot-shaker"></div>
+        <div class="card bilan" id="na-bilan"></div>
+      </section>
+      <section class="pane" id="na-p-calcul"></section>
+    </main>
+    <nav class="tabs"><div class="tabs-in">
+      <button class="tab on" data-p="profil"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20c0-3.7 3.2-6.2 7.2-6.2s7.2 2.5 7.2 6.2"/></svg>Profil</button>
+      <button class="tab" data-p="recettes"><svg viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H17a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2-2z"/><path d="M9 9h6M9 13h4"/></svg>Recettes</button>
+      <button class="tab" data-p="journee"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="16" rx="3.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Journée</button>
+      <button class="tab" data-p="calcul"><svg viewBox="0 0 24 24"><rect x="4.5" y="3" width="15" height="18" rx="4"/><path d="M8.5 8h7M8.5 12.5h2m3.5 0h1.5M8.5 16.5h2m3.5 0h1.5"/></svg>Calcul</button>
+    </div></nav>
+  </div>
+  <div class="veil" id="na-veil"></div>
+  <div class="sheet" id="na-sheet"><div class="grab"></div><div id="na-sh"></div></div>
+  <div class="sheet" id="na-pick"><div class="grab"></div><div id="na-pk" style="padding:14px 20px 40px"></div></div>
+</div>
+
+<script src="partner.js"></script>
 <script src="supabase.js"></script>
+<script src="push_timer.js"></script>
+<script src="steps.js"></script>
+<script src="sleep.js"></script>
 <script src="app.js"></script>
+<script src="nutria_data.js"></script>
+<script src="nutria.js"></script>
+<script src="nutriplus.js"></script>
 </body>
 </html>

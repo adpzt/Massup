@@ -1,0 +1,15 @@
+{
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node dev/check.js",
+    "vercel-build": "echo 'Site statique : aucune etape de build sur Vercel (controles en local : npm run build)'",
+    "test": "node --test tests/*.test.js",
+    "ui": "node dev/ui/verif_ui.js"
+  },
+  "dependencies": {
+    "web-push": "^3.6.7"
+  }
+}

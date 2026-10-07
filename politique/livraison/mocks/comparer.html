@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mock — Comparer</title><link rel="stylesheet" href="mock.css"></head>
+<body>
+<div class="page-h"><div class="k">⑨ Mock · Comparer — direction A</div><h1>Duel, idées communes, questions groupées par zones</h1></div>
+<div class="frames">
+<div><p class="frame-lbl">Desktop 1280 · clair</p><div class="frame w1280" data-theme="light" id="f1"></div></div>
+<div><p class="frame-lbl">Desktop 1280 · sombre</p><div class="frame w1280" data-theme="dark" id="f2"></div></div>
+<div><p class="frame-lbl">Mobile 390 · clair</p><div class="frame w390" data-theme="light" id="f3"></div></div>
+<div><p class="frame-lbl">Mobile 390 · sombre</p><div class="frame w390" data-theme="dark" id="f4"></div></div>
+</div>
+
+<template id="tpl-desktop">
+<div class="flag"></div>
+<div class="hd">
+  <div class="brand"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect x="3" y="12" width="20" height="10" rx="2" stroke="var(--pol-blue)" stroke-width="2"></rect><rect x="10" y="10" width="6" height="2" fill="var(--pol-blue)"></rect><path d="M13 3v6" stroke="var(--pol-blue)" stroke-width="2" stroke-linecap="round"></path><path d="M9.5 6 13 9.5 16.5 6" stroke="var(--pol-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"></path></svg>
+  <div><div class="brand-name">Quiz <em>Politique</em> 2027</div><div class="brand-sub">Présidentielle · 18 avril 2027</div></div></div>
+  <nav class="topnav"><span>Accueil</span><span>Le quiz</span><span>Mes résultats</span><span>Candidats</span><span class="on">Comparer</span><span>Méthodologie</span><span>Profil</span></nav>
+  <span class="icobtn"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="4" stroke="currentColor" stroke-width="1.75" fill="none"></circle><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6 13 13M13 3l-1.4 1.4M4.4 11.6 3 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg></span>
+</div>
+<div class="wrap" style="padding-top:48px">
+  <span class="ov dim">Comparateur</span>
+  <h1 class="h-display" style="font-size:38px;margin:12px 0 8px">Comparer deux candidats</h1>
+  <p class="body-t" style="max-width:640px;margin:0">Leur taux d'idées communes thème par thème, puis les 108 questions classées des plus grands accords aux plus grands désaccords — avec ta réponse en regard.</p>
+</div>
+<div class="wrap" style="padding-top:40px;display:grid;grid-template-columns:1fr auto 1fr;gap:24px;align-items:stretch;max-width:900px">
+  <div class="card" style="text-align:center;padding:20px">
+    <span class="avatar" style="width:56px;height:56px;margin:0 auto;font-size:16px">MLP</span>
+    <div style="font-size:15px;font-weight:800;margin-top:10px">Marine Le Pen</div>
+    <div class="cap" style="font-size:12px;margin-top:2px">Rassemblement national (RN)</div>
+    <div style="display:flex;justify-content:center;gap:6px;margin-top:10px"><span class="badge" style="background:var(--pol-ok-soft);color:var(--pol-ok)">Déclarée · 7 juil. 2026</span><span class="badge" style="background:var(--pol-bg-2);color:var(--pol-txt-2)">~35 %</span></div>
+  </div>
+  <div style="display:flex;flex-direction:column;justify-content:center;text-align:center;gap:4px">
+    <span class="data-xl" style="font-size:52px">58&nbsp;%</span>
+    <span class="cap">d'idées communes<br>30 accords · 21 désaccords</span>
+  </div>
+  <div class="card" style="text-align:center;padding:20px">
+    <span class="avatar" style="width:56px;height:56px;margin:0 auto;font-size:16px">RG</span>
+    <div style="font-size:15px;font-weight:800;margin-top:10px">Raphaël Glucksmann</div>
+    <div class="cap" style="font-size:12px;margin-top:2px">Place publique</div>
+    <div style="display:flex;justify-content:center;gap:6px;margin-top:10px"><span class="badge" style="background:var(--pol-pink-soft);color:var(--pol-pink)">Primaire PS/PP · oct.</span><span class="badge" style="background:var(--pol-bg-2);color:var(--pol-txt-2)">~11,5 %</span></div>
+  </div>
+</div>
+<div class="wrap" style="padding-top:16px;text-align:center">
+  <p class="body-t" style="font-size:14px;margin:0">Tes idées sont plus proches de <strong>Glucksmann</strong> (73&nbsp;% contre 63&nbsp;%).</p>
+</div>
+<div class="wrap" style="padding-top:48px;padding-bottom:72px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);gap:0 64px;align-items:start">
+  <div>
+    <h2 class="h-sec">Question par question</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:32px">
+      <span class="chip on">Toutes · 108</span><span class="chip">Économie</span><span class="chip">Social &amp; Santé</span><span class="chip">Immigration</span><span class="chip">Sécurité</span><span class="chip">Environnement</span><span class="chip">Europe</span>
+    </div>
+    <div class="ov" style="color:var(--pol-ok);margin-bottom:4px">Accords · 30 questions</div>
+    <div style="padding:20px 0;border-bottom:1px solid var(--pol-line)">
+      <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start">
+        <div><div class="cap" style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em">Économie · Q4</div>
+        <div style="font-size:15.5px;font-weight:700;line-height:1.4;margin-top:4px">Privatisations&nbsp;: l'État doit-il céder ses entreprises publiques&nbsp;?</div></div>
+        <span class="tag ok">Accord</span>
+      </div>
+      <p class="body-t" style="font-size:14px;margin:10px 0 0"><strong>Même position&nbsp;:</strong> renforcer les services publics, stopper toute nouvelle privatisation.</p>
+      <div style="margin-top:10px;font-size:13px;color:var(--pol-txt-2);background:var(--pol-surface-2);border:1px dashed var(--pol-line-2);border-radius:8px;padding:8px 12px"><strong style="color:var(--pol-txt)">Toi&nbsp;:</strong> même option — ex æquo entre les deux.</div>
+    </div>
+    <div style="padding:20px 0;border-bottom:1px solid var(--pol-line)">
+      <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start">
+        <div><div class="cap" style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em">Institutions · Q72</div>
+        <div style="font-size:15.5px;font-weight:700;line-height:1.4;margin-top:4px">Sénat&nbsp;: utile ou chambre des notables à supprimer&nbsp;?</div></div>
+        <span class="tag ok">Accord</span>
+      </div>
+      <p class="body-t" style="font-size:14px;margin:10px 0 0"><strong>Même position&nbsp;:</strong> le réformer pour le rendre plus représentatif des citoyens.</p>
+      <div style="margin-top:10px;font-size:13px;color:var(--pol-txt-2);background:var(--pol-surface-2);border:1px dashed var(--pol-line-2);border-radius:8px;padding:8px 12px"><strong style="color:var(--pol-txt)">Toi&nbsp;:</strong> le maintenir tel quel — plus proche d'aucun des deux.</div>
+    </div>
+    <div class="ov" style="color:var(--pol-red);margin:32px 0 4px">Désaccords · 21 questions</div>
+    <div style="padding:20px 0;border-bottom:1px solid var(--pol-line)">
+      <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start">
+        <div><div class="cap" style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em">Immigration · Q32</div>
+        <div style="font-size:15.5px;font-weight:700;line-height:1.4;margin-top:4px">Voile islamique dans l'espace public&nbsp;: faut-il légiférer&nbsp;?</div></div>
+        <span class="tag desac">Désaccord</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:12px">
+        <div style="border-left:2px solid var(--pol-pos-dr);padding-left:12px"><div class="cap" style="font-size:11px;font-weight:800;margin-bottom:2px">Le Pen</div><p class="body-t" style="font-size:13.5px;margin:0;line-height:1.55">Interdire par amende le port du voile dans l'espace public, par référendum.</p></div>
+        <div style="border-left:2px solid var(--pol-pos-cg);padding-left:12px"><div class="cap" style="font-size:11px;font-weight:800;margin-bottom:2px">Glucksmann</div><p class="body-t" style="font-size:13.5px;margin:0;line-height:1.55">Aucune loi nouvelle&nbsp;: la laïcité actuelle suffit, refus de stigmatiser.</p></div>
+      </div>
+      <div style="margin-top:12px;font-size:13px;color:var(--pol-txt-2);background:var(--pol-surface-2);border:1px dashed var(--pol-line-2);border-radius:8px;padding:8px 12px"><strong style="color:var(--pol-txt)">Toi&nbsp;:</strong> aucune loi nouvelle — plus proche de <strong>Glucksmann</strong>.</div>
+    </div>
+    <div style="margin-top:24px;text-align:center"><span class="btn sec sm" style="min-width:240px">Voir 20 questions de plus</span></div>
+  </div>
+  <div>
+    <h2 class="h-sec">Idées communes par thème</h2>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:13.5px;font-weight:700">Institutions &amp; Démocratie</span><span style="font-size:13px;font-weight:800">74&nbsp;%</span></div><div class="prog-track"><div class="prog-fill" style="width:74%"></div></div></div>
+      <div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:13.5px;font-weight:700">Éducation &amp; Culture</span><span style="font-size:13px;font-weight:800">70&nbsp;%</span></div><div class="prog-track"><div class="prog-fill" style="width:70%"></div></div></div>
+      <div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:13.5px;font-weight:700">Économie</span><span style="font-size:13px;font-weight:800">69&nbsp;%</span></div><div class="prog-track"><div class="prog-fill" style="width:69%"></div></div></div>
+      <div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:13.5px;font-weight:700">Sécurité &amp; Justice</span><span style="font-size:13px;font-weight:800">47&nbsp;%</span></div><div class="prog-track"><div class="prog-fill" style="width:47%"></div></div></div>
+      <div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:13.5px;font-weight:700">Immigration</span><span style="font-size:13px;font-weight:800">38&nbsp;%</span></div><div class="prog-track"><div class="prog-fill" style="width:38%"></div></div></div>
+    </div>
+    <h2 class="h-sec" style="margin-top:48px">Leurs dernières sorties</h2>
+    <div style="position:relative;padding-left:20px">
+      <span style="position:absolute;left:3.5px;top:8px;bottom:8px;width:1px;background:var(--pol-line)"></span>
+      <div style="position:relative;padding-bottom:18px">
+        <span class="dot" style="position:absolute;left:-20px;top:6px;background:var(--pol-pos-dr)"></span>
+        <div class="cap" style="margin-bottom:3px">31 août · Le Pen · <span class="tag proche" style="font-size:10.5px;padding:2px 6px">Proche</span></div>
+        <p class="body-t" style="font-size:13.5px;margin:0;line-height:1.6">Assume la proposition d'amende pour port du voile, soumise par référendum… <span class="link" style="border:none">Lire →</span></p>
+      </div>
+      <div style="position:relative">
+        <span class="dot" style="position:absolute;left:-20px;top:6px;background:var(--pol-pos-cg)"></span>
+        <div class="cap" style="margin-bottom:3px">30 août · Glucksmann · <span class="tag ok" style="font-size:10.5px;padding:2px 6px">Accord</span></div>
+        <p class="body-t" style="font-size:13.5px;margin:0;line-height:1.6">Salue la candidature de Faure&nbsp;: « Nous allons gagner ce match »… <span class="link" style="border:none">Lire →</span></p>
+      </div>
+    </div>
+  </div>
+</div>
+</template>
+
+<template id="tpl-mobile">
+<div class="flag"></div>
+<div class="hd">
+  <div class="brand"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><rect x="3" y="12" width="20" height="10" rx="2" stroke="var(--pol-blue)" stroke-width="2"></rect><rect x="10" y="10" width="6" height="2" fill="var(--pol-blue)"></rect><path d="M13 3v6" stroke="var(--pol-blue)" stroke-width="2" stroke-linecap="round"></path><path d="M9.5 6 13 9.5 16.5 6" stroke="var(--pol-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"></path></svg>
+  <span class="brand-name">Quiz <em>Politique</em> 2027</span></div>
+  <span class="icobtn"><svg width="14" height="14" viewBox="0 0 16 16"><circle cx="8" cy="8" r="4" stroke="currentColor" stroke-width="1.75" fill="none"></circle><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6 13 13M13 3l-1.4 1.4M4.4 11.6 3 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg></span>
+</div>
+<div class="wrap" style="padding-top:32px">
+  <span class="ov dim">Comparateur</span>
+  <h1 class="h-display" style="font-size:28px;margin:10px 0 0">Comparer deux candidats</h1>
+</div>
+<div class="wrap" style="padding-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+  <div class="card" style="text-align:center;padding:14px 10px"><span class="avatar" style="width:44px;height:44px;margin:0 auto;font-size:13px">MLP</span><div style="font-size:13px;font-weight:800;margin-top:8px">Marine Le Pen</div><div class="cap" style="font-size:11px">RN · ~35 %</div></div>
+  <div class="card" style="text-align:center;padding:14px 10px"><span class="avatar" style="width:44px;height:44px;margin:0 auto;font-size:13px">RG</span><div style="font-size:13px;font-weight:800;margin-top:8px">R. Glucksmann</div><div class="cap" style="font-size:11px">Place publique · ~11,5 %</div></div>
+</div>
+<div class="wrap" style="padding-top:20px;text-align:center">
+  <span class="data-xl" style="font-size:42px">58&nbsp;%</span>
+  <div class="cap" style="margin-top:4px">d'idées communes · 30 accords · 21 désaccords</div>
+  <p class="body-t" style="font-size:13.5px;margin:10px 0 0">Tes idées sont plus proches de <strong>Glucksmann</strong> (73&nbsp;% contre 63&nbsp;%).</p>
+</div>
+<div class="wrap" style="padding-top:36px;padding-bottom:32px">
+  <div style="display:flex;gap:8px;overflow:hidden;margin-bottom:24px"><span class="chip on">Toutes · 108</span><span class="chip">Économie</span><span class="chip">Social</span><span class="chip">Immigration</span></div>
+  <div class="ov" style="color:var(--pol-ok);margin-bottom:2px">Accords · 30</div>
+  <div style="padding:16px 0;border-bottom:1px solid var(--pol-line)">
+    <div style="display:flex;justify-content:space-between;gap:10px"><div style="font-size:14px;font-weight:700;line-height:1.4">Privatisations&nbsp;: l'État doit-il céder ses entreprises&nbsp;?</div><span class="tag ok">Accord</span></div>
+    <p class="body-t" style="font-size:13px;margin:8px 0 0"><strong>Même position&nbsp;:</strong> renforcer les services publics, stopper les privatisations.</p>
+  </div>
+  <div class="ov" style="color:var(--pol-red);margin:24px 0 2px">Désaccords · 21</div>
+  <div style="padding:16px 0;border-bottom:1px solid var(--pol-line)">
+    <div style="display:flex;justify-content:space-between;gap:10px"><div style="font-size:14px;font-weight:700;line-height:1.4">Voile islamique&nbsp;: faut-il légiférer&nbsp;?</div><span class="tag desac">Désaccord</span></div>
+    <div style="margin-top:10px;display:flex;flex-direction:column;gap:10px">
+      <div style="border-left:2px solid var(--pol-pos-dr);padding-left:10px"><div class="cap" style="font-size:10.5px;font-weight:800">Le Pen</div><p class="body-t" style="font-size:13px;margin:2px 0 0;line-height:1.5">Interdire par amende, par référendum.</p></div>
+      <div style="border-left:2px solid var(--pol-pos-cg);padding-left:10px"><div class="cap" style="font-size:10.5px;font-weight:800">Glucksmann</div><p class="body-t" style="font-size:13px;margin:2px 0 0;line-height:1.5">Aucune loi nouvelle, la laïcité actuelle suffit.</p></div>
+    </div>
+  </div>
+  <div style="margin-top:20px"><span class="btn sec sm" style="width:100%;box-sizing:border-box">Voir 20 questions de plus</span></div>
+</div>
+<div class="bnav">
+  <span><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 11 12 4l8 7v9h-6v-5h-4v5H4Z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"></path></svg><span class="l">Accueil</span></span>
+  <span><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><rect x="3" y="12" width="20" height="10" rx="2" stroke="currentColor" stroke-width="2"></rect><rect x="10" y="10" width="6" height="2" fill="currentColor"></rect><path d="M13 3v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M9.5 6 13 9.5 16.5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"></path></svg><span class="l">Quiz</span></span>
+  <span><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 20v-8M12 20V5M19 20v-6" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"></path></svg><span class="l">Résultats</span></span>
+  <span><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="9" r="3.2" stroke="currentColor" stroke-width="1.75"></circle><path d="M3.5 19c.7-3 2.8-4.5 5.5-4.5s5.3 1.5 6 4.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" fill="none"></path><circle cx="17" cy="10" r="2.6" stroke="currentColor" stroke-width="1.75"></circle><path d="M16.5 14.8c2.3.2 3.6 1.5 4.1 3.7" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" fill="none"></path></svg><span class="l">Candidats</span></span>
+  <span><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="1.75"></circle><path d="M5 20c.9-3.6 3.4-5.4 7-5.4s6.1 1.8 7 5.4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" fill="none"></path></svg><span class="l">Profil</span></span>
+</div>
+</template>
+
+<script>
+const d = document.getElementById('tpl-desktop').innerHTML, m = document.getElementById('tpl-mobile').innerHTML;
+document.getElementById('f1').innerHTML = d; document.getElementById('f2').innerHTML = d;
+document.getElementById('f3').innerHTML = m; document.getElementById('f4').innerHTML = m;
+</script>
+</body></html>

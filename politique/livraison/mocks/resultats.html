@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mock — Résultats</title><link rel="stylesheet" href="mock.css"></head>
+<body>
+<div class="page-h"><div class="k">⑨ Mock · Résultats — direction A</div><h1>Position globale, podium, classement rythmé, barres par thème</h1></div>
+<div class="frames">
+<div><p class="frame-lbl">Desktop 1280 · clair</p><div class="frame w1280" data-theme="light" id="f1"></div></div>
+<div><p class="frame-lbl">Desktop 1280 · sombre</p><div class="frame w1280" data-theme="dark" id="f2"></div></div>
+<div><p class="frame-lbl">Mobile 390 · clair</p><div class="frame w390" data-theme="light" id="f3"></div></div>
+<div><p class="frame-lbl">Mobile 390 · sombre</p><div class="frame w390" data-theme="dark" id="f4"></div></div>
+</div>
+
+<template id="tpl-desktop">
+<div class="flag"></div>
+<div class="hd">
+  <div class="brand"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect x="3" y="12" width="20" height="10" rx="2" stroke="var(--pol-blue)" stroke-width="2"></rect><rect x="10" y="10" width="6" height="2" fill="var(--pol-blue)"></rect><path d="M13 3v6" stroke="var(--pol-blue)" stroke-width="2" stroke-linecap="round"></path><path d="M9.5 6 13 9.5 16.5 6" stroke="var(--pol-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"></path></svg>
+  <div><div class="brand-name">Quiz <em>Politique</em> 2027</div><div class="brand-sub">Présidentielle · 18 avril 2027</div></div></div>
+  <nav class="topnav"><span>Accueil</span><span>Le quiz</span><span class="on">Mes résultats</span><span>Candidats</span><span>Comparer</span><span>Méthodologie</span><span>Profil</span></nav>
+  <span class="icobtn"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="4" stroke="currentColor" stroke-width="1.75" fill="none"></circle><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6 13 13M13 3l-1.4 1.4M4.4 11.6 3 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg></span>
+</div>
+<div class="wrap" style="padding-top:48px;text-align:center">
+  <span class="ov dim">Position globale · 5,7/10 · 108/108 questions</span>
+  <div style="margin-top:14px"><span style="display:inline-block;border-radius:999px;padding:10px 26px;font-family:'Newsreader',serif;font-size:26px;font-weight:600;background:var(--pol-pos-cg);color:var(--pol-on-pos)">Centre-gauche</span></div>
+</div>
+<div class="wrap" style="padding-top:40px;display:flex;justify-content:center;gap:12px;align-items:flex-end">
+  <div class="card" style="width:190px;text-align:center;padding:16px">
+    <div class="cap" style="font-weight:800;margin-bottom:8px">2</div>
+    <span class="avatar" style="width:56px;height:56px;margin:0 auto;font-size:16px">KB</span>
+    <div style="font-size:13.5px;font-weight:800;margin-top:10px">Karim Bouamrane</div>
+    <div class="cap" style="font-size:11.5px">PS · La France humaine</div>
+    <div class="data-xl" style="font-size:24px;margin-top:6px">73&nbsp;%</div>
+  </div>
+  <div class="card" style="width:210px;text-align:center;padding:20px 16px;border-top:3px solid var(--pol-gold)">
+    <span style="display:inline-flex;width:24px;height:24px;border-radius:50%;background:var(--pol-gold);color:#fff;font-size:12px;font-weight:800;align-items:center;justify-content:center;margin-bottom:8px">1</span>
+    <span class="avatar" style="width:64px;height:64px;margin:0 auto;font-size:18px">RG</span>
+    <div style="font-size:14.5px;font-weight:800;margin-top:10px">Raphaël Glucksmann</div>
+    <div class="cap" style="font-size:11.5px">Place publique</div>
+    <div class="data-xl" style="font-size:28px;margin-top:6px">73&nbsp;%</div>
+  </div>
+  <div class="card" style="width:190px;text-align:center;padding:16px">
+    <div class="cap" style="font-weight:800;margin-bottom:8px">3</div>
+    <span class="avatar" style="width:56px;height:56px;margin:0 auto;font-size:16px">OF</span>
+    <div style="font-size:13.5px;font-weight:800;margin-top:10px">Olivier Faure</div>
+    <div class="cap" style="font-size:11.5px">Parti socialiste (PS)</div>
+    <div class="data-xl" style="font-size:24px;margin-top:6px">72&nbsp;%</div>
+  </div>
+</div>
+<div class="wrap" style="padding-top:56px;padding-bottom:72px;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:0 64px;align-items:start">
+  <div>
+    <h2 class="h-sec" style="display:flex;align-items:baseline;justify-content:space-between">Classement des 26 <span class="link" style="font-family:Manrope;font-size:13.5px">Inclure les retirés</span></h2>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card" style="display:flex;align-items:center;gap:14px;padding:14px 20px"><span class="rank" style="width:22px;text-align:center;font-weight:800;color:var(--pol-mut);font-size:13px">4</span><span class="avatar" style="width:44px;height:44px;font-size:14px">JG</span><span class="dot" style="background:var(--pol-pos-cg)"></span><div style="flex:1"><div style="font-weight:800;font-size:15px">Jérôme Guedj</div><div class="cap" style="font-size:12px">Parti socialiste (PS) · sondages &lt; 1 %</div></div><span class="data-xl" style="font-size:22px">72&nbsp;%</span><span class="chev">›</span></div>
+      <div class="card" style="display:flex;align-items:center;gap:14px;padding:14px 20px"><span class="rank" style="width:22px;text-align:center;font-weight:800;color:var(--pol-mut);font-size:13px">5</span><span class="avatar" style="width:44px;height:44px;font-size:14px">DV</span><span class="dot" style="background:var(--pol-pos-cd)"></span><div style="flex:1"><div style="font-weight:800;font-size:15px">Dominique de Villepin</div><div class="cap" style="font-size:12px">La France humaniste · sondages ~3 %</div></div><span class="data-xl" style="font-size:22px">72&nbsp;%</span><span class="chev">›</span></div>
+      <div class="card" style="display:flex;align-items:center;gap:14px;padding:14px 20px;border-color:var(--pol-blue);background:var(--pol-surface)"><span class="rank" style="width:22px;text-align:center;font-weight:800;color:var(--pol-mut);font-size:13px">6</span><span class="avatar" style="width:44px;height:44px;font-size:14px">FA</span><span class="dot" style="background:var(--pol-pos-c)"></span><div style="flex:1"><div style="font-weight:800;font-size:15px">François Asselineau</div><div class="cap" style="font-size:12px">UPR · sondages &lt; 1 %</div></div><span class="data-xl" style="font-size:22px">72&nbsp;%</span><span class="chev" style="transform:rotate(90deg)">›</span></div>
+      <div style="background:var(--pol-surface-2);border:1px solid var(--pol-line);border-top:none;border-radius:0 0 14px 14px;margin-top:-12px;padding:16px 20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--pol-line)"><span style="font-size:13.5px;font-weight:700">Institutions &amp; Démocratie</span><span class="tag ok">Accord</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--pol-line)"><span style="font-size:13.5px;font-weight:700">Sécurité &amp; Justice</span><span class="tag proche">Proche</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0"><span style="font-size:13.5px;font-weight:700">Immigration</span><span class="tag ecart">Écart</span></div>
+      </div>
+    </div>
+    <div class="ov dim" style="margin:32px 0 12px">Plus éloignés de toi · 11 – 26</div>
+    <div>
+      <div class="crow"><span class="rank">11</span><span class="avatar" style="width:32px;height:32px;font-size:11px">FR</span><span class="dot" style="background:var(--pol-pos-gr)"></span><span class="nm">François Ruffin</span><span class="pt">Debout !</span><span class="pct">68&nbsp;%</span><span class="chev">›</span></div>
+      <div class="crow"><span class="rank">12</span><span class="avatar" style="width:32px;height:32px;font-size:11px">GA</span><span class="dot" style="background:var(--pol-pos-cd)"></span><span class="nm">Gabriel Attal</span><span class="pt">Renaissance · ~13,5 %</span><span class="pct">68&nbsp;%</span><span class="chev">›</span></div>
+      <div class="crow"><span class="rank">13</span><span class="avatar" style="width:32px;height:32px;font-size:11px">MT</span><span class="dot" style="background:var(--pol-pos-g)"></span><span class="nm">Marine Tondelier</span><span class="pt">Les Écologistes · ~3,5 %</span><span class="pct">67&nbsp;%</span><span class="chev">›</span></div>
+      <div class="crow"><span class="rank">14</span><span class="avatar" style="width:32px;height:32px;font-size:11px">FR</span><span class="dot" style="background:var(--pol-pos-gr)"></span><span class="nm">Fabien Roussel</span><span class="pt">PCF · ~3 %</span><span class="pct">67&nbsp;%</span><span class="chev">›</span></div>
+    </div>
+    <div style="margin-top:20px;text-align:center"><span class="btn sec sm" style="min-width:220px">Voir les 12 suivants</span></div>
+  </div>
+  <div>
+    <h2 class="h-sec">Ton profil par thème</h2>
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px"><span style="font-size:14px;font-weight:700">Économie</span><span style="font-size:12.8px;font-weight:800;color:var(--pol-pos-c)">Centre · 5,1</span></div><div class="pbar"><span class="mk" style="left:51%"></span></div></div>
+      <div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px"><span style="font-size:14px;font-weight:700">Social &amp; Santé</span><span style="font-size:12.8px;font-weight:800;color:var(--pol-pos-g)">Gauche · 7,1</span></div><div class="pbar"><span class="mk" style="left:71%"></span></div></div>
+      <div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px"><span style="font-size:14px;font-weight:700">Immigration</span><span style="font-size:12.8px;font-weight:800;color:var(--pol-pos-c)">Centre · 5,4</span></div><div class="pbar"><span class="mk" style="left:54%"></span></div></div>
+      <div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px"><span style="font-size:14px;font-weight:700">Sécurité &amp; Justice</span><span style="font-size:12.8px;font-weight:800;color:var(--pol-pos-cg)">Centre-gauche · 6,1</span></div><div class="pbar"><span class="mk" style="left:61%"></span></div></div>
+      <div style="display:flex;justify-content:space-between"><span class="cap" style="font-size:11.5px">← Gauche</span><span class="cap" style="font-size:11.5px">Centre</span><span class="cap" style="font-size:11.5px">Droite →</span></div>
+    </div>
+    <div style="margin-top:32px;padding-top:20px;border-top:1px solid var(--pol-line)">
+      <p class="body-t" style="font-size:13.5px;margin:0;line-height:1.65">Chaque candidat est comparé <strong>question par question</strong>, jamais par « camp » — pondéré par ta pertinence. <span class="link" style="border-bottom-width:1px">Comment c'est calculé →</span></p>
+    </div>
+    <div style="margin-top:24px;display:grid;gap:8px">
+      <span class="btn sec sm">Mes réponses</span>
+      <span class="btn sec sm">Exporter ce bilan</span>
+    </div>
+  </div>
+</div>
+</template>
+
+<template id="tpl-mobile">
+<div class="flag"></div>
+<div class="hd">
+  <div class="brand"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><rect x="3" y="12" width="20" height="10" rx="2" stroke="var(--pol-blue)" stroke-width="2"></rect><rect x="10" y="10" width="6" height="2" fill="var(--pol-blue)"></rect><path d="M13 3v6" stroke="var(--pol-blue)" stroke-width="2" stroke-linecap="round"></path><path d="M9.5 6 13 9.5 16.5 6" stroke="var(--pol-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"></path></svg>
+  <span class="brand-name">Quiz <em>Politique</em> 2027</span></div>
+  <span class="icobtn"><svg width="14" height="14" viewBox="0 0 16 16"><circle cx="8" cy="8" r="4" stroke="currentColor" stroke-width="1.75" fill="none"></circle><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6 13 13M13 3l-1.4 1.4M4.4 11.6 3 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg></span>
+</div>
+<div class="wrap" style="padding-top:32px;text-align:center">
+  <span class="ov dim">Position globale · 5,7/10</span>
+  <div style="margin-top:12px"><span style="display:inline-block;border-radius:999px;padding:8px 22px;font-family:'Newsreader',serif;font-size:22px;font-weight:600;background:var(--pol-pos-cg);color:var(--pol-on-pos)">Centre-gauche</span></div>
+</div>
+<div class="wrap" style="padding-top:28px;display:flex;justify-content:center;gap:8px;align-items:flex-end">
+  <div class="card" style="flex:1;text-align:center;padding:12px 8px"><div class="cap" style="font-weight:800;margin-bottom:6px">2</div><span class="avatar" style="width:44px;height:44px;margin:0 auto;font-size:13px">KB</span><div style="font-size:12px;font-weight:800;margin-top:8px;line-height:1.25">Karim Bouamrane</div><div class="data-xl" style="font-size:19px;margin-top:4px">73&nbsp;%</div></div>
+  <div class="card" style="flex:1.15;text-align:center;padding:16px 8px;border-top:3px solid var(--pol-gold)"><span style="display:inline-flex;width:22px;height:22px;border-radius:50%;background:var(--pol-gold);color:#fff;font-size:11px;font-weight:800;align-items:center;justify-content:center;margin-bottom:6px">1</span><span class="avatar" style="width:52px;height:52px;margin:0 auto;font-size:15px">RG</span><div style="font-size:12.5px;font-weight:800;margin-top:8px;line-height:1.25">Raphaël Glucksmann</div><div class="data-xl" style="font-size:22px;margin-top:4px">73&nbsp;%</div></div>
+  <div class="card" style="flex:1;text-align:center;padding:12px 8px"><div class="cap" style="font-weight:800;margin-bottom:6px">3</div><span class="avatar" style="width:44px;height:44px;margin:0 auto;font-size:13px">OF</span><div style="font-size:12px;font-weight:800;margin-top:8px;line-height:1.25">Olivier Faure</div><div class="data-xl" style="font-size:19px;margin-top:4px">72&nbsp;%</div></div>
+</div>
+<div class="wrap" style="padding-top:40px;padding-bottom:32px">
+  <h2 class="h-sec">Classement des 26</h2>
+  <div class="card" style="display:flex;align-items:center;gap:12px;padding:12px 14px;margin-bottom:12px"><span class="rank" style="font-weight:800;color:var(--pol-mut);font-size:13px">4</span><span class="avatar" style="width:38px;height:38px;font-size:12px">JG</span><div style="flex:1;min-width:0"><div style="font-weight:800;font-size:14px">Jérôme Guedj</div><div class="cap" style="font-size:11.5px">PS · &lt; 1 %</div></div><span class="data-xl" style="font-size:19px">72&nbsp;%</span><span class="chev">›</span></div>
+  <div class="card" style="display:flex;align-items:center;gap:12px;padding:12px 14px"><span class="rank" style="font-weight:800;color:var(--pol-mut);font-size:13px">5</span><span class="avatar" style="width:38px;height:38px;font-size:12px">DV</span><div style="flex:1;min-width:0"><div style="font-weight:800;font-size:14px">Dominique de Villepin</div><div class="cap" style="font-size:11.5px">La France humaniste · ~3 %</div></div><span class="data-xl" style="font-size:19px">72&nbsp;%</span><span class="chev">›</span></div>
+  <div class="ov dim" style="margin:28px 0 8px">Plus éloignés de toi · 11 – 26</div>
+  <div class="crow"><span class="rank">11</span><span class="avatar" style="width:30px;height:30px;font-size:10px">FR</span><span class="dot" style="background:var(--pol-pos-gr)"></span><span class="nm" style="font-size:13.5px">François Ruffin</span><span class="pct" style="font-size:14px">68&nbsp;%</span><span class="chev">›</span></div>
+  <div class="crow"><span class="rank">12</span><span class="avatar" style="width:30px;height:30px;font-size:10px">GA</span><span class="dot" style="background:var(--pol-pos-cd)"></span><span class="nm" style="font-size:13.5px">Gabriel Attal</span><span class="pct" style="font-size:14px">68&nbsp;%</span><span class="chev">›</span></div>
+  <div class="crow"><span class="rank">13</span><span class="avatar" style="width:30px;height:30px;font-size:10px">MT</span><span class="dot" style="background:var(--pol-pos-g)"></span><span class="nm" style="font-size:13.5px">Marine Tondelier</span><span class="pct" style="font-size:14px">67&nbsp;%</span><span class="chev">›</span></div>
+  <div style="margin-top:16px"><span class="btn sec sm" style="width:100%;box-sizing:border-box">Voir les 13 suivants</span></div>
+  <h2 class="h-sec" style="margin-top:40px">Ton profil par thème</h2>
+  <div style="display:flex;flex-direction:column;gap:18px">
+    <div><div style="display:flex;justify-content:space-between;margin-bottom:7px"><span style="font-size:13.5px;font-weight:700">Économie</span><span style="font-size:12px;font-weight:800;color:var(--pol-pos-c)">Centre · 5,1</span></div><div class="pbar"><span class="mk" style="left:51%"></span></div></div>
+    <div><div style="display:flex;justify-content:space-between;margin-bottom:7px"><span style="font-size:13.5px;font-weight:700">Social &amp; Santé</span><span style="font-size:12px;font-weight:800;color:var(--pol-pos-g)">Gauche · 7,1</span></div><div class="pbar"><span class="mk" style="left:71%"></span></div></div>
+  </div>
+</div>
+<div class="bnav">
+  <span><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 11 12 4l8 7v9h-6v-5h-4v5H4Z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"></path></svg><span class="l">Accueil</span></span>
+  <span><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><rect x="3" y="12" width="20" height="10" rx="2" stroke="currentColor" stroke-width="2"></rect><rect x="10" y="10" width="6" height="2" fill="currentColor"></rect><path d="M13 3v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M9.5 6 13 9.5 16.5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"></path></svg><span class="l">Quiz</span></span>
+  <span class="on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 20v-8M12 20V5M19 20v-6" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"></path></svg><span class="l">Résultats</span></span>
+  <span><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="9" r="3.2" stroke="currentColor" stroke-width="1.75"></circle><path d="M3.5 19c.7-3 2.8-4.5 5.5-4.5s5.3 1.5 6 4.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" fill="none"></path><circle cx="17" cy="10" r="2.6" stroke="currentColor" stroke-width="1.75"></circle><path d="M16.5 14.8c2.3.2 3.6 1.5 4.1 3.7" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" fill="none"></path></svg><span class="l">Candidats</span></span>
+  <span><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="1.75"></circle><path d="M5 20c.9-3.6 3.4-5.4 7-5.4s6.1 1.8 7 5.4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" fill="none"></path></svg><span class="l">Profil</span></span>
+</div>
+</template>
+
+<script>
+const d = document.getElementById('tpl-desktop').innerHTML, m = document.getElementById('tpl-mobile').innerHTML;
+document.getElementById('f1').innerHTML = d; document.getElementById('f2').innerHTML = d;
+document.getElementById('f3').innerHTML = m; document.getElementById('f4').innerHTML = m;
+</script>
+</body></html>

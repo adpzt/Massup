@@ -1,0 +1,13 @@
+env
+._*
+**/._*
+*.bak
+**/*.bak
+tests/
+# (07/10) schémas SQL (contiennent un email/UUID) et docs : jamais servis en ligne
+*.sql
+**/*.sql
+*.md
+**/*.md
+# (08/10) outils de dev (build, captures) : jamais servis
+dev/
