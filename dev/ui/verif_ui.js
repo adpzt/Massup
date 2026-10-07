@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // ═══════════════════════════════════════════════════════════════════════════
-// Vérification visuelle mobile (08/10/2026) — `npm run ui -- [options]` depuis massup/
+// Vérification visuelle mobile (08/10/2026) — `npm run ui -- [options]` depuis MUSCU/
 //   (rien)                     tous les écrans du catalogue (screens.js), mode sombre + clair
 //   --only a_nutria,m_nutri    seulement les écrans dont le nom contient un de ces mots
 //   --app adrien|melati|politique   une seule app (plusieurs : séparées par des virgules)

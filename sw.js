@@ -1,4 +1,4 @@
-const CACHE = 'massup-v130';
+const CACHE = 'massup-v131';
 // (27/08) Melati épinglée sur l'écran d'accueil : ses fichiers entrent au cache pour s'ouvrir hors ligne.
 const ASSETS = ['/', '/index.html', '/style.css', '/app.js', '/supabase.js', '/push_timer.js', '/nutria.css', '/nutria_data.js', '/nutria.js', '/partner.js', '/desktop.css',
   '/melati.html', '/melati.css', '/melati.js', '/nutrition.css', '/nutrition_data.js', '/nutrition.js', '/nutriplus.js', '/nutriplus.css', '/steps.js', '/steps.css', '/sleep.js', '/sleep.css', '/melati.webmanifest', '/imgs/melati_icon.png'];

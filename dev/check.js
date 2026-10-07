@@ -6,7 +6,8 @@
 //   2. tests `node --test tests/*.test.js` ;
 //   3. hygiène git : aucun fichier interdit suivi par git (dépôt GitHub PUBLIC) ;
 //   4. avertissement si un fichier mis en cache par sw.js a changé sans incrément de CACHE.
-// Sur Vercel, `npm run vercel-build` ne fait rien : ce script tourne seulement en local.
+// Lancé depuis MUSCU/ (package.json racine). Il ne doit JAMAIS être branché comme script `build` du
+// package.json de massup/ : Vercel exigerait alors un dossier public/ et le déploiement échouerait.
 // ═══════════════════════════════════════════════════════════════════════════
 const fs = require('fs'), path = require('path'), { execFileSync, spawnSync } = require('child_process');
 const ROOT = path.join(__dirname, '..');
@@ -48,6 +49,11 @@ else {
   if (hits.length) ko('fichiers interdits suivis par git (dépôt PUBLIC) : ' + hits.slice(0, 10).join(', ') + ' → git rm --cached');
   else ok('aucun fichier interdit suivi');
 }
+
+// 3 bis. Vercel : aucun script de build côté site (sinon il exige un dossier public/ → déploiement en erreur)
+const pkgScripts = (JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).scripts) || {};
+if (pkgScripts.build || pkgScripts['vercel-build']) ko('massup/package.json contient un script build/vercel-build → Vercel échouera (« No Output Directory named public »). Les scripts de dev vont dans MUSCU/package.json.');
+else ok('massup/package.json sans script de build (déploiement Vercel statique)');
 
 // 4. Version du cache du service worker
 console.log('4. Cache du service worker');
