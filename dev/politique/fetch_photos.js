@@ -10,7 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 
-const OUT = path.join(__dirname, 'imgs');
+const OUT = path.join(__dirname, '..', '..', 'politique', 'imgs');
 if (!fs.existsSync(OUT)) fs.mkdirSync(OUT, { recursive: true });
 
 // nom → titre exact de la page Wikipédia FR (pour éviter les homonymies)
@@ -43,6 +43,12 @@ const CANDIDATES = [
   ['Éric Zemmour', 'Éric Zemmour'],
   ['Florian Philippot', 'Florian Philippot'],
   ['Fabien Roussel', 'Fabien Roussel'],
+  // (12/10/2026)
+  ['Emmanuel Maurel', 'Emmanuel Maurel'],
+  ['Bernard Cazeneuve', 'Bernard Cazeneuve'],
+  ['Bruno Le Maire', 'Bruno Le Maire'],
+  ['Philippe Brun', 'Philippe Brun (homme politique)'],
+  ['Selma Labib', 'Selma Labib'],
   ['Ségolène Royal', 'Ségolène Royal'],
   ['Philippe Brun', 'Philippe Brun (homme politique)']
 ];
@@ -98,7 +104,7 @@ function download(url, dest, depth) {
   for (const [name, title] of CANDIDATES) {
     const existing = path.join(OUT, slug(name) + '.jpg');
     if (fs.existsSync(existing)) { manifest[name] = slug(name) + '.jpg'; console.log('⏭️  déjà là :', name); ok++; continue; }
-    const api = 'https://fr.wikipedia.org/w/api.php?action=query&format=json&prop=pageimages&piprop=thumbnail&pithumbsize=500&titles=' + encodeURIComponent(title);
+    const api = 'https://fr.wikipedia.org/w/api.php?action=query&format=json&prop=pageimages&piprop=thumbnail&pithumbsize=240&titles=' + encodeURIComponent(title);
     try {
       const j = await getJSON(api);
       const pages = j.query && j.query.pages;

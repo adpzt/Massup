@@ -11,7 +11,7 @@
 // ============================================================
 const fs = require('fs'), path = require('path'), https = require('https');
 const { PARTIES } = require('./parties.js');
-const OUT = path.join(__dirname, 'imgs', 'logos');
+const OUT = path.join(__dirname, '..', '..', 'politique', 'imgs', 'logos');
 if (!fs.existsSync(OUT)) fs.mkdirSync(OUT, { recursive: true });
 const args = process.argv.slice(2), FORCE = args.includes('--force'), ONLY = args.filter(a => !a.startsWith('--'));
 const UA = { 'User-Agent': 'MassupQuiz/1.0 (usage personnel ; contact: adrien)' };

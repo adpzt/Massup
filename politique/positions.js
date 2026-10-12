@@ -47,6 +47,8 @@
   };
   // Candidat → famille
   var FAMILY_OF = {
+    // (12/10/2026) nouveaux : Maurel (GRS, gauche républicaine souverainiste → PCF le plus proche), Cazeneuve (La Convention → social-démocratie PSSD), Le Maire (→ REN)
+    'Emmanuel Maurel': 'PCF', 'Bernard Cazeneuve': 'PSSD', 'Bruno Le Maire': 'REN',
     'Nathalie Arthaud': 'LO', 'Anasse Kazib': 'LO', 'Selma Labib': 'LO',
     'Jean-Luc Mélenchon': 'LFI', 'Clémentine Autain': 'APRES', 'François Ruffin': 'RUFFIN',
     'Marine Tondelier': 'EELV', 'Delphine Batho': 'BATHO', 'Fabien Roussel': 'PCF',
@@ -216,6 +218,46 @@
     // Attal (Le Monde 25/08, Medef, tribune 16/08) : certificat d'études et brevet obligatoire, fermeture des 100 collèges ghettos, +200 € pour les profs, référendum pour interdire les réseaux sociaux aux moins de 15 ans ; 01/09 : c'est LUI qui a lancé l'expérimentation de la tenue unique et le « retour de l'autorité » → 112: 2.5 (la ligne REN « au choix des établissements » le sous-cotait)
     'Gabriel Attal': { 67: 6, 86: 6.5, 93: 3, 97: 6, 111: 4.5, 112: 2.5 }
   };
+  // Emmanuel Maurel (franceinfo 04/09, débats de la primaire LCI 23/09 · France 2 01/10 · BFMTV 04/10) : positions déclarées pendant la primaire
+  OVERRIDES['Emmanuel Maurel'] = {2: 7, 3: 8.5, 4: 8.5, 5: 8, 6: 8.5, 8: 3, 9: 9, 10: 8, 14: 8.5, 16: 8.5, 21: 8.5, 28: 5.5, 56: 4, 59: 4, 60: 7, 67: 7, 77: 3, 85: 8.5, 95: 7, 101: 10, 102: 8.5, 106: 7.5, 108: 4, 109: 9.5, 110: 8};
+  // Bernard Cazeneuve (« Lettre aux Français », Public Sénat 17/07) : dose de proportionnelle, Ve République conservée, redressement des comptes — le reste suit la famille sociale-démocrate
+  OVERRIDES['Bernard Cazeneuve'] = {5: 3, 66: 4, 110: 5};
+  // Bruno Le Maire (manifeste 23/08, plan du 06/09 — franceinfo) : gel des pensions/prestations, ≈100 Md€ d'économies, 65 ans évoqués, capitalisation complémentaire, gel des recrutements, gel de l'IR, fédération européenne à six
+  OVERRIDES['Bruno Le Maire'] = {1: 4, 2: 0.5, 5: 1, 56: 9, 102: 3, 103: 3, 104: 1};
+  // ── MAJ du 12/10/2026 (sweep de 7 agents, fenêtre 01/09 → 12/10) : positions corrigées, une ligne par candidat ──
+  // Marine Le Pen : Q102 8→4 (AFP via Orange 06/10/2026 06/10) · Q103 4→2.5 (Public Sénat 06/10/2026 06/10) · Q5 2→1.5 (Public Sénat 06/10/2026 06/10) · Q21 3→2 (France 3 Hauts-de-France 13/09/2026 13/09)
+  OVERRIDES["Marine Le Pen"] = Object.assign(OVERRIDES["Marine Le Pen"] || {}, {5: 1.5, 21: 2, 102: 4, 103: 2.5});
+  // Jordan Bardella : Q102 7→4 (AFP via Orange 06/10/2026 06/10) · Q103 4→2.5 (Public Sénat 06/10/2026 06/10) · Q5 2→1.5 (Public Sénat 06/10/2026 06/10)
+  OVERRIDES["Jordan Bardella"] = Object.assign(OVERRIDES["Jordan Bardella"] || {}, {5: 1.5, 102: 4, 103: 2.5});
+  // Nicolas Dupont-Aignan : Q56 1.5→0 (franceinfo 19/09/2026 19/09) · Q60 3.5→3 (franceinfo 19/09/2026 19/09)
+  OVERRIDES["Nicolas Dupont-Aignan"] = Object.assign(OVERRIDES["Nicolas Dupont-Aignan"] || {}, {56: 0, 60: 3});
+  // Bruno Retailleau : Q106 3→0 (BFMTV 08/09/2026 08/09) · Q2 1.5→2.5 (franceinfo/LCP 22/09/2026 22/09) · Q102 3→2 (franceinfo/LCP 22/09/2026 22/09) · Q67 7→8 (Le Figaro 02/09/2026 02/09) · Q104 3→5 (Public Sénat 16/09/2026 16/09) · Q32 1→2 (Le JDD 12/09/2026 12/09) · Q77 0→1.5 (Le JDD 12/09/2026 12/09) · Q49 1.5→1 (Le Télégramme 16/09/2026 16/09)
+  OVERRIDES["Bruno Retailleau"] = Object.assign(OVERRIDES["Bruno Retailleau"] || {}, {2: 2.5, 32: 2, 49: 1, 67: 8, 77: 1.5, 102: 2, 104: 5, 106: 0});
+  // Laurent Wauquiez : Q104 3→4.5 (Les Échos/AFP 04/10/2026 04/10)
+  OVERRIDES["Laurent Wauquiez"] = Object.assign(OVERRIDES["Laurent Wauquiez"] || {}, {104: 4.5});
+  // Dominique de Villepin : Q97 4→6.5 (La France humaniste 01/09/2026 01/09) · Q85 4→5.5 (La France humaniste 01/09/2026 01/09) · Q86 5.5→6 (La France humaniste 01/09/2026 01/09) · Q38 5→6.5 (franceinfo 05/10/2026 05/10) · Q111 4.5→4 (La France humaniste 01/09/2026 01/09)
+  OVERRIDES["Dominique de Villepin"] = Object.assign(OVERRIDES["Dominique de Villepin"] || {}, {38: 6.5, 85: 5.5, 86: 6, 97: 6.5, 111: 4});
+  // Édouard Philippe : Q2 1.5→0.5 (franceinfo 29/09/2026 29/09) · Q27 2.5→1.5 (AFP via Boursorama 09/10/2026 08/10) · Q31 2→0.5 (AFP via Boursorama 09/10/2026 08/10) · Q29 2→1.5 (JDN 09/10/2026 08/10) · Q110 3.5→1.5 (franceinfo 08/10/2026 08/10) · Q76 6→5 (franceinfo 08/10/2026 08/10) · Q9 3→2 (franceinfo 08/10/2026 08/10) · Q37 3→1.5 (edouardphilippe.fr, page « Pour une Fran 12/10)
+  OVERRIDES["Édouard Philippe"] = Object.assign(OVERRIDES["Édouard Philippe"] || {}, {2: 0.5, 9: 2, 27: 1.5, 29: 1.5, 31: 0.5, 37: 1.5, 76: 5, 110: 1.5});
+  // Gabriel Attal : Q5 3→2 (attalpresident.fr 23/09 et 04/10/2026 03/10) · Q14 5→5.5 (attalpresident.fr 23/09/2026 23/09) · Q42 3→2 (attalpresident.fr 30/09/2026 30/09)
+  OVERRIDES["Gabriel Attal"] = Object.assign(OVERRIDES["Gabriel Attal"] || {}, {5: 2, 14: 5.5, 42: 2});
+  // Raphaël Glucksmann : Q9 7→5 (franceinfo, 23/09/2026 23/09) · Q28 5→6.5 (franceinfo 04/10) · Q10 7.5→8.5 (franceinfo 04/10) · Q109 7.5→8.5 (franceinfo, 23/09/2026 06/10)
+  OVERRIDES["Raphaël Glucksmann"] = Object.assign(OVERRIDES["Raphaël Glucksmann"] || {}, {9: 5, 10: 8.5, 28: 6.5, 109: 8.5});
+  // Olivier Faure : Q3 7→8.5 (AFP via Boursorama, 17/09/2026 17/09) · Q28 7→8 (AFP via Boursorama, 17/09/2026 04/10) · Q38 7→8.5 (AFP via Boursorama, 17/09/2026 17/09) · Q80 7→8.5 (AFP via Boursorama, 17/09/2026 17/09) · Q109 8→9.5 (Le Grand Continent, 06/10/2026 06/10) · Q14 7→8.5 (AFP via Boursorama, 17/09/2026 17/09)
+  OVERRIDES["Olivier Faure"] = Object.assign(OVERRIDES["Olivier Faure"] || {}, {3: 8.5, 14: 8.5, 28: 8, 38: 8.5, 80: 8.5, 109: 9.5});
+  // Ségolène Royal : Q60 7→6 (LCP, 09/10/2026 04/10) · Q101 8.5→10 (franceinfo 04/10) · Q109 8→9.5 (LCP, 09/10/2026 23/09)
+  OVERRIDES["Ségolène Royal"] = Object.assign(OVERRIDES["Ségolène Royal"] || {}, {60: 6, 101: 10, 109: 9.5});
+  // Jérôme Guedj : Q18 7→9 (LCP, 09/10/2026 09/10) · Q2 7→6 (LCP, 09/10/2026 09/10) · Q109 8→7.5 (Le Grand Continent, 06/10/2026 06/10)
+  OVERRIDES["Jérôme Guedj"] = Object.assign(OVERRIDES["Jérôme Guedj"] || {}, {2: 6, 18: 9, 109: 7.5});
+  // François Hollande : Q102 4→3 (LCP 03/09)
+  OVERRIDES["François Hollande"] = Object.assign(OVERRIDES["François Hollande"] || {}, {102: 3});
+  // Jean-Luc Mélenchon : Q3 7→8.5 (franceinfo, 17/09/2026 12/09) · Q68 3→4.5 (Outre-mer La 1ère, 07/06/2026 07/06)
+  OVERRIDES["Jean-Luc Mélenchon"] = Object.assign(OVERRIDES["Jean-Luc Mélenchon"] || {}, {3: 8.5, 68: 4.5});
+  // François Ruffin : Q95 7→8.5 (franceinfo, 05/10 et 09/10/2026 09/10) · Q38 7→8 (franceinfo, 05/10/2026 05/10) · Q58 8.5→9 (franceinfo, 09/10/2026 08/10)
+  OVERRIDES["François Ruffin"] = Object.assign(OVERRIDES["François Ruffin"] || {}, {38: 8, 58: 9, 95: 8.5});
+  // Marine Tondelier : Q2 7→8 (franceinfo, 30/09/2026 30/09)
+  OVERRIDES["Marine Tondelier"] = Object.assign(OVERRIDES["Marine Tondelier"] || {}, {2: 8});
+
 
   // ── Parsing des lignes ──
   var POSITIONS = {}; // { qid: { FAMILY: value } }
@@ -288,7 +330,7 @@
     return by;
   }
 
-  POL.POSITIONS_DATE = '1er septembre 2026';
+  POL.POSITIONS_DATE = '12 octobre 2026';
   POL.FAMILIES = FAMILIES; POL.FAMILY_LABELS = FAMILY_LABELS; POL.FAMILY_OF = FAMILY_OF; POL.POSITIONS = POSITIONS; POL.POSITION_OVERRIDES = OVERRIDES;
   POL.candPos = candPos; POL.concordance = concordance; POL.concPct = pctOf; POL.concTag = concTag;
   POL.nearestOption = nearestOption; POL.matchByQuestions = matchByQuestions; POL.candSimilarity = candSimilarity; POL.whoAnswers = whoAnswers;

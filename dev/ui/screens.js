@@ -35,10 +35,19 @@ const MELATI = [
   ['m_liveflow', ['asOpen()', "document.querySelector('#asOverlay .as-bigcard').click()"], { scroll: '#asOverlay' }],
 ];
 const POLITIQUE = [
-  ['p_accueil', []],
+  ['p_accueil', [], { full: true }],
+  ['p_express', ['POLQ.startExpress()']],
+  ['p_resultats', ['POLQ.showResultsFromAnswers()'], { full: true }],
+  ['p_candidats', ['POLQ.goCandidats()'], { full: true }],
+  ['p_actu', ['POLQ.openActu()'], { full: true }],
+  ['p_comparer', ['POLQ.goCompare()'], { full: true }],
+  ['p_methodo', ['POLQ.goMethodo()'], { full: true }],
+  ['p_profil', ['POLQ.goProfile()'], { full: true }],
 ];
+const POLITIQUE_OWNER = POLITIQUE.map(([n, a, o]) => [n.replace('p_', 'po_'), a, o]);
 module.exports = {
   adrien: { page: 'index.html', seed: 'adrienSeed', list: ADRIEN },
   melati: { page: 'melati.html', seed: 'melatiSeed', list: MELATI },
-  politique: { page: 'politique/index.html', seed: null, list: POLITIQUE },
+  politique: { page: 'politique/index.html', seed: 'politiqueSeed', list: POLITIQUE },
+  politique_owner: { page: 'politique/index.html', seed: 'politiqueOwnerSeed', list: POLITIQUE_OWNER },
 };

@@ -40,4 +40,25 @@ function melatiSeed(){
   }
   localStorage.setItem('melati_db',JSON.stringify({v:3,weights:{},logs:logs,mobiDays:{},tests:[],pesees:pes,salsa:salsa,eau:eau,health:health,seed2308:true,seed2308b:true}));
 }
-module.exports={adrienSeed,melatiSeed};
+// Quiz politique : JAMAIS de cloud (__POL_NO_CLOUD) + réponses fictives sur toutes les questions.
+// Invité : seulement les clés « _invite » (les clés historiques sans suffixe déclenchent la migration en mode propriétaire).
+function politiqueSeed(){
+  window.__POL_NO_CLOUD = true;
+  if (localStorage.getItem('pol_seeded')) return;
+  var ans = {}, imp = {}, t = Date.now();
+  for (var id = 1; id <= 112; id++) { ans[id] = { optIdx: (id * 7) % 4, t: t }; imp[id] = 1 + (id % 5); }
+  localStorage.setItem('pol_draft_invite', JSON.stringify({ answers: ans, notes: {}, importance: imp, pending: {}, lastChange: t, v: 1 }));
+  localStorage.setItem('pol_importance_invite', JSON.stringify(imp));
+  localStorage.setItem('pol_seeded', '1');
+}
+function politiqueOwnerSeed(){
+  window.__POL_NO_CLOUD = true;
+  if (localStorage.getItem('pol_seeded')) return;
+  localStorage.setItem('pol_owner', '1');
+  var ans = {}, imp = {}, t = Date.now();
+  for (var id = 1; id <= 112; id++) { ans[id] = { optIdx: (id * 3) % 4, t: t }; imp[id] = 1 + (id % 5); }
+  localStorage.setItem('pol_draft', JSON.stringify({ answers: ans, notes: {}, importance: imp, pending: {}, lastChange: t, v: 1 }));
+  localStorage.setItem('pol_importance', JSON.stringify(imp));
+  localStorage.setItem('pol_seeded', '1');
+}
+module.exports={adrienSeed,melatiSeed,politiqueSeed,politiqueOwnerSeed};

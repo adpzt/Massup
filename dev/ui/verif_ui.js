@@ -18,7 +18,7 @@ const { chromium, serve, newPage, wait, ROOT } = require('./lib');
 const seeds = require('./seeds'), audit = require('./audit'), SCREENS = require('./screens');
 
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d; };
-const apps = arg('app', 'adrien,melati,politique').split(',');
+const apps = arg('app', 'adrien,melati,politique,politique_owner').split(',');
 const only = (arg('only', '') || '').split(',').filter(Boolean);
 const schemes = { both: ['dark', 'light'], dark: ['dark'], light: ['light'] }[arg('scheme', 'both')];
 const width = +arg('width', 390), height = +arg('height', 844);

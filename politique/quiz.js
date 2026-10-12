@@ -111,6 +111,8 @@
   function el(id) { return document.getElementById(id); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function cc(hex) { return 'color-mix(in srgb, ' + hex + ', #fff var(--pol-lift))'; }
+  // Nom d'usage court : « Le Pen », « Le Maire » (la particule Le/La fait partie du nom), « Villepin » pour « de Villepin »
+  function surname(n) { var p = String(n || '').trim().split(/\s+/); var l = p[p.length - 1] || ''; return p.length > 2 && /^(Le|La)$/.test(p[p.length - 2]) ? p[p.length - 2] + ' ' + l : l; }
   function shortName(n) { var p = String(n || '').trim().split(/\s+/); return p.length > 1 ? p[0][0] + '. ' + p.slice(1).join(' ') : n; }
   function lsGet(k, d) { try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }
   function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
@@ -408,7 +410,7 @@
       var ev = (POL.EVENTS || [])[0];
       actuCard = '<div class="pol-slbl">Fil d\'actu de la campagne' + (nNew ? ' <span class="pol-actu-n">' + nNew + ' nouv.</span>' : '') + '</div><div class="pol-card pol-actu-home">' +
         (ev ? '<div class="pol-actu-event-mini"><strong>' + esc(ev.label) + '</strong> · ' + esc(fmtDecl(ev.d)) + '<br><span class="pol-sub">' + esc(ev.txt.length > 240 ? ev.txt.slice(0, 237) + '…' : ev.txt) + '</span></div>' : '') +
-        actus.slice(0, 3).map(function (a) { var c = candByName(a.c); return '<div class="pol-actu-mini"><span class="pol-cand-dot" style="background:' + (c ? c.color : '#888') + '"></span><span><strong>' + esc(a.c.split(' ').slice(-1)[0]) + '</strong> · ' + POL.themeEmoji(a.th) + ' ' + esc(a.txt.length > 120 ? a.txt.slice(0, 117) + '…' : a.txt) + (live ? ' ' + actuTag(a, live.profile) : '') + '</span></div>'; }).join('') +
+        actus.slice(0, 3).map(function (a) { var c = candByName(a.c); return '<div class="pol-actu-mini"><span class="pol-cand-dot" style="background:' + (c ? c.color : '#888') + '"></span><span><strong>' + esc(surname(a.c)) + '</strong> · ' + POL.themeEmoji(a.th) + ' ' + esc(a.txt.length > 120 ? a.txt.slice(0, 117) + '…' : a.txt) + (live ? ' ' + actuTag(a, live.profile) : '') + '</span></div>'; }).join('') +
         '<button class="pol-btn pol-btn-line pol-btn-sm" style="margin-top:.7rem;width:100%" onclick="POLQ.openActu()">Tout le fil d\'actu (' + actus.length + ' prises de position)</button></div>';
     }
 
@@ -892,7 +894,7 @@
       return { s: s, v: v, near: closestCandidateForTheme(s, v), conc: conc, pct: conc != null ? POL.concPct(conc) : null, n: t ? t.n : 0, dTop: conc != null ? (1 - conc) * 5 : Math.abs(top.scores[s] - v) };
     }).sort(function (a, b) { return a.dTop - b.dTop; });
     if (rows.length < 2) return '';
-    var last = top.name.split(' ').slice(-1)[0];
+    var last = surname(top.name);
     return '<div class="pol-slbl">Sujet par sujet</div><div class="pol-card"><div class="pol-cd-stat-hint" style="margin-top:0">Du sujet où tu es le plus en phase avec <strong>' + esc(last) + '</strong> (ton n°1) à celui où vous divergez le plus.</div>' +
       rows.map(function (x) { var t = x.conc != null ? POL.concTag(x.conc) : posTag(x.dTop); return '<div class="pol-ts-row"><div class="pol-ts-main"><span class="pol-ts-th">' + POL.themeEmoji(x.s) + ' ' + esc(POL.SECTION_LABELS[x.s]) + '</span><span class="pol-ts-you">' + (x.pct != null ? esc(last) + ' ' + x.pct + ' % · ' + x.n + ' q.' : 'toi ' + x.v.toFixed(1) + ' · ' + esc(last) + ' ' + top.scores[x.s]) + '</span><span class="pol-cand-theme-tag ' + t.cls + '">' + t.label + '</span></div>' + (x.near && x.near.name !== top.name ? '<div class="pol-ts-near">Le plus proche de toi sur ce sujet : <strong style="color:' + cc(x.near.color) + '">' + esc(x.near.name) + '</strong> (' + themePctLabel(x.near, x.s) + ')</div>' : '') + '</div>'; }).join('') +
       '<div class="pol-sub" style="font-size:.72rem;margin-top:.5rem">% d\'accord = concordance entre ses positions et tes réponses sur les questions du thème (100 % identiques · 50 % neutre · 0 % opposées), pondérée par ta pertinence. Accord ≥ 80 % · Proche ≥ 60 % · Écart ≥ 35 % · Désaccord en dessous.</div></div>';
@@ -1027,7 +1029,7 @@
         '<div class="pol-cand-detail">' + head + '<div class="pol-cd-meta">' + statusChip(c) + '</div>' + fitHtml(r.profile, c) + qFitHtml(m.mq) +
           '<div class="pol-cand-prog-hint">Écart avec toi, thème par thème</div><div class="pol-diff-legend"><span style="color:var(--pol-left)">◀ plus à gauche que toi</span><span style="color:var(--pol-right)">plus à droite que toi ▶</span></div>' + V.diffBars(diffRows) +
           '<div style="margin:.6rem 0 .3rem"><a class="pol-linkbtn" style="font-size:.82rem" onclick="POLQ.openDuel(\'' + esc(m.name).replace(/'/g, "\\'") + '\')">Comparer avec un autre candidat →</a></div>' +
-          '<div class="pol-cand-prog-hint">Ce que ' + esc(m.name.split(' ').slice(-1)[0]) + ' défend :</div>' + rows + actuBlock(m.name, r.profile, 4) + '</div>' +
+          '<div class="pol-cand-prog-hint">Ce que ' + esc(surname(m.name)) + ' défend :</div>' + rows + actuBlock(m.name, r.profile, 4) + '</div>' +
       '</div>';
     }).join('');
 
@@ -1035,7 +1037,7 @@
     var radarCand = candByName(state.radarCand);
     var radarHtml = '';
     if (radarCand && !isPerso) {
-      var chips = r.matches.slice(0, 6).map(function (m) { return '<button class="pol-rv-chip' + (m.name === state.radarCand ? ' on' : '') + '" style="--rv:' + m.color + '" onclick="POLQ.setRadar(\'' + esc(m.name).replace(/'/g, "\\'") + '\')">' + esc(m.name.split(' ').slice(-1)[0]) + ' ' + m.match + '%</button>'; }).join('');
+      var chips = r.matches.slice(0, 6).map(function (m) { return '<button class="pol-rv-chip' + (m.name === state.radarCand ? ' on' : '') + '" style="--rv:' + m.color + '" onclick="POLQ.setRadar(\'' + esc(m.name).replace(/'/g, "\\'") + '\')">' + esc(surname(m.name)) + ' ' + m.match + '%</button>'; }).join('');
       radarHtml = '<div class="pol-slbl">Radar d\'accord</div><div class="pol-card"><div class="pol-rv-chips" style="position:static;padding:0 0 .6rem">' + chips + '</div>' +
         V.radar([{ values: agreementValues(r.profile, radarCand), color: radarCand.color, label: radarCand.name }], { title: 'Accord avec ' + radarCand.name }) +
         '<div class="pol-sub" style="font-size:.74rem;text-align:center">Plus la surface est grande, plus vous êtes d\'accord (bord = accord total, centre = désaccord total).</div></div>';
@@ -1502,7 +1504,6 @@
     var p = POL.partyOf ? POL.partyOf(c) : null; if (!p) return '';
     return '<span class="pol-party-logo' + (size ? ' ' + size : '') + '" title="' + esc(c.party) + '"><span class="pol-party-sigle">' + esc(p.short.length <= 4 ? p.short : p.short.replace(/[^A-Za-zÀ-ÿ]/g, '').slice(0, 3).toUpperCase()) + '</span><img src="imgs/logos/' + p.slug + '.png" alt="" loading="lazy" onload="this.previousSibling.style.display=\'none\'" onerror="this.remove()"></span>';
   }
-  function candThemeBar(score) { var left = ((10 - score) / 10) * 100; return '<div class="pol-cd-bar"><div class="pol-cd-bar-track"></div><div class="pol-cd-bar-dot" style="left:' + left + '%"></div></div>'; }
   function pollOf(c) { var p = POL.POLLS && POL.POLLS[c.name]; return p == null ? -1 : p; }
   function pctLabel(pct) { return pct == null ? '' : (pct < 1 ? '<1%' : (Math.round(pct * 10) / 10) + '%'); }
   function candAvg(c) { var v = POL.SECTIONS.map(function (s) { return c.scores[s]; }); return v.reduce(function (a, b) { return a + b; }, 0) / v.length; }
@@ -1545,18 +1546,18 @@
       '<button class="pol-rv-chip' + (state.candView === 'duel' ? ' on' : '') + '" onclick="POLQ.openDuel()">Duel</button>' +
       '<button class="pol-rv-chip' + (state.candFilter === 'actu' && state.candView === 'list' ? ' on' : '') + '" style="--rv:#7C3AED" onclick="POLQ.openActu()">Actu · ' + allActus().length + '</button>' +
       '<button class="pol-rv-chip' + (state.candFilter === 'official' && state.candView === 'list' ? ' on' : '') + '" style="--rv:#18753C" onclick="POLQ.setCandFilter(\'official\')">Officiellement déclarés · ' + nOff + '</button>' +
-      '<button class="pol-rv-chip' + (state.candFilter === 'primaire' && state.candView === 'list' ? ' on' : '') + '" style="--rv:#AD1457" onclick="POLQ.setCandFilter(\'primaire\')">Primaire PS/PP · ' + nPrim + '</button>' +
+      (nPrim ? '<button class="pol-rv-chip' + (state.candFilter === 'primaire' && state.candView === 'list' ? ' on' : '') + '" style="--rv:#AD1457" onclick="POLQ.setCandFilter(\'primaire\')">Primaire PS/PP · ' + nPrim + '</button>' : '') +
       '<button class="pol-rv-chip' + (state.candFilter === 'pressenti' && state.candView === 'list' ? ' on' : '') + '" style="--rv:#B45309" onclick="POLQ.setCandFilter(\'pressenti\')">Pressentis / quasi · ' + nPres + '</button>' +
       blocs.map(function (b) { var n = running.filter(function (c) { return c.bloc === b; }).length; return '<button class="pol-rv-chip' + (state.candFilter === b && state.candView === 'list' ? ' on' : '') + '" onclick="POLQ.setCandFilter(\'' + b + '\')">' + esc(POL.BLOC_LABELS[b]) + ' · ' + n + '</button>'; }).join('') +
       '<button class="pol-rv-chip' + (state.candFilter === 'retired' && state.candView === 'list' ? ' on' : '') + '" onclick="POLQ.setCandFilter(\'retired\')">Retirés / plan B · ' + retired.length + '</button>';
 
     var body, hint, top = '';
-    if (state.candView === 'duel') { body = renderDuel(r); hint = 'Compare deux candidats entre eux — et avec toi, thème par thème.'; }
-    else if (state.candFilter === 'actu') { body = renderActu(up); hint = '<strong>Fil d\'actu</strong> : dernières prises de position publiques (débats, interviews, universités d\'été), datées et sourcées, mises à jour le ' + esc(POL.ACTUS_DATE || POL.DATA_DATE) + '. ' + (up ? 'Chaque étiquette compare la position exprimée à <strong>la tienne</strong> sur ce thème.' : 'Fais le quiz pour voir à quel point chaque sortie colle à tes idées.'); }
+    // (12/10) l'ancienne vue « duel » est remplacée par la page Comparer (openDuel → goCompare)
+    if (state.candFilter === 'actu') { body = renderActu(up); hint = '<strong>Fil d\'actu</strong> : dernières prises de position publiques (débats, interviews, universités d\'été), datées et sourcées, mises à jour le ' + esc(POL.ACTUS_DATE || POL.DATA_DATE) + '. ' + (up ? 'Chaque étiquette compare la position exprimée à <strong>la tienne</strong> sur ce thème.' : 'Fais le quiz pour voir à quel point chaque sortie colle à tes idées.'); }
     else if (state.candFilter === 'all') {
       var ranked = running.slice().sort(function (a, b) { return pollOf(b) - pollOf(a) || candAvg(b) - candAvg(a); });
-      hint = 'Classés par <strong>intentions de vote au 1er tour</strong> (moyenne de plusieurs sondages, ' + esc(POL.POLLS_DATE) + '). Marine Le Pen est bien candidate (éligible depuis l\'arrêt du 7 juillet 2026). ' + (up ? 'Le % vert = ton accord avec chaque candidat.' : '');
-      var pollRows = ranked.filter(function (c) { return pollOf(c) >= 2; }).map(function (c) { return { label: c.name.split(' ').slice(-1)[0], value: pollOf(c), color: c.color, range: POL.POLLS_RANGE && POL.POLLS_RANGE[c.name], text: pctLabel(pollOf(c)) }; });
+      hint = 'Classés par <strong>intentions de vote au 1er tour</strong> (moyenne de plusieurs sondages, ' + esc(POL.POLLS_DATE) + '). Marine Le Pen reste éligible tant que la Cour de cassation n\'a pas tranché (au plus tard début avril 2027). ' + (up ? 'Le % vert = ton accord avec chaque candidat.' : '');
+      var pollRows = ranked.filter(function (c) { return pollOf(c) >= 2; }).map(function (c) { return { label: surname(c.name), value: pollOf(c), color: c.color, range: POL.POLLS_RANGE && POL.POLLS_RANGE[c.name], text: pctLabel(pollOf(c)) }; });
       top = '<div class="pol-card">' + V.hbars(pollRows, { title: 'Sondages 1er tour', max: 40 }) + '<div class="pol-sub" style="font-size:.72rem">Barre = estimation médiane · zone claire = fourchette observée. Sources : ' + esc(POL.POLLS_SOURCES) + '. Hollande est testé comme hypothèse (non déclaré).</div></div>';
       var id0 = 0; body = ranked.map(function (c, k) { return candCard(c, id0++, k + 1, up); }).join('');
     } else if (state.candFilter === 'official') {
@@ -1584,54 +1585,7 @@
 
   // ── Duel / comparateur ──
   function openDuel(name) { if (name) { if (state.duel.a !== name) state.duel.b = state.duel.a === name ? state.duel.b : state.duel.a; state.duel.a = name; } goCompare(); return; }
-  function openDuelLegacy(name) {
-    if (name) {
-      if (!state.duel.a || state.duel.a === name) state.duel.a = name; else state.duel.b = name;
-      if (state.duel.a === state.duel.b) state.duel.b = null;
-    }
-    state.candView = 'duel'; show('candidats'); setNav('candidats'); renderCandidats();
-  }
   function setDuel(side, name) { state.duel[side] = name || null; if (state.duel.a && state.duel.a === state.duel.b) state.duel[side === 'a' ? 'b' : 'a'] = null; if (state.view === 'compare') renderCompare(); else renderCandidats(); }
-  function renderDuel(r) {
-    var running = POL.CANDIDATES.slice().sort(function (a, b) { return pollOf(b) - pollOf(a); });
-    if (!state.duel.a) state.duel.a = 'Marine Le Pen';
-    if (!state.duel.b) state.duel.b = r && r.matches[0] && r.matches[0].name !== state.duel.a ? r.matches[0].name : 'Édouard Philippe';
-    var A = candByName(state.duel.a), B = candByName(state.duel.b);
-    function sel(side, cur) { return '<select class="pol-select" onchange="POLQ.setDuel(\'' + side + '\', this.value)">' + running.map(function (c) { return '<option value="' + esc(c.name) + '"' + (c.name === cur ? ' selected' : '') + '>' + esc(c.name) + (POL.isRunning(c) ? '' : ' (retiré)') + '</option>'; }).join('') + '</select>'; }
-    var head = '<div class="pol-card pol-duel-head"><div class="pol-duel-side">' + candAvatar(A, 'big') + sel('a', A.name) + '<span class="pol-cd-party">' + esc(A.party) + '</span></div><span class="pol-duel-vs">VS</span><div class="pol-duel-side">' + candAvatar(B, 'big') + sel('b', B.name) + '<span class="pol-cd-party">' + esc(B.party) + '</span></div></div>';
-    var up = r ? r.profile : null;
-    var mqA = mqOf(A), mqB = mqOf(B); var sim = POL.candSimilarity ? POL.candSimilarity(A, B) : null;
-    var verdict = '';
-    var rows = POL.SECTIONS.map(function (s) {
-      var a = A.scores[s], b = B.scores[s], u = up ? up[s] : null;
-      var win = '';
-      var ta = mqA && mqA.themes[s], tb = mqB && mqB.themes[s];
-      if (ta && tb && ta.score != null && tb.score != null) win = ta.score > tb.score + 0.01 ? 'a' : (tb.score > ta.score + 0.01 ? 'b' : '=');
-      else if (u != null) { var da = Math.abs(a - u), db = Math.abs(b - u); win = da < db - 0.01 ? 'a' : (db < da - 0.01 ? 'b' : '='); }
-      var youMark = u != null ? '<span class="pol-duel-you" style="left:' + ((10 - u) / 10 * 100) + '%"></span>' : '';
-      return { s: s, a: a, b: b, u: u, win: win, html: '<div class="pol-duel-row"><div class="pol-duel-lbl">' + POL.themeEmoji(s) + ' ' + esc(POL.SECTION_LABELS[s]) + (win && win !== '=' ? ' <span class="pol-duel-win" style="color:' + cc(win === 'a' ? A.color : B.color) + '">→ ' + esc((win === 'a' ? A : B).name.split(' ').slice(-1)[0]) + ' plus proche</span>' : (win === '=' ? ' <span class="pol-duel-win" style="color:var(--pol-mut)">égalité</span>' : '')) + '</div>' +
-        '<div class="pol-duel-track"><div class="pol-cd-bar-track"></div>' + youMark + '<span class="pol-duel-dot" style="left:' + ((10 - a) / 10 * 100) + '%;background:' + A.color + '" title="' + esc(A.name) + ' ' + a + '"></span><span class="pol-duel-dot" style="left:' + ((10 - b) / 10 * 100) + '%;background:' + B.color + '" title="' + esc(B.name) + ' ' + b + '"></span></div></div>' };
-    });
-    if (up) {
-      var wa = rows.filter(function (x) { return x.win === 'a'; }).length, wb = rows.filter(function (x) { return x.win === 'b'; }).length;
-      var ma = mqA ? mqA.pct : POL.computeMatch(up, A.scores), mb = mqB ? mqB.pct : POL.computeMatch(up, B.scores);
-      var closer = ma > mb ? A : (mb > ma ? B : null);
-      verdict = '<div class="pol-card pol-duel-verdict"><div class="pol-duel-scores"><span style="color:' + cc(A.color) + '"><strong>' + ma + '%</strong> d\'accord</span><span class="pol-duel-vs-sm">' + wa + ' – ' + wb + ' thèmes</span><span style="color:' + cc(B.color) + '"><strong>' + mb + '%</strong> d\'accord</span></div>' +
-        '<div class="pol-duel-txt">' + (closer ? 'Dans un second tour <strong>' + esc(A.name) + '</strong> / <strong>' + esc(B.name) + '</strong>, tes idées sont plus proches de <strong style="color:' + cc(closer.color) + '">' + esc(closer.name) + '</strong> (' + Math.max(ma, mb) + '% contre ' + Math.min(ma, mb) + '%).' : 'Égalité parfaite entre les deux.') + (sim != null ? ' Entre eux, ' + esc(A.name.split(' ').slice(-1)[0]) + ' et ' + esc(B.name.split(' ').slice(-1)[0]) + ' répondent pareil à <strong>' + sim + ' %</strong> des ' + Q.length + ' questions.' : '') + '</div></div>';
-    } else verdict = '<div class="pol-matching-note">Fais le quiz pour voir de qui tu es le plus proche dans ce duel.' + (sim != null ? ' Entre eux : <strong>' + sim + ' %</strong> d\'idées communes sur les ' + Q.length + ' questions.' : '') + '</div>';
-    var radar = '<div class="pol-card">' + V.radar([
-      { values: up ? agreementValues(up, A) : A.scores, color: A.color, label: A.name.split(' ').slice(-1)[0] },
-      { values: up ? agreementValues(up, B) : B.scores, color: B.color, label: B.name.split(' ').slice(-1)[0] }
-    ], { title: 'Radar' }) + '<div class="pol-sub" style="font-size:.74rem;text-align:center">' + (up ? 'Surface = accord avec toi par thème.' : 'Surface = position (10 = gauche) par thème.') + '</div></div>';
-    var bars = '<div class="pol-card"><div class="pol-cd-stat-hint">Positions thème par thème ' + (up ? '<span class="pol-cd-you-legend">▮ toi</span>' : '') + '</div>' + rows.map(function (x) { return x.html; }).join('') + '<div class="pol-axis-legend"><span style="color:var(--pol-left)">← Gauche</span><span>Centre</span><span style="color:var(--pol-right)">Droite →</span></div></div>';
-    var progs = '<div class="pol-card"><div class="pol-cd-stat-hint">Leurs programmes, face à face</div>' + POL.SECTIONS.map(function (s) { return '<div class="pol-duel-prog"><div class="pol-duel-prog-t">' + POL.themeEmoji(s) + ' ' + esc(POL.SECTION_LABELS[s]) + '</div><div class="pol-duel-prog-cols"><div style="border-color:' + A.color + '"><strong style="color:' + cc(A.color) + '">' + esc(A.name.split(' ').slice(-1)[0]) + '</strong><br>' + esc(A.program[s] || '—') + '</div><div style="border-color:' + B.color + '"><strong style="color:' + cc(B.color) + '">' + esc(B.name.split(' ').slice(-1)[0]) + '</strong><br>' + esc(B.program[s] || '—') + '</div></div></div>'; }).join('') + '</div>';
-    var duelActus = (actusOf(A.name).length || actusOf(B.name).length) ? '<div class="pol-card"><div class="pol-cd-stat-hint">Leurs dernières sorties</div><div class="pol-duel-prog-cols pol-duel-actus"><div style="border-color:' + A.color + '">' + (actusOf(A.name).slice(0, 3).map(function (a) { return actuItem(a, up, false); }).join('') || '<span class="pol-sub">—</span>') + '</div><div style="border-color:' + B.color + '">' + (actusOf(B.name).slice(0, 3).map(function (a) { return actuItem(a, up, false); }).join('') || '<span class="pol-sub">—</span>') + '</div></div></div>' : '';
-    return '<div class="pol-cols"><div class="pol-col">' + head + verdict + radar + '</div><div class="pol-col pol-col-side">' + bars + progs + duelActus + '</div></div>';
-  }
-
-  // ════════════════════════════════════════════════
-  // PAGE MÉTHODOLOGIE (30/08/2026)
-  // ════════════════════════════════════════════════
   function goMethodo() { renderMethodo(); show('methodo'); setNav('methodo'); }
   function renderMethodo() {
     var nRun = POL.CANDIDATES.filter(POL.isRunning).length, nFam = POL.FAMILIES ? POL.FAMILIES.length : 22;
@@ -1731,7 +1685,7 @@
     Q.forEach(function (q) { var pa = POL.candPos(q, A), pb = POL.candPos(q, B); if (pa == null || pb == null) return; items.push({ q: q, pa: pa, pb: pb, conc: POL.concordance(pa, pb), u: r ? POL.answerScore(state.answers[q.id], q) : null }); });
     var sim = items.length ? POL.concPct(items.reduce(function (s, it) { return s + it.conc; }, 0) / items.length) : null;
     var nAcc = items.filter(function (it) { return it.conc >= 0.6; }).length, nDis = items.filter(function (it) { return it.conc < -0.3; }).length;
-    var simCard = '<div class="pol-card pol-cmp-sim"><div class="pol-cmp-sim-n">' + (sim == null ? '—' : sim + ' %') + '</div><div class="pol-cmp-sim-l">d\'idées communes entre <strong style="color:' + cc(A.color) + '">' + esc(A.name.split(' ').slice(-1)[0]) + '</strong> et <strong style="color:' + cc(B.color) + '">' + esc(B.name.split(' ').slice(-1)[0]) + '</strong> sur ' + items.length + ' questions · ' + nAcc + ' accords, ' + nDis + ' désaccords</div><div class="pol-cmp-sim-bar"><span style="width:' + (sim || 0) + '%"></span></div></div>';
+    var simCard = '<div class="pol-card pol-cmp-sim"><div class="pol-cmp-sim-n">' + (sim == null ? '—' : sim + ' %') + '</div><div class="pol-cmp-sim-l">d\'idées communes entre <strong style="color:' + cc(A.color) + '">' + esc(surname(A.name)) + '</strong> et <strong style="color:' + cc(B.color) + '">' + esc(surname(B.name)) + '</strong> sur ' + items.length + ' questions · ' + nAcc + ' accords, ' + nDis + ' désaccords</div><div class="pol-cmp-sim-bar"><span style="width:' + (sim || 0) + '%"></span></div></div>';
     var themeRows = POL.SECTIONS.map(function (t) {
       var its = items.filter(function (it) { return it.q.theme === t; }); if (!its.length) return '';
       var pct = POL.concPct(its.reduce(function (s, it) { return s + it.conc; }, 0) / its.length); var tag = POL.concTag((pct / 100) * 2 - 1);
@@ -1756,7 +1710,7 @@
     function catOf(c) { return c >= 0.6 ? 'acc' : (c < -0.3 ? 'dis' : 'mid'); }
     var CAT_LBL = { acc: 'Ils sont d\'accord', mid: 'Positions nuancées', dis: 'Ils s\'opposent' };
     var lastCat = null;
-    var an = A.name.split(' ').slice(-1)[0], bn = B.name.split(' ').slice(-1)[0];
+    var an = surname(A.name), bn = surname(B.name);
     var rows = list.slice(0, shown).map(function (it) {
       var tag = POL.concTag(it.conc), cat = catOf(it.conc), hdr = '';
       if (cat !== lastCat) {

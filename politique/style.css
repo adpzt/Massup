@@ -24,7 +24,7 @@
   /* ── ENCRE ── */
   --pol-txt: #151D31;       /* encre bleu-nuit. Sur surface 15,4:1 */
   --pol-txt-2: #49536B;     /* secondaire. 7,2:1 */
-  --pol-mut: #6F7789;       /* légendes ≥ 12,8px. Sur surface 4,9:1 · sur bg 4,6:1 */
+  --pol-mut: #5E6677;       /* légendes (12/10 : #6F7789 → #5E6677, mesuré 4,1:1 sur bg → 5,2:1 ; ≥ 4,8:1 sur toutes les surfaces claires) */
   /* ── BLEU — unique couleur d'action ── */
   --pol-blue: #1B4DE4;      /* liens, texte interactif. 5,6:1 */
   --pol-blue-deep: #10328F; /* rubriques, hover. 9,6:1 */
@@ -44,7 +44,7 @@
   --pol-amber: #E29A0C;     /* décoratif uniquement */
   --pol-violet: #5B21B6;    --pol-violet-soft: #F0EBFB;
   --pol-pink: #AD1457;      --pol-pink-soft: #FBEAF2;
-  --pol-gold: #8C6A14;      /* sur gold-soft 4,8:1 (ex #D4A017 : 2,2:1 !) */
+  --pol-gold: #7E5F12;      /* sur gold-soft 4,8:1 (ex #D4A017 : 2,2:1 !) */
   --pol-gold-soft: #F7F2E2;
   /* ── DRAPEAU — filet, jamais aplat ── */
   --pol-flag-blue: #10328F; --pol-flag-white: #FFFFFF; --pol-flag-red: #BE2B38;
@@ -86,7 +86,7 @@
   --pol-blue-deep: #BDCAFF; /* 9,1:1 */
   --pol-blue-bright: #6E89F7;
   --pol-blue-soft: #1E2A4E;
-  --pol-acc: #4A6CF5;       /* fond bouton — ravivé (A2). Blanc dessus 4,6:1 */
+  --pol-acc: #3F62EE;       /* fond bouton (12/10 : #4A6CF5 → #3F62EE, blanc dessus 4,4:1 → 5,0:1, AA) */
   --pol-acc-soft: #1E2A4E;
   --pol-red: #FF8494; --pol-red-soft: #332027;
   --pol-ok: #67CC96; --pol-ok-soft: #14291F; --pol-ok-line: #23483A;
@@ -196,11 +196,8 @@ body.pol-body {
 .pol-prof-switch { display: flex; gap: 3px; background: var(--pol-bg-2); border: 1px solid var(--pol-line-2); border-radius: 10px; padding: 3px; }
 .pol-prof-btn { border: none; background: transparent; color: var(--pol-txt-2); font-family: inherit; font-size: .78rem; font-weight: 700; padding: .32rem .6rem; border-radius: 7px; cursor: pointer; transition: background .15s, color .15s; }
 .pol-prof-btn.on { background: var(--pol-blue); color: #fff; box-shadow: 0 1px 3px rgba(27,77,228,.3); }
-.pol-icon-btn {
-  background: var(--pol-surface); border: 1px solid var(--pol-line-2); color: var(--pol-txt-2);
-  border-radius: 9px; padding: .4rem .65rem; font-size: .78rem; font-weight: 600; cursor: pointer; font-family: inherit;
-}
-.pol-icon-btn:active { background: var(--pol-bg-2); }
+
+
 
 /* ── Boutons ── */
 .pol-btn {
@@ -233,26 +230,26 @@ body.pol-body {
 .pol-wrap > div > .pol-slbl:first-child, .pol-wrap > div > .pol-cols:first-child > .pol-col > .pol-slbl:first-child, .pol-col > .pol-slbl:first-child, .pol-wrap > div > .pol-card:first-child, .pol-wrap > div > .pol-global:first-child { margin-top: .9rem; }
 
 /* ── Login ── */
-.pol-login { min-height: 78vh; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem; }
-.pol-login-card { background: var(--pol-surface); border: 1px solid var(--pol-line); border-radius: 22px; padding: 2.1rem 1.6rem; max-width: 390px; width: 100%; text-align: center; box-shadow: var(--pol-shadow); }
-.pol-login-card h1 { font-size: 1.45rem; margin: 0 0 .35rem; letter-spacing: -.025em; }
-.pol-login-card p { color: var(--pol-txt-2); font-size: .88rem; margin: 0 0 1.4rem; }
+
+
+
+
 .pol-input {
   width: 100%; background: var(--pol-surface-2); border: 1.5px solid var(--pol-line-2); color: var(--pol-txt);
   border-radius: 12px; padding: .85rem .95rem; font-family: inherit; font-size: .95rem;
 }
 .pol-input::placeholder { color: var(--pol-mut); }
 .pol-input:focus { outline: none; border-color: var(--pol-blue); box-shadow: 0 0 0 3px var(--pol-blue-soft); background: var(--pol-surface); }
-.pol-login-note { margin-top: 1.1rem; font-size: .76rem; color: var(--pol-mut); line-height: 1.55; }
+
 
 /* ── Intro ── */
-.pol-intro-hero { text-align: center; padding: 2.2rem 0 1rem; }
-.pol-intro-hero h1 { font-size: 2rem; margin: .35rem 0; letter-spacing: -.035em; line-height: 1.1; }
-.pol-intro-hero .pol-sub { color: var(--pol-txt-2); font-size: .96rem; max-width: 470px; margin: .55rem auto 0; }
-.pol-stat-row { display: flex; gap: .6rem; margin: 1.5rem 0; }
+
+
+
+
 .pol-stat { flex: 1; background: var(--pol-surface); border: 1px solid var(--pol-line); border-radius: 15px; padding: 1rem .5rem; text-align: center; box-shadow: var(--pol-shadow-sm); }
-.pol-stat-n { font-size: 1.65rem; font-weight: 800; color: var(--pol-blue); letter-spacing: -.02em; }
-.pol-stat-l { font-size: .7rem; color: var(--pol-mut); margin-top: .15rem; font-weight: 600; }
+
+
 .pol-neutral-note { font-size: .79rem; color: var(--pol-txt-2); line-height: 1.6; background: var(--pol-surface); border: 1px solid var(--pol-line); border-left: 3px solid var(--pol-blue); border-radius: 12px; padding: .9rem 1rem; margin-bottom: 1.1rem; box-shadow: var(--pol-shadow-sm); }
 
 /* ── Progress bar ── */
@@ -263,7 +260,7 @@ body.pol-body {
 
 /* ── Question ── */
 .pol-q-badge { display: inline-flex; align-items: center; gap: .4rem; font-size: .7rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: .32rem .65rem; border-radius: 99px; margin-bottom: .85rem; }
-.pol-q-num { font-size: .8rem; color: var(--pol-mut); font-weight: 600; margin-bottom: .3rem; }
+
 .pol-q-title { font-size: 1.4rem; font-weight: 800; line-height: 1.28; letter-spacing: -.025em; margin: 0 0 .95rem; }
 .pol-q-expl { background: var(--pol-surface); border: 1px solid var(--pol-line); border-left: 3px solid var(--pol-blue); border-radius: 12px; padding: .9rem 1rem; font-size: .87rem; line-height: 1.62; color: var(--pol-txt-2); margin-bottom: 1.15rem; box-shadow: var(--pol-shadow-sm); }
 .pol-q-expl strong { color: var(--pol-txt); font-weight: 800; }
@@ -305,11 +302,11 @@ body.pol-body {
 .pol-imp-hint { font-size: .64rem; color: var(--pol-mut); margin-top: .35rem; line-height: 1.4; }
 
 /* ── Accueil (dashboard) ── */
-.pol-home-stats { display: flex; gap: .6rem; justify-content: center; font-size: .8rem; color: var(--pol-txt-2); margin: .3rem 0 .2rem; }
-.pol-home-stats span { background: var(--pol-surface-2); border: 1px solid var(--pol-line); border-radius: 8px; padding: .25rem .6rem; }
+
+
 .pol-perso-card { border-left: 3px solid var(--pol-blue); }
 .pol-perso-top { display: flex; gap: .6rem; align-items: flex-start; }
-.pol-perso-emoji { font-size: 1.6rem; line-height: 1; }
+
 
 /* ── Indice de sauvegarde ── */
 .pol-save-hint { font-size: .74rem; color: var(--pol-mut); text-align: center; margin: .2rem 0 .85rem; line-height: 1.45; }
@@ -349,7 +346,7 @@ body.pol-body {
 .pol-cand.open .pol-cand-detail { display: block; }
 .pol-cand-hint { font-size: .78rem; color: var(--pol-mut); margin: -.3rem 0 .7rem; line-height: 1.5; }
 .pol-cand-oneliner { font-size: .84rem; color: var(--pol-txt); font-weight: 600; line-height: 1.5; padding: .7rem 0 .2rem; }
-.pol-cand-status { font-weight: 600; color: var(--pol-mut); text-transform: capitalize; }
+
 .pol-cand-prog-hint { font-size: .72rem; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; color: var(--pol-blue-deep); margin: .7rem 0 .3rem; }
 .pol-cand-theme-block { padding: .5rem 0; border-bottom: 1px solid var(--pol-line); }
 .pol-cand-theme-block:last-child { border-bottom: none; }
@@ -391,11 +388,11 @@ body.pol-body {
 
 /* ── États divers ── */
 .pol-empty { text-align: center; color: var(--pol-mut); padding: 2.5rem 1rem; }
-.pol-empty-ico { font-size: 2.2rem; margin-bottom: .5rem; }
-.pol-spinner { width: 28px; height: 28px; border: 3px solid var(--pol-line-2); border-top-color: var(--pol-blue); border-radius: 50%; animation: pol-spin .8s linear infinite; margin: 2rem auto; }
+
+
 @keyframes pol-spin { to { transform: rotate(360deg); } }
 .pol-hidden { display: none !important; }
-.pol-fade { animation: pol-fade .25s ease; }
+
 @keyframes pol-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
 .pol-matching-note { font-size: .79rem; color: var(--pol-txt-2); line-height: 1.6; background: var(--pol-surface); border: 1px solid var(--pol-line); border-left: 3px solid var(--pol-red); border-radius: 12px; padding: .85rem 1rem; margin-top: 1rem; box-shadow: var(--pol-shadow-sm); }
@@ -489,9 +486,9 @@ body.pol-body {
 
 /* header : pastille cloud */
 .pol-cloud { border: 1px solid var(--pol-line-2); background: var(--pol-surface); color: var(--pol-txt-2); border-radius: 9px; padding: .34rem .55rem; font-family: inherit; font-size: .72rem; font-weight: 800; cursor: pointer; white-space: nowrap; }
-.pol-cloud-ok { background: var(--pol-ok-soft); border-color: var(--pol-ok-line); color: var(--pol-ok); }
-.pol-cloud-sync, .pol-cloud-pending { background: var(--pol-blue-soft); border-color: #C9D8FF; color: var(--pol-blue-deep); }
-.pol-cloud-off, .pol-cloud-err, .pol-cloud-offline { background: var(--pol-warn-soft); border-color: var(--pol-warn-line); color: var(--pol-warn); }
+
+
+
 .pol-cloud-line { font-size: .78rem; color: var(--pol-txt-2); background: var(--pol-ok-soft); border: 1px solid var(--pol-ok-line); border-radius: 10px; padding: .55rem .8rem; margin: -.3rem 0 1rem; }
 .pol-cloud-card.ok { border-left: 3px solid var(--pol-ok); }
 .pol-cloud-card.warn { border-left: 3px solid var(--pol-amber); }
@@ -502,9 +499,9 @@ body.pol-body {
 .pol-layers li { margin-bottom: .3rem; }
 
 /* accueil */
-.pol-countdown { display: inline-flex; align-items: center; gap: .6rem; margin-top: .6rem; background: var(--pol-surface); border: 1px solid var(--pol-line); border-radius: 14px; padding: .5rem .9rem; box-shadow: var(--pol-shadow-sm); text-align: left; }
-.pol-cd-j { font-size: 1.5rem; font-weight: 800; color: var(--pol-blue); letter-spacing: -.03em; }
-.pol-cd-txt { font-size: .72rem; color: var(--pol-txt-2); line-height: 1.3; }
+
+
+
 .pol-recap-top { display: flex; align-items: center; gap: .9rem; margin-bottom: .6rem; }
 .pol-recap-txt { flex: 1; min-width: 0; }
 .pol-recap-txt .pol-global-label { font-size: 1.05rem; padding: .35rem .9rem; }
@@ -591,8 +588,8 @@ body.pol-body {
 
 /* duel */
 .pol-select { width: 100%; background: var(--pol-surface-2); border: 1.5px solid var(--pol-line-2); color: var(--pol-txt); border-radius: 10px; padding: .5rem .6rem; font-family: inherit; font-size: .82rem; font-weight: 700; margin: .4rem 0 .2rem; }
-.pol-duel-head { display: flex; align-items: center; gap: .5rem; }
-.pol-duel-side { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
+
+
 .pol-duel-vs { font-weight: 800; color: var(--pol-mut); font-size: .9rem; flex-shrink: 0; }
 .pol-duel-verdict { border-left: 3px solid var(--pol-blue); }
 .pol-duel-scores { display: flex; align-items: center; justify-content: space-between; gap: .5rem; font-size: .9rem; }
@@ -601,16 +598,16 @@ body.pol-body {
 .pol-duel-row { padding: .5rem 0; border-bottom: 1px solid var(--pol-line); }
 .pol-duel-row:last-of-type { border-bottom: none; }
 .pol-duel-lbl { font-size: .8rem; font-weight: 700; margin-bottom: .35rem; display: flex; justify-content: space-between; gap: .4rem; flex-wrap: wrap; }
-.pol-duel-win { font-size: .7rem; font-weight: 800; }
-.pol-duel-track { position: relative; height: 10px; margin: .2rem 4px; }
-.pol-duel-dot { position: absolute; top: -3px; width: 16px; height: 16px; border-radius: 50%; transform: translateX(-50%); border: 2px solid var(--pol-surface); box-shadow: 0 1px 3px rgba(0,0,0,.25); }
-.pol-duel-you { position: absolute; top: -5px; width: 3px; height: 20px; border-radius: 2px; background: var(--pol-ok); transform: translateX(-50%); box-shadow: 0 0 0 1.5px var(--pol-surface); }
-.pol-duel-prog { padding: .6rem 0; border-bottom: 1px solid var(--pol-line); }
-.pol-duel-prog:last-child { border-bottom: none; }
-.pol-duel-prog-t { font-size: .82rem; font-weight: 800; margin-bottom: .4rem; }
-.pol-duel-prog-cols { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
-.pol-duel-prog-cols > div { font-size: .76rem; line-height: 1.5; color: var(--pol-txt-2); border-left: 3px solid; padding-left: .5rem; }
-@media (max-width: 380px) { .pol-duel-prog-cols { grid-template-columns: 1fr; } .pol-coh-row { grid-template-columns: 1fr 60px 100px; } }
+
+
+
+
+
+
+
+
+
+@media (max-width: 380px) {  .pol-coh-row { grid-template-columns: 1fr 60px 100px; } }
 
 /* header étroit (iPhone 390 px) */
 @media (max-width: 420px) {
@@ -667,7 +664,7 @@ body.pol-body {
 .pol-ts-th { flex: 1; font-weight: 700; color: var(--pol-txt); }
 .pol-ts-you { font-size: .7rem; color: var(--pol-mut); font-weight: 600; white-space: nowrap; }
 .pol-ts-near { font-size: .74rem; color: var(--pol-txt-2); margin-top: .25rem; }
-.pol-duel-actus .pol-actu-item { margin: .35rem 0; padding-left: .8rem; }
+
 @media (max-width: 380px) { .pol-fit { grid-template-columns: 1fr; } }
 
 
@@ -715,10 +712,10 @@ body.pol-body {
   .pol-q-expl { font-size: .92rem; }
   .pol-cd-list, .pol-rv-items { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 1rem; align-items: start; }
   .pol-svg { max-width: 500px; }
-  .pol-intro-hero { padding: 1.3rem 0 .6rem; }
-  .pol-intro-hero h1 { font-size: 2.4rem; }
-  .pol-intro-hero .pol-sub { max-width: 640px; }
-  .pol-stat-row { max-width: 760px; margin-left: auto; margin-right: auto; }
+  
+  
+  
+  
   .pol-podium-item { max-width: 190px; }
   .pol-cand-hint, .pol-matching-note, .pol-neutral-note { font-size: .84rem; }
   .pol-fit { grid-template-columns: 1fr 1fr; }
@@ -778,13 +775,13 @@ body.pol-body {
 .pol-figure-l { font-size: .72rem; font-weight: 700; color: var(--pol-mut); margin-top: .2rem; }
 .pol-steps { display: grid; gap: .55rem; }
 .pol-step { display: flex; gap: .75rem; align-items: flex-start; background: var(--pol-surface); border: 1px solid var(--pol-line); border-radius: 14px; padding: .8rem .9rem; }
-.pol-step-n { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; background: var(--pol-blue); color: #fff; font-weight: 800; font-size: .85rem; display: flex; align-items: center; justify-content: center; }
+
 .pol-step strong { display: block; font-size: .9rem; margin-bottom: .12rem; }
 .pol-step span { font-size: .8rem; color: var(--pol-txt-2); line-height: 1.5; }
-.pol-principles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
-.pol-principle { background: var(--pol-surface); border: 1px solid var(--pol-line); border-radius: 14px; padding: .8rem .85rem; font-size: .78rem; color: var(--pol-txt-2); line-height: 1.5; }
-.pol-principle b { display: block; color: var(--pol-txt); font-size: .84rem; margin-bottom: .15rem; }
-.pol-principle .pol-pi { font-size: 1.2rem; display: block; margin-bottom: .3rem; }
+
+
+
+
 .pol-link-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .6rem; }
 .pol-link-row .pol-btn { width: auto; }
 
@@ -866,7 +863,7 @@ body.pol-body {
   .pol-home-hero h1 { font-size: 3rem; }
   .pol-home-hero .pol-lead { font-size: 1.08rem; }
   .pol-figures { grid-template-columns: repeat(4, minmax(0, 1fr)); max-width: 900px; margin: 1.6rem auto .6rem; }
-  .pol-principles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  
   .pol-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pol-page-head h1 { font-size: 2.4rem; }
   .pol-article { padding: 1.5rem 1.7rem 1.6rem; }
@@ -913,7 +910,7 @@ body.pol-body {
 /* ════════════════════════════════════════════════════════════════
    DIRECTION A « Le quotidien de référence » — livraison Claude Design 01/09
    Couche finale : elle OVERRIDE les styles historiques (chargée en dernier).
-   Réf. : politique/livraison/ (tokens.css déjà greffés en tête de fichier,
+   Réf. : archive/politique_retire_2026-10-12/livraison/ (tokens.css déjà greffés en tête de fichier,
    02-systeme.md pour les valeurs, mocks/ pour le rendu cible).
    ════════════════════════════════════════════════════════════════ */
 
@@ -1050,12 +1047,12 @@ body.pol-body { background: var(--pol-bg); font-family: 'Manrope', system-ui, sa
 .pol-gauge-lblrow { font-size: .75rem; font-weight: 600; color: var(--pol-mut); }
 
 /* ── Chips : UNE espèce filtre (actif = inversion d'encre) ── */
-.pol-rv-chip, .pol-rv-mode, .pol-tab, .pol-cd-filter, .pol-theme-tab {
+.pol-rv-chip, .pol-rv-mode, .pol-tab, .pol-theme-tab {
   height: 32px; display: inline-flex; align-items: center; padding: 0 14px; border-radius: 999px;
   border: 1.5px solid var(--pol-line-2); background: var(--pol-surface); font-size: .8rem; font-weight: 700;
   color: var(--pol-txt-2); box-shadow: none;
 }
-.pol-rv-chip.on, .pol-rv-mode.on, .pol-tab.on, .pol-cd-filter.on, .pol-theme-tab.on {
+.pol-rv-chip.on, .pol-rv-mode.on, .pol-tab.on, .pol-theme-tab.on {
   background: var(--pol-txt); border-color: var(--pol-txt); color: var(--pol-bg);
 }
 .pol-tabs { position: sticky; top: var(--pol-header-h); background: var(--pol-bg); border-bottom: 1px solid var(--pol-line); box-shadow: none; padding: 10px 0; display: flex; gap: 8px; overflow-x: auto; }
@@ -1083,7 +1080,7 @@ body.pol-body { background: var(--pol-bg); font-family: 'Manrope', system-ui, sa
 /* rangées compactes (rangs 11+) */
 .pol-cand.compact { background: transparent; border: none; border-radius: 0; box-shadow: none; border-bottom: 1px solid var(--pol-line); margin: 0; }
 .pol-cand.compact .pol-cand-head { padding: 12px 4px; }
-.pol-cand.compact .pol-cand-head img, .pol-cand.compact .pol-cand-head .pol-avatar { width: 32px !important; height: 32px !important; }
+.pol-cand.compact .pol-cand-head img{ width: 32px !important; height: 32px !important; }
 .pol-cand.compact .pol-cand-name { font-size: .875rem; }
 .pol-cand.compact .pol-cand-party { font-size: .74rem; }
 .pol-strate-lbl { font-size: .82rem; font-weight: 800; color: var(--pol-txt-2); margin: 24px 0 4px; padding-bottom: 8px; border-bottom: 2px solid var(--pol-txt); }
@@ -1163,9 +1160,9 @@ body.pol-body { background: var(--pol-bg); font-family: 'Manrope', system-ui, sa
 .pol-logo { font-size: 1rem; line-height: 1.1; }
 .pol-theme-btn, #polCloud { width: 36px; height: 36px; border-radius: 9px; position: relative; }
 .pol-cloud-dot { position: absolute; right: 5px; bottom: 5px; width: 7px; height: 7px; border-radius: 50%; background: var(--pol-mut); border: 1.5px solid var(--pol-surface); }
-.pol-cloud-ok .pol-cloud-dot { background: var(--pol-ok); }
-.pol-cloud-sync .pol-cloud-dot, .pol-cloud-pending .pol-cloud-dot { background: var(--pol-blue); }
-.pol-cloud-err .pol-cloud-dot, .pol-cloud-off .pol-cloud-dot, .pol-cloud-offline .pol-cloud-dot { background: var(--pol-warn); }
+
+
+
 /* sélecteur de profils : segmenté plat, fini les pilules imbriquées */
 .pol-prof-switch { display: flex; gap: 3px; background: var(--pol-bg-2); border: 1px solid var(--pol-line); border-radius: 10px; padding: 3px; box-shadow: none; }
 .pol-prof-btn { border: none; background: transparent; border-radius: 7px; padding: 0 12px; height: 30px; font-size: .8rem; font-weight: 700; color: var(--pol-txt-2); box-shadow: none; }
@@ -1220,3 +1217,18 @@ body.pol-body { background: var(--pol-bg); font-family: 'Manrope', system-ui, sa
 .pol-actu-slim:last-child { border-bottom: none; }
 .pol-actu-slim-d { flex-shrink: 0; font-weight: 700; color: var(--pol-mut); font-size: .72rem; padding-top: 2px; min-width: 58px; }
 .pol-cta-hero .pol-btn-primary { width: auto; max-width: 420px; }
+/* (12/10/2026) Contraste AA des boutons pleins en mode sombre : texte blanc sur #4A6CF5 = 4,4:1 → #3F62EE = 5,0:1.
+   --pol-acc reste #4A6CF5 en sombre car il sert aussi de couleur de texte sur fond foncé. */
+:root[data-theme="dark"] .pol-btn-primary, :root[data-theme="dark"] .pol-prof-btn.on { background-color: #3F62EE; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pol-btn-primary, :root:not([data-theme="light"]) .pol-prof-btn.on { background-color: #3F62EE; }
+}
+
+/* (12/10/2026) Mobile : la barre de filtres collante faisait 5 lignes (≈ 45 % de l'écran à 390 px) et son bas
+   semi-transparent laissait voir le texte dessous → une seule ligne qui défile horizontalement, fond plein. */
+@media (max-width: 999px) {
+  .pol-rv-chips { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    background: var(--pol-bg); padding: .35rem 0 .55rem; margin-left: -1rem; margin-right: -1rem; padding-left: 1rem; padding-right: 1rem; }
+  .pol-rv-chips::-webkit-scrollbar { display: none; }
+  .pol-rv-chips > .pol-rv-chip { flex: 0 0 auto; }
+}
