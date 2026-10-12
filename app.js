@@ -8196,7 +8196,9 @@ function edRender(){
   h+='<div class="as-scroll">';
   // Date / heure
   h+='<div class="ed-dt"><div class="ed-dt-f"><label class="as-lbl">Date</label><input class="ed-input" type="date" id="edDate" value="'+ED.date+'" onchange="edSyncFields();edRender()"/></div>'
-    +'<div class="ed-dt-f"><label class="as-lbl">Heure</label><input class="ed-input" type="time" id="edTime" value="'+(ED.time||'')+'"/></div></div>';
+    +'<div class="ed-dt-f"><label class="as-lbl">Heure</label><input class="ed-input" type="time" id="edTime" value="'+(ED.time||'')+'"/></div></div>'
+    // 12/10 (demande Adrien) : date, heure et durée ensemble en haut — changer la date déplace la séance au calendrier
+    +'<div class="ed-dt"><div class="ed-dt-f"><label class="as-lbl">Dur&#xE9;e (min)</label><input class="ed-input" type="number" inputmode="numeric" id="edDur" min="1" max="300" placeholder="45" value="'+(ED.dur||'')+'"/></div><div class="ed-dt-f"></div></div>';
   if(ED.live){
     // ── Séance en direct : correction exo par exo ──
     h+='<div class="as-lbl">LiveUp &#x2014; corrige tes s&#xE9;ries <span class="as-lbl-hint">reps &#xB7; poids &#xB7; retirer</span></div>';
@@ -8285,7 +8287,6 @@ function edRender(){
   }
   h+=scale('&#x26A1; &#xC9;nergie','energy',['&#xC0; plat','En feu']);
   h+=scale('&#x2B50; Ressenti','feeling',['Tr&#xE8;s dur','Parfaite']);
-  h+='<div class="ed-dt" style="margin-top:.6rem;"><div class="ed-dt-f"><label class="as-lbl">Dur&#xE9;e (min)</label><input class="ed-input" type="number" id="edDur" min="1" max="300" placeholder="45" value="'+(ED.dur||'')+'"/></div></div>';
   h+='<label class="as-lbl">Commentaire</label><textarea class="as-note" id="edComment" rows="2" placeholder="Comment tu t\'es senti...">'+(ED.comment||'')+'</textarea>';
   if(ED.logId){
     h+='<button class="ed-del-btn" onclick="edDelete()">&#x1F5D1; Supprimer cette s&#xE9;ance</button>';
@@ -8488,6 +8489,9 @@ function edSave(){
   var durMin=ED.dur?parseInt(ED.dur,10):null;
   if(durMin&&(isNaN(durMin)||durMin<=0)) durMin=null;
   var logId=ED.logId||Date.now();
+  var _wasEdit=!!ED.logId, _oldDate=null;
+  if(_wasEdit){ var _old=DB.logs.find(function(l){return String(l.id)===String(ED.logId);}); _oldDate=_old?_old.date:null; }
+  var _newDate=ED.date;
   // RANK : total avant, pour le récap de rectification (séance oubliée ajoutée après coup)
   var _rpBefore=null, _rpSeason=null;
   if(FEATURE_RANK) try{ _rpSeason=rankSeasonOf(ED.date); if(_rpSeason) _rpBefore=rankCompute(_rpSeason).total; }catch(e){}
@@ -8521,7 +8525,9 @@ function edSave(){
   edClose();
   renderHisto();
   try{ renderGymGreet(); }catch(e){}
-  showToast('&#x2705; S&#xE9;ance '+(ED&&ED.logId?'modifi&#xE9;e':'enregistr&#xE9;e')+' !');
+  // (12/10) ED est déjà remis à null par edClose : le message s'appuie sur l'état capturé avant
+  showToast(_wasEdit&&_oldDate&&_oldDate!==_newDate?'&#x1F4C5; S&#xE9;ance d&#xE9;plac&#xE9;e au '+formatDateFr(_newDate)
+    :'&#x2705; S&#xE9;ance '+(_wasEdit?'modifi&#xE9;e':'enregistr&#xE9;e')+' !');
   // Récap RP de l'ajustement (différé pour ne pas écraser le toast principal)
   try{
     if(_rpBefore!==null&&_rpSeason){

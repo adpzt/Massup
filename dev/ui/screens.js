@@ -36,6 +36,26 @@ const ADRIEN = [
   ['a_wr_v3_verdict', ["WR=null;wrOpen(rankMonday(todayStr()),true);WR.maison=8;WR.shaker=6;WR.run=1;wrSubmit()"], { scroll: '#wrOverlay .as-scroll' }],
   ['a_export_dossier', [EXPORT_GO], { full: true }],
   ['a_liveup_carte', ['asOpen()', 'asChooseCarte()'], { scroll: '#asOverlay .as-scroll' }],
+  // (12/10) Modifier une séance : date / heure / durée éditables, la case du calendrier suit la nouvelle date
+  ['a_edit_live', ["(function(){var l=DB.logs.find(function(x){return x.live&&x.live.exos&&x.live.exos.length;});edOpen(l.id);})()"], { scroll: '#edOverlay .as-scroll' }],
+  ['a_edit_move', [`(function(){
+    var l=DB.logs.find(function(x){return x.live&&x.live.exos&&x.live.exos.length;});
+    var from=l.date, to=null;
+    for(var i=1;i<25;i++){ var d=rankAddDays(todayStr(),-i); if(!DB.logs.some(function(x){return x.date===d;})&&d.slice(0,7)===todayStr().slice(0,7)){ to=d; break; } }
+    if(!to) to=rankAddDays(from,1);
+    edOpen(l.id);
+    document.getElementById('edDate').value=to; edSyncFields(); edRender();
+    document.getElementById('edTime').value='07:15'; document.getElementById('edDur').value='52';
+    window.confirm=function(){return true;};
+    edSave();
+    var moved=DB.logs.find(function(x){return String(x.id)===String(l.id);});
+    if(!moved||moved.date!==to||moved.time!=='07:15'||moved.duration_min!==52) throw new Error('ECHEC deplacement : '+JSON.stringify(moved&&{date:moved.date,time:moved.time,dur:moved.duration_min})+' attendu '+to);
+    if(DB.logs.filter(function(x){return String(x.id)===String(l.id);}).length!==1) throw new Error('ECHEC doublon');
+    switchView('progression',document.querySelectorAll('.bni')[2]); renderHisto();
+    var cell=[].slice.call(document.querySelectorAll('#calGrid .cal-day')).find(function(c){return c.dataset.date===to;});
+    if(to.slice(0,7)===todayStr().slice(0,7)&&(!cell||cell.className.indexOf('has-session')<0)) throw new Error('ECHEC case calendrier '+to);
+    document.getElementById('calGrid').scrollIntoView();
+  })()`]],
   ['a_liveflow', ['asOpen()', "document.querySelector('#asOverlay .as-bigcard').click()", "asPickLegsMain('leg_press')", 'AS.fromPrep=true;asToReady()'], { scroll: '#asOverlay' }],
 ];
 const MELATI = [
