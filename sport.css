@@ -1,0 +1,65 @@
+/* ═══ « Un autre sport ? » (12/10/2026) — course guidée + autres sports (sport.js) ═══
+   Couleur course = --run (jaune électrique en sombre, olive en clair, défini dans style.css). */
+.sp-frame{box-shadow:inset 0 0 52px rgba(232,255,58,.13),inset 0 0 7px rgba(232,255,58,.28);}
+
+/* Choix du sport : la course prend l'essentiel de l'écran */
+.sp-pick{display:flex;flex-direction:column;gap:.75rem;min-height:100%;}
+.sp-run-card{position:relative;flex:1 1 auto;min-height:52vh;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;gap:.45rem;
+  padding:1.3rem 1.15rem;border-radius:var(--x-r-xl);border:1px solid rgba(232,255,58,.5);
+  background:linear-gradient(160deg,rgba(232,255,58,.24),rgba(232,255,58,.05) 70%);box-shadow:var(--x-inset);
+  color:var(--txt);font-family:inherit;text-align:left;cursor:pointer;overflow:hidden;min-width:0;}
+.sp-run-card:active{transform:scale(.99);}
+.sp-run-ico{position:absolute;top:1rem;right:1.1rem;font-size:4.4rem;line-height:1;}
+.sp-run-name{font-family:'Saira',system-ui,sans-serif;font-style:italic;font-weight:800;font-size:2.5rem;line-height:1;color:var(--run);}
+.sp-run-sub{font-size:.84rem;color:var(--txt);line-height:1.45;max-width:30ch;}
+.sp-run-target{display:inline-block;max-width:100%;padding:.35rem .7rem;border-radius:var(--x-r-pill);border:1px solid rgba(232,255,58,.45);
+  background:rgba(232,255,58,.1);color:var(--run);font-size:.74rem;font-weight:700;overflow-wrap:anywhere;}
+.sp-run-go{margin-top:.35rem;font-size:.95rem;font-weight:800;color:var(--run);}
+.sp-others{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem;}
+.sp-other{display:flex;flex-direction:column;align-items:center;gap:.25rem;min-width:0;padding:.7rem .3rem;background:var(--x-glass);box-shadow:var(--x-inset);
+  border:1px solid var(--gb);border-radius:var(--x-r-lg);color:var(--txt);font-family:inherit;cursor:pointer;}
+.sp-other-ico{font-size:1.5rem;line-height:1;}
+.sp-other-name{font-size:.74rem;font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* Échauffement + course en cours */
+.sp-step{display:flex;flex-direction:column;align-items:center;gap:.6rem;padding:1rem .25rem;text-align:center;}
+.sp-dose{font-size:1rem;font-weight:800;color:var(--run);}
+.sp-clock{font-family:'Saira',system-ui,sans-serif;font-style:italic;font-weight:800;font-size:2.6rem;line-height:1;color:var(--txt);font-variant-numeric:tabular-nums;}
+.sp-clock.big{font-size:3.6rem;color:var(--run);}
+.sp-timer-btn{flex:0 0 auto;}
+.sp-runnow{display:flex;flex-direction:column;align-items:center;gap:.7rem;padding:.8rem 0 1rem;text-align:center;}
+
+/* Formulaire de stats */
+.sp-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.55rem;margin-bottom:.4rem;}
+.sp-field{min-width:0;}
+.sp-field .as-lbl{display:block;margin:.5rem 0 .3rem;}
+.sp-dur{display:flex;align-items:center;gap:.3rem;}
+.sp-dur .ed-input{min-width:0;text-align:center;}
+.sp-dur span{color:var(--mut);font-weight:700;}
+.sp-calc{margin:.35rem 0 .6rem;padding:.55rem .7rem;border-radius:var(--x-r-md);border:1px solid rgba(232,255,58,.35);background:rgba(232,255,58,.07);
+  font-size:.78rem;color:var(--txt);line-height:1.45;}
+.sp-calc strong{color:var(--run);}
+.sp-picks{margin-bottom:.4rem;}
+
+/* Calendrier + modal du jour */
+.cal-day.has-session.day-course{background:linear-gradient(160deg,rgba(232,255,58,.3),rgba(232,255,58,.07) 72%);border-color:rgba(232,255,58,.55);color:#F4FFB8;text-shadow:0 0 8px rgba(232,255,58,.45);}
+.cal-day .cd-run{position:absolute;bottom:1px;left:2px;font-size:.5rem;line-height:1;opacity:.95;}
+.chip-course{background:rgba(232,255,58,.14);color:var(--run);}
+.chip-course-soft{background:rgba(232,255,58,.06);color:var(--mut);}
+.hc-log.dm-t-course{border-left:3px solid var(--run);}
+.hc-log .hc-pts-v.sp-km{background:none;-webkit-text-fill-color:currentColor;filter:none;color:var(--run);}
+.hc-log.dm-t-maison .hc-pts-v.sp-km{color:var(--maison);}
+.sp-km small{font-size:.42em;font-weight:800;color:var(--mut);}
+.dm-live.sp-pain{color:var(--yellow);}
+.sp-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.4rem;margin:.55rem 0 .4rem;}
+.sp-stat{min-width:0;padding:.45rem .35rem;text-align:center;background:var(--x-glass);box-shadow:var(--x-inset);border:1px solid var(--gb);border-radius:var(--x-r-md);}
+.sp-stat b{display:block;font-size:.88rem;color:var(--txt);overflow-wrap:anywhere;}
+.sp-stat span{display:block;margin-top:.1rem;font-size:.58rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--mut);}
+
+@media (prefers-color-scheme: light){
+  .sp-run-card{border-color:rgba(90,100,0,.35);background:linear-gradient(160deg,rgba(232,255,58,.42),rgba(232,255,58,.1) 70%);}
+  .sp-run-target{border-color:rgba(90,100,0,.35);background:rgba(232,255,58,.25);}
+  .sp-calc{border-color:rgba(90,100,0,.3);background:rgba(232,255,58,.18);}
+  .cal-day.has-session.day-course{color:var(--run);text-shadow:none;border-color:rgba(90,100,0,.4);background:linear-gradient(160deg,rgba(232,255,58,.55),rgba(232,255,58,.15) 72%);}
+  .chip-course{background:rgba(232,255,58,.35);}
+}

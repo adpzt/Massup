@@ -3,6 +3,8 @@
 // pour capturer aussi le bas. `full` = capture de toute la page par tranches.
 // Ajouter ici chaque nouvel écran, pour qu'il soit vérifié à chaque passe.
 const tab = (root, re) => `[...document.querySelectorAll('${root} .tab')].find(b=>/${re}/i.test(b.textContent)||/${re}/i.test(b.dataset.p||'')).click()`;
+// Rend le dossier coach dans la page (contrôle visuel + détection des sections en erreur)
+const EXPORT_GO = `(function(){var t=exportCoachDossier();var bad=t.match(/section indisponible[^)]*/g)||[];var pre=document.createElement('pre');pre.id='dossier';pre.style.cssText='white-space:pre-wrap;font-size:10px;line-height:1.35;padding:8px;color:var(--txt);background:var(--bg)';pre.textContent=(bad.length?'ERREURS: '+bad.join(' | ')+'\\n\\n':'')+t.slice(0,7000);document.body.innerHTML='';document.body.appendChild(pre);})()`;
 const ADRIEN = [
   ['a_bilan', [], { full: true }],
   ['a_seances', ["switchView('seances',document.querySelectorAll('.bni')[1])"], { full: true }],
@@ -21,6 +23,19 @@ const ADRIEN = [
   // (12/10) Abonnement push perdu : bandeau « Réactiver » + état honnête dans les réglages
   ['a_push_lost', ["Object.defineProperty(Notification,'permission',{get:()=>'granted'});Object.defineProperty(navigator,'standalone',{get:()=>true});initReminders();DB.reminders.enabled=true;_pushState={state:'lost',reason:'subscribe'};renderWeeklyRecapWidget()"]],
   ['a_push_lost_settings', ["Object.defineProperty(Notification,'permission',{get:()=>'granted'});Object.defineProperty(navigator,'standalone',{get:()=>true});initReminders();DB.reminders.enabled=true;_pushState={state:'lost',reason:'subscribe'}", 'openSettings()', "(document.getElementById('reminderSettings')||document.body).scrollIntoView()"]],
+  // (12/10) « Un autre sport ? » : course guidée, autres sports, carte du jour, calendrier jaune électrique
+  ['a_sport_pick', ['asOpen()', 'asOtherSport()'], { scroll: '#spOverlay .as-scroll' }],
+  ['a_sport_warm', ['SPORT.open()', 'SPORT.startRun()']],
+  ['a_sport_run', ['SPORT.open()', 'SPORT.startRun()', 'SPORT.go(true)'], { scroll: '#spOverlay .as-scroll' }],
+  ['a_sport_done', ['SPORT.open()', 'SPORT.startRun()', 'SPORT.go(true)', 'SPORT.finish()', "SPORT.field('km','5,2');SPORT.setEffort(2)"], { scroll: '#spOverlay .as-scroll' }],
+  ['a_sport_other', ['SPORT.open()', "SPORT.pickOther('foot')"]],
+  ['a_day_course', ["DB.logs.push({id:777,date:todayStr(),time:'18:30',sessions:['autre:Course'],sport:'course',run:{km:5.2,sec:1830,dplus:42,hr:152,hrMax:176,cad:168,kcal:410,effort:1,pain:'genou',warmup:true},duration_min:31,comment:'Bonne sortie, genou un peu chaud en descente',cardio:true});DB.logs.push({id:778,date:todayStr(),time:'12:00',sessions:['autre:Football'],sport:'foot',effort:2,duration_min:90,comment:''});renderHisto();showDayModal(todayStr())"], { scroll: '#dayModal .modal,#dayModal' }],
+  ['a_cal_course', ["(function(){for(var i=1;i<28;i++){var d=rankAddDays(todayStr(),-i);if(!DB.logs.some(function(l){return l.date===d;})){DB.logs.push({id:779,date:d,time:'08:00',sessions:['autre:Course'],sport:'course',run:{km:6,sec:2100},duration_min:35,cardio:true});break;}}})();switchView('progression',document.querySelectorAll('.bni')[2]);renderHisto();document.getElementById('calGrid').scrollIntoView()"]],
+  ['a_week_v3', ["nutTapWeek('maison');nutTapWeek('maison');nutTapWeek('shaker');DB.logs.push({id:777,date:todayStr(),time:'18:30',sessions:['autre:Course'],sport:'course',run:{km:5.2,sec:1830,dplus:42,hr:152,hrMax:176,cad:168,kcal:410,effort:1,pain:'genou',warmup:true},duration_min:31,comment:'Bonne sortie, genou un peu chaud en descente',cardio:true});DB.logs.push({id:778,date:todayStr(),time:'12:00',sessions:['autre:Football'],sport:'foot',effort:2,duration_min:90,comment:''});renderBilanWeekNut();(document.getElementById('bilanWeekNut')||document.body).scrollIntoView()"]],
+  ['a_wr_v3_decl', ["wrOpen(rankMonday(todayStr()),true);wrGoto(4)"], { scroll: '#wrOverlay .as-scroll' }],
+  ['a_wr_v3_verdict', ["WR=null;wrOpen(rankMonday(todayStr()),true);WR.maison=8;WR.shaker=6;WR.run=1;wrSubmit()"], { scroll: '#wrOverlay .as-scroll' }],
+  ['a_export_dossier', [EXPORT_GO], { full: true }],
+  ['a_liveup_carte', ['asOpen()', 'asChooseCarte()'], { scroll: '#asOverlay .as-scroll' }],
   ['a_liveflow', ['asOpen()', "document.querySelector('#asOverlay .as-bigcard').click()", "asPickLegsMain('leg_press')", 'AS.fromPrep=true;asToReady()'], { scroll: '#asOverlay' }],
 ];
 const MELATI = [

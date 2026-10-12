@@ -273,13 +273,15 @@ var DATA = [
   {id:"sb",t:"bonus",num:"Others",icon:"&#x1F525;",name:"OTHERS",sub:"Abdos · Poids de corps · Cardio",exos:[
     {key:"releve_chaise",cat:"abdo",name:"Relevés de Jambes (chaise romaine)",unite:"reps",inc:1,repTarget:true,serie:"3×10",rest:60,cue:"Dos contre le dossier, appui sur les coudes : monte les genoux JUSQU'À ce que le bassin s'enroule et que le bas du dos s'écrase contre le dossier.",tips:["Le repère = bassin enroulé + bas du dos écrasé contre le dossier. Si seules les jambes montent, c'est du psoas et ça aggrave ton antéversion.","Descente lente 2-3s, zéro balancier.","Progression : quand 3×15 passent, haltère de 4 kg entre les pieds."],errs:["Ne pas se balancer.","Ne pas s'arrêter à « lever les genoux » sans enrouler le bassin."],img:"hanglegraise"},
     {key:"crunch_leste",cat:"abdo",name:"Crunch Lesté",poids:5,unite:"kg",inc:2.5,serie:"3×12",rest:75,cue:"Au sol ou sur le banc à crunch, plaque de 5-10 kg tenue sur la poitrine : arrondis le dos, sternum vers le nombril.",tips:["Amplitude courte 20-30 cm, pas plus — c'est une FLEXION haute, pas un sit-up.","Le dos s'arrondit, le bas du dos reste collé : les hanches ne bougent jamais.","Progression : +2,5 kg dès que 3×15 passent proprement."],errs:["Ne pas tirer sur la nuque.","Ne pas monter le buste entier (ça devient du psoas)."]},
+    // 12/10/2026 — ajouté à la demande d'Adrien : banc décliné, tête en bas, pieds bloqués en haut.
+    {key:"crunch_decline",cat:"abdo",name:"Crunch Banc Décliné",unite:"reps",inc:1,repTarget:true,serie:"3×12",rest:60,cue:"Banc décliné, pieds bloqués sous les boudins, tête vers le bas : enroule le buste vers les genoux, une vertèbre après l'autre, puis redescends lentement.",tips:["Enroule le dos (sternum vers le bassin) au lieu de monter le buste droit : ce sont les abdos qui travaillent, pas les fléchisseurs de hanche.","Remonte jusqu'à ~45° maximum, puis redescends en 2-3 s sans reposer complètement le dos.","Progression : quand 3×15 passent proprement, tiens un disque de 2,5-5 kg contre la poitrine."],errs:["Ne pas tirer sur la nuque avec les mains.","Ne pas monter jusqu'à la verticale en tirant avec les jambes (ça devient du psoas et ça aggrave ton antéversion)."]},
     // 22/08/2026 — le Pallof repasse en REPS (décision Adrien) : 3×8-10/côté, chaque rep = une
     // tenue gainée de 2-3 s puis retour. La version « 20 s en continu » du 08/08 est remplacée.
     {key:"pallof",cat:"abdo",name:"Pallof Press (poulie)",poids:10,unite:"kg",inc:1,serie:"3×10/côté",rest:45,uni:true,cue:"Poulie à hauteur de sternum, de profil, perpendiculaire à la machine : tends les bras, TIENS 2-3 s sans pivoter, reviens — et recommence.",tips:["Chaque rep = 2-3 s de tenue bras tendus — la pause EST l'exercice.","Fessiers serrés, côtes basses, épaules loin des oreilles.","Très léger par principe : si tu tournes ou te penches, c'est trop lourd. 3×10 propres des deux côtés ? +1 cran de poulie."],errs:["Ne pas laisser la poulie te faire pivoter.","Ne pas enchaîner les reps sans la tenue de 2-3 s."],img:"pallofimg"},
     {key:"dead_bug",cat:"abdo",name:"Dead Bug",unite:"reps",inc:1,repTarget:true,serie:"3×10/côté",rest:45,cue:"Sur le dos, bas du dos PLAQUÉ au sol : tends lentement bras et jambe opposés.",tips:["Le bas du dos ne décolle JAMAIS — c'est tout l'exercice.","Le correctif direct de ton antéversion : c'est du contrôle, pas de la brûlure — ne pas « sentir » est normal.","Expire en tendant, très lent, 2s par répétition."],errs:["Ne pas cambrer quand la jambe descend.","Ne pas aller vite."],img:"deadbugimg"},
     {key:"crunch_poulie",cat:"abdo",hidden:true,name:"Crunch Poulie à genoux",poids:15,unite:"kg",inc:1,serie:"3×12",rest:75,cue:"À genoux dos à la poulie haute, corde tenue contre la tête : ENROULE le buste vers le bas, coudes vers les genoux.",tips:["C'est le dos qui s'arrondit — les hanches ne bougent pas.","Lourd et contrôlé : c'est LUI qui épaissit les abdos et les rend visibles.","Expire à fond en bas, 1s de contraction avant de remonter."],errs:["Ne pas tirer avec les bras.","Ne pas plier aux hanches (le fessier reste posé sur les talons)."],img:"cablecrunch"},
     {key:"hollow_hold",cat:"abdo",hidden:true,name:"Hollow Hold (dish)",unite:"s",inc:5,repTarget:true,serie:"3×20",rest:45,cue:"Sur le dos, bras et jambes tendus décollés du sol, bas du dos plaqué : tiens la position banane.",tips:["Plus les bras et jambes sont loin du corps, plus c'est dur — règle le levier.","Bas du dos collé au sol en permanence.","Respire court, ne bloque pas ta respiration."],errs:["Ne pas cambrer.","Ne pas monter les jambes trop haut pour tricher."],img:"hollowimg"},
-    {key:"pompes",cat:"corps",hidden:true,name:"Pompes",unite:"reps",inc:1,repTarget:true,serie:"3×10",rest:60,cue:"Corps gainé, descends la poitrine près du sol et pousse fort.",tips:["Mains un peu plus larges que les épaules.","Corps droit : ni fesses en l'air ni dos cambré.","Descente lente, poussée explosive."],errs:["Ne pas laisser les hanches s'affaisser.","Ne pas faire de demi-amplitude."]},
+    {key:"pompes",cat:"corps",name:"Pompes",unite:"reps",inc:1,repTarget:true,serie:"3×10",rest:60,bless:"Poignet : mains sur des poignées de pompes ou des haltères (poignet droit), jamais à plat à la reprise. Stop à la moindre douleur.",cue:"Corps gainé, descends la poitrine près du sol et pousse fort.",tips:["Remises au programme le 12/10 (demande Adrien) : poignées ou haltères au sol pour garder le poignet dans l'axe.","Mains un peu plus larges que les épaules.","Corps droit : ni fesses en l'air ni dos cambré.","Descente lente, poussée explosive."],errs:["Ne pas laisser les hanches s'affaisser.","Ne pas faire de demi-amplitude."]},
     {key:"gainage",cat:"corps",imp:true,name:"Gainage planche",unite:"s",inc:5,repTarget:true,serie:"3×40",rest:60,cue:"Aligne tête-dos-bassin, serre le ventre et les fessiers.",tips:["Coudes sous les épaules, appui sur les avant-bras.","Abdos et fessiers contractés tout du long.","Respire normalement, ne bloque pas."],errs:["Ne pas creuser le bas du dos.","Ne pas lever les fesses vers le haut."]},
     {key:"crunch",cat:"abdo",hidden:true,name:"Crunch",unite:"reps",inc:1,repTarget:true,serie:"3×15",rest:45,cue:"Enroule le buste, décolle les omoplates sans tirer sur la nuque.",tips:["Mains aux tempes, pas derrière la tête.","Expire en montant, contracte les abdos.","Mouvement court et contrôlé."],errs:["Ne pas tirer sur la nuque.","Ne pas aller trop vite par à-coups."]},
     // 08/08/2026 — réglages tapis CALIBRÉS sur les mesures d'Adrien (séance test) : 4,5/6 → 120 bpm
@@ -1225,7 +1227,7 @@ var CANONICAL_WEIGHTS = {
   'poulie_triceps_av':18,'dev_militaire':14,'triceps_barre':18,'tirage_pulldown':50,'shoulder_press':16,
   'traction_assist':25,
   'pompes':10,'gainage':40,'crunch':15,'gripper':20,
-  'crunch_poulie':15,'releve_chaise':10,'pallof':10,'dead_bug':10,'hollow_hold':20,'crunch_leste':5,'cardio_liss':20,'cardio_rameur':10
+  'crunch_poulie':15,'releve_chaise':10,'pallof':10,'dead_bug':10,'hollow_hold':20,'crunch_leste':5,'crunch_decline':12,'cardio_liss':20,'cardio_rameur':10
 };
 
 // Full progression history seed (source: MASSUP_progression.md)
@@ -1345,6 +1347,7 @@ function sessionWeight(sid){
 //   (peu importe le nombre d'exos choisis), MAIS jamais empilée par-dessus une
 //   séance salle déjà comptée dans le même log.
 function logWeight(l){
+  if(l&&l.sport==='course') return 0; // course (12/10) : objectif « Courir », jamais une séance de gym
   var w=0, hasExo=false;
   (l && l.sessions || []).forEach(function(sid){
     if(sid.indexOf('exo:')===0){ hasExo=true; }
@@ -2061,8 +2064,8 @@ function renderCal(){
   var offset=(first===0)?6:first-1;
   var days=new Date(calYear,calMonth2+1,0).getDate();
   var today=todayStr();
-  var sessionMap={};
-  DB.logs.forEach(function(l){ if(!sessionMap[l.date]) sessionMap[l.date]=[]; sessionMap[l.date]=sessionMap[l.date].concat(l.sessions); });
+  var sessionMap={}, runDays={};
+  DB.logs.forEach(function(l){ if(!sessionMap[l.date]) sessionMap[l.date]=[]; sessionMap[l.date]=sessionMap[l.date].concat(l.sessions); if(l.sport==='course') runDays[l.date]=true; });
   // 04/09 (demande Adrien) : plus de trous en début/fin de mois — les cases des semaines à cheval
   // affichent les VRAIS jours du mois d'avant/d'après (grisés .other, mêmes couleurs, cliquables).
   var trail=(7-(offset+days)%7)%7;
@@ -2098,11 +2101,14 @@ function renderCal(){
       if(pushC>pullC&&pushC>legsC) cls+=' day-push';
       else if(pullC>pushC&&pullC>legsC) cls+=' day-pull';
       else if(legsC>pushC&&legsC>pullC) cls+=' day-legs';
+      // Course seule ce jour-là (12/10) : jaune électrique ; avec une séance salle → pastille 🏃
+      else if(runDays[dateStr]&&pushC===0&&pullC===0&&legsC===0&&!sessions.some(function(sid){return sid==='sb'||(sid.indexOf('autre:')===0&&sid!=='autre:Course');})) cls+=' day-course';
       else if(hasMaisonAutre&&pushC===0&&pullC===0&&legsC===0) cls+=' day-maison';
     }
     el.className=cls;
     el.textContent=d;
     if(frozen){ var fk=document.createElement('span'); fk.className='cd-frost'; fk.innerHTML='&#x2744;'; el.appendChild(fk); }
+    if(runDays[dateStr]&&cls.indexOf('day-course')<0){ var rk=document.createElement('span'); rk.className='cd-run'; rk.innerHTML='&#x1F3C3;'; el.appendChild(rk); }
     // Étirements du jour (espace Détente) : petite bulle 🧘 compacte — la couleur de la case ne change pas
     var stretched=dzDayDone(dateStr); // étirements de séance OU routine matin/soir (26/08)
     if(stretched){ var zk=document.createElement('span'); zk.className='cd-zen'; zk.innerHTML='&#x1F9D8;'; el.appendChild(zk); }
@@ -2196,6 +2202,8 @@ function showDayModal(date){
     +'<button class="modal-close hc-close" onclick="closeDayModal()">\u2715</button>';
   var html='';
   logs.forEach(function(l){
+    // Course / autre sport (12/10) : carte dédiée avec toutes les stats (module sport.js)
+    if(l.sport&&typeof SPORT!=='undefined'){ html+=SPORT.dayCardHtml(l); return; }
     // ── Normalisation : si TOUS les principaux d'une séance sont là en exos à la carte,
     // on affiche la chip de LA séance à la place (fix « 3 exos jambes ≠ séance LEGS ») ──
     var sess=(l.sessions||[]).slice();
@@ -2282,8 +2290,8 @@ function showDayModal(date){
       +'<div class="dm-actrow">'
       +(canResume?'<button class="dm-resume" onclick="asResumeLog(\''+l.id+'\')">&#x25B6; Reprendre</button>':'')
       +(hasLive?'<button class="dm-report" onclick="asViewReport(\''+l.id+'\')">&#x1F4CA; Bilan</button>':'')
-      +'<button class="dle-edit">&#x270E; Modifier</button>'
-      +'<button class="dle-del" title="Supprimer">&#x1F5D1;</button>'
+      +'<button class="dle-edit" data-id="'+l.id+'">&#x270E; Modifier</button>'
+      +'<button class="dle-del" data-id="'+l.id+'" title="Supprimer">&#x1F5D1;</button>'
       +'</div>'
       +'</div>';
   });
@@ -2306,17 +2314,20 @@ function showDayModal(date){
     html+='<div class="dm-zen">&#x1F9D8; '+_zl.join(' &#xB7; ')+'</div>';
   }
   document.getElementById('dayModalContent').innerHTML=frozenBanner+html;
+  // (12/10) data-id sur chaque bouton : les cartes sport ont leur propre formulaire de modification
   document.querySelectorAll('#dayModalContent .dle-del').forEach(function(btn,i){
     btn.addEventListener('click',function(e){
       e.stopPropagation();
-      deleteLog(logs[i].id);
+      deleteLog(btn.dataset.id||logs[i].id);
     });
   });
   document.querySelectorAll('#dayModalContent .dle-edit').forEach(function(btn,i){
     btn.addEventListener('click',function(e){
       e.stopPropagation();
       closeDayModal();
-      edOpen(logs[i].id);
+      var id=btn.dataset.id||logs[i].id;
+      var lg=DB.logs.find(function(x){return String(x.id)===String(id);});
+      if(lg&&lg.sport&&typeof SPORT!=='undefined') SPORT.edit(lg.id); else edOpen(id);
     });
   });
   document.getElementById('dayModal').classList.add('open');
@@ -3669,7 +3680,7 @@ function ensureNutriDay(date){
 function pruneNutriDay(date){
   var d=DB.nutrition[date]; if(!d) return;
   var empty=(d.kcal===null||d.kcal===undefined||d.kcal==='')&&(d.prot===null||d.prot===undefined||d.prot==='')
-    &&!d.petit_dej&&!d.dejeuner&&!d.diner&&!d.shaker;
+    &&!d.petit_dej&&!d.dejeuner&&!d.diner&&!d.shaker&&!d.maison&&!d.run&&!d.cardio;
   if(empty) delete DB.nutrition[date];
 }
 function nutriEntriesInWindow(days){
@@ -4025,192 +4036,242 @@ function exportPoidsCSV(){
 
 
 // Export complet "coach" — tout dans un seul fichier, sections multiples
-function exportCoachCSV(){
-  var sep=',';
-  function cell(v){ v=(v===undefined||v===null)?'':String(v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
-  function line(arr){ return arr.map(cell).join(sep); }
-  var bwt=getProfileBodyWeight();
-  var p=DB.profile||{};
-  var goalMap={masse:'Prise de masse',force:'Force',seche:'Seche',maintien:'Maintien'};
-  var g=nutriGoal();
-  var R=[];
-  // ── Profil ──
-  R.push(line(['MASSUP - DOSSIER COMPLET POUR LE COACH']));
-  R.push(line(['Genere le', todayStr()]));
-  R.push(line(['Prenom', p.name||'Adrien']));
-  R.push(line(['Age', (p.age||DEFAULT_AGE)+' ans']));
-  R.push(line(['Taille', (p.height||172)+' cm']));
-  R.push(line(['Poids de corps actuel', bwt?Math.round(bwt*10)/10+' kg':'?']));
-  R.push(line(['Objectif', goalMap[p.goal]||'-']));
-  R.push(line(['Objectif nutrition', g.kcal+' kcal / '+g.prot+' g proteines par jour']));
-  R.push('');
-
-  // ── Progression des charges (synthese) ──
-  // ⚠️ Exos ASSISTÉS (traction/dips assistées) : moins d'assistance = PLUS FORT → la progression
-  // est inversée à l'affichage (bug relevé le 14/08 : 45→20 sortait en « −56 % » comme une
-  // régression alors que c'est sa meilleure progression).
-  R.push(line(['=== FORCE : SYNTHESE PAR EXERCICE ===']));
-  R.push(line(['Traction/Dips assistees : le poids = l\'ASSISTANCE de la machine -> moins = plus fort (progression comptee dans le bon sens)']));
-  R.push(line(['Exercice','Depart','1ere date','Actuel','Progression','%','Derniere modif']));
-  var order=[], seen={};
-  DATA.forEach(function(s){ s.exos.forEach(function(e){ if(!seen[e.key]){ seen[e.key]=1; order.push(e.key); } }); });
-  Object.keys(DB.weights).forEach(function(k){ if(!seen[k]){ seen[k]=1; order.push(k); } });
-  order.forEach(function(key){
-    var arr=DB.weights[key]; if(!arr||!arr.length) return;
-    var w=arr[arr.length-1].val, startVal=arr[0].val;
-    var inv=asIsInverse(key);
-    var delta=Math.round(((inv?startVal-w:w-startVal))*10)/10;
-    var base=inv?startVal:startVal;
-    var pct=base>0?Math.round(delta/base*100):0;
-    R.push(line([getExoName(key)+(inv?' (assistance : moins = mieux)':''),startVal,arr[0].date,w,
-      (delta>0?'+':'')+delta+(inv?' kg d\'assistance en moins':''),(pct>0?'+':'')+pct+'%',DB.weightSetDate[key]||'']));
-  });
-  R.push('');
-
-  // ── Historique détaillé des charges ──
-  R.push(line(['=== FORCE : HISTORIQUE DETAILLE (1 ligne par mesure) ===']));
-  R.push(line(['Exercice','Date','Poids']));
-  order.forEach(function(key){
-    var arr=DB.weights[key]; if(!arr||!arr.length) return;
-    arr.forEach(function(e){ R.push(line([getExoName(key),e.date,e.val])); });
-  });
-  R.push('');
-
-  // ── Séances (v2 14/08 : note /20, RP, douleur, imprévu, échauffement — TOUT ce que l'app sait) ──
-  function _logScore20(l){
-    if(!l.live||!l.live.exos||!l.live.exos.length) return '';
-    try{
-      var ex=liveNotedExos(l.live.exos);
-      if(!ex.length) return '';
-      var t=0; ex.forEach(function(x){ t+=asScoreExoRaw(x); });
-      return Math.max(0,Math.min(20,Math.round(t/ex.length*4)));
-    }catch(e){ return ''; }
+// ── DOSSIER COACH & NUTRITION (refonte 12/10/2026, demande Adrien : « tu peux mieux faire, un max
+// d'infos ») : un fichier Markdown lisible par un coach humain OU un Claude coach — une SYNTHÈSE
+// chiffrée d'abord, puis TOUTES les données brutes en blocs CSV. Chaque section est isolée : une
+// donnée absente ou corrompue n'empêche jamais l'export du reste.
+function exportCoachCSV(){ exportCoachDossier(); }
+function exportCoachDossier(){
+  var _dec=document.createElement('textarea');
+  function txt(v){ if(v===undefined||v===null) return ''; _dec.innerHTML=String(v).replace(/<[^>]*>/g,''); return _dec.value; }
+  function cell(v){ v=txt(v); return /[",\n;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
+  function csv(head,rows){ return '```csv\n'+[head].concat(rows).map(function(r){ return r.map(cell).join(','); }).join('\n')+'\n```'; }
+  function r1(x){ return Math.round(x*10)/10; }
+  function fr(x){ return String(x).replace('.',','); }
+  function avg(a){ return a.length?a.reduce(function(s,x){return s+x;},0)/a.length:null; }
+  var today=todayStr(), p=DB.profile||{};
+  var out=[];
+  function section(title,fn){
+    out.push('\n## '+title+'\n');
+    try{ var r=fn(); if(r) out.push(r); }catch(e){ out.push('_(section indisponible : '+e.message+')_'); }
   }
-  function _logRP(l){
-    try{ if(!rankLogIsSalle(l)) return ''; return Math.max(1,Math.round(rankSeanceRP(l).total/LADDER_ECO.seanceDiv)); }catch(e){ return ''; }
-  }
-  var CTX_LBL={temps:'manque de temps',blessure:'blessure/douleur',energie:'energie/sommeil',malade:'malade'};
-  R.push(line(['=== SEANCES (1 ligne par seance) ===']));
-  R.push(line(['Energie/Ressenti global: 1-5 · Douleur poignet: 0-5 · Douleurs: zones signalees en fin de seance · Note /20 = execution des exos principaux']));
-  R.push(line(['Date','Heure','Seances','Duree (min)','Energie (1-5)','Ressenti (1-5)','Note /20','RP gagnes','Douleur poignet','Douleurs (zone niveau/5)','Imprevu','Echauffement','Cardio','Commentaire']));
-  DB.logs.slice().sort(function(a,b){return b.date.localeCompare(a.date);}).forEach(function(l){
-    var snames=(l.sessions||[]).map(function(sid){
-      if(sid.indexOf('autre:')===0) return sid.replace('autre:','');
-      if(sid.indexOf('exo:')===0) return getExoName(sid.replace('exo:',''));
+  function sname(l){
+    return (l.sessions||[]).map(function(sid){
+      if(sid.indexOf('autre:')===0) return sid.slice(6);
+      if(sid.indexOf('exo:')===0) return getExoName(sid.slice(4));
       var s=DATA.find(function(x){return x.id===sid;}); return s?s.name:sid;
-    }).join(' + ');
-    var lv=l.live||{};
-    R.push(line([l.date,l.time||'',snames,l.duration_min||'',l.energy||'',l.feeling||'',_logScore20(l),_logRP(l),
-      (lv.pain!=null?lv.pain:''),(lv.pains&&lv.pains.length?painZonesTxt(lv.pains):(lv.painAny===false?'aucune':'')),(lv.context?(CTX_LBL[lv.context]||lv.context):''),
-      (l.live?(lv.warmup?'oui':'non'):''),l.cardio?'oui':'',l.comment||'']));
-  });
-  R.push('');
-
-  // ── Étirements / Détente (jours étirés + gestes posture quotidiens) ──
-  if(DB.dz&&Object.keys(DB.dz).length){
-    R.push(line(['=== ETIREMENTS / DETENTE (par jour) ===']));
-    R.push(line(['Date','Etirements faits','Gestes du plan','Posture quotidienne']));
-    Object.keys(DB.dz).sort().forEach(function(dt){
-      var d=DB.dz[dt];
-      var daily=Object.keys(d).filter(function(k){return k!=='stretch'&&k!=='stCt'&&d[k];}).join(' / ');
-      R.push(line([dt,d.stretch?'oui':'',d.stCt||'',daily]));
-    });
-    R.push('');
+    }).map(txt).join(' + ');
   }
+  var logs=(DB.logs||[]).slice().sort(function(a,b){return a.date.localeCompare(b.date)||(a.time||'').localeCompare(b.time||'');});
+  var bw=(DB.bodyWeight||[]).slice().sort(function(a,b){return a.date.localeCompare(b.date);});
+  function bwAt(daysAgo){ var lim=rankAddDays(today,-daysAgo), v=null; bw.forEach(function(b){ if(b.date<=lim) v=b; }); return v; }
+  var curMon=rankMonday(today);
+  var weeks=[]; for(var i=8;i>=1;i--) weeks.push(rankAddDays(curMon,-7*i)); weeks.push(curMon);
 
-  // ── Poids de corps (seule métrique de référence — les données RENPHO ont été retirées) ──
-  R.push(line(['=== POIDS DE CORPS ===']));
-  R.push(line(['Date','Poids (kg)']));
-  (DB.bodyWeight||[]).slice().sort(function(a,b){return a.date.localeCompare(b.date);}).forEach(function(b){
-    R.push(line([b.date,b.weight_kg]));
+  out.push('# MASSUP — Dossier coach & nutrition — '+txt(p.name||'Adrien'));
+  out.push('Généré le '+today+' depuis l\'app MASSUP (données saisies au jour le jour par Adrien).');
+  out.push('\n**Comment lire ce dossier.** La section 1 est une synthèse chiffrée ; les suivantes contiennent toutes les données brutes (blocs CSV). '
+    +'Conventions : charges en kg (haltères = kg par main) ; Traction et Dips **assistées** : le poids est l\'ASSISTANCE de la machine, donc **moins = plus fort** ; '
+    +'note de séance /20 = qualité d\'exécution des exercices principaux (barème de l\'app) ; ressenti par série : facile / ok / dur / échec (« échec » = muscle au bout, pas un raté) ; '
+    +'une semaine va du lundi au dimanche.');
+
+  section('1. Synthèse',function(){
+    var L=[];
+    var last=bw.length?bw[bw.length-1]:null;
+    L.push('**Profil** : '+(p.age||DEFAULT_AGE)+' ans · '+(p.height||172)+' cm · muscu depuis le 28/02/2026 · phase actuelle : **fin de prise de masse** (poids stable visé) → **sèche à partir du lundi 4 janvier 2027** (cible ~12 % de gras, ~68 kg au 1er juin 2027).');
+    if(last){
+      var d=function(n){ var b=bwAt(n); return b?(last.weight_kg-b.weight_kg>0?'+':'')+fr(r1(last.weight_kg-b.weight_kg))+' kg':'n/d'; };
+      L.push('**Poids** : '+fr(last.weight_kg)+' kg (pesée du '+last.date+') · sur 7 j : '+d(7)+' · 30 j : '+d(30)+' · 90 j : '+d(90)+' · départ : '+fr(bw[0].weight_kg)+' kg le '+bw[0].date+'.');
+    }
+    var wv=weeks.map(function(ws){ var we=rankAddDays(ws,6); return weekValue((DB.logs||[]).filter(function(l){return l.date>=ws&&l.date<=we;})); });
+    L.push('**Séances de salle par semaine** (8 dernières semaines closes, de la plus ancienne à la plus récente ; objectif '+getWeekGoal()+') : '+wv.slice(0,8).map(fr).join(' · ')+' — semaine en cours : '+fr(wv[8])+'.');
+    var n30=logs.filter(function(l){return l.date>=rankAddDays(today,-30);}).map(liveLogNote20).filter(function(n){return n!=null;});
+    if(n30.length) L.push('**Exécution** : note moyenne '+fr(r1(avg(n30)))+'/20 sur '+n30.length+' séances notées (30 j).');
+    var wn=weeks.slice(0,8).map(function(ws){ try{ return bilanNoteWeek(ws).note; }catch(e){ return null; } });
+    L.push('**Notes de semaine /20** (8 dernières) : '+wn.map(function(n){return n==null?'–':fr(n);}).join(' · ')+'.');
+    var prs=[], stag=[];
+    Object.keys(DB.weights||{}).forEach(function(k){
+      var a=DB.weights[k]; if(!a||a.length<2) return;
+      var info=findExoIndex(k); if(info&&info.exo&&info.exo.hidden) return;
+      var cur=a[a.length-1], prev=null;
+      a.forEach(function(e){ if(e.date<rankAddDays(today,-30)) prev=e; });
+      if(prev&&cur.val!==prev.val){
+        var up=asIsInverse(k)?cur.val<prev.val:cur.val>prev.val;
+        if(up) prs.push(txt(getExoName(k))+' '+fr(prev.val)+'→'+fr(cur.val));
+      }
+      try{ var nd=getProgressNudge(k); if(nd) stag.push(txt(getExoName(k))+' ('+getSessionsAtWeight(k)+' séances au même poids)'); }catch(e){}
+    });
+    L.push('**Charges en hausse sur 30 j** : '+(prs.length?prs.join(' · '):'aucune')+'.');
+    if(stag.length) L.push('**Stagnations** (≥ 6 séances au même poids) : '+stag.join(' · ')+'.');
+    var nut=weeks.slice(5).map(function(ws){
+      var a=DB.rank&&DB.rank.weekly&&DB.rank.weekly[ws];
+      var o=nutObjectives(ws);
+      if(o.v===3) return ws+' : plats maison '+(a?a.maison:nutWeekCount('maison',ws))+'/14 · shakers '+(a?a.shaker:nutWeekCount('shaker',ws))+'/7 · course '+(a?(a.run||0):Math.max(nutWeekCount('run',ws),runWeekAuto(ws)))+(a?' (déclaré)':' (coches)');
+      return ws+' : petits-déj '+(a?a.pdj:nutWeekCount('petit_dej',ws))+'/7 · '+(o.v===2?'créatine ':'shakers ')+(a?a.shaker:nutWeekCount('shaker',ws))+'/7'+(a?' (déclaré)':' (coches)');
+    });
+    L.push('**Nutrition déclarée** (4 dernières semaines) :\n'+nut.map(function(x){return '- '+x;}).join('\n'));
+    var nd30=Object.keys((DB.nutriA&&DB.nutriA.day)||{}).filter(function(d){return d>=rankAddDays(today,-30);});
+    if(nd30.length&&typeof NUTRIA!=='undefined'){
+      var tt=nd30.map(function(d){ return NUTRIA._totals(DB.nutriA.day[d]); }).filter(function(t){return t.k>0;});
+      var resto=nd30.reduce(function(s,d){ return s+((DB.nutriA.day[d].resto||[]).length); },0);
+      if(tt.length) L.push('**Journal repas** (module Nutrition, '+tt.length+' jours renseignés sur 30) : moyenne '+Math.round(avg(tt.map(function(t){return t.k;})))+' kcal · '+Math.round(avg(tt.map(function(t){return t.p;})))+' g protéines par jour renseigné · '+resto+' repas resto/commande notés. Attention : les jours non renseignés ne sont pas comptés.');
+    }
+    if(typeof STEPS!=='undefined'){
+      var st=[]; for(var j=1;j<=30;j++){ var h=DB.health&&DB.health[rankAddDays(today,-j)]; if(h&&h.steps) st.push(h.steps); }
+      if(st.length) L.push('**Pas** : moyenne '+Math.round(avg(st)).toLocaleString('fr-FR')+' / jour sur '+st.length+' jours (30 j).');
+    }
+    var runs=logs.filter(function(l){return l.sport==='course'&&l.run;});
+    if(runs.length){
+      var km=runs.reduce(function(s,l){return s+(l.run.km||0);},0);
+      var lr=runs[runs.length-1].run;
+      L.push('**Course** : '+runs.length+' sortie(s), '+fr(r1(km))+' km au total · dernière : '+fr(lr.km)+' km en '+Math.round(lr.sec/60)+' min ('+runs[runs.length-1].date+').');
+    } else L.push('**Course** : aucune sortie enregistrée pour l\'instant (objectif 1/semaine depuis le 12/10/2026).');
+    var sl=[]; Object.keys(DB.sleepLog||{}).forEach(function(n){ if(n>=rankAddDays(today,-30)){ var m=sleepMinutes(DB.sleepLog[n]); if(m) sl.push(m); } });
+    if(sl.length) L.push('**Sommeil** : moyenne '+Math.floor(avg(sl)/60)+' h '+String(Math.round(avg(sl)%60)).padStart(2,'0')+' sur '+sl.length+' nuits (30 j).');
+    var pains=logs.filter(function(l){return l.date>=rankAddDays(today,-30)&&l.live&&l.live.pains&&l.live.pains.length;}).map(function(l){return l.date+' : '+painZonesTxt(l.live.pains);});
+    var rp=logs.filter(function(l){return l.date>=rankAddDays(today,-30)&&l.run&&l.run.pain;}).map(function(l){return l.date+' : '+l.run.pain+' (course)';});
+    L.push('**Douleurs signalées (30 j)** : '+(pains.concat(rp).length?pains.concat(rp).join(' · '):'aucune')+'.');
+    var ev=Object.keys(DB.evolution||{});
+    if(ev.length) L.push('**Évolutions de charge en cours** : '+ev.map(function(k){var e=DB.evolution[k]; return txt(getExoName(k))+' '+fr(e.from)+'→'+fr(e.to)+' ('+e.hi+' série(s) au poids haut)';}).join(' · ')+'.');
+    return L.join('\n\n');
   });
-  R.push('');
 
-  // ── Nutrition ──
-  R.push(line(['=== NUTRITION (par jour) ===']));
-  R.push(line(['Date','Calories','Proteines (g)','Petit-dej','Dejeuner','Diner','Shaker']));
-  Object.keys(DB.nutrition).sort().forEach(function(dt){
-    var d=DB.nutrition[dt];
-    R.push(line([dt,(d.kcal!=null?d.kcal:''),(d.prot!=null?d.prot:''),d.petit_dej?'oui':'non',d.dejeuner?'oui':'non',d.diner?'oui':'non',d.shaker?'oui':'non']));
+  section('2. Programme actuel',function(){
+    var rows=[];
+    DATA.forEach(function(s){ s.exos.forEach(function(e){
+      if(e.hidden) return;
+      rows.push([txt(s.name),txt(e.name),e.bonus?'bonus':'principal',e.imp?'oui':'',e.cat||'',e.serie||'',e.rest?e.rest+' s':'',getCurrentWeight(e.key),e.unite||'kg',txt(e.bless||'')]);
+    }); });
+    return 'Règles de l\'app : chaque séance PUSH/PULL contient au moins 1 exercice jambes principal et, depuis le 12/10/2026, **1 exercice abdo obligatoire** (principal, compté dans la note). Minimum 5 exercices.\n\n'
+      +csv(['Séance','Exercice','Statut','Exo clé','Catégorie','Séries×reps','Repos','Charge actuelle','Unité','Consigne blessure'],rows);
   });
-  var w30=nutriEntriesInWindow(30);
-  var kd=w30.filter(function(e){return e.kcal;});
-  R.push('');
-  R.push(line(['Moyenne kcal/jour (30j)', kd.length?Math.round(kd.reduce(function(a,e){return a+e.kcal;},0)/kd.length):0]));
-  R.push(line(['Shakers/semaine (30j)', Math.round(w30.filter(function(e){return e.shaker;}).length/(30/7)*10)/10]));
-  R.push('');
 
-  // ── Séances en direct : détail série par série + note /5 par exo (v2 14/08) ──
-  var liveLogs=(DB.logs||[]).filter(function(l){return l.live;}).sort(function(a,b){return a.date.localeCompare(b.date);});
-  if(liveLogs.length){
-    R.push(line(['=== SEANCES EN DIRECT (detail par serie) ===']));
-    R.push(line(['Ressenti serie: facile / ok (correct) / dur / echec (= muscle au bout, pas un rate) · G/D renseignes sur les unilateraux']));
-    R.push(line(['Date','Seance','Exercice','Statut','Compte','Bonus','Note /5','Serie','Poids serie','Reps faites','Reps cible','Ressenti','Ressenti G','Ressenti D']));
-    liveLogs.forEach(function(l){
-      var sname=(l.sessions||[]).map(function(sid){
-        var s=DATA.find(function(x){return x.id===sid;}); return s?s.name:null;
-      }).filter(Boolean).join('+')||'Exos a la carte';
-      (l.live.exos||[]).forEach(function(x){
-        var counted='';
-        try{ counted=liveExoCounted(x)?'oui':'non'; }catch(e){}
-        var sc='';
-        try{ sc=(x.sets&&x.sets.length)?String(asScoreExo(x)).replace('.',','):''; }catch(e){}
-        var bonus=x.extra?'oui':'';
-        if(!x.sets||!x.sets.length){
-          R.push(line([l.date,sname,getExoName(x.key),x.status||'',counted,bonus,sc,'',x.w,'','','','',''])); return;
-        }
-        x.sets.forEach(function(s,si){
-          R.push(line([l.date,sname,getExoName(x.key),x.status||'',counted,bonus,(si===0?sc:''),si+1,(s.w!=null?s.w:x.w),s.reps,x.reps,s.feel||'',s.feelG||'',s.feelD||'']));
-        });
+  section('3. Charges — synthèse par exercice',function(){
+    var rows=[];
+    Object.keys(DB.weights||{}).forEach(function(k){
+      var a=DB.weights[k]; if(!a||!a.length) return;
+      var inv=asIsInverse(k), st=a[0].val, cur=a[a.length-1].val;
+      var dl=r1(inv?st-cur:cur-st);
+      var info=findExoIndex(k);
+      rows.push([txt(getExoName(k))+(inv?' (assistance, moins = mieux)':''),info&&info.exo&&info.exo.hidden?'retiré':'actif',st,a[0].date,cur,(dl>0?'+':'')+dl,st>0?Math.round(dl/st*100)+'%':'',getSessionsAtWeight(k),DB.weightSetDate[k]||'']);
+    });
+    return csv(['Exercice','Statut','Départ','Date départ','Actuel','Progression','%','Séances au poids actuel','Dernière modif'],rows);
+  });
+
+  section('4. Charges — historique complet',function(){
+    var rows=[];
+    Object.keys(DB.weights||{}).forEach(function(k){ (DB.weights[k]||[]).forEach(function(e){ rows.push([txt(getExoName(k)),e.date,e.val]); }); });
+    return csv(['Exercice','Date','Charge de référence'],rows);
+  });
+
+  section('5. Séances (une ligne par séance, salle + sport)',function(){
+    var CTX={temps:'manque de temps',blessure:'blessure/douleur',energie:'énergie/sommeil',malade:'malade'};
+    return csv(['Date','Heure','Type','Contenu','Durée (min)','Compte en séances de salle','Note /20','Énergie (1-5)','Ressenti (1-5)','Échauffement','Douleurs','Imprévu','Commentaire'],
+      logs.map(function(l){
+        var lv=l.live||{};
+        return [l.date,l.time||'',l.sport?(l.sport==='course'?'course':'autre sport'):(l.live?'salle (LiveUp)':'salle (manuelle)'),sname(l),l.duration_min||'',fr(logWeight(l)),
+          liveLogNote20(l)!=null?liveLogNote20(l):'',l.energy||'',l.feeling||'',l.live?(lv.warmup?'oui':'non'):'',
+          lv.pains&&lv.pains.length?painZonesTxt(lv.pains):(lv.painAny===false?'aucune':''),lv.context?(CTX[lv.context]||lv.context):'',l.comment||''];
+      }));
+  });
+
+  section('6. Détail série par série (séances LiveUp)',function(){
+    var rows=[];
+    logs.filter(function(l){return l.live&&l.live.exos;}).forEach(function(l){
+      var sn=sname(l);
+      l.live.exos.forEach(function(x){
+        var sc=''; try{ sc=(x.sets&&x.sets.length)?fr(asScoreExo(x)):''; }catch(e){}
+        var st=liveExoSide(x)?'bonus':'principal', ct=''; try{ ct=liveExoCounted(x)?'oui':'non'; }catch(e){}
+        if(!x.sets||!x.sets.length){ rows.push([l.date,sn,txt(getExoName(x.key)),st,x.status||'',ct,sc,'',x.w,'',x.reps,'','','']); return; }
+        x.sets.forEach(function(s,si){ rows.push([l.date,sn,txt(getExoName(x.key)),st,x.status||'',ct,si===0?sc:'',si+1,s.w!=null?s.w:x.w,s.reps,x.reps,s.feel||'',s.feelG||'',s.feelD||'']); });
       });
-      if(l.live.ready&&l.live.ready.length) R.push(line([l.date,sname,'-> Se sent pret a monter sur','','','','','',l.live.ready.map(getExoName).join(' / '),'','','','','']));
     });
-    R.push('');
-  }
-
-  // ── Objectifs de saison (v4) : départ 30/07 → cible 1er janvier, note /100, médaille ──
-  R.push(line(['=== OBJECTIFS SAISON 1 (27/07/2026 -> 01/01/2027) ===']));
-  R.push(line(['Note /100: 50 = poids du 30/07 (aucun progres) · 100 = objectif du 1er janvier atteint · Medaille: Bronze III (depart) -> Champion I (objectif)']));
-  R.push(line(['Exercice','Depart 30/07','Actuel','Cible 1er jan','Progression saison %','Note /100','Medaille']));
-  order.forEach(function(key){
-    if(GOALS_JAN[key]==null) return;
-    var info=findExoIndex(key);
-    if(info&&info.exo&&info.exo.hidden) return;
-    var cur=getCurrentWeight(key); if(!cur&&cur!==0) return;
-    var st=exoSeasonStartWeight(key);
-    var prog=null,lvl=null,med='';
-    try{ prog=goalProgress(key); lvl=goalLevel(key); if(prog!==null){ var ld=ladderOf(prog); med=ld.tier.name+' '+ld.div; } }catch(e){}
-    R.push(line([getExoName(key),(st!=null?st:''),cur,GOALS_JAN[key],
-      (prog!==null?Math.round(prog*100)+'%':''),(lvl!==null?Math.round(lvl*100):''),med]));
+    return csv(['Date','Séance','Exercice','Statut','État','Compté','Note /5','Série','Charge','Reps faites','Reps cible','Ressenti','Ressenti G','Ressenti D'],rows);
   });
-  try{
-    var _st=rankState();
-    R.push(line(['RANK GLOBAL',_st.glob.tier.name+' '+_st.glob.div,_st.glob.rp+' RP','','','','']));
-  }catch(e){}
-  R.push('');
 
-  // ── Bilans hebdo déclarés (dimanche soir : petit-déj / shakers / cardio) ──
-  var _wk=(DB.rank&&DB.rank.weekly)?DB.rank.weekly:null;
-  if(_wk&&Object.keys(_wk).length){
-    R.push(line(['=== BILANS HEBDO DECLARES ===']));
-    R.push(line(['Semaine du','Petits-dejeuners','Shakers','Cardios']));
-    Object.keys(_wk).sort().forEach(function(ws){
-      var a=_wk[ws]||{};
-      R.push(line([ws,(a.pdj!=null?a.pdj:''),(a.shaker!=null?a.shaker:''),(a.cardio!=null?a.cardio:'')]));
+  section('7. Courses',function(){
+    var runs=logs.filter(function(l){return l.sport==='course'&&l.run;});
+    if(!runs.length) return '_Aucune course enregistrée._';
+    var EF=['facile','moyen','dur','très dur'];
+    return csv(['Date','Distance (km)','Temps (min:s)','Allure (min/km)','Vitesse (km/h)','D+ (m)','FC moy','FC max','Cadence','Calories','Effort','Douleur','Échauffement','Commentaire'],
+      runs.map(function(l){ var r=l.run, pace=r.km?r.sec/r.km:0;
+        return [l.date,r.km,Math.floor(r.sec/60)+':'+String(r.sec%60).padStart(2,'0'),pace?Math.floor(pace/60)+':'+String(Math.round(pace%60)).padStart(2,'0'):'',r.km?r1(r.km/(r.sec/3600)):'',
+          r.dplus!=null?r.dplus:'',r.hr!=null?r.hr:'',r.hrMax!=null?r.hrMax:'',r.cad!=null?r.cad:'',r.kcal!=null?r.kcal:'',r.effort!=null?EF[r.effort]:'',r.pain||'',r.warmup?'oui':'non',l.comment||'']; }));
+  });
+
+  section('8. Poids de corps (pesées du matin)',function(){
+    return csv(['Date','Poids (kg)','Note'],bw.map(function(b){return [b.date,b.weight_kg,b.note||''];}));
+  });
+
+  section('9. Nutrition',function(){
+    var L=[];
+    var g=nutriGoal();
+    L.push('Repères en prise de masse : ~2900 kcal et 150 g de protéines par jour. Objectifs hebdo de l\'app depuis le 12/10/2026 : **10 plats maison sur 14 repas** (midi + soir), **shaker whey + créatine 7/7**, **1 course**. Avant : petits-déjeuners 5/7 et créatine 5/7 (depuis le 10/08), petits-déj 4 et 2 shakers (avant). Cible enregistrée dans le profil : '+g.kcal+' kcal / '+g.prot+' g.');
+    var wk=(DB.rank&&DB.rank.weekly)||{};
+    L.push('\n**Déclarations du bilan de la semaine**\n\n'+csv(['Semaine du','Plats maison /14','Shakers /7','Courses','Petits-déj /7','Cardios'],
+      Object.keys(wk).sort().map(function(ws){ var a=wk[ws]||{}; return [ws,a.maison!=null?a.maison:'',a.shaker!=null?a.shaker:'',a.run!=null?a.run:'',a.pdj!=null?a.pdj:'',a.cardio!=null?a.cardio:'']; })));
+    L.push('\n**Coches quotidiennes**\n\n'+csv(['Date','Plats maison (0-2)','Shaker','Course','Petit-déj','Calories','Protéines (g)'],
+      Object.keys(DB.nutrition||{}).sort().map(function(d){ var e=DB.nutrition[d]; return [d,e.maison||'',e.shaker?'oui':'',e.run?'oui':'',e.petit_dej?'oui':'',e.kcal!=null?e.kcal:'',e.prot!=null?e.prot:'']; })));
+    var nd=(DB.nutriA&&DB.nutriA.day)||{};
+    if(Object.keys(nd).length&&typeof NUTRIA!=='undefined'){
+      var R=(typeof NUTA!=='undefined'&&NUTA.R)||[], RS=(typeof NUTA!=='undefined'&&NUTA.RESTO)||[];
+      var nm=function(id){ var r=R.find(function(x){return x.id===id;}); return r?txt(r.n):(id||''); };
+      var rn=function(id){ var r=RS.find(function(x){return x.id===id;}); return r?txt(r.n||r.name||id):id; };
+      L.push('\n**Journal repas détaillé** (module Nutrition ; totaux calculés par l\'app)\n\n'+csv(['Date','kcal','Protéines','Glucides','Lipides','Petit-déj','Déjeuner','Dîner','Snacks','Resto / commande','Shaker'],
+        Object.keys(nd).sort().map(function(d){ var j=nd[d], t=NUTRIA._totals(j);
+          return [d,t.k,t.p,t.g,t.l,j.pdj?'oui':'',nm(j.dej),nm(j.din),(j.snacks||[]).length,(j.resto||[]).map(rn).join(' / '),j.shaker?'oui':'']; })));
+    }
+    return L.join('\n');
+  });
+
+  section('10. Pas (120 derniers jours)',function(){
+    var rows=[]; for(var j=120;j>=0;j--){ var d=rankAddDays(today,-j), h=DB.health&&DB.health[d]; if(h&&(h.steps||h.km)) rows.push([d,h.steps||'',h.km||'',h.kcal||'',h.floors||'']); }
+    return rows.length?csv(['Date','Pas','km','kcal actives','Étages'],rows):'_Pas de données de pas._';
+  });
+
+  section('11. Sommeil',function(){
+    var ks=Object.keys(DB.sleepLog||{}).sort();
+    if(!ks.length) return '_Pas de données de sommeil._';
+    return csv(['Nuit du','Coucher','Réveil','Durée (h)'],ks.map(function(n){ var s=DB.sleepLog[n], m=sleepMinutes(s); return [n,s.bed||'',s.wake||'',m?r1(m/60):'']; }));
+  });
+
+  section('12. Étirements / Détente',function(){
+    var ks=Object.keys(DB.dz||{}).sort(); if(!ks.length) return '_Aucun._';
+    return csv(['Date','Étirements de séance','Routine matin','Routine soir'],ks.map(function(d){ var z=DB.dz[d]||{}; return [d,z.stretch?'oui':'',z.am?'oui':'',z.pm?'oui':'']; }));
+  });
+
+  section('13. Douleurs et blessures',function(){
+    var L=['Poignet gauche : ancienne fracture de la styloïde ulnaire (prises neutres, pas de supination jusqu\'à ~novembre 2026). Genou : douleur récurrente en flexion chargée (épisodes juillet et 16/08).'];
+    var rows=logs.filter(function(l){return (l.live&&l.live.pains&&l.live.pains.length)||(l.run&&l.run.pain);})
+      .map(function(l){ return [l.date,sname(l),l.live&&l.live.pains?painZonesTxt(l.live.pains):(l.run.pain+' (course)')]; });
+    if(rows.length) L.push(csv(['Date','Séance','Zones (niveau /5)'],rows));
+    if(DB.painLog&&DB.painLog.length) L.push('\n**Journal poignet**\n\n'+csv(['Date','Douleur (0-5)','Note'],DB.painLog.map(function(x){return [x.date,x.level,x.note||''];})));
+    return L.join('\n\n');
+  });
+
+  section('14. Objectifs de charges saison 1 (départ 30/07/2026 → 1er janvier 2027)',function(){
+    var rows=[];
+    Object.keys(GOALS_JAN).forEach(function(k){
+      var info=findExoIndex(k); if(info&&info.exo&&info.exo.hidden) return;
+      var prog=null; try{ prog=goalProgress(k); }catch(e){}
+      rows.push([txt(getExoName(k)),exoSeasonStartWeight(k)!=null?exoSeasonStartWeight(k):'',getCurrentWeight(k),GOALS_JAN[k],prog!=null?Math.round(prog*100)+'%':'']);
     });
-    R.push('');
-  }
+    return csv(['Exercice','Départ 30/07','Actuel','Cible 1er janvier','Chemin parcouru'],rows);
+  });
 
-  // ── Journal blessure poignet ──
-  if(DB.painLog&&DB.painLog.length){
-    R.push(line(['=== JOURNAL BLESSURE POIGNET (styloide ulnaire) ===']));
-    R.push(line(['Date','Douleur (0-5)','Note']));
-    DB.painLog.forEach(function(p){ R.push(line([p.date,p.level,p.note||''])); });
-    R.push('');
-  }
-
-  downloadCSV('massup_coach_'+todayStr()+'.csv',R.join('\n'));
-  showToast('&#x1F4E5; Dossier complet coach téléchargé');
+  var blob=new Blob([out.join('\n')+'\n'],{type:'text/markdown;charset=utf-8'});
+  var url=URL.createObjectURL(blob), a=document.createElement('a');
+  a.href=url; a.download='massup_dossier_coach_'+today+'.md';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast('&#x1F4E5; Dossier coach & nutrition t&#xE9;l&#xE9;charg&#xE9;');
+  return out.join('\n');
+}
+// Durée d'une nuit {bed:'23:10', wake:'07:05'} en minutes (passe minuit)
+function sleepMinutes(s){
+  if(!s||!s.bed||!s.wake) return null;
+  var b=s.bed.split(':').map(Number), w=s.wake.split(':').map(Number);
+  var m=(w[0]*60+w[1])-(b[0]*60+b[1]); if(m<=0) m+=1440;
+  return m>0&&m<1080?m:null;
 }
 
 // ══════════════════════════════════════════════════
@@ -4447,7 +4508,7 @@ function asPendingAfter(){
 function asNextSetIdx(x){ return (x.sets||[]).length+(x.skippedSets||0)+1; }
 // Suppressible du burger : bonus/ajoutés uniquement — JAMAIS les exos de la séance
 // ni l'exo jambes choisi au départ du LiveUp (règle Adrien 02/08).
-function asExoDeletable(x){ return liveExoSide(x)&&!x.legsPick; }
+function asExoDeletable(x){ return liveExoSide(x)&&!x.legsPick&&!x.abdoPick; }
 function asElapsedMin(){ return AS.startTs?Math.max(1,Math.round((Date.now()-AS.startTs)/60000)):0; }
 function asPick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 // Tirage SANS REMISE à l'échelle d'un bilan (05/08, retour Adrien « ça se répète ») :
@@ -4932,13 +4993,15 @@ function asRenderSetup(){
   if(!DB.prepared){
     h+='<button class="as-carte-link" onclick="asChooseCarte()">&#x1F3AF; Ou compose une s&#xE9;ance &#xE0; la carte &#x203A;</button>';
   }
-  // Séance manuelle (autre sport, oubli) — reléguée ici en discret (04/08, l'ancien ＋ de la vue Séances)
-  h+='<button class="as-carte-link as-manual-link" onclick="asManualEntry()">&#x270D;&#xFE0F; Ou enregistre une s&#xE9;ance manuelle <span class="as-lbl-hint">autre sport, oubli</span> &#x203A;</button>';
+  // 12/10 (demande Adrien) : la séance manuelle laisse la place à « Un autre sport ? » (course guidée,
+  // foot, escalade…). Une séance existante se corrige toujours depuis le calendrier (✎ Modifier).
+  h+='<button class="as-carte-link as-sport-link" onclick="asOtherSport()">&#x1F3C3; Un autre sport&#x202F;? <span class="as-lbl-hint">course, foot, escalade&#x2026;</span> &#x203A;</button>';
   h+='</div>';
   h+='<div class="as-foot"><button class="as-ghost-btn" onclick="asCancelSetup()">Annuler</button></div>';
   return h;
 }
 function asManualEntry(){ asCancelSetup(); edOpen(null); }
+function asOtherSport(){ asCancelSetup(); if(typeof SPORT!=='undefined') SPORT.open(); }
 function asChooseSeance(sid){
   if(AS.sel.sid!==sid){ AS.sel.sid=sid; AS.sel.chosen={}; AS.sel.legsMain=null; }
   if(!AS.sel.extras) AS.sel.extras=[];
@@ -4990,20 +5053,21 @@ function asLegsRequirement(){
 }
 // ── Règle abdos (04/08) : toute séance PUSH/PULL/LEGS doit embarquer AU MOINS 1 exo abdo,
 // choisi AU SETUP (remplace le rituel posture de fin — les étirements vivent dans Détente 🧘).
+// 12/10/2026 (demande Adrien : « obligation d'un exo abdo par séance ») : vaut aussi à la carte, et l'exo
+// abdo choisi devient PRINCIPAL et non supprimable (abdoPick, comme l'exo jambes du jour).
 function asAbdoRequirement(){
   var sel=AS.sel;
-  if(!sel.sid) return {ok:true,msg:''}; // à la carte : libre
-  var s=DATA.find(function(x){return x.id===sel.sid;});
-  if(!s||s.t==='bonus') return {ok:true,msg:''};
+  var s=sel.sid?DATA.find(function(x){return x.id===sel.sid;}):null;
+  if(sel.sid&&(!s||s.t==='bonus')) return {ok:true,msg:''};
   var keys=(sel.extras||[]).slice();
   if(sel.legsMain) keys.push(sel.legsMain);
-  s.exos.forEach(function(e){
+  if(s) s.exos.forEach(function(e){
     if(e.hidden) return;
     if(sel.chosen[e.key]!==false&&(sel.chosen[e.key]===true||!e.bonus)) keys.push(e.key);
   });
   var has=keys.some(function(k){ var i=findExoIndex(k); return !!(i&&i.exo&&i.exo.cat==='abdo'); });
   if(has) return {ok:true,msg:''};
-  return {ok:false,msg:'&#x1F525; Choisis <strong>ton exo abdo du jour</strong> (relev&#xE9;s, crunch lest&#xE9;, pallof, dead bug) &#x2014; il fait partie de chaque s&#xE9;ance.'};
+  return {ok:false,msg:'&#x1F525; Choisis <strong>ton exo abdo du jour</strong> (relev&#xE9;s, crunch d&#xE9;clin&#xE9;, crunch lest&#xE9;, pallof, dead bug) &#x2014; obligatoire dans chaque s&#xE9;ance, il compte dans la note /20.'};
 }
 // Marqueur d'exo dans les listes de choix (règle Adrien 02/08) :
 // cle (U+1F511) = exo clé du profil · étoile = exo principal · rien = bonus. La clé gagne sur l'étoile.
@@ -5066,20 +5130,21 @@ function asRenderSetup2(){
       h+='<div class="as-legs-hint" id="asLegsHint" '+(req.ok?'style="display:none"':'')+'>'+req.msg+'</div>';
       h+='</div>';
     }
-    // ── Bloc 3 (violet) : l'exo ABDO du jour — obligatoire sur toute séance salle (règle 04/08) ──
-    if(s.t!=='bonus'){
-      var reqA0=asAbdoRequirement();
-      h+='<div class="as-sec sec-req'+(reqA0.ok?' ok':'')+'" id="asAbdoZone" style="animation-delay:.12s">';
-      h+='<div class="as-sec-head"><span>&#x1F525; Ton exo abdo du jour</span><span class="as-sec-lock">1 obligatoire</span></div>';
-      h+='<div class="as-exo-picks">';
-      asAbdoOptions().forEach(function(e){
-        var onA=(sel.extras||[]).indexOf(e.key)>=0;
-        h+='<button class="as-pick legs'+(onA?' on':'')+'" data-k="'+e.key+'" onclick="asToggleExtra(\''+e.key+'\',this)">'+e.name+'<span class="as-pick-tick">&#x2713;</span></button>';
-      });
-      h+='</div>';
-      h+='<div class="as-legs-hint" id="asAbdoHint" '+(reqA0.ok?'style="display:none"':'')+'>'+reqA0.msg+'</div>';
-      h+='</div>';
-    }
+  }
+  // ── Bloc 3 (violet) : l'exo ABDO du jour — obligatoire sur toute séance salle (règle 04/08),
+  // à la carte comprise depuis le 12/10 ──
+  if(!s||s.t!=='bonus'){
+    var reqA0=asAbdoRequirement();
+    h+='<div class="as-sec sec-req'+(reqA0.ok?' ok':'')+'" id="asAbdoZone" style="animation-delay:.12s">';
+    h+='<div class="as-sec-head"><span>&#x1F525; Ton exo abdo du jour</span><span class="as-sec-lock">1 obligatoire</span></div>';
+    h+='<div class="as-exo-picks">';
+    asAbdoOptions().forEach(function(e){
+      var onA=(sel.extras||[]).indexOf(e.key)>=0;
+      h+='<button class="as-pick legs'+(onA?' on':'')+'" data-k="'+e.key+'" onclick="asToggleExtra(\''+e.key+'\',this)">'+e.name+'<span class="as-pick-tick">&#x2713;</span></button>';
+    });
+    h+='</div>';
+    h+='<div class="as-legs-hint" id="asAbdoHint" '+(reqA0.ok?'style="display:none"':'')+'>'+reqA0.msg+'</div>';
+    h+='</div>';
   }
   // ── Bloc 🎯 principal ↔ bonus (22/08 à la carte, étendu 31/08 à TOUTES les séances —
   // demande Adrien : machine en maintenance/prise → l'exo de remplacement doit pouvoir compter
@@ -5469,6 +5534,9 @@ function asToReady(){
     list.push(x);
   });
   if(!list.length) return;
+  // Exo abdo du jour (12/10) : le premier abdo de la séance est PRINCIPAL et non supprimable
+  var _ab=list.find(function(x){ var i=findExoIndex(x.key); return !!(i&&i.exo&&i.exo.cat==='abdo'); });
+  if(_ab){ _ab.abdoPick=true; _ab.main=true; }
   // Les principaux d'abord, les bonus en fin de séance (l'ordre reste réglable à l'écran suivant)
   list.sort(function(a,b){ return (a.main===false?1:0)-(b.main===false?1:0); });
   AS.exos=list; AS.cur=0; AS.setIdx=1; AS.phase='intro'; AS.introIdx=0; AS.step='ready';
@@ -6223,6 +6291,7 @@ function asToggleMainAt(i){
   var x=AS.exos[i]; if(!x) return;
   if(exoIsCardio(x.key)){ showToast('Le cardio ne se note pas &#x2014; il reste hors /20.'); return; }
   if(AS.stype==='legs'&&rankGroupOf(x.key)==='Jambes'){ showToast('&#x1F9B5; Legday : tous les exos jambes sont principaux (r&#xE8;gle du 16/08).'); return; }
+  if(x.abdoPick){ showToast('&#x1F525; L\'exo abdo du jour reste principal &#x2014; il est obligatoire.'); return; }
   x.main=liveExoSide(x); // bonus → principal, principal → bonus
   asSave(); asRender();
   showToast(x.main
@@ -7362,7 +7431,7 @@ var DZ_MUSCLE_OF={
   gripper:['avantbras'],
   leg_press:['quadris','fessiers'],leg_ext:['quadris'],leg_curl:['ischios'],mollets:['mollets'],
   hip_thrust:['fessiers','ischios','lombaires'],abduct:['fessiers'],adduct:['adducteurs'],
-  crunch_poulie:['abdos'],releve_chaise:['abdos','hanches'],pallof:['abdos'],dead_bug:['abdos'],crunch_leste:['abdos'],
+  crunch_poulie:['abdos'],releve_chaise:['abdos','hanches'],pallof:['abdos'],dead_bug:['abdos'],crunch_leste:['abdos'],crunch_decline:['abdos'],
   hollow_hold:['abdos'],crunch:['abdos'],gainage:['abdos'],
   cardio_liss:['quadris','mollets'],cardio_rameur:['dos','quadris']
 };
@@ -8558,7 +8627,7 @@ var RADAR_GROUPS=[
   {label:'Biceps',keys:['curl_marteau','curl_marteau_croise','curl_incline_neutre','curl_corde','curl_halt','curl_poulie','curl_incline']},
   {label:'Jambes',keys:['leg_press','leg_ext','leg_curl','mollets','abduct','adduct','hip_thrust']},
   // Abdos ajoutés au volume hebdo le 06/08 (demande Adrien) — gainage inclus (c'est du tronc)
-  {label:'Abdos',keys:['crunch_poulie','releve_chaise','pallof','dead_bug','hollow_hold','crunch','gainage','crunch_leste']}
+  {label:'Abdos',keys:['crunch_poulie','releve_chaise','pallof','dead_bug','hollow_hold','crunch','gainage','crunch_leste','crunch_decline']}
 ];
 // Crédit « muscle assistant » pour le VOLUME hebdo (05/08, question Adrien) : chaque série
 // d'un polyarticulaire compte 1 pour son muscle cible + 0,5 pour l'assistant (un tirage
@@ -9591,12 +9660,18 @@ function renderWeeklyRecapWidget(){
         :'Rappels et fin de repos n\'arrivent plus &#x2014; touche ici pour les r&#xE9;activer')+'</small></span>'
       +'<span class="wr-w-arr">&#x203A;</span></button>';
   }
+  if(typeof SPORT!=='undefined'&&SPORT.active()){
+    h+='<button class="wr-widget" onclick="SPORT.resume()">'
+      +'<span class="wr-w-ico">&#x1F3C3;</span>'
+      +'<span class="wr-w-txt"><strong>Course en cours</strong><br><small>Touche pour reprendre &#x2014; et renseigner tes stats en rentrant</small></span>'
+      +'<span class="wr-w-arr">&#x203A;</span></button>';
+  }
   var wk=wrPendingWeek();
   if(wk){
     h+='<button class="wr-widget" onclick="wrOpen(\''+wk+'\')">'
       +'<span class="wr-w-ico">&#x1F4CA;</span>'
       +'<span class="wr-w-txt"><strong>Ton bilan de la semaine est pr&#xEA;t</strong><br>'
-      +'<small>Semaine du '+formatDateFr(wk)+' &#x2014; d&#xE9;clare tes petits-d&#xE9;j &amp; shakers, d&#xE9;couvre ton score</small></span>'
+      +'<small>Semaine du '+formatDateFr(wk)+' &#x2014; d&#xE9;clare tes plats maison &amp; shakers, d&#xE9;couvre ton score</small></span>'
       +'<span class="wr-w-arr">&#x203A;</span></button>';
   }
   var mk=null;
@@ -9617,18 +9692,23 @@ function nutWeekCount(field,weekStart){
   var c=0;
   for(var i=0;i<7;i++){
     var e=DB.nutrition[rankAddDays(weekStart,i)];
-    if(e&&e[field]) c++;
+    if(!e||!e[field]) continue;
+    c+=(typeof e[field]==='number')?e[field]:1; // `maison` compte les repas (0-2/jour)
   }
   return c;
 }
+// Plafond du compteur hebdo par case (12/10) : 14 plats maison (2/jour), 3 sorties course, 7 sinon
+function nutTapMax(field){ return field==='maison'?14:field==='run'?3:7; }
 // Tap = +1 sur la semaine (stocké en remplissant les jours lun→dim) · après 7, retour à 0.
 function nutTapWeek(field){
   var monday=rankMonday(todayStr());
-  var next=(nutWeekCount(field,monday)+1)%8;
+  var max=nutTapMax(field), per=field==='maison'?2:1;
+  var next=(nutWeekCount(field,monday)+1)%(max+1);
   for(var i=0;i<7;i++){
     var d=rankAddDays(monday,i);
-    if(i<next){ ensureNutriDay(d)[field]=true; }
-    else if(DB.nutrition[d]){ DB.nutrition[d][field]=false; pruneNutriDay(d); }
+    var v=Math.max(0,Math.min(per,next-i*per));
+    if(v>0){ ensureNutriDay(d)[field]=per>1?v:true; }
+    else if(DB.nutrition[d]){ DB.nutrition[d][field]=per>1?0:false; pruneNutriDay(d); }
   }
   saveDB();
   renderBilanWeekNut();
@@ -9645,21 +9725,26 @@ function cardioWeekAuto(monday){
   });
   return c;
 }
+// Sorties course de la semaine (12/10) : séances « Un autre sport ? › Course » du calendrier
+function runWeekAuto(monday){
+  var end=rankAddDays(monday,6);
+  return (DB.logs||[]).filter(function(l){ return l.date>=monday&&l.date<=end&&l.sport==='course'; }).length;
+}
 function renderBilanWeekNut(){
   var el=document.getElementById('bilanWeekNut'); if(!el) return;
   var monday=rankMonday(todayStr());
-  var o=nutObjectives(monday); // v2 (15/08) : pdj obj 5 · créatine obj 5 · cardio obj 3 (hors note)
-  var pdj=nutWeekCount('petit_dej',monday), shk=nutWeekCount('shaker',monday);
-  var crd=Math.max(nutWeekCount('cardio',monday),cardioWeekAuto(monday));
+  var o=nutObjectives(monday); // v3 (12/10) : plat maison obj 10/14 · shaker obj 7 · courir obj 1
+  var mai=nutWeekCount('maison',monday), shk=nutWeekCount('shaker',monday);
+  var run=Math.max(nutWeekCount('run',monday),runWeekAuto(monday));
   el.innerHTML='<div class="wn-card">'
     +'<div class="wn-title">Cette semaine <span class="wn-hint">tape pour ajouter &#xB7; confirm&#xE9; au bilan du dimanche</span></div>'
     +'<div class="wn-row">'
-    +'<button class="wn-tile'+(pdj>0?' on':'')+(pdj>=o.pdj?' full':'')+'" onclick="nutTapWeek(\'petit_dej\')">'
-    +'<span class="wn-ico">&#x1F373;</span><span class="wn-count">'+pdj+'<small>/7</small></span><span class="wn-lbl">petits-d&#xE9;j &#xB7; obj. '+o.pdj+'</span></button>'
+    +'<button class="wn-tile'+(mai>0?' on':'')+(mai>=o.maison?' full':'')+'" onclick="nutTapWeek(\'maison\')">'
+    +'<span class="wn-ico">&#x1F372;</span><span class="wn-count">'+mai+'<small>/'+o.maisonMax+'</small></span><span class="wn-lbl">plats maison &#xB7; obj. '+o.maison+'</span></button>'
     +'<button class="wn-tile'+(shk>0?' on':'')+(shk>=o.shk?' full':'')+'" onclick="nutTapWeek(\'shaker\')">'
-    +'<span class="wn-ico">'+o.shkIco+'</span><span class="wn-count">'+shk+'<small>/7</small></span><span class="wn-lbl">'+o.shkLbl+' &#xB7; obj. '+o.shk+'</span></button>'
-    +'<button class="wn-tile'+(crd>0?' on':'')+(crd>=o.cardio?' full':'')+'" onclick="nutTapWeek(\'cardio\')">'
-    +'<span class="wn-ico">&#x1F3C3;</span><span class="wn-count">'+crd+'<small>/'+o.cardio+'</small></span><span class="wn-lbl">cardio &#xB7; hors note</span></button>'
+    +'<span class="wn-ico">'+o.shkIco+'</span><span class="wn-count">'+shk+'<small>/7</small></span><span class="wn-lbl">shaker &#xB7; obj. '+o.shk+'</span></button>'
+    +'<button class="wn-tile'+(run>0?' on':'')+(run>=o.run?' full':'')+'" onclick="nutTapWeek(\'run\')">'
+    +'<span class="wn-ico">&#x1F3C3;</span><span class="wn-count">'+run+'<small>/'+o.run+'</small></span><span class="wn-lbl">courir &#xB7; obj. '+o.run+'</span></button>'
     +'</div></div>';
 }
 // ── NOTE /20 des bilans (15/08/2026, demande Adrien : « le bilan = juste une note /20 ») ──
@@ -9672,10 +9757,17 @@ function renderBilanWeekNut(){
 // cardio 3/sem mais HORS note (il ne fait ni gagner ni perdre de points).
 // Les semaines d'avant le 10/08 se relisent avec leurs objectifs de l'époque (4 pdj / 2 shakers).
 var NUT_V2_START='2026-08-10';
+// ── Objectifs hebdo v3 (12/10/2026, demande Adrien — « je me laisse aller niveau bouffe ») :
+// 🍲 PLAT MAISON (midi + soir = 14 repas/sem, objectif 10, champ `maison` = 0-2 par jour) ·
+// 🥤 SHAKER whey + créatine OBLIGATOIRE (objectif 7, même champ `shaker`, il pèse lourd) ·
+// 🏃 COURIR 1×/sem (champ `run`, ou séance « course » auto). Tout entre dans la note.
+// Les semaines d'avant gardent leur barème (une note ne change jamais par recalcul).
+var NUT_V3_START='2026-10-12';
 function nutObjectives(ws){
-  var v2=!ws||ws>=NUT_V2_START;
-  return v2?{pdj:5,shk:5,shkLbl:'cr&#xE9;atine',shkIco:'&#x1F9EA;',cardio:3}
-           :{pdj:4,shk:2,shkLbl:'shakers',shkIco:'&#x1F964;',cardio:2};
+  if(!ws||ws>=NUT_V3_START) return {v:3,maison:10,maisonMax:14,shk:7,shkLbl:'shakers',shkIco:'&#x1F964;',run:1,pdj:0,cardio:0};
+  var v2=ws>=NUT_V2_START;
+  return v2?{v:2,pdj:5,shk:5,shkLbl:'cr&#xE9;atine',shkIco:'&#x1F9EA;',cardio:3}
+           :{v:1,pdj:4,shk:2,shkLbl:'shakers',shkIco:'&#x1F964;',cardio:2};
 }
 function bilanNoteWeek(ws){
   var we=rankAddDays(ws,6);
@@ -9694,6 +9786,19 @@ function bilanNoteWeek(ws){
   var pdj=ans?(ans.pdj||0):nutWeekCount('petit_dej',ws);
   var shk=ans?(ans.shaker||0):nutWeekCount('shaker',ws);
   var o=nutObjectives(ws);
+  // v3 (12/10) : assiduité /6 · exécution /6 · shaker /3 · plats maison /2 · courir /1 · pas /2.
+  // Sans données de pas : calculée sur 18 puis ramenée sur 20 (zéro pénalité à l'aveugle).
+  if(o.v===3){
+    var mai=ans?(ans.maison||0):nutWeekCount('maison',ws);
+    var run=ans?(ans.run||0):Math.max(nutWeekCount('run',ws),runWeekAuto(ws));
+    var r1=function(x){ return Math.round(x*10)/10; };
+    var a3=vRatio*6, e3=(avg!=null?avg/20:vRatio)*6;
+    var sS=Math.min(1,shk/o.shk)*3, sM=Math.min(1,mai/o.maison)*2, sR=Math.min(1,run/o.run)*1;
+    var sw3=typeof STEPS!=='undefined'?STEPS.week(ws):null, p3=typeof STEPS!=='undefined'?STEPS.weekPts(ws,2):null;
+    var raw3=a3+e3+sS+sM+sR+(p3!=null?p3:0);
+    return {v:3,note:Math.round((p3!=null?raw3:raw3*20/18)*2)/2,pA:r1(a3),pE:r1(e3),pS:r1(sS),pM:r1(sM),pR:r1(sR),pN:r1(sS+sM+sR),
+      pP:p3,stepAvg:sw3?sw3.avg:null,salle:salle.length,goal:goal,avg:avg,maison:mai,shk:shk,run:run,pdj:0,declared:!!ans};
+  }
   // 29/09 (demande Adrien) : les PAS entrent dans la note (/3, moyenne ≥ 8 000) et la créatine pèse moins
   // (2 → 1 pt). Barème : assiduité /7 · exécution /7 · petit-déj /2 · créatine /1 · pas /3.
   // Semaine sans données de pas (< 4 jours) : calculée sur 17 pts puis ramenée sur 20 — zéro pénalité à l'aveugle.
@@ -9785,10 +9890,14 @@ function wrOpen(weekStart,replay){
   // Préremplissage depuis les coches quotidiennes de la semaine concernée (à confirmer/corriger)
   var tp=nutWeekCount('petit_dej',weekStart), ts=nutWeekCount('shaker',weekStart);
   var tc=Math.max(nutWeekCount('cardio',weekStart),cardioWeekAuto(weekStart));
-  WR={week:weekStart,we:rankAddDays(weekStart,6),idx:0,replay:!!replay,saved:!!prev,
+  var tm=nutWeekCount('maison',weekStart), tr=Math.max(nutWeekCount('run',weekStart),runWeekAuto(weekStart));
+  var v3=nutObjectives(weekStart).v===3;
+  WR={week:weekStart,we:rankAddDays(weekStart,6),idx:0,replay:!!replay,saved:!!prev,v3:v3,
       pdj:prev?prev.pdj:(tp>0?tp:null),shaker:prev?prev.shaker:(ts>0?ts:null),
       cardio:prev?(prev.cardio||0):tc,
-      tracked:!prev&&(tp>0||ts>0)};
+      maison:prev?(prev.maison!=null?prev.maison:null):(tm>0?tm:null),
+      run:prev?(prev.run||0):tr,
+      tracked:!prev&&(tp>0||ts>0||tm>0)};
   try{ WR.A=wrAnalyze(weekStart); }catch(e){ WR.A=null; console.warn('[MASSUP] wrAnalyze:',e); }
   document.getElementById('wrOverlay').classList.add('open');
   document.body.style.overflow='hidden';
@@ -9802,11 +9911,13 @@ function wrClose(){
   try{ renderSante(); }catch(e){}
 }
 function wrSetCount(field,v){ WR[field]=v; wrRender(); }
+function wrMissing(){ return WR.v3?(WR.maison===null||WR.shaker===null):(WR.pdj===null||WR.shaker===null); }
 function wrSubmit(){
-  if(WR.pdj===null||WR.shaker===null){ showToast('R&#xE9;ponds aux deux questions !'); return; }
+  if(wrMissing()){ showToast('R&#xE9;ponds aux deux questions !'); return; }
   if(!DB.rank) DB.rank={pauses:[]};
   if(!DB.rank.weekly) DB.rank.weekly={};
-  DB.rank.weekly[WR.week]={pdj:WR.pdj,shaker:WR.shaker,cardio:WR.cardio||0};
+  DB.rank.weekly[WR.week]=WR.v3?{v:3,maison:WR.maison,shaker:WR.shaker,run:WR.run||0}
+    :{pdj:WR.pdj,shaker:WR.shaker,cardio:WR.cardio||0};
   saveDB();
   WR.saved=true;
   try{ WR.A=wrAnalyze(WR.week); }catch(e){}
@@ -9814,9 +9925,9 @@ function wrSubmit(){
 }
 var _wrDir='fwd';
 function wrGoto(i){ _wrDir=i<WR.idx?'back':'fwd'; WR.idx=Math.max(0,Math.min(5,i)); wrRender(); }
-function wrCountRow(field,label,hint){
+function wrCountRow(field,label,hint,max){
   var h='<div class="as-lbl">'+label+' <span class="as-lbl-hint">'+hint+'</span></div><div class="wr-count-row">';
-  for(var i=0;i<=7;i++){
+  for(var i=0;i<=(max||7);i++){
     h+='<button class="wr-count-btn'+(WR[field]===i?' on':'')+'" onclick="wrSetCount(\''+field+'\','+i+')">'+i+'</button>';
   }
   return h+'</div>';
@@ -9924,11 +10035,22 @@ function wrMessages(w,comp,weekLogs,decayWeek){
   if(w&&w.streak>=2) msgs.push('&#x1F525; Streak de '+w.streak+' semaines &#xE0; 4+'+(FEATURE_RANK?' &#x2014; bonus +'+RANK_ECO.streak[Math.min(w.streak,RANK_ECO.streak.length-1)]+' pts. Chaque semaine de plus paye plus.':' &#x2014; c\'est la r&#xE9;gularit&#xE9; qui construit, pas les coups d\'&#xE9;clat.'));
   // Nutrition (objectifs v2 depuis le 10/08 : pdj 5 · créatine 5)
   var _on=nutObjectives(WR.week);
-  if(WR.pdj>=7) msgs.push('&#x1F31F; 7/7 petits-d&#xE9;j&#x202F;: LE levier n&#xB0;1 de ta prise de masse, verrouill&#xE9;.'+(FEATURE_RANK?' +'+(7*RANK_ECO.pdjRP+RANK_ECO.pdjPerfect)+' pts.':''));
+  if(WR.v3){
+    if(WR.shaker>=7) msgs.push('&#x1F964; 7/7 shakers &#x2014; whey + cr&#xE9;atine chaque jour : la base est verrouill&#xE9;e.');
+    else if(WR.shaker>=5) msgs.push('&#x1F964; '+WR.shaker+'/7 shakers &#x2014; presque. Cale-le sur un moment FIXE (apr&#xE8;s la s&#xE9;ance ou au r&#xE9;veil) pour ne plus y penser.');
+    else msgs.push('&#x1F6A8; '+WR.shaker+'/7 shakers seulement &#x2014; c\'est ta base de prot&#xE9;ines ET ta cr&#xE9;atine (qui ne marche que satur&#xE9;e). Pr&#xE9;pare-le d&#xE8;s le matin.');
+    if(WR.maison>=_on.maison) msgs.push('&#x1F372; '+WR.maison+'/14 plats maison &#x2014; objectif rempli : tu sais exactement ce que tu manges.');
+    else if(WR.maison>=6) msgs.push('&#x1F372; '+WR.maison+'/14 plats maison (objectif '+_on.maison+') &#x2014; un batch le dimanche r&#xE8;gle la moiti&#xE9; de la semaine.');
+    else msgs.push('&#x1F6A8; '+WR.maison+'/14 plats maison &#x2014; trop de livraison : moins de prot&#xE9;ines, plus de sel. Un batch cooking dimanche, et 2 plats maison par jour d&#xE8;s lundi.');
+    if((WR.run||0)>=1) msgs.push('&#x1F3C3; '+WR.run+' sortie'+(WR.run>1?'s':'')+' course &#x2014; la base cardio de la s&#xE8;che se construit maintenant.');
+    else msgs.push('&#x1F3C3; Pas de course cette semaine &#x2014; 20-25 min faciles suffisent pour habituer tes tendons avant janvier.');
+  }
+  else if(WR.pdj>=7) msgs.push('&#x1F31F; 7/7 petits-d&#xE9;j&#x202F;: LE levier n&#xB0;1 de ta prise de masse, verrouill&#xE9;.'+(FEATURE_RANK?' +'+(7*RANK_ECO.pdjRP+RANK_ECO.pdjPerfect)+' pts.':''));
   else if(WR.pdj>=_on.pdj) msgs.push('&#x1F373; '+WR.pdj+'/7 petits-d&#xE9;j &#x2014; objectif '+_on.pdj+' rempli. C\'est TA priorit&#xE9; nutrition&#x202F;: chaque jour de plus paie.');
   else if(WR.pdj>=_on.pdj-1) msgs.push('&#x1F373; '+WR.pdj+'/7 petits-d&#xE9;j &#x2014; &#xE0; un jour de l\'objectif de '+_on.pdj+'. Rappel&#x202F;: sauter le petit-d&#xE9;j = quasi impossible de manger assez sur la journ&#xE9;e.');
   else msgs.push('&#x1F6A8; '+WR.pdj+'/7 petits-d&#xE9;j &#x2014; c\'est LE maillon faible de ta semaine (objectif '+_on.pdj+' minimum). Pr&#xE9;pare-le la veille s\'il le faut.');
-  if(_on.shk>=5){
+  if(WR.v3){}
+  else if(_on.shk>=5){
     if(WR.shaker>=_on.shk) msgs.push('&#x1F9EA; '+WR.shaker+'/7 jours de cr&#xE9;atine &#x2014; objectif '+_on.shk+' rempli. Sa seule condition d\'efficacit&#xE9;, c\'est la constance&#x202F;: gagn&#xE9;.');
     else if(WR.shaker>=3) msgs.push('&#x1F9EA; '+WR.shaker+'/7 jours de cr&#xE9;atine (objectif '+_on.shk+') &#x2014; la cr&#xE9;atine ne marche que satur&#xE9;e&#x202F;: m&#xEA;me heure chaque jour, s&#xE9;ance ou pas.');
     else msgs.push('&#x1F6A8; '+WR.shaker+'/7 jours de cr&#xE9;atine seulement &#x2014; en dessous de 5, la saturation retombe et elle ne sert &#xE0; rien. Cale-la sur un rituel fixe (petit-d&#xE9;j).');
@@ -10083,13 +10205,23 @@ function wrRender(){
     // ── Slide 4 : nutrition (déclaration) + poids de corps ──
     h+='<div class="wr-say">Le carburant, maintenant. Sois honn&#xEA;te.</div>';
     if(WR.tracked) h+='<div class="wr-tracked-hint">&#x2713; Pr&#xE9;-rempli avec tes coches de la semaine &#x2014; confirme ou corrige.</div>';
-    var _o=nutObjectives(WR.week); // v2 (15/08) : pdj 5 · créatine 5 · cardio 3 hors note
-    h+=wrCountRow('pdj','&#x1F373; Combien de petits-d&#xE9;jeuners ?','objectif '+_o.pdj+'+ &#x2014; LA priorit&#xE9; nutrition, le levier n&#xB0;1 de ta prise de masse');
-    h+=wrCountRow('shaker',_o.shkIco+' Combien de jours de '+_o.shkLbl+' ?','objectif '+_o.shk+(_o.shk>=5?' &#x2014; la cr&#xE9;atine paie par la R&#xC9;GULARIT&#xC9;, pas par la dose':'+ &#x2014; tes prot&#xE9;ines les moins ch&#xE8;res'));
-    h+=wrCountRow('cardio','&#x1F3C3; Combien de cardios ?','objectif '+_o.cardio+' &#x2014; hors note : ni gain ni perte, juste le suivi');
+    var _o=nutObjectives(WR.week);
+    if(WR.v3){
+      h+=wrCountRow('maison','&#x1F372; Combien de plats maison ?','sur 14 repas (midi + soir) &#x2014; objectif '+_o.maison+' : cuisiner, c\'est TES calories et TES prot&#xE9;ines',14);
+      h+=wrCountRow('shaker','&#x1F964; Combien de jours avec ton shaker ?','whey + cr&#xE9;atine &#x2014; objectif '+_o.shk+'/7, il p&#xE8;se lourd dans la note');
+      h+=wrCountRow('run','&#x1F3C3; Combien de sorties course ?','objectif '+_o.run+' par semaine',3);
+    } else {
+      h+=wrCountRow('pdj','&#x1F373; Combien de petits-d&#xE9;jeuners ?','objectif '+_o.pdj+'+ &#x2014; LA priorit&#xE9; nutrition, le levier n&#xB0;1 de ta prise de masse');
+      h+=wrCountRow('shaker',_o.shkIco+' Combien de jours de '+_o.shkLbl+' ?','objectif '+_o.shk+(_o.shk>=5?' &#x2014; la cr&#xE9;atine paie par la R&#xC9;GULARIT&#xC9;, pas par la dose':'+ &#x2014; tes prot&#xE9;ines les moins ch&#xE8;res'));
+      h+=wrCountRow('cardio','&#x1F3C3; Combien de cardios ?','objectif '+_o.cardio+' &#x2014; hors note : ni gain ni perte, juste le suivi');
+    }
     if(A.bwDelta!==null){
       var rate=A.bwDelta;
-      var rMsg=rate>0.55?'&#x26A0; Rythme au-dessus de la zone utile (0,25-0,4 kg/sem) &#x2014; si &#xE7;a se r&#xE9;p&#xE8;te 2-3 semaines, on enl&#xE8;ve ~200 kcal.':
+      // Fin de prise de masse (v3, 12/10) : le poids doit rester STABLE jusqu'à la sèche du 4 janvier
+      var rMsg=WR.v3?(rate>0.3?'&#x26A0; &#xC7;a monte encore &#x2014; on est en fin de prise de masse : l\'objectif est un poids STABLE (73-74 kg max) jusqu\'&#xE0; la s&#xE8;che du 4 janvier.':
+        rate>=-0.25?'&#x2705; Poids stable &#x2014; exactement l\'objectif de fin de prise : on garde la force, on ne prend plus.':
+        '&#x1F50E; Poids en baisse &#x2014; pas encore la s&#xE8;che : il manque des calories (plats maison + shaker).')
+        :rate>0.55?'&#x26A0; Rythme au-dessus de la zone utile (0,25-0,4 kg/sem) &#x2014; si &#xE7;a se r&#xE9;p&#xE8;te 2-3 semaines, on enl&#xE8;ve ~200 kcal.':
         rate>=0.15?'&#x2705; Pile dans la zone de prise propre (0,25-0,4 kg/sem). Continue exactement pareil.':
         rate>=-0.2?'&#x1F50E; Poids stable &#x2014; en bulk, c\'est le signal de manger un peu PLUS.':
         '&#x1F6A8; Poids en baisse en pleine prise de masse &#x2014; l&#xE0; c\'est s&#xFB;r&#x202F;: tu ne manges pas assez.';
@@ -10099,7 +10231,7 @@ function wrRender(){
         +'<div class="as-rep-note">'+rMsg+'</div>';
     }
     foot='<button class="as-ghost-btn" onclick="wrGoto(3)">&#x2039;</button>'
-      +'<button class="as-cta" '+((WR.pdj===null||WR.shaker===null)?'disabled':'')+' onclick="wrSubmit()">Le verdict &#x203A;</button>';
+      +'<button class="as-cta" '+(wrMissing()?'disabled':'')+' onclick="wrSubmit()">Le verdict &#x203A;</button>';
   } else {
     // ── Slide 5 : LE RÉCAP — à la fin, comme il se doit ──
     // 15/08 : le verdict = LA NOTE /20 (couleurs de son échelle). L'ancien héros en points
@@ -10135,7 +10267,15 @@ function wrRender(){
       if(B.note>=18) h+='<div class="wr-badge gold">&#x1F451; Semaine en or</div>';
       else if(B.note>=14) h+='<div class="wr-badge blue">&#x1F4AA; Le standard MASSUP</div>';
       h+='<div class="wr-hook">'+(B.note>=18?'C\'est exactement &#xE7;a, une semaine de prise de masse r&#xE9;ussie.':B.note>=14?'Grosse semaine. On encha&#xEE;ne.':B.note>=11?'Semaine solide. La marche au-dessus se joue sur les d&#xE9;tails ci-dessous.':B.note>=8?'Semaine en retrait &#x2014; identifie LE maillon faible et corrige-le d&#xE8;s lundi.':'Semaine rat&#xE9;e. Pas de discours&#x202F;: une s&#xE9;ance programm&#xE9;e MAINTENANT et on repart.')+'</div>';
-      h+='<div class="wr-breakdown">'
+      if(B.v===3) h+='<div class="wr-breakdown">'
+        +'<div class="wr-b-row"><span>&#x1F3CB; Assiduit&#xE9; &#x2014; '+fmtSeances(B.salle)+'/'+B.goal+' s&#xE9;ances</span><span style="color:var(--acc)">'+String(B.pA).replace('.',',')+' /6</span></div>'
+        +'<div class="wr-b-row"><span>&#x1F4DD; Ex&#xE9;cution &#x2014; '+(B.avg!=null?'moy. '+String(Math.round(B.avg*10)/10).replace('.',',')+'/20':'pas de LiveUp')+'</span><span style="color:var(--acc2)">'+String(B.pE).replace('.',',')+' /6</span></div>'
+        +'<div class="wr-b-row"><span>&#x1F964; Shaker &#x2014; '+B.shk+'/7 jours</span><span style="color:var(--yellow)">'+String(B.pS).replace('.',',')+' /3</span></div>'
+        +'<div class="wr-b-row"><span>&#x1F372; Plats maison &#x2014; '+B.maison+'/14</span><span style="color:var(--yellow)">'+String(B.pM).replace('.',',')+' /2</span></div>'
+        +'<div class="wr-b-row"><span>&#x1F3C3; Courir &#x2014; '+B.run+' sortie'+(B.run>1?'s':'')+'</span><span style="color:var(--yellow)">'+String(B.pR).replace('.',',')+' /1</span></div>'
+        +'<div class="wr-b-row"><span>&#x1F45F; Pas &#x2014; '+(B.stepAvg!=null?'moy. '+Math.round(B.stepAvg).toLocaleString('fr-FR')+' / 8 000':'pas renseign&#xE9;s')+'</span><span style="color:#3FD68A">'+(B.pP!=null?String(B.pP).replace('.',',')+' /2':'&#x2014; (ramen&#xE9;e sur 20)')+'</span></div>'
+        +'</div>';
+      else h+='<div class="wr-breakdown">'
         +'<div class="wr-b-row"><span>&#x1F3CB; Assiduit&#xE9; &#x2014; '+fmtSeances(B.salle)+'/'+B.goal+' s&#xE9;ances</span><span style="color:var(--acc)">'+String(B.pA).replace('.',',')+' /7</span></div>'
         +'<div class="wr-b-row"><span>&#x1F4DD; Ex&#xE9;cution &#x2014; '+(B.avg!=null?'moy. '+String(Math.round(B.avg*10)/10).replace('.',',')+'/20':'pas de LiveUp')+'</span><span style="color:var(--acc2)">'+String(B.pE).replace('.',',')+' /7</span></div>'
         +'<div class="wr-b-row"><span>&#x1F373;'+_ov.shkIco+' Nutrition &#x2014; '+B.pdj+' pdj &#xB7; '+B.shk+' '+_ov.shkLbl+'</span><span style="color:var(--yellow)">'+String(B.pN).replace('.',',')+' /3</span></div>'
@@ -10260,9 +10400,11 @@ function mrAnalyze(mk){
   var bestStreak=0; weeks.forEach(function(w){ if(w.streak>bestStreak) bestStreak=w.streak; });
   var checksPts=0; weeks.forEach(function(w){ checksPts+=w.rp+(w.nut||0); });
   // Nutrition totale du mois (déclarations hebdo, fallback coches)
-  var pdj=0,shk=0,crd=0;
+  var pdj=0,shk=0,crd=0,mai=0,run=0;
   weeks.forEach(function(w){
     var ans=DB.rank&&DB.rank.weekly&&DB.rank.weekly[w.start];
+    mai+=ans?(ans.maison||0):nutWeekCount('maison',w.start);
+    run+=ans?(ans.run||0):Math.max(nutWeekCount('run',w.start),runWeekAuto(w.start));
     pdj+=ans?(ans.pdj||0):nutWeekCount('petit_dej',w.start);
     shk+=ans?(ans.shaker||0):nutWeekCount('shaker',w.start);
     crd+=ans?(ans.cardio||0):Math.max(nutWeekCount('cardio',w.start),cardioWeekAuto(w.start));
@@ -10280,7 +10422,7 @@ function mrAnalyze(mk){
     rpAvg:salle.length?Math.round(pts/salle.length/LADDER_ECO.seanceDiv):0,
     avgNote:avgNote,topErrs:topErrs,prs:prs,malusPts:malusPts,tonnage:Math.round(tonnage),
     ups:ups,downs:downs,okW:okW,badW:badW,bestStreak:bestStreak,checksPts:checksPts,
-    pdj:pdj,shk:shk,crd:crd,bwDelta:bwDelta,bwEnd:bwEnd,rankDelta:rankDelta,stretchCt:stretchCt};
+    pdj:pdj,shk:shk,crd:crd,mai:mai,run:run,bwDelta:bwDelta,bwEnd:bwEnd,rankDelta:rankDelta,stretchCt:stretchCt};
 }
 function mrOpen(mk,replay){
   MR={mk:mk,idx:0,replay:!!replay};
@@ -10388,16 +10530,20 @@ function mrRender(){
       +'</div>';
     var _om=nutObjectives(A.mEnd); // labels de l'époque du mois (créatine depuis le 10/08)
     h+='<div class="wr-mini-stats" style="margin-top:.6rem;">'
-      +'<div class="wr-ms"><span data-cu="'+A.pdj+'">0</span>&#x1F373; petits-d&#xE9;j</div>'
-      +'<div class="wr-ms"><span data-cu="'+A.shk+'">0</span>'+_om.shkIco+' '+_om.shkLbl+'</div>'
-      +'<div class="wr-ms"><span data-cu="'+A.crd+'">0</span>&#x1F3C3; cardio</div>'
+      +(_om.v===3
+        ?'<div class="wr-ms"><span data-cu="'+A.mai+'">0</span>&#x1F372; plats maison</div>'
+          +'<div class="wr-ms"><span data-cu="'+A.shk+'">0</span>&#x1F964; shakers</div>'
+          +'<div class="wr-ms"><span data-cu="'+A.run+'">0</span>&#x1F3C3; courses</div>'
+        :'<div class="wr-ms"><span data-cu="'+A.pdj+'">0</span>&#x1F373; petits-d&#xE9;j</div>'
+          +'<div class="wr-ms"><span data-cu="'+A.shk+'">0</span>'+_om.shkIco+' '+_om.shkLbl+'</div>'
+          +'<div class="wr-ms"><span data-cu="'+A.crd+'">0</span>&#x1F3C3; cardio</div>')
       +'<div class="wr-ms"><span data-cu="'+(A.stretchCt||0)+'">0</span>&#x1F9D8; &#xE9;tirements</div>'
       +'</div>';
     if(A.bwDelta!==null){
       h+='<div class="as-lbl" style="margin-top:1rem;">&#x2696;&#xFE0F; Ton poids sur le mois</div>'
         +'<div class="wr-bw"><span class="wr-bw-v" data-cu="'+A.bwEnd.weight_kg+'" data-cu-dec="1">0</span><span class="wr-bw-u">kg</span>'
         +'<span class="wr-bw-d '+(A.bwDelta>2.2?'warn':A.bwDelta>=0.6?'ok':'warn')+'">'+(A.bwDelta>0?'+':'')+String(A.bwDelta).replace('.',',')+' kg ce mois</span></div>'
-        +'<div class="as-rep-note">'+(A.bwDelta>2.2?'&#x26A0; Plus de 2 kg sur un mois&#x202F;: une partie part en gras. Vise 1 &#xE0; 1,7 kg/mois &#x2014; l&#xE8;ve un peu le pied sur le surplus.':A.bwDelta>=0.6?'&#x2705; Rythme de prise propre (1-1,7 kg/mois = la zone). Continue pareil.':'&#x1F50E; Prise trop lente pour un bulk &#x2014; il manque des calories quelque part (petits-d&#xE9;j&#x202F;?).')+'</div>';
+        +'<div class="as-rep-note">'+(_om.v===3?(A.bwDelta>1?'&#x26A0; Plus d\'1 kg sur le mois &#x2014; en fin de prise, le poids doit rester stable jusqu\'&#xE0; la s&#xE8;che du 4 janvier.':A.bwDelta>=-1?'&#x2705; Poids stable &#x2014; la fin de prise se passe comme pr&#xE9;vu : la force monte, le poids ne bouge plus.':'&#x1F50E; Poids en baisse avant la s&#xE8;che &#x2014; il manque des calories : plats maison et shaker d\'abord.'):A.bwDelta>2.2?'&#x26A0; Plus de 2 kg sur un mois&#x202F;: une partie part en gras. Vise 1 &#xE0; 1,7 kg/mois &#x2014; l&#xE8;ve un peu le pied sur le surplus.':A.bwDelta>=0.6?'&#x2705; Rythme de prise propre (1-1,7 kg/mois = la zone). Continue pareil.':'&#x1F50E; Prise trop lente pour un bulk &#x2014; il manque des calories quelque part (petits-d&#xE9;j&#x202F;?).')+'</div>';
     }
     foot='<button class="as-ghost-btn" onclick="mrGoto(2)">&#x2039;</button><button class="as-cta" onclick="mrGoto(4)">Le verdict &#x203A;</button>';
   } else {

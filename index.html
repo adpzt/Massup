@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="nutriplus.css">
 <link rel="stylesheet" href="steps.css">
 <link rel="stylesheet" href="sleep.css">
+<link rel="stylesheet" href="sport.css">
 <!-- Version ORDINATEUR : appliquée uniquement ≥ 1000 px de large — jamais sur iPhone (desktop.css) -->
 <link rel="stylesheet" href="desktop.css" media="(min-width: 1000px)">
 </head>
@@ -143,7 +144,7 @@
     <div id="logSummary" class="log-summary" style="margin-bottom:1.5rem;"></div>
     <div class="slbl">Export données</div>
     <div class="chart-section" style="margin-bottom:2rem;">
-      <button class="btn-export btn-export-main" onclick="exportCoachCSV()">&#x1F4CB; Tout pour le coach (CSV complet)</button>
+      <button class="btn-export btn-export-main" onclick="exportCoachCSV()">&#x1F4CB; Dossier complet coach &amp; nutrition</button>
       <div class="export-hint">Toutes tes données à jour : force, séances, composition, nutrition — en un seul fichier.</div>
       <div class="export-row" style="margin-top:.75rem;">
         <button class="btn-export" onclick="exportSeancesCSV()">&#x1F4C4; Séances</button>
@@ -384,6 +385,12 @@ if('serviceWorker' in navigator){
   <div class="as-body" id="edBody"></div>
 </div>
 
+<!-- UN AUTRE SPORT ? 🏃 (course guidée + autres sports, sport.js — 12/10/2026) -->
+<div class="as-overlay" id="spOverlay">
+  <div class="as-frame sp-frame" aria-hidden="true"></div>
+  <div class="as-body" id="spBody"></div>
+</div>
+
 <!-- ESPACE DÉTENTE 🧘 (posture quotidienne + étirements sur mesure) -->
 <div class="as-overlay" id="dzOverlay">
   <div class="as-frame ed-frame" aria-hidden="true"></div>
@@ -468,6 +475,7 @@ if('serviceWorker' in navigator){
 <script src="steps.js"></script>
 <script src="sleep.js"></script>
 <script src="app.js"></script>
+<script src="sport.js"></script>
 <script src="nutria_data.js"></script>
 <script src="nutria.js"></script>
 <script src="nutriplus.js"></script>

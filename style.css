@@ -17,6 +17,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
   --pull:#4D9DFF;                    /* séance PULL (bleu). 6.3:1 ✅ */
   --legs:#C97BFF;                    /* séance LEGS (violet). 6.9:1 ✅ */
   --maison:#9B8CFF;                  /* séance MAISON (lavande). 6.2:1 ✅ */
+  --run:#E8FF3A;                     /* COURSE (jaune électrique, 12/10). ≈17:1 ✅ */
 
   /* ---- 2. Dégradé signature (logo, bordure pesée, CTA, cadre Mode Séance) ---- */
   --x-grad-a:#71FFB4;
@@ -111,6 +112,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
     --pull:#1E62C8;                    /* 5.8:1 ✅ */
     --legs:#7B2DB8;                    /* 6.8:1 ✅ */
     --maison:#4F41C9;                  /* 6.5:1 ✅ */
+    --run:#5A6400;                     /* course en clair : olive. ≈5.6:1 ✅ */
 
     /* Le dégradé signature reste saturé : réservé aux SURFACES (logo, bordures, CTA)
        avec texte --x-on-grad dessus. Jamais utilisé comme couleur de texte en light. */
@@ -797,7 +799,7 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 .dle-wrap{display:flex;align-items:flex-start;gap:.7rem;background:var(--x-glass);box-shadow:var(--x-inset);border:1px solid var(--gb);border-radius:var(--x-r-lg);padding:.9rem;margin-bottom:.75rem;}
 .dle-main{flex:1;min-width:0;}
 .dle-actions{display:flex;flex-direction:column;gap:.35rem;flex-shrink:0;}
-.dle-del{background:none;border:1px solid rgba(255,107,122,.25);color:rgba(255,107,122,.65);border-radius:var(--x-r-sm);padding:.35rem .55rem;font-size:.9rem;cursor:pointer;flex-shrink:0;transition:all .2s;line-height:1;}
+.dle-del{background:none;border:1px solid rgba(255,107,122,.25);color:var(--red);border-radius:var(--x-r-sm);padding:.35rem .55rem;font-size:.9rem;cursor:pointer;flex-shrink:0;transition:all .2s;line-height:1;}
 .dle-del:active{background:rgba(255,107,122,.12);border-color:rgba(255,107,122,.5);}
 .dle-edit{background:none;border:1px solid var(--gb);color:var(--mut);border-radius:var(--x-r-sm);padding:.35rem .55rem;font-size:.9rem;cursor:pointer;flex-shrink:0;transition:all .2s;line-height:1;}
 .dle-edit:active{background:var(--ghov);}
@@ -2821,6 +2823,7 @@ span.bn-hero-bar i.n-gold,.bn-hero-bar i.n-blue{color:transparent;}
     --pull:#1E62C8;                    /* 5.8:1 ✅ */
     --legs:#7B2DB8;                    /* 6.8:1 ✅ */
     --maison:#4F41C9;                  /* 6.5:1 ✅ */
+    --run:#5A6400;                     /* course en clair : olive. ≈5.6:1 ✅ */
 
     /* Le dégradé signature reste saturé : réservé aux SURFACES (logo, bordures, CTA)
        avec texte --x-on-grad dessus. Jamais utilisé comme couleur de texte en light. */
