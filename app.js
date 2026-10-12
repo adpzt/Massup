@@ -4036,235 +4036,331 @@ function exportPoidsCSV(){
 
 
 // Export complet "coach" — tout dans un seul fichier, sections multiples
-// ── DOSSIER COACH & NUTRITION (refonte 12/10/2026, demande Adrien : « tu peux mieux faire, un max
-// d'infos ») : un fichier Markdown lisible par un coach humain OU un Claude coach — une SYNTHÈSE
-// chiffrée d'abord, puis TOUTES les données brutes en blocs CSV. Chaque section est isolée : une
-// donnée absente ou corrompue n'empêche jamais l'export du reste.
+// ── DOSSIER COACH (Excel) — refonte du 12/10/2026, demande Adrien : « le .md est un enfer, pas de
+// nourriture, un max d'infos mais bien monté, plutôt Excel ». Lu ensuite par un agent Claude coach.
+// Un classeur .xlsx (généré ici, sans librairie ni réseau) : un onglet « Lisez-moi » qui explique tout,
+// une « Synthèse » chiffrée, puis une table propre par sujet (1 ligne = 1 enregistrement, 1 en-tête,
+// dates ISO, nombres en nombres). AUCUNE donnée nutrition (décision Adrien). Les clés internes
+// orphelines (anciennes séances) et les objectifs de saison 1 (affichage coupé) sont exclus.
 function exportCoachCSV(){ exportCoachDossier(); }
-function exportCoachDossier(){
+var XLSX_LITE=(function(){
+  var CRC=null;
+  function crc32(b){
+    if(!CRC){ CRC=[]; for(var n=0;n<256;n++){ var c=n; for(var k=0;k<8;k++) c=c&1?0xEDB88320^(c>>>1):c>>>1; CRC[n]=c>>>0; } }
+    var x=0xFFFFFFFF; for(var i=0;i<b.length;i++) x=CRC[(x^b[i])&255]^(x>>>8); return (x^0xFFFFFFFF)>>>0;
+  }
+  // ZIP « stocké » (sans compression) : suffisant pour un classeur de quelques centaines de Ko
+  function zip(files){
+    var enc=new TextEncoder(), parts=[], central=[], off=0;
+    files.forEach(function(f){
+      var nm=enc.encode(f.name), d=enc.encode(f.data), crc=crc32(d);
+      var h=new DataView(new ArrayBuffer(30));
+      h.setUint32(0,0x04034b50,true); h.setUint16(4,20,true); h.setUint16(6,0x0800,true);
+      h.setUint16(12,0x21,true); h.setUint32(14,crc,true); h.setUint32(18,d.length,true); h.setUint32(22,d.length,true); h.setUint16(26,nm.length,true);
+      parts.push(new Uint8Array(h.buffer),nm,d);
+      var c=new DataView(new ArrayBuffer(46));
+      c.setUint32(0,0x02014b50,true); c.setUint16(4,20,true); c.setUint16(6,20,true); c.setUint16(8,0x0800,true);
+      c.setUint16(14,0x21,true); c.setUint32(16,crc,true); c.setUint32(20,d.length,true); c.setUint32(24,d.length,true); c.setUint16(28,nm.length,true); c.setUint32(42,off,true);
+      central.push(new Uint8Array(c.buffer),nm);
+      off+=30+nm.length+d.length;
+    });
+    var size=central.reduce(function(s,p){return s+p.length;},0);
+    var e=new DataView(new ArrayBuffer(22));
+    e.setUint32(0,0x06054b50,true); e.setUint16(8,files.length,true); e.setUint16(10,files.length,true); e.setUint32(12,size,true); e.setUint32(16,off,true);
+    return parts.concat(central,[new Uint8Array(e.buffer)]);
+  }
+  function esc(v){ return String(v).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function col(i){ var s=''; i++; while(i>0){ var m=(i-1)%26; s=String.fromCharCode(65+m)+s; i=Math.floor((i-1)/26); } return s; }
+  function cell(v,r,c,style){
+    if(v===null||v===undefined||v==='') return '';
+    var ref=col(c)+r, s=style?' s="'+style+'"':'';
+    if(typeof v==='number'&&isFinite(v)) return '<c r="'+ref+'"'+s+'><v>'+v+'</v></c>';
+    if(typeof v==='boolean') v=v?'oui':'non';
+    return '<c r="'+ref+'"'+s+' t="inlineStr"><is><t xml:space="preserve">'+esc(v)+'</t></is></c>';
+  }
+  // sheet = {name, cols:[{h, w, wrap}], rows:[[...]]}
+  function sheetXml(sh){
+    var x='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+      +'<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>';
+    sh.cols.forEach(function(c,i){ x+='<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+(c.w||14)+'" customWidth="1"/>'; });
+    x+='</cols><sheetData><row r="1">'+sh.cols.map(function(c,i){ return cell(c.h,1,i,1); }).join('')+'</row>';
+    sh.rows.forEach(function(row,ri){
+      x+='<row r="'+(ri+2)+'">'+row.map(function(v,ci){ return cell(v,ri+2,ci,sh.cols[ci]&&sh.cols[ci].wrap?2:0); }).join('')+'</row>';
+    });
+    x+='</sheetData>';
+    if(sh.rows.length&&!sh.noFilter) x+='<autoFilter ref="A1:'+col(sh.cols.length-1)+(sh.rows.length+1)+'"/>';
+    return x+'</worksheet>';
+  }
+  function build(sheets){
+    var files=[], ns='http://schemas.openxmlformats.org/';
+    files.push({name:'[Content_Types].xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="'+ns+'package/2006/content-types">'
+      +'<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>'
+      +'<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+      +'<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
+      +sheets.map(function(s,i){ return '<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'; }).join('')+'</Types>'});
+    files.push({name:'_rels/.rels',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="'+ns+'package/2006/relationships"><Relationship Id="rId1" Type="'+ns+'officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'});
+    var defs=sheets.map(function(s,i){ return (s.rows.length&&!s.noFilter)?'<definedName name="_xlnm._FilterDatabase" localSheetId="'+i+'" hidden="1">\''+esc(s.name)+'\'!$A$1:$'+col(s.cols.length-1)+'$'+(s.rows.length+1)+'</definedName>':''; }).join('');
+    files.push({name:'xl/workbook.xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="'+ns+'spreadsheetml/2006/main" xmlns:r="'+ns+'officeDocument/2006/relationships"><sheets>'
+      +sheets.map(function(s,i){ return '<sheet name="'+esc(s.name)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>'; }).join('')+'</sheets>'+(defs?'<definedNames>'+defs+'</definedNames>':'')+'</workbook>'});
+    files.push({name:'xl/_rels/workbook.xml.rels',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="'+ns+'package/2006/relationships">'
+      +sheets.map(function(s,i){ return '<Relationship Id="rId'+(i+1)+'" Type="'+ns+'officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>'; }).join('')
+      +'<Relationship Id="rId'+(sheets.length+1)+'" Type="'+ns+'officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'});
+    files.push({name:'xl/styles.xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="'+ns+'spreadsheetml/2006/main">'
+      +'<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>'
+      +'<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFDCE8F5"/><bgColor indexed="64"/></patternFill></fill></fills>'
+      +'<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+      +'<cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'
+      +'<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf>'
+      +'<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf></cellXfs>'
+      +'<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'});
+    sheets.forEach(function(s,i){ files.push({name:'xl/worksheets/sheet'+(i+1)+'.xml',data:sheetXml(s)}); });
+    return new Blob(zip(files),{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  }
+  return {build:build};
+})();
+
+function exportCoachDossier(opts){
+  opts=opts||{};
   var _dec=document.createElement('textarea');
-  function txt(v){ if(v===undefined||v===null) return ''; _dec.innerHTML=String(v).replace(/<[^>]*>/g,''); return _dec.value; }
-  function cell(v){ v=txt(v); return /[",\n;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
-  function csv(head,rows){ return '```csv\n'+[head].concat(rows).map(function(r){ return r.map(cell).join(','); }).join('\n')+'\n```'; }
-  function r1(x){ return Math.round(x*10)/10; }
-  function fr(x){ return String(x).replace('.',','); }
+  function txt(v){ if(v===undefined||v===null) return ''; _dec.innerHTML=String(v).replace(/<[^>]*>/g,''); return _dec.value.trim(); }
+  function r1(x){ return x==null||!isFinite(x)?null:Math.round(x*10)/10; }
+  function r2(x){ return x==null||!isFinite(x)?null:Math.round(x*100)/100; }
   function avg(a){ return a.length?a.reduce(function(s,x){return s+x;},0)/a.length:null; }
-  var today=todayStr(), p=DB.profile||{};
-  var out=[];
-  function section(title,fn){
-    out.push('\n## '+title+'\n');
-    try{ var r=fn(); if(r) out.push(r); }catch(e){ out.push('_(section indisponible : '+e.message+')_'); }
-  }
-  function sname(l){
-    return (l.sessions||[]).map(function(sid){
-      if(sid.indexOf('autre:')===0) return sid.slice(6);
-      if(sid.indexOf('exo:')===0) return getExoName(sid.slice(4));
-      var s=DATA.find(function(x){return x.id===sid;}); return s?s.name:sid;
-    }).map(txt).join(' + ');
-  }
+  var JOURS=['dim','lun','mar','mer','jeu','ven','sam'];
+  function jour(d){ return JOURS[new Date(d+'T12:00:00').getDay()]; }
+  var today=todayStr(), p=DB.profile||{}, d30=rankAddDays(today,-30);
   var logs=(DB.logs||[]).slice().sort(function(a,b){return a.date.localeCompare(b.date)||(a.time||'').localeCompare(b.time||'');});
   var bw=(DB.bodyWeight||[]).slice().sort(function(a,b){return a.date.localeCompare(b.date);});
-  function bwAt(daysAgo){ var lim=rankAddDays(today,-daysAgo), v=null; bw.forEach(function(b){ if(b.date<=lim) v=b; }); return v; }
-  var curMon=rankMonday(today);
-  var weeks=[]; for(var i=8;i>=1;i--) weeks.push(rankAddDays(curMon,-7*i)); weeks.push(curMon);
-
-  out.push('# MASSUP — Dossier coach & nutrition — '+txt(p.name||'Adrien'));
-  out.push('Généré le '+today+' depuis l\'app MASSUP (données saisies au jour le jour par Adrien).');
-  out.push('\n**Comment lire ce dossier.** La section 1 est une synthèse chiffrée ; les suivantes contiennent toutes les données brutes (blocs CSV). '
-    +'Conventions : charges en kg (haltères = kg par main) ; Traction et Dips **assistées** : le poids est l\'ASSISTANCE de la machine, donc **moins = plus fort** ; '
-    +'note de séance /20 = qualité d\'exécution des exercices principaux (barème de l\'app) ; ressenti par série : facile / ok / dur / échec (« échec » = muscle au bout, pas un raté) ; '
-    +'une semaine va du lundi au dimanche.');
-
-  section('1. Synthèse',function(){
-    var L=[];
-    var last=bw.length?bw[bw.length-1]:null;
-    L.push('**Profil** : '+(p.age||DEFAULT_AGE)+' ans · '+(p.height||172)+' cm · muscu depuis le 28/02/2026 · phase actuelle : **fin de prise de masse** (poids stable visé) → **sèche à partir du lundi 4 janvier 2027** (cible ~12 % de gras, ~68 kg au 1er juin 2027).');
-    if(last){
-      var d=function(n){ var b=bwAt(n); return b?(last.weight_kg-b.weight_kg>0?'+':'')+fr(r1(last.weight_kg-b.weight_kg))+' kg':'n/d'; };
-      L.push('**Poids** : '+fr(last.weight_kg)+' kg (pesée du '+last.date+') · sur 7 j : '+d(7)+' · 30 j : '+d(30)+' · 90 j : '+d(90)+' · départ : '+fr(bw[0].weight_kg)+' kg le '+bw[0].date+'.');
-    }
-    var wv=weeks.map(function(ws){ var we=rankAddDays(ws,6); return weekValue((DB.logs||[]).filter(function(l){return l.date>=ws&&l.date<=we;})); });
-    L.push('**Séances de salle par semaine** (8 dernières semaines closes, de la plus ancienne à la plus récente ; objectif '+getWeekGoal()+') : '+wv.slice(0,8).map(fr).join(' · ')+' — semaine en cours : '+fr(wv[8])+'.');
-    var n30=logs.filter(function(l){return l.date>=rankAddDays(today,-30);}).map(liveLogNote20).filter(function(n){return n!=null;});
-    if(n30.length) L.push('**Exécution** : note moyenne '+fr(r1(avg(n30)))+'/20 sur '+n30.length+' séances notées (30 j).');
-    var wn=weeks.slice(0,8).map(function(ws){ try{ return bilanNoteWeek(ws).note; }catch(e){ return null; } });
-    L.push('**Notes de semaine /20** (8 dernières) : '+wn.map(function(n){return n==null?'–':fr(n);}).join(' · ')+'.');
-    var prs=[], stag=[];
-    Object.keys(DB.weights||{}).forEach(function(k){
-      var a=DB.weights[k]; if(!a||a.length<2) return;
-      var info=findExoIndex(k); if(info&&info.exo&&info.exo.hidden) return;
-      var cur=a[a.length-1], prev=null;
-      a.forEach(function(e){ if(e.date<rankAddDays(today,-30)) prev=e; });
-      if(prev&&cur.val!==prev.val){
-        var up=asIsInverse(k)?cur.val<prev.val:cur.val>prev.val;
-        if(up) prs.push(txt(getExoName(k))+' '+fr(prev.val)+'→'+fr(cur.val));
-      }
-      try{ var nd=getProgressNudge(k); if(nd) stag.push(txt(getExoName(k))+' ('+getSessionsAtWeight(k)+' séances au même poids)'); }catch(e){}
+  // Exos connus du programme (clé → définition + séance) ; les clés orphelines sont ignorées
+  var EXO={}, ORDER=[];
+  DATA.forEach(function(s){ s.exos.forEach(function(e){ if(!EXO[e.key]){ EXO[e.key]={e:e,s:s}; ORDER.push(e.key); } }); });
+  function name(k){ return txt(EXO[k]?EXO[k].e.name:getExoName(k)); }
+  function group(k){ var g=rankGroupOf(k); if(g) return g; var c=EXO[k]&&EXO[k].e.cat; return c==='cardio'?'Cardio':c==='corps'?'Corps':c==='abdo'?'Abdos':''; }
+  function unitOf(k,x){ return (x&&x.unite)||(EXO[k]&&EXO[k].e.unite)||'kg'; }
+  function isLoad(k,x){ var u=unitOf(k,x), d=EXO[k]&&EXO[k].e; return /kg/.test(u)&&!(d&&d.repTarget)&&!asIsInverse(k); }
+  function e1rm(w,reps){ return (w>0&&reps>0&&reps<=20)?w*(1+reps/30):null; }
+  function sessionLabel(l){
+    if(l.sport) return l.sport==='course'?'Course':'Autre sport';
+    var names=[], exoOnly=true;
+    (l.sessions||[]).forEach(function(sid){
+      if(sid.indexOf('exo:')===0) return;
+      exoOnly=false;
+      if(sid.indexOf('autre:')===0){ names.push(txt(sid.slice(6))); return; }
+      var s=DATA.find(function(x){return x.id===sid;}); names.push(s?txt(s.name):sid);
     });
-    L.push('**Charges en hausse sur 30 j** : '+(prs.length?prs.join(' · '):'aucune')+'.');
-    if(stag.length) L.push('**Stagnations** (≥ 6 séances au même poids) : '+stag.join(' · ')+'.');
-    var nut=weeks.slice(5).map(function(ws){
-      var a=DB.rank&&DB.rank.weekly&&DB.rank.weekly[ws];
-      var o=nutObjectives(ws);
-      if(o.v===3) return ws+' : plats maison '+(a?a.maison:nutWeekCount('maison',ws))+'/14 · shakers '+(a?a.shaker:nutWeekCount('shaker',ws))+'/7 · course '+(a?(a.run||0):Math.max(nutWeekCount('run',ws),runWeekAuto(ws)))+(a?' (déclaré)':' (coches)');
-      return ws+' : petits-déj '+(a?a.pdj:nutWeekCount('petit_dej',ws))+'/7 · '+(o.v===2?'créatine ':'shakers ')+(a?a.shaker:nutWeekCount('shaker',ws))+'/7'+(a?' (déclaré)':' (coches)');
-    });
-    L.push('**Nutrition déclarée** (4 dernières semaines) :\n'+nut.map(function(x){return '- '+x;}).join('\n'));
-    var nd30=Object.keys((DB.nutriA&&DB.nutriA.day)||{}).filter(function(d){return d>=rankAddDays(today,-30);});
-    if(nd30.length&&typeof NUTRIA!=='undefined'){
-      var tt=nd30.map(function(d){ return NUTRIA._totals(DB.nutriA.day[d]); }).filter(function(t){return t.k>0;});
-      var resto=nd30.reduce(function(s,d){ return s+((DB.nutriA.day[d].resto||[]).length); },0);
-      if(tt.length) L.push('**Journal repas** (module Nutrition, '+tt.length+' jours renseignés sur 30) : moyenne '+Math.round(avg(tt.map(function(t){return t.k;})))+' kcal · '+Math.round(avg(tt.map(function(t){return t.p;})))+' g protéines par jour renseigné · '+resto+' repas resto/commande notés. Attention : les jours non renseignés ne sont pas comptés.');
-    }
-    if(typeof STEPS!=='undefined'){
-      var st=[]; for(var j=1;j<=30;j++){ var h=DB.health&&DB.health[rankAddDays(today,-j)]; if(h&&h.steps) st.push(h.steps); }
-      if(st.length) L.push('**Pas** : moyenne '+Math.round(avg(st)).toLocaleString('fr-FR')+' / jour sur '+st.length+' jours (30 j).');
-    }
-    var runs=logs.filter(function(l){return l.sport==='course'&&l.run;});
-    if(runs.length){
-      var km=runs.reduce(function(s,l){return s+(l.run.km||0);},0);
-      var lr=runs[runs.length-1].run;
-      L.push('**Course** : '+runs.length+' sortie(s), '+fr(r1(km))+' km au total · dernière : '+fr(lr.km)+' km en '+Math.round(lr.sec/60)+' min ('+runs[runs.length-1].date+').');
-    } else L.push('**Course** : aucune sortie enregistrée pour l\'instant (objectif 1/semaine depuis le 12/10/2026).');
-    var sl=[]; Object.keys(DB.sleepLog||{}).forEach(function(n){ if(n>=rankAddDays(today,-30)){ var m=sleepMinutes(DB.sleepLog[n]); if(m) sl.push(m); } });
-    if(sl.length) L.push('**Sommeil** : moyenne '+Math.floor(avg(sl)/60)+' h '+String(Math.round(avg(sl)%60)).padStart(2,'0')+' sur '+sl.length+' nuits (30 j).');
-    var pains=logs.filter(function(l){return l.date>=rankAddDays(today,-30)&&l.live&&l.live.pains&&l.live.pains.length;}).map(function(l){return l.date+' : '+painZonesTxt(l.live.pains);});
-    var rp=logs.filter(function(l){return l.date>=rankAddDays(today,-30)&&l.run&&l.run.pain;}).map(function(l){return l.date+' : '+l.run.pain+' (course)';});
-    L.push('**Douleurs signalées (30 j)** : '+(pains.concat(rp).length?pains.concat(rp).join(' · '):'aucune')+'.');
-    var ev=Object.keys(DB.evolution||{});
-    if(ev.length) L.push('**Évolutions de charge en cours** : '+ev.map(function(k){var e=DB.evolution[k]; return txt(getExoName(k))+' '+fr(e.from)+'→'+fr(e.to)+' ('+e.hi+' série(s) au poids haut)';}).join(' · ')+'.');
-    return L.join('\n\n');
-  });
+    return names.length?names.join(' + '):(exoOnly?'À la carte':'');
+  }
+  function sessionSource(l){ return l.live?'LiveUp (série par série)':/Reconstitu/i.test(l.comment||'')?'Reconstituée (après la perte de données du 11/08)':'Saisie manuelle'; }
+  function exoStatus(x){
+    var c=false; try{ c=liveExoCounted(x); }catch(e){}
+    if(x.pain) return 'arrêt douleur';
+    if(x.status==='done') return 'fait';
+    if(x.status==='skipped') return c?'écourté (compté)':'passé';
+    return 'non fait';
+  }
+  function hardSetsLog(l){ var v={}; if(!l.live||!l.live.exos) return v;
+    l.live.exos.forEach(function(x){ var c=false; try{ c=liveExoCounted(x); }catch(e){} if(!c&&!(liveExoSide(x)&&(x.sets||[]).length)) return; volAddSets(v,x.key,(x.sets||[]).length); });
+    return v; }
+  function logTonnage(l){ var t=0; ((l.live&&l.live.exos)||[]).forEach(function(x){ (x.sets||[]).forEach(function(s){ var w=s.w!=null?s.w:x.w; if(isLoad(x.key,x)&&w&&s.reps) t+=w*s.reps; }); }); return t; }
+  var CTX={temps:'manque de temps',blessure:'blessure / douleur',energie:'énergie / sommeil',malade:'malade'};
+  var GROUPS=RADAR_GROUPS.map(function(g){return g.label;});
+  var sheets=[];
 
-  section('2. Programme actuel',function(){
-    var rows=[];
-    DATA.forEach(function(s){ s.exos.forEach(function(e){
-      if(e.hidden) return;
-      rows.push([txt(s.name),txt(e.name),e.bonus?'bonus':'principal',e.imp?'oui':'',e.cat||'',e.serie||'',e.rest?e.rest+' s':'',getCurrentWeight(e.key),e.unite||'kg',txt(e.bless||'')]);
-    }); });
-    return 'Règles de l\'app : chaque séance PUSH/PULL contient au moins 1 exercice jambes principal et, depuis le 12/10/2026, **1 exercice abdo obligatoire** (principal, compté dans la note). Minimum 5 exercices.\n\n'
-      +csv(['Séance','Exercice','Statut','Exo clé','Catégorie','Séries×reps','Repos','Charge actuelle','Unité','Consigne blessure'],rows);
-  });
-
-  section('3. Charges — synthèse par exercice',function(){
-    var rows=[];
-    Object.keys(DB.weights||{}).forEach(function(k){
-      var a=DB.weights[k]; if(!a||!a.length) return;
-      var inv=asIsInverse(k), st=a[0].val, cur=a[a.length-1].val;
-      var dl=r1(inv?st-cur:cur-st);
-      var info=findExoIndex(k);
-      rows.push([txt(getExoName(k))+(inv?' (assistance, moins = mieux)':''),info&&info.exo&&info.exo.hidden?'retiré':'actif',st,a[0].date,cur,(dl>0?'+':'')+dl,st>0?Math.round(dl/st*100)+'%':'',getSessionsAtWeight(k),DB.weightSetDate[k]||'']);
-    });
-    return csv(['Exercice','Statut','Départ','Date départ','Actuel','Progression','%','Séances au poids actuel','Dernière modif'],rows);
-  });
-
-  section('4. Charges — historique complet',function(){
-    var rows=[];
-    Object.keys(DB.weights||{}).forEach(function(k){ (DB.weights[k]||[]).forEach(function(e){ rows.push([txt(getExoName(k)),e.date,e.val]); }); });
-    return csv(['Exercice','Date','Charge de référence'],rows);
-  });
-
-  section('5. Séances (une ligne par séance, salle + sport)',function(){
-    var CTX={temps:'manque de temps',blessure:'blessure/douleur',energie:'énergie/sommeil',malade:'malade'};
-    return csv(['Date','Heure','Type','Contenu','Durée (min)','Compte en séances de salle','Note /20','Énergie (1-5)','Ressenti (1-5)','Échauffement','Douleurs','Imprévu','Commentaire'],
-      logs.map(function(l){
-        var lv=l.live||{};
-        return [l.date,l.time||'',l.sport?(l.sport==='course'?'course':'autre sport'):(l.live?'salle (LiveUp)':'salle (manuelle)'),sname(l),l.duration_min||'',fr(logWeight(l)),
-          liveLogNote20(l)!=null?liveLogNote20(l):'',l.energy||'',l.feeling||'',l.live?(lv.warmup?'oui':'non'):'',
-          lv.pains&&lv.pains.length?painZonesTxt(lv.pains):(lv.painAny===false?'aucune':''),lv.context?(CTX[lv.context]||lv.context):'',l.comment||''];
-      }));
-  });
-
-  section('6. Détail série par série (séances LiveUp)',function(){
-    var rows=[];
-    logs.filter(function(l){return l.live&&l.live.exos;}).forEach(function(l){
-      var sn=sname(l);
-      l.live.exos.forEach(function(x){
-        var sc=''; try{ sc=(x.sets&&x.sets.length)?fr(asScoreExo(x)):''; }catch(e){}
-        var st=liveExoSide(x)?'bonus':'principal', ct=''; try{ ct=liveExoCounted(x)?'oui':'non'; }catch(e){}
-        if(!x.sets||!x.sets.length){ rows.push([l.date,sn,txt(getExoName(x.key)),st,x.status||'',ct,sc,'',x.w,'',x.reps,'','','']); return; }
-        x.sets.forEach(function(s,si){ rows.push([l.date,sn,txt(getExoName(x.key)),st,x.status||'',ct,si===0?sc:'',si+1,s.w!=null?s.w:x.w,s.reps,x.reps,s.feel||'',s.feelG||'',s.feelD||'']); });
+  // ── Séries (calculées d'abord : elles alimentent Exercices et Synthèse) ──
+  var setRows=[], exoStats={};
+  logs.forEach(function(l){
+    if(!l.live||!l.live.exos) return;
+    var lbl=sessionLabel(l);
+    l.live.exos.forEach(function(x,xi){
+      if(!x.sets||!x.sets.length) return;
+      var k=x.key, u=unitOf(k,x), cu=cntU(x), load=isLoad(k,x), inv=asIsInverse(k), counted=false, sc=null;
+      try{ counted=liveExoCounted(x); }catch(e){}
+      try{ sc=asScoreExo(x); }catch(e){}
+      var st=exoStats[k]||(exoStats[k]={n:0,n30:0,last:null,best:null,bestDate:null,bestSet:''});
+      if(counted){ st.n++; if(l.date>=d30) st.n30++; if(!st.last||l.date>st.last) st.last=l.date; }
+      x.sets.forEach(function(s,si){
+        var w=s.w!=null?s.w:x.w, est=load?e1rm(w,s.reps):null;
+        if(est!=null&&(!st.best||est>st.best)){ st.best=est; st.bestDate=l.date; st.bestSet=w+' × '+s.reps; }
+        setRows.push([l.date,jour(l.date),lbl,xi+1,name(k),group(k),liveExoSide(x)?'bonus':'principal',exoStatus(x),counted,sc,si+1,
+          w,u,inv,s.reps,cu,x.reps,(s.reps!=null&&x.reps!=null)?s.reps-x.reps:null,s.feel||'',s.feelG||'',s.feelD||'',x.w0!=null?x.w0:null,r1(est)]);
       });
     });
-    return csv(['Date','Séance','Exercice','Statut','État','Compté','Note /5','Série','Charge','Reps faites','Reps cible','Ressenti','Ressenti G','Ressenti D'],rows);
   });
 
-  section('7. Courses',function(){
-    var runs=logs.filter(function(l){return l.sport==='course'&&l.run;});
-    if(!runs.length) return '_Aucune course enregistrée._';
-    var EF=['facile','moyen','dur','très dur'];
-    return csv(['Date','Distance (km)','Temps (min:s)','Allure (min/km)','Vitesse (km/h)','D+ (m)','FC moy','FC max','Cadence','Calories','Effort','Douleur','Échauffement','Commentaire'],
-      runs.map(function(l){ var r=l.run, pace=r.km?r.sec/r.km:0;
-        return [l.date,r.km,Math.floor(r.sec/60)+':'+String(r.sec%60).padStart(2,'0'),pace?Math.floor(pace/60)+':'+String(Math.round(pace%60)).padStart(2,'0'):'',r.km?r1(r.km/(r.sec/3600)):'',
-          r.dplus!=null?r.dplus:'',r.hr!=null?r.hr:'',r.hrMax!=null?r.hrMax:'',r.cad!=null?r.cad:'',r.kcal!=null?r.kcal:'',r.effort!=null?EF[r.effort]:'',r.pain||'',r.warmup?'oui':'non',l.comment||'']; }));
-  });
+  // ── Lisez-moi ──
+  var last=bw.length?bw[bw.length-1]:null;
+  var readme=[
+    ['Qui','Adrien, '+(p.age||DEFAULT_AGE)+' ans, '+(p.height||172)+' cm, ectomorphe. Musculation depuis le 28/02/2026, salle à 1 min, séances le soir. Objectif '+getWeekGoal()+' séances de salle par semaine.'],
+    ['Phase actuelle','Fin de prise de masse « propre » jusqu\'au 3 janvier 2027 : poids stable (73-74 kg max), on garde et on pousse la force.'],
+    ['Phase suivante','Sèche du lundi 4 janvier au 1er juin 2027 : cible ~12 % de gras (~68 kg), 3 séances de muscu + 1 course par semaine, charges lourdes conservées.'],
+    ['Poids','Départ '+(bw[0]?bw[0].weight_kg+' kg le '+bw[0].date:'?')+' · dernier '+(last?last.weight_kg+' kg le '+last.date:'?')+'. Composition (borne de salle, 31/08/2026, conditions non standardisées) : 21,3 % de gras affiché (fourchette réaliste 17-22 %), jambes à 97 % de la norme, bras au-dessus.'],
+    ['Blessures','Poignet gauche : ancienne fracture de la styloïde ulnaire → prises neutres, pas de supination jusqu\'à ~novembre 2026. Genou : douleur en flexion chargée par épisodes. Coude gauche : douleur interne signalée fin septembre / début octobre. Détail daté : onglet Douleurs.'],
+    ['Programme','Rotation PUSH / PULL / LEGS + exos « à la carte ». Règles de l\'app : chaque PUSH/PULL contient 1 exo jambes principal ; depuis le 12/10/2026, 1 exo abdo obligatoire (principal) ; 5 exos minimum. Détail : onglet Exercices.'],
+    ['Nutrition','Volontairement absente de ce fichier.'],
+    ['Charges','En kg. Haltères : kg par main (« kg/main », « kg/côté »). Exos au poids du corps ou en temps : la « charge » est l\'objectif (reps, s, min).'],
+    ['Assistance','Traction assistée et Dips assistée : la charge est l\'ASSISTANCE de la machine → moins = plus fort (colonne « Assistance (moins = mieux) »).'],
+    ['Ressenti','Par série : facile / ok / dur / echec. « echec » = muscle au bout à la fin de la série (pas un raté) ; un raté se lit dans « Écart cible » < 0.'],
+    ['Note /20','Note de séance calculée par l\'app sur l\'exécution des exos principaux (séries faites, reps vs cible, charge vs référence). Note /5 = même chose par exercice.'],
+    ['Note de semaine','Note de l\'app : assiduité, exécution, objectifs hebdo de l\'app (dont des objectifs non sportifs) et pas. Pour le sport seul, lire « Exécution moyenne ».'],
+    ['Séries dures','Séries comptées par muscle (1 par série + 0,5 pour le muscle assistant des polyarticulaires). Repère : 10-20 par muscle et par semaine.'],
+    ['e1RM','Force estimée par série (Epley : charge × (1 + reps / 30)), seulement pour les exos chargés en kg (pas les assistances).'],
+    ['Séances anciennes','Février → avril : séances RITM / escalade notées sans détail. Juin → juillet : séances reconstituées après une perte de données (dates approximatives, pas de détail). Détail série par série fiable à partir du 01/08/2026.'],
+    ['Onglets','Synthèse · Semaines · Séances · Séries · Exercices · Historique charges · Poids · Course & sports · Pas · Sommeil · Douleurs · Mobilité.'],
+    ['Généré le',today+' depuis l\'app MASSUP (données saisies au jour le jour).']
+  ];
+  sheets.push({name:'Lisez-moi',noFilter:true,cols:[{h:'Rubrique',w:20},{h:'Contenu',w:120,wrap:true}],rows:readme});
 
-  section('8. Poids de corps (pesées du matin)',function(){
-    return csv(['Date','Poids (kg)','Note'],bw.map(function(b){return [b.date,b.weight_kg,b.note||''];}));
+  // ── Synthèse ──
+  var S=[];
+  function add(ind,val,unit,per,det){ S.push([ind,val,unit||'',per||'',det||'']); }
+  if(last){
+    var at=function(n){ var lim=rankAddDays(today,-n), v=null; bw.forEach(function(b){ if(b.date<=lim) v=b; }); return v; };
+    add('Poids actuel',last.weight_kg,'kg','pesée du '+last.date);
+    [30,90].forEach(function(n){ var b=at(n); if(b) add('Variation de poids',r1(last.weight_kg-b.weight_kg),'kg',n+' jours','depuis '+b.weight_kg+' kg le '+b.date); });
+    if(bw.length) add('Variation depuis le départ',r1(last.weight_kg-bw[0].weight_kg),'kg','depuis le '+bw[0].date);
+  }
+  var curMon=rankMonday(today), weeksBack=[];
+  for(var i=8;i>=1;i--) weeksBack.push(rankAddDays(curMon,-7*i));
+  var wv=weeksBack.map(function(ws){ var we=rankAddDays(ws,6); return weekValue(logs.filter(function(l){return l.date>=ws&&l.date<=we;})); });
+  add('Séances de salle par semaine',r1(avg(wv)),'séances','8 dernières semaines closes','objectif '+getWeekGoal()+' · détail : '+wv.join(' / '));
+  var n30=logs.filter(function(l){return l.date>=d30;}).map(liveLogNote20).filter(function(n){return n!=null;});
+  if(n30.length) add('Note moyenne de séance',r1(avg(n30)),'/20','30 jours',n30.length+' séances notées');
+  var dur30=logs.filter(function(l){return l.date>=d30&&l.live&&l.duration_min&&l.duration_min<200;}).map(function(l){return l.duration_min;});
+  if(dur30.length) add('Durée moyenne de séance',Math.round(avg(dur30)),'min','30 jours');
+  var vol4=muscleVolume(rankAddDays(curMon,-28),rankAddDays(curMon,-1));
+  GROUPS.forEach(function(g){ add('Séries dures / semaine — '+g,r1((vol4[g]||0)/4),'séries','moyenne des 4 dernières semaines closes','repère 10-20'); });
+  var s30=setRows.filter(function(r){return r[0]>=d30;}), sp30=s30.filter(function(r){return r[6]==='principal';});
+  if(sp30.length){
+    add('Séries des exos principaux',sp30.length,'séries','30 jours');
+    add('Séries principales sous la cible',Math.round(sp30.filter(function(r){return r[17]!=null&&r[17]<0;}).length/sp30.length*100),'%','30 jours','reps faites < reps visées');
+    add('Séries principales notées « echec »',Math.round(sp30.filter(function(r){return r[18]==='echec';}).length/sp30.length*100),'%','30 jours','muscle au bout en fin de série');
+    add('Séries principales notées « facile »',Math.round(sp30.filter(function(r){return r[18]==='facile';}).length/sp30.length*100),'%','30 jours');
+  }
+  var ups=[], stag=[];
+  ORDER.forEach(function(k){
+    var a=DB.weights[k]; if(!a||!a.length||EXO[k].e.hidden) return;
+    var cur=a[a.length-1], prev=null; a.forEach(function(e){ if(e.date<d30) prev=e; });
+    if(prev&&cur.val!==prev.val&&(asIsInverse(k)?cur.val<prev.val:cur.val>prev.val)) ups.push(name(k)+' '+prev.val+' → '+cur.val);
+    var n=getSessionsAtWeight(k); if(n>=6&&exoStats[k]&&exoStats[k].n30) stag.push(name(k)+' ('+n+' séances)');
   });
+  add('Charges de référence en hausse',ups.length,'exercices','30 jours',ups.join(' · '));
+  add('Exercices stagnants (≥ 6 séances au même poids, encore pratiqués)',stag.length,'exercices','',stag.join(' · '));
+  var ev=Object.keys(DB.evolution||{}).filter(function(k){return EXO[k];});
+  if(ev.length) add('Évolutions de charge en cours',ev.length,'exercices','',ev.map(function(k){var e=DB.evolution[k]; return name(k)+' '+e.from+' → '+e.to+' ('+e.hi+' série(s) au poids haut)';}).join(' · '));
+  var st=[]; for(var j=1;j<=30;j++){ var h=DB.health&&DB.health[rankAddDays(today,-j)]; if(h&&h.steps) st.push(h.steps); }
+  if(st.length) add('Pas moyens par jour',Math.round(avg(st)),'pas','30 jours',st.length+' jours renseignés');
+  var sl=[]; Object.keys(DB.sleepLog||{}).forEach(function(n){ if(n>=d30){ var m=sleepMinutes(DB.sleepLog[n]); if(m) sl.push(m); } });
+  if(sl.length) add('Sommeil moyen',r1(avg(sl)/60),'h','30 jours',sl.length+' nuits renseignées');
+  var runs=logs.filter(function(l){return l.sport==='course'&&l.run;});
+  add('Courses enregistrées',runs.length,'sorties','depuis le 12/10/2026',runs.length?r1(runs.reduce(function(s,l){return s+(l.run.km||0);},0))+' km au total':'objectif 1 par semaine');
+  sheets.push({name:'Synthèse',cols:[{h:'Indicateur',w:52},{h:'Valeur',w:10},{h:'Unité',w:12},{h:'Période',w:34},{h:'Détail',w:90,wrap:true}],rows:S});
 
-  section('9. Nutrition',function(){
-    var L=[];
-    var g=nutriGoal();
-    L.push('Repères en prise de masse : ~2900 kcal et 150 g de protéines par jour. Objectifs hebdo de l\'app depuis le 12/10/2026 : **10 plats maison sur 14 repas** (midi + soir), **shaker whey + créatine 7/7**, **1 course**. Avant : petits-déjeuners 5/7 et créatine 5/7 (depuis le 10/08), petits-déj 4 et 2 shakers (avant). Cible enregistrée dans le profil : '+g.kcal+' kcal / '+g.prot+' g.');
-    var wk=(DB.rank&&DB.rank.weekly)||{};
-    L.push('\n**Déclarations du bilan de la semaine**\n\n'+csv(['Semaine du','Plats maison /14','Shakers /7','Courses','Petits-déj /7','Cardios'],
-      Object.keys(wk).sort().map(function(ws){ var a=wk[ws]||{}; return [ws,a.maison!=null?a.maison:'',a.shaker!=null?a.shaker:'',a.run!=null?a.run:'',a.pdj!=null?a.pdj:'',a.cardio!=null?a.cardio:'']; })));
-    L.push('\n**Coches quotidiennes**\n\n'+csv(['Date','Plats maison (0-2)','Shaker','Course','Petit-déj','Calories','Protéines (g)'],
-      Object.keys(DB.nutrition||{}).sort().map(function(d){ var e=DB.nutrition[d]; return [d,e.maison||'',e.shaker?'oui':'',e.run?'oui':'',e.petit_dej?'oui':'',e.kcal!=null?e.kcal:'',e.prot!=null?e.prot:'']; })));
-    var nd=(DB.nutriA&&DB.nutriA.day)||{};
-    if(Object.keys(nd).length&&typeof NUTRIA!=='undefined'){
-      var R=(typeof NUTA!=='undefined'&&NUTA.R)||[], RS=(typeof NUTA!=='undefined'&&NUTA.RESTO)||[];
-      var nm=function(id){ var r=R.find(function(x){return x.id===id;}); return r?txt(r.n):(id||''); };
-      var rn=function(id){ var r=RS.find(function(x){return x.id===id;}); return r?txt(r.n||r.name||id):id; };
-      L.push('\n**Journal repas détaillé** (module Nutrition ; totaux calculés par l\'app)\n\n'+csv(['Date','kcal','Protéines','Glucides','Lipides','Petit-déj','Déjeuner','Dîner','Snacks','Resto / commande','Shaker'],
-        Object.keys(nd).sort().map(function(d){ var j=nd[d], t=NUTRIA._totals(j);
-          return [d,t.k,t.p,t.g,t.l,j.pdj?'oui':'',nm(j.dej),nm(j.din),(j.snacks||[]).length,(j.resto||[]).map(rn).join(' / '),j.shaker?'oui':'']; })));
-    }
-    return L.join('\n');
+  // ── Semaines ──
+  var firstLog=logs.length?logs[0].date:today, W=[];
+  for(var ws=rankMonday(firstLog); ws<=curMon; ws=rankAddDays(ws,7)){
+    var we=rankAddDays(ws,6), wl=logs.filter(function(l){return l.date>=ws&&l.date<=we;});
+    var vol=muscleVolume(ws,we), tot=0; GROUPS.forEach(function(g){ tot+=vol[g]||0; });
+    var notes=wl.map(liveLogNote20).filter(function(n){return n!=null;});
+    var ton=wl.reduce(function(s,l){ return s+logTonnage(l); },0);
+    var stp=[]; for(var di=0;di<7;di++){ var hh=DB.health&&DB.health[rankAddDays(ws,di)]; if(hh&&hh.steps) stp.push(hh.steps); }
+    var bwk=null; bw.forEach(function(b){ if(b.date>=ws&&b.date<=we) bwk=b.weight_kg; });
+    var slp=[]; for(var dj=0;dj<7;dj++){ var mm=sleepMinutes((DB.sleepLog||{})[rankAddDays(ws,dj)]); if(mm) slp.push(mm); }
+    var rk=wl.filter(function(l){return l.sport==='course'&&l.run;});
+    var bn=null; try{ bn=bilanNoteWeek(ws).note; }catch(e){}
+    var gel=0; try{ gel=gelDaysInWeek(ws); }catch(e){}
+    W.push([ws,ws===curMon?'oui':'',weekValue(wl),getWeekGoal(),notes.length?r1(avg(notes)):null,notes.length,bn]
+      .concat(GROUPS.map(function(g){return r1(vol[g]||0);}))
+      .concat([r1(tot),Math.round(ton)||null,stp.length?Math.round(avg(stp)):null,rk.length,rk.length?r1(rk.reduce(function(s,l){return s+(l.run.km||0);},0)):null,bwk,slp.length?r1(avg(slp)/60):null,gel||null]));
+  }
+  sheets.push({name:'Semaines',cols:[{h:'Semaine du (lundi)',w:13},{h:'Semaine en cours',w:8},{h:'Séances de salle',w:10},{h:'Objectif',w:9},{h:'Exécution moyenne /20',w:12},{h:'Séances notées',w:9},{h:'Note de semaine /20 (app)',w:12}]
+    .concat(GROUPS.map(function(g){return {h:'Séries dures '+g,w:10};}))
+    .concat([{h:'Séries dures total',w:10},{h:'Tonnage (kg × reps)',w:12},{h:'Pas moyens / jour',w:11},{h:'Courses',w:8},{h:'Km de course',w:9},{h:'Poids fin de semaine (kg)',w:11},{h:'Sommeil moyen (h)',w:10},{h:'Jours gelés (vacances / blessure)',w:12}]),rows:W});
+
+  // ── Séances ──
+  sheets.push({name:'Séances',cols:[{h:'Date',w:11},{h:'Jour',w:6},{h:'Heure',w:7},{h:'Type',w:22},{h:'Exercices / contenu',w:60,wrap:true},{h:'Source',w:22},{h:'Compte en séances de salle',w:11},{h:'Durée (min)',w:8},{h:'Note /20',w:8},{h:'Énergie (1-5)',w:8},{h:'Ressenti (1-5)',w:8},{h:'Exos principaux faits',w:9},{h:'Exos bonus faits',w:9},{h:'Séries totales',w:8},{h:'Tonnage (kg × reps)',w:10},{h:'Échauffement',w:10},{h:'Imprévu déclaré',w:16},{h:'Douleurs (fin de séance)',w:22,wrap:true},{h:'Commentaire',w:44,wrap:true}],
+    rows:logs.map(function(l){
+      var lv=l.live||{}, ex=lv.exos||[], mainN=0,bonN=0,sets=0,ton=0, names=[];
+      ex.forEach(function(x){ var c=false; try{ c=liveExoCounted(x); }catch(e){} if(c){ if(liveExoSide(x)) bonN++; else mainN++; names.push(name(x.key)); }
+        sets+=(x.sets||[]).length; });
+      ton=logTonnage(l);
+      if(!ex.length) (l.sessions||[]).forEach(function(sid){ if(sid.indexOf('exo:')===0) names.push(name(sid.slice(4))); });
+      if(!names.length&&!l.sport) names.push('(détail non saisi)');
+      return [l.date,jour(l.date),l.time||'',sessionLabel(l),names.join(' · '),sessionSource(l),logWeight(l),l.duration_min||null,liveLogNote20(l),l.energy||null,l.feeling||null,
+        l.live?mainN:null,l.live?bonN:null,l.live?sets:null,l.live?Math.round(ton):null,l.live?(lv.warmup?'oui':'non'):'',lv.context?(CTX[lv.context]||lv.context):'',
+        lv.pains&&lv.pains.length?painZonesTxt(lv.pains):(lv.painAny===false?'aucune':''),txt(l.comment)];
+    })});
+
+  // ── Séries ──
+  sheets.push({name:'Séries',cols:[{h:'Date',w:11},{h:'Jour',w:6},{h:'Séance',w:16},{h:'Ordre de l\'exo',w:7},{h:'Exercice',w:30},{h:'Groupe musculaire',w:11},{h:'Rôle',w:9},{h:'Statut de l\'exo',w:14},{h:'Exo compté',w:7},{h:'Note exo /5',w:7},{h:'N° série',w:6},{h:'Charge',w:8},{h:'Unité de charge',w:9},{h:'Assistance (moins = mieux)',w:9},{h:'Réalisé',w:8},{h:'Unité réalisée',w:8},{h:'Cible',w:7},{h:'Écart cible',w:7},{h:'Ressenti',w:9},{h:'Ressenti gauche',w:9},{h:'Ressenti droit',w:9},{h:'Charge de référence du jour',w:10},{h:'e1RM (kg)',w:9}],rows:setRows});
+
+  // ── Exercices ──
+  var exoRows=[];
+  ORDER.forEach(function(k){
+    var d=EXO[k], a=DB.weights[k]||[], es=exoStats[k];
+    if(d.e.hidden&&!es) return; // retiré et jamais fait en LiveUp
+    var cur=a.length?a[a.length-1]:null, first=a.length?a[0]:null, prev=null; a.forEach(function(e){ if(e.date<d30) prev=e; });
+    var inv=asIsInverse(k), dl=(cur&&first)?r1(inv?first.val-cur.val:cur.val-first.val):null, d30v=(cur&&prev)?r1(inv?prev.val-cur.val:cur.val-prev.val):null;
+    var evo=DB.evolution&&DB.evolution[k];
+    exoRows.push([name(k),k,txt(d.s.name),d.e.hidden?'retiré':d.e.bonus?'bonus':'principal',d.e.imp?'oui':'',group(k),d.e.serie||'',d.e.rest||null,unitOf(k),inv,
+      cur?cur.val:null,cur?cur.date:'',getSessionsAtWeight(k)||null,first?first.val:null,first?first.date:'',dl,(first&&first.val&&dl!=null)?Math.round(dl/first.val*100):null,d30v,
+      es?es.n:0,es?es.n30:0,es&&es.last||'',es&&es.best?r1(es.best):null,es&&es.bestDate||'',es&&es.bestSet||'',evo?evo.from+' → '+evo.to+' ('+evo.hi+' série(s) au poids haut)':'',txt(d.e.bless||'')]);
   });
+  sheets.push({name:'Exercices',cols:[{h:'Exercice',w:30},{h:'Clé',w:16},{h:'Séance du programme',w:10},{h:'Rôle',w:9},{h:'Exo clé',w:6},{h:'Groupe musculaire',w:11},{h:'Prescription (séries × reps)',w:11},{h:'Repos (s)',w:7},{h:'Unité',w:8},{h:'Assistance (moins = mieux)',w:9},{h:'Charge de référence actuelle',w:10},{h:'Depuis le',w:11},{h:'Séances au même poids',w:9},{h:'Charge de départ',w:9},{h:'Date de départ',w:11},{h:'Progression totale',w:9},{h:'Progression %',w:9},{h:'Variation sur 30 j',w:9},{h:'Exécutions LiveUp',w:9},{h:'Exécutions 30 j',w:9},{h:'Dernière exécution',w:11},{h:'Meilleure e1RM (kg)',w:9},{h:'Date meilleure e1RM',w:11},{h:'Meilleure série (charge × reps)',w:12},{h:'Évolution de charge en cours',w:22},{h:'Consigne blessure',w:50,wrap:true}],rows:exoRows});
 
-  section('10. Pas (120 derniers jours)',function(){
-    var rows=[]; for(var j=120;j>=0;j--){ var d=rankAddDays(today,-j), h=DB.health&&DB.health[d]; if(h&&(h.steps||h.km)) rows.push([d,h.steps||'',h.km||'',h.kcal||'',h.floors||'']); }
-    return rows.length?csv(['Date','Pas','km','kcal actives','Étages'],rows):'_Pas de données de pas._';
+  // ── Historique des charges de référence ──
+  var hist=[];
+  ORDER.forEach(function(k){ var pv=null; (DB.weights[k]||[]).forEach(function(e){ hist.push([e.date,name(k),k,e.val,unitOf(k),asIsInverse(k),pv!=null?r2(e.val-pv):null]); pv=e.val; }); });
+  hist.sort(function(a,b){return a[0].localeCompare(b[0])||a[1].localeCompare(b[1]);});
+  sheets.push({name:'Historique charges',cols:[{h:'Date',w:11},{h:'Exercice',w:30},{h:'Clé',w:16},{h:'Charge de référence',w:10},{h:'Unité',w:8},{h:'Assistance (moins = mieux)',w:9},{h:'Variation',w:9}],rows:hist});
+
+  // ── Poids ──
+  sheets.push({name:'Poids',cols:[{h:'Date',w:11},{h:'Poids (kg)',w:9},{h:'Variation (kg)',w:9},{h:'Jours depuis la pesée précédente',w:11},{h:'kg par semaine',w:9},{h:'Note',w:40}],
+    rows:bw.map(function(b,i){ var pr=bw[i-1], dd=pr?Math.round((new Date(b.date)-new Date(pr.date))/86400000):null;
+      return [b.date,b.weight_kg,pr?r2(b.weight_kg-pr.weight_kg):null,dd,pr&&dd?r2((b.weight_kg-pr.weight_kg)/dd*7):null,txt(b.note||'')]; })});
+
+  // ── Course & sports ──
+  var EF=['facile','moyen','dur','très dur'];
+  sheets.push({name:'Course & sports',cols:[{h:'Date',w:11},{h:'Heure',w:7},{h:'Sport',w:14},{h:'Distance (km)',w:9},{h:'Durée (min)',w:8},{h:'Allure (min:s / km)',w:10},{h:'Allure (s / km)',w:9},{h:'Vitesse (km/h)',w:9},{h:'Dénivelé + (m)',w:9},{h:'FC moyenne',w:9},{h:'FC max',w:8},{h:'Cadence (pas/min)',w:9},{h:'Calories (kcal)',w:9},{h:'Effort',w:9},{h:'Douleur',w:10},{h:'Échauffement guidé',w:10},{h:'Commentaire',w:44,wrap:true}],
+    rows:logs.filter(function(l){ return l.sport||(l.sessions||[]).some(function(s){return s.indexOf('autre:')===0;}); }).map(function(l){
+      var r=l.run||{}, pace=r.km&&r.sec?Math.round(r.sec/r.km):null;
+      var sp=l.sport==='course'?'Course':txt(((l.sessions||[]).find(function(s){return s.indexOf('autre:')===0;})||'autre:').slice(6));
+      return [l.date,l.time||'',sp,r.km||null,r.sec?r1(r.sec/60):(l.duration_min||null),pace?Math.floor(pace/60)+':'+String(pace%60).padStart(2,'0'):'',pace,
+        r.km&&r.sec?r1(r.km/(r.sec/3600)):null,r.dplus,r.hr,r.hrMax,r.cad,r.kcal,(r.effort!=null?EF[r.effort]:(l.effort!=null?EF[l.effort]:'')),r.pain||'',l.run?(r.warmup?'oui':'non'):'',txt(l.comment)];
+    })});
+
+  // ── Pas ──
+  sheets.push({name:'Pas',cols:[{h:'Date',w:11},{h:'Jour',w:6},{h:'Pas',w:9},{h:'Distance (km)',w:9},{h:'Calories actives (kcal)',w:10},{h:'Étages',w:7},{h:'Saisie manuelle',w:9}],
+    rows:Object.keys(DB.health||{}).sort().filter(function(d){ var h=DB.health[d]; return h&&(h.steps||h.km); }).map(function(d){ var h=DB.health[d];
+      return [d,jour(d),h.steps||null,h.km?r2(h.km):null,h.kcal||null,h.floors||null,h.ms?'oui':'']; })});
+
+  // ── Sommeil ──
+  sheets.push({name:'Sommeil',cols:[{h:'Nuit du',w:11},{h:'Coucher',w:8},{h:'Réveil',w:8},{h:'Durée (h)',w:8}],
+    rows:Object.keys(DB.sleepLog||{}).sort().map(function(n){ var s=DB.sleepLog[n], m=sleepMinutes(s); return [n,s.bed||'',s.wake||'',m?r2(m/60):null]; })});
+
+  // ── Douleurs (toutes les sources, datées) ──
+  var P=[];
+  logs.forEach(function(l){
+    var lv=l.live||{};
+    (lv.pains||[]).forEach(function(z){ P.push([l.date,'question de fin de séance',txt(painZoneLabel(z.z)),z.lvl||null,'',txt(l.comment)]); });
+    (lv.exos||[]).forEach(function(x){ if(x.pain) P.push([l.date,'exercice arrêté pour douleur','',null,name(x.key),txt(l.comment)]); });
+    if(lv.context==='blessure') P.push([l.date,'séance déclarée « blessure / douleur »','',null,'',txt(l.comment)]);
+    if(l.run&&l.run.pain) P.push([l.date,'course',l.run.pain,null,'',txt(l.comment)]);
   });
+  (DB.painLog||[]).forEach(function(x){ if(x.level>0) P.push([x.date,'journal poignet (0-5)','poignet',x.level,'',txt(x.note)]); });
+  P.sort(function(a,b){return a[0].localeCompare(b[0]);});
+  sheets.push({name:'Douleurs',cols:[{h:'Date',w:11},{h:'Source',w:30},{h:'Zone',w:12},{h:'Niveau /5',w:8},{h:'Exercice',w:26},{h:'Commentaire de la séance',w:60,wrap:true}],rows:P});
 
-  section('11. Sommeil',function(){
-    var ks=Object.keys(DB.sleepLog||{}).sort();
-    if(!ks.length) return '_Pas de données de sommeil._';
-    return csv(['Nuit du','Coucher','Réveil','Durée (h)'],ks.map(function(n){ var s=DB.sleepLog[n], m=sleepMinutes(s); return [n,s.bed||'',s.wake||'',m?r1(m/60):'']; }));
-  });
+  // ── Mobilité ──
+  sheets.push({name:'Mobilité',cols:[{h:'Date',w:11},{h:'Étirements de séance',w:10},{h:'Routine du matin',w:10},{h:'Routine du soir',w:10}],
+    rows:Object.keys(DB.dz||{}).sort().filter(function(d){ var z=DB.dz[d]||{}; return z.stretch||z.am||z.pm; }).map(function(d){ var z=DB.dz[d]; return [d,z.stretch?'oui':'',z.am?'oui':'',z.pm?'oui':'']; })});
 
-  section('12. Étirements / Détente',function(){
-    var ks=Object.keys(DB.dz||{}).sort(); if(!ks.length) return '_Aucun._';
-    return csv(['Date','Étirements de séance','Routine matin','Routine soir'],ks.map(function(d){ var z=DB.dz[d]||{}; return [d,z.stretch?'oui':'',z.am?'oui':'',z.pm?'oui':'']; }));
-  });
-
-  section('13. Douleurs et blessures',function(){
-    var L=['Poignet gauche : ancienne fracture de la styloïde ulnaire (prises neutres, pas de supination jusqu\'à ~novembre 2026). Genou : douleur récurrente en flexion chargée (épisodes juillet et 16/08).'];
-    var rows=logs.filter(function(l){return (l.live&&l.live.pains&&l.live.pains.length)||(l.run&&l.run.pain);})
-      .map(function(l){ return [l.date,sname(l),l.live&&l.live.pains?painZonesTxt(l.live.pains):(l.run.pain+' (course)')]; });
-    if(rows.length) L.push(csv(['Date','Séance','Zones (niveau /5)'],rows));
-    if(DB.painLog&&DB.painLog.length) L.push('\n**Journal poignet**\n\n'+csv(['Date','Douleur (0-5)','Note'],DB.painLog.map(function(x){return [x.date,x.level,x.note||''];})));
-    return L.join('\n\n');
-  });
-
-  section('14. Objectifs de charges saison 1 (départ 30/07/2026 → 1er janvier 2027)',function(){
-    var rows=[];
-    Object.keys(GOALS_JAN).forEach(function(k){
-      var info=findExoIndex(k); if(info&&info.exo&&info.exo.hidden) return;
-      var prog=null; try{ prog=goalProgress(k); }catch(e){}
-      rows.push([txt(getExoName(k)),exoSeasonStartWeight(k)!=null?exoSeasonStartWeight(k):'',getCurrentWeight(k),GOALS_JAN[k],prog!=null?Math.round(prog*100)+'%':'']);
-    });
-    return csv(['Exercice','Départ 30/07','Actuel','Cible 1er janvier','Chemin parcouru'],rows);
-  });
-
-  var blob=new Blob([out.join('\n')+'\n'],{type:'text/markdown;charset=utf-8'});
-  var url=URL.createObjectURL(blob), a=document.createElement('a');
-  a.href=url; a.download='massup_dossier_coach_'+today+'.md';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-  showToast('&#x1F4E5; Dossier coach & nutrition t&#xE9;l&#xE9;charg&#xE9;');
-  return out.join('\n');
+  if(opts.dryRun) return sheets;
+  var blob=XLSX_LITE.build(sheets), url=URL.createObjectURL(blob), a=document.createElement('a');
+  a.href=url; a.download='massup_coach_'+today+'.xlsx';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); },4000);
+  showToast('&#x1F4E5; Dossier coach (Excel) t&#xE9;l&#xE9;charg&#xE9;');
+  return sheets;
 }
 // Durée d'une nuit {bed:'23:10', wake:'07:05'} en minutes (passe minuit)
 function sleepMinutes(s){

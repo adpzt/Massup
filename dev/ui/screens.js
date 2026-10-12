@@ -4,7 +4,7 @@
 // Ajouter ici chaque nouvel écran, pour qu'il soit vérifié à chaque passe.
 const tab = (root, re) => `[...document.querySelectorAll('${root} .tab')].find(b=>/${re}/i.test(b.textContent)||/${re}/i.test(b.dataset.p||'')).click()`;
 // Rend le dossier coach dans la page (contrôle visuel + détection des sections en erreur)
-const EXPORT_GO = `(function(){var t=exportCoachDossier();var bad=t.match(/section indisponible[^)]*/g)||[];var pre=document.createElement('pre');pre.id='dossier';pre.style.cssText='white-space:pre-wrap;font-size:10px;line-height:1.35;padding:8px;color:var(--txt);background:var(--bg)';pre.textContent=(bad.length?'ERREURS: '+bad.join(' | ')+'\\n\\n':'')+t.slice(0,7000);document.body.innerHTML='';document.body.appendChild(pre);})()`;
+const EXPORT_GO = `(function(){var sh=exportCoachDossier({dryRun:true});var pre=document.createElement('pre');pre.style.cssText='white-space:pre-wrap;font-size:10px;line-height:1.35;padding:8px;color:var(--txt);background:var(--bg)';pre.textContent=sh.map(function(s){return '== '+s.name+' ('+s.rows.length+' lignes)\\n'+s.cols.map(function(c){return c.h;}).join(' | ')+'\\n'+s.rows.slice(0,2).map(function(r){return r.join(' | ');}).join('\\n');}).join('\\n\\n');document.body.innerHTML='';document.body.appendChild(pre);})()`;
 const ADRIEN = [
   ['a_bilan', [], { full: true }],
   ['a_seances', ["switchView('seances',document.querySelectorAll('.bni')[1])"], { full: true }],
