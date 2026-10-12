@@ -1095,6 +1095,7 @@ function init(){
     try{ renderSanteChart(); }catch(e){}
   });
   try{ checkReminders(); }catch(e){}
+  if(pushWatch) setTimeout(function(){ pushWatch.run(true); },1500);
   try{ asBoot(); }catch(e){ console.warn('[MASSUP] asBoot:',e); }
 }
 
@@ -3450,8 +3451,11 @@ async function enablePushNotifications(){
       if(created) await subscription.unsubscribe();
       throw new Error('Enregistrement de l’abonnement impossible : '+saved.error.message);
     }
+    _pushState={state:'ok'};
+    setPushOptOut(false);
     showToast('Notifications push activées sur cet appareil');
     renderReminderSettings();
+    try{ renderWeeklyRecapWidget(); }catch(e){}
   }catch(error){
     console.warn('[MASSUP] Web Push subscription:',error.message);
     showToast('Activation Web Push impossible : '+error.message);
@@ -3459,6 +3463,8 @@ async function enablePushNotifications(){
 }
 async function disablePushNotifications(){
   if(typeof sbClient==='undefined'||!sbClient){ showToast('Connexion au cloud indisponible : réessaie avec du réseau'); return; }
+  setPushOptOut(true); _pushState=null;
+  try{ renderWeeklyRecapWidget(); }catch(e){}
   try{
     var registration=await navigator.serviceWorker.ready;
     var subscription=await registration.pushManager.getSubscription();
@@ -3482,7 +3488,25 @@ var workoutPushTimer=(typeof PushTimer!=='undefined')?PushTimer.create({
     initReminders();
     return !!DB.reminders.enabled&&!(typeof rankInPause==='function'&&rankInPause(todayStr()));
   },
-  onError:function(){ showToast('Chrono lancé, mais rappel hors application indisponible'); }
+  onError:function(){ showToast('Chrono lancé, mais rappel hors application indisponible'); },
+  onMissing:function(){ if(pushWatch) pushWatch.run(true); }
+}):null;
+// Auto-réparation de l'abonnement push (12/10/2026, bug « plus aucune notif depuis 2 jours ») :
+// au démarrage, au retour au premier plan et quand un chrono ne trouve plus d'abonnement.
+var _pushState=null;
+// « Désactiver sur cet appareil » = choix de CET appareil : l'auto-réparation ne doit pas le défaire
+function pushOptedOut(){ try{ return localStorage.getItem('massup_push_optout')==='1'; }catch(e){ return false; } }
+function setPushOptOut(on){ try{ if(on) localStorage.setItem('massup_push_optout','1'); else localStorage.removeItem('massup_push_optout'); }catch(e){} }
+var pushWatch=(typeof PushTimer!=='undefined'&&PushTimer.watchSubscription)?PushTimer.watchSubscription({
+  tag:'[MASSUP]',
+  client:function(){ return (typeof sbClient!=='undefined'&&sbClient)||null; },
+  enabled:function(){ initReminders(); return !!DB.reminders.enabled&&!pushOptedOut(); },
+  onState:function(res){
+    var was=_pushState&&_pushState.state;
+    _pushState=res;
+    if(res.state==='healed') showToast('&#x1F514; Notifications r&#xE9;activ&#xE9;es sur cet appareil');
+    if(res.state!==was){ renderReminderSettings(); try{ renderWeeklyRecapWidget(); }catch(e){} }
+  }
 }):null;
 function updateWorkoutPushTimer(dueAt,title,body){
   if(!workoutPushTimer) return Promise.resolve();
@@ -3568,7 +3592,12 @@ function renderReminderSettings(){
     } else if(!isStandaloneWebApp()&&/iPhone|iPad|iPod/i.test(navigator.userAgent)){
       html+='<div class="rem-note">Sur iPhone, ajoute MASSUP à l’écran d’accueil et ouvre l’app installée pour activer les notifications push.</div>';
     } else if(perm==='granted'){
-      html+='<div class="rem-note rem-ok">&#x2705; Autorisation de notification accordée sur cet appareil.</div>'
+      var ps=_pushState&&_pushState.state;
+      html+=(ps==='lost'
+          ?'<div class="rem-note rem-warn">&#x26A0;&#xFE0F; Abonnement perdu sur cet appareil : plus aucune notification. Touche « Activer / actualiser ».</div>'
+          :(ps==='ok'||ps==='healed')
+          ?'<div class="rem-note rem-ok">&#x2705; Notifications actives sur cet appareil (vérifié).</div>'
+          :'<div class="rem-note rem-ok">&#x2705; Autorisation de notification accordée sur cet appareil.</div>')
         +'<button class="rem-perm-btn" onclick="enablePushNotifications()">&#x1F514; Activer / actualiser cet abonnement</button>'
         +'<button class="rem-perm-btn" onclick="disablePushNotifications()">&#x1F515; Désactiver sur cet appareil</button>';
     } else {
@@ -9551,6 +9580,17 @@ function wrPendingWeek(){
 function renderWeeklyRecapWidget(){
   var el=document.getElementById('weeklyRecapWidget'); if(!el) return;
   var h='';
+  // (12/10) Abonnement push perdu, pas réparable sans un tap : on le dit en haut du Bilan
+  // au lieu de laisser 2 jours sans rappel ni fin de repos, sans un mot
+  if(_pushState&&_pushState.state==='lost'){
+    var denied=_pushState.reason==='denied';
+    h+='<button class="wr-widget" onclick="'+(denied?'openSettings()':'enablePushNotifications()')+'">'
+      +'<span class="wr-w-ico">&#x1F515;</span>'
+      +'<span class="wr-w-txt"><strong>Notifications coup&#xE9;es sur cet appareil</strong><br>'
+      +'<small>'+(denied?'Bloqu&#xE9;es dans R&#xE9;glages iOS &#x203A; Notifications &#x203A; MASSUP'
+        :'Rappels et fin de repos n\'arrivent plus &#x2014; touche ici pour les r&#xE9;activer')+'</small></span>'
+      +'<span class="wr-w-arr">&#x203A;</span></button>';
+  }
   var wk=wrPendingWeek();
   if(wk){
     h+='<button class="wr-widget" onclick="wrOpen(\''+wk+'\')">'

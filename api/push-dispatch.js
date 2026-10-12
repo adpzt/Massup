@@ -306,6 +306,8 @@ async function dispatchDueTimerEvents(events, subscriptions, stateByUser) {
       if (status === 404 || status === 410) {
         await rest("push_subscriptions?" + new URLSearchParams({ endpoint: "eq." + subscription.endpoint }), { method: "DELETE" });
         removed++;
+        // (12/10) Tracé : l'app se réabonne seule au prochain lancement (PushTimer.watchSubscription)
+        console.warn("[MASSUP] Expired push subscription removed (" + status + ") for user", subscription.user_id);
       } else {
         await rest("push_timer_events?" + new URLSearchParams({
           id: "eq." + event.id,
@@ -442,6 +444,7 @@ module.exports = async function handler(req, res) {
             if (status === 404 || status === 410) {
               await rest("push_subscriptions?" + new URLSearchParams({ endpoint: "eq." + subscription.endpoint }), { method: "DELETE" });
               removed++;
+              console.warn("[MASSUP] Expired push subscription removed (" + status + ") for user", userId);
             } else {
               console.warn("[MASSUP] Push delivery failed:", status || error.message);
             }

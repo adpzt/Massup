@@ -599,3 +599,100 @@ test("workout logs and sleep entries are only needed when their reminder slot is
   assert.equal(needsHistory({ reminders: { ...reminders, enabled: false } }, { minute: 12 * 60 }), false);
   assert.equal(needsHistory({ reminders: { ...reminders, workoutEnabled: false, sleepLogEnabled: false } }, { minute: 12 * 60 }), false);
 });
+
+// ── Auto-réparation de l'abonnement push (12/10/2026) ──
+function loadPushHealth({ permission = "granted", standalone = true, deviceSub = null, serverRow = true, subscribeFails = false, saveError = null }) {
+  const log = { unsubscribed: 0, subscribed: 0, upserts: [], selects: [] };
+  let current = deviceSub ? { endpoint: deviceSub, unsubscribe: async () => { log.unsubscribed++; current = null; return true; } } : null;
+  const pushManager = {
+    getSubscription: async () => current,
+    subscribe: async () => {
+      if (subscribeFails) throw new Error("user gesture required");
+      log.subscribed++;
+      current = { endpoint: "https://web.push.apple.com/new", unsubscribe: async () => { log.unsubscribed++; current = null; return true; },
+        toJSON: () => ({ endpoint: "https://web.push.apple.com/new", keys: { p256dh: "p", auth: "a" } }) };
+      return current;
+    }
+  };
+  const client = {
+    auth: { getSession: async () => ({ data: { session: fakeSession } }) },
+    from(table) {
+      assert.equal(table, "push_subscriptions");
+      return {
+        select() { return { eq(_c, endpoint) { log.selects.push(endpoint); return { maybeSingle: async () => ({ data: serverRow ? { endpoint } : null, error: null }) }; } }; },
+        upsert: async (row) => { log.upserts.push(row); return { error: saveError }; }
+      };
+    }
+  };
+  const listeners = {};
+  const sandbox = {
+    console: { warn() {} }, Promise, Date, JSON, Uint8Array,
+    Intl,
+    fetch: async () => ({ ok: true, json: async () => ({ enabled: true, publicKey: "AQID" }) }),
+    navigator: { standalone, serviceWorker: { ready: Promise.resolve({ pushManager }) } },
+    document: { visibilityState: "visible", addEventListener(name, callback) { listeners[name] = callback; } },
+    window: { isSecureContext: true, Notification: {}, atob: (v) => Buffer.from(v, "base64").toString("binary"), addEventListener() {}, matchMedia: () => ({ matches: false }) },
+    Notification: { permission }
+  };
+  sandbox.window.Notification = sandbox.Notification;
+  vm.runInNewContext(fs.readFileSync("push_timer.js", "utf8"), sandbox);
+  return { PushTimer: sandbox.PushTimer, client, log, listeners };
+}
+
+test("push health: a subscription known by the server is left alone", async () => {
+  const { PushTimer, client, log } = loadPushHealth({ deviceSub: "https://web.push.apple.com/me", serverRow: true });
+  const res = await PushTimer.checkSubscription(client);
+  assert.equal(res.state, "ok");
+  assert.deepEqual(log.selects, ["https://web.push.apple.com/me"]);
+  assert.equal(log.unsubscribed + log.subscribed + log.upserts.length, 0);
+});
+
+test("push health: a subscription removed server-side is replaced by a fresh one", async () => {
+  const { PushTimer, client, log } = loadPushHealth({ deviceSub: "https://web.push.apple.com/dead", serverRow: false });
+  const res = await PushTimer.checkSubscription(client);
+  assert.equal(res.state, "healed");
+  assert.equal(log.unsubscribed, 1);
+  assert.equal(log.subscribed, 1);
+  assert.equal(log.upserts.length, 1);
+  assert.equal(log.upserts[0].endpoint, "https://web.push.apple.com/new");
+  assert.equal(log.upserts[0].user_id, "u1");
+});
+
+test("push health: a device that lost its subscription re-subscribes", async () => {
+  const { PushTimer, client, log } = loadPushHealth({ deviceSub: null });
+  assert.equal((await PushTimer.checkSubscription(client)).state, "healed");
+  assert.equal(log.subscribed, 1);
+});
+
+test("push health: reports 'lost' when iOS demands a tap, or when notifications are blocked", async () => {
+  const tap = loadPushHealth({ deviceSub: null, subscribeFails: true });
+  const res = await tap.PushTimer.checkSubscription(tap.client);
+  assert.equal(res.state, "lost");
+  assert.equal(res.reason, "subscribe");
+  const denied = loadPushHealth({ permission: "denied" });
+  assert.equal((await denied.PushTimer.checkSubscription(denied.client)).reason, "denied");
+});
+
+test("push health: nothing is touched outside the installed app", async () => {
+  const { PushTimer, client, log } = loadPushHealth({ standalone: false, deviceSub: null });
+  assert.equal((await PushTimer.checkSubscription(client)).state, "off");
+  assert.equal(log.subscribed + log.selects.length, 0);
+});
+
+test("a rest timer without any push subscription asks for a repair instead of failing silently", async () => {
+  let missing = 0;
+  const sandbox = {
+    console, Promise, Date, JSON,
+    fetch: async () => { throw new Error("no request expected"); },
+    navigator: { serviceWorker: { ready: Promise.resolve({ pushManager: { getSubscription: async () => null } }) } },
+    document: { addEventListener() {} },
+    window: { addEventListener() {} }
+  };
+  vm.runInNewContext(fs.readFileSync("push_timer.js", "utf8"), sandbox);
+  const client = { auth: { getSession: async () => ({ data: { session: fakeSession } }) } };
+  const timer = sandbox.PushTimer.create({ url: "https://sb.example", key: "anon", client: () => client, enabled: () => true, onMissing: () => missing++ });
+  await timer.update(Date.now() + 60000, "Repos terminé", "Go");
+  assert.equal(missing, 1);
+  await timer.update(null);
+  assert.equal(missing, 1); // une annulation ne réclame rien
+});

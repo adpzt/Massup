@@ -13,8 +13,10 @@
      client(),            // client supabase-js prêt pour la synchro, ou null (local / non connecté)
      enabled(),           // les rappels sont-ils autorisés en ce moment ?
      tag,                 // préfixe des logs console
-     onError(error)       // retour visuel en cas d'échec
-   }) → { update(dueAt, title, body), flush() } */
+     onError(error),      // retour visuel en cas d'échec
+     onMissing()          // chrono lancé alors que l'appareil n'a plus d'abonnement push (12/10)
+   }) → { update(dueAt, title, body), flush() }
+   PushTimer.watchSubscription({...}) : auto-réparation de l'abonnement, voir plus bas. */
 var PushTimer=(function(){
   function create(cfg){
     var revision=0, queue=Promise.resolve(), wanted=null, synced=null, rpcMissing=false;
@@ -53,7 +55,10 @@ var PushTimer=(function(){
       var sb=cfg.client();
       if(!sb) return false;
       var endpoint=await currentEndpoint();
-      if(!endpoint) return false; // pas de notifications push activées sur cet appareil
+      if(!endpoint){ // pas (ou plus) d'abonnement push sur cet appareil
+        if(job.dueAt&&cfg.onMissing) cfg.onMissing();
+        return false;
+      }
       var session=await currentSession(sb);
       if(!rpcMissing){
         var response=await fetch(cfg.url+'/rest/v1/rpc/schedule_push_timer',{
@@ -103,5 +108,83 @@ var PushTimer=(function(){
     window.addEventListener('pagehide',flush);
     return {update:update,flush:flush};
   }
-  return {create:create};
+
+  /* ═══ Auto-réparation de l'abonnement push (12/10/2026) ═══
+     Bug vécu par Adrien : plus aucune notif pendant 2 jours, sans le moindre message. iOS peut perdre
+     l'abonnement de l'appareil, et le dispatcher efface celui qu'Apple déclare expiré (404/410) ; l'app
+     ne le voyait jamais (le chrono abandonnait en silence, les réglages restaient au vert).
+     Au démarrage et au retour au premier plan : abonnement présent sur l'appareil ET connu du serveur,
+     sinon on en recrée un neuf. Seulement dans l'app installée (une icône = un stockage isolé : MASSUP et
+     Melati ne se disputent jamais le même abonnement).
+     → state : 'ok' | 'healed' | 'lost' (à réactiver d'un tap) | 'off' (rien à vérifier) | 'unknown' (réseau) */
+  function standalone(){
+    return !!(navigator.standalone===true||(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches));
+  }
+  function keyBytes(value){
+    var raw=window.atob(value.replace(/-/g,'+').replace(/_/g,'/'));
+    var bytes=new Uint8Array(raw.length);
+    for(var i=0;i<raw.length;i++) bytes[i]=raw.charCodeAt(i);
+    return bytes;
+  }
+  async function checkSubscription(sb){
+    if(!sb||!('Notification' in window)||!navigator.serviceWorker||!window.isSecureContext||!standalone()) return {state:'off'};
+    if(Notification.permission==='denied') return {state:'lost',reason:'denied'};
+    if(Notification.permission!=='granted') return {state:'lost',reason:'permission'};
+    var registration=await navigator.serviceWorker.ready;
+    if(!registration.pushManager) return {state:'off'};
+    var result=await sb.auth.getSession();
+    var session=result&&result.data&&result.data.session;
+    if(!session||!session.user) return {state:'unknown'};
+    var subscription=await registration.pushManager.getSubscription();
+    if(subscription){
+      var found=await sb.from('push_subscriptions').select('endpoint').eq('endpoint',subscription.endpoint).maybeSingle();
+      if(found.error) return {state:'unknown'};
+      if(found.data) return {state:'ok'};
+      // Le serveur ne connaît plus cet abonnement (expiré chez Apple, ou jamais enregistré) : on repart d'un neuf
+      try{ await subscription.unsubscribe(); }catch(e){}
+    }
+    var configResponse=await fetch('/api/push-config',{cache:'no-store'});
+    var config=await configResponse.json();
+    if(!configResponse.ok||!config.enabled||!config.publicKey) return {state:'unknown'};
+    try{
+      subscription=await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:keyBytes(config.publicKey)});
+    }catch(error){
+      return {state:'lost',reason:'subscribe',error:error.message}; // iOS exige parfois un tap
+    }
+    var json=subscription.toJSON();
+    var saved=await sb.from('push_subscriptions').upsert({
+      endpoint:json.endpoint,user_id:session.user.id,
+      p256dh:json.keys&&json.keys.p256dh,auth:json.keys&&json.keys.auth,
+      time_zone:Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC',
+      updated_at:new Date().toISOString()
+    },{onConflict:'endpoint'});
+    if(saved.error){
+      try{ await subscription.unsubscribe(); }catch(e){}
+      return {state:'lost',reason:'save',error:saved.error.message};
+    }
+    return {state:'healed'};
+  }
+  /* Vérification au démarrage + au retour au premier plan (au plus toutes les 15 min).
+     cfg : client(), enabled() (rappels activés ?), tag, onState(result) */
+  function watchSubscription(cfg){
+    var last=0, running=false;
+    async function run(force){
+      if(running||(!force&&Date.now()-last<15*60*1000)) return;
+      if(!cfg.enabled()) return;
+      var sb=cfg.client(); if(!sb) return;
+      running=true; last=Date.now();
+      try{
+        var res=await checkSubscription(sb);
+        if(res.state==='lost'||res.state==='healed') console.warn((cfg.tag||'[PushTimer]')+' Abonnement push :',res.state,res.reason||'',res.error||'');
+        if(res.state==='unknown') last=0; // réseau absent : on retentera au prochain retour
+        if(cfg.onState) cfg.onState(res);
+      }catch(error){
+        last=0;
+        console.warn((cfg.tag||'[PushTimer]')+' Vérification abonnement push :',error.message);
+      }finally{ running=false; }
+    }
+    document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') run(false); });
+    return {run:run};
+  }
+  return {create:create,checkSubscription:checkSubscription,watchSubscription:watchSubscription};
 })();

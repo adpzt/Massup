@@ -1043,6 +1043,7 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 .rem-day.on{background:rgba(113,255,180,.14);border-color:rgba(113,255,180,.4);color:var(--acc);}
 .rem-time{width:130px;}
 .rem-perm-btn{width:100%;padding:.65rem;background:rgba(77,157,255,.12);border:1px solid rgba(77,157,255,.35);color:var(--acc2);border-radius:11px;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;margin-bottom:.5rem;}
+@media (prefers-color-scheme: light){ .rem-perm-btn{background:rgba(77,157,255,.06);} }
 .rem-settings-group{min-width:0;margin:.45rem 0;padding:.65rem .7rem;border:1px solid var(--gb);border-radius:12px;background:rgba(255,255,255,.025);}
 .rem-settings-group>summary{display:flex;align-items:center;justify-content:space-between;gap:.5rem;min-height:32px;cursor:pointer;list-style:none;font-size:.78rem;font-weight:800;color:var(--txt);}
 .rem-settings-group>summary::-webkit-details-marker{display:none;}
@@ -1062,6 +1063,7 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 .rem-ics-btn{width:100%;margin-top:.85rem;padding:.7rem;background:rgba(255,255,255,.04);border:1px solid var(--gb);border-radius:11px;color:var(--txt);font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;}
 .rem-note{font-size:.68rem;color:var(--mut);line-height:1.5;margin-top:.4rem;}
 .rem-note.rem-ok{color:var(--acc);}
+.rem-note.rem-warn{color:var(--yellow);}
 @media(max-width:380px){.rem-schedule-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:.25rem;}.rem-settings-group{padding:.55rem;}.rem-schedule-row{grid-template-columns:minmax(0,1fr) 94px;gap:.35rem;}}
 
 /* ═══ ÉTIREMENTS (Maison) ═══ */

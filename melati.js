@@ -3975,6 +3975,7 @@ function mlPull(){
       }
       _mlPullOk=true;
       mlBadge('ok');
+      if(_mlPushWatch) setTimeout(function(){ _mlPushWatch.run(true); },1500);
       mlQueuePush(); // pousse l'état courant (crée la ligne au premier login)
       mlUpdateBackupInfo();
       try{ if(typeof PV!=='undefined') PV.pull(true); }catch(e){} // « Nous deux » : la semaine d'Adrien
@@ -4123,10 +4124,13 @@ function mlRenderPushSettings(){
   if(times) times.innerHTML=(r.hydrationTimes||[]).map(function(time,index){
     return '<label>Eau '+(index+1)+' <span class="ml-time-field" id="mlWaterTime'+index+'">'+mlTimeField(time,'mlSaveWaterTime('+index+')')+'</span></label>';
   }).join('');
+  var lost=enabled&&_mlPushState&&_mlPushState.state==='lost';
   var button=$id('mlPushToggle');
-  if(button) button.textContent=enabled?'Suspendre':'Activer';
+  if(button) button.textContent=lost?'Réactiver':enabled?'Suspendre':'Activer';
   var status=$id('mlPushStatus');
-  if(status) status.textContent=enabled?'Actif sur cet appareil · notifications à la fin des repos inclus':'Eau, séances et chrono de repos';
+  if(status) status.textContent=lost
+    ?(_mlPushState.reason==='denied'?'Notifications bloquées : Réglages iOS › Notifications › Melati':'Les notifications ne sont plus actives sur cet appareil : touche Réactiver')
+    :enabled?'Actif sur cet appareil · notifications à la fin des repos inclus':'Eau, séances et chrono de repos';
 }
 function mlSaveReminderOption(key,value){
   DB.reminders[key]=value;
@@ -4149,7 +4153,7 @@ function mlSaveWorkoutTime(key){
   saveDB();
 }
 async function mlTogglePushNotifications(){
-  if(DB.reminders.enabled){
+  if(DB.reminders.enabled&&!(_mlPushState&&_mlPushState.state==='lost')){
     DB.reminders.enabled=false;
     saveDB();
     updateMelatiWorkoutTimer(null);
@@ -4191,6 +4195,7 @@ async function mlTogglePushNotifications(){
       throw new Error('Enregistrement de l’abonnement impossible : '+saved.error.message);
     }
     DB.reminders.enabled=true;
+    _mlPushState={state:'ok'};
     saveDB();
     mlRenderPushSettings();
     showToast('Notifications Melati activées sur cet appareil');
@@ -4204,7 +4209,22 @@ var _mlWorkoutPush=(typeof PushTimer!=='undefined')?PushTimer.create({
   url:ML_SB_URL,key:ML_SB_KEY,tag:'[MELATI]',
   client:function(){ return (mlSb&&_mlPullOk&&!_mlForeign)?mlSb:null; },
   enabled:function(){ var r=DB.reminders||{}; return !!r.enabled&&r.workoutEnabled!==false; },
-  onError:function(){ showToast('Chrono lancé, mais rappel hors application indisponible'); }
+  onError:function(){ showToast('Chrono lancé, mais rappel hors application indisponible'); },
+  onMissing:function(){ if(_mlPushWatch) _mlPushWatch.run(true); }
+}):null;
+// Auto-réparation de l'abonnement push (12/10/2026, parité MASSUP) : au démarrage, au retour au
+// premier plan et quand un chrono ne trouve plus d'abonnement sur l'appareil.
+var _mlPushState=null;
+var _mlPushWatch=(typeof PushTimer!=='undefined'&&PushTimer.watchSubscription)?PushTimer.watchSubscription({
+  tag:'[MELATI]',
+  client:function(){ return (mlSb&&_mlPullOk&&!_mlForeign)?mlSb:null; },
+  enabled:function(){ return !!(DB.reminders&&DB.reminders.enabled); },
+  onState:function(res){
+    var was=_mlPushState&&_mlPushState.state;
+    _mlPushState=res;
+    if(res.state==='healed') showToast('Notifications réactivées sur cet appareil');
+    if(res.state!==was) mlRenderPushSettings();
+  }
 }):null;
 function updateMelatiWorkoutTimer(dueAt,title,body){
   if(!_mlWorkoutPush) return Promise.resolve();
