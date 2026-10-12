@@ -269,6 +269,68 @@
   });
 
   // Position d'un candidat sur une question (null si inconnue — ex. questions sur-mesure)
+  // ── MAJ du 12/10/2026 — passe 2 « cohérence programme ↔ positions » (8 agents, programmes officiels relus question par question) ──
+  // Marine Le Pen : Q4 7→5.5 · Q15 1.5→3 · Q60 4.5→5 · Q64 2→4.5 · Q66 8→6.5 · Q108 5→3 · Q57 4.5→5.5
+  OVERRIDES["Marine Le Pen"] = Object.assign(OVERRIDES["Marine Le Pen"] || {}, {4: 5.5, 15: 3, 57: 5.5, 60: 5, 64: 4.5, 66: 6.5, 108: 3});
+  // Jordan Bardella : Q4 7→5.5 · Q15 1.5→3 · Q60 4.5→5 · Q64 2→4.5 · Q66 8→6.5 · Q108 5→3
+  OVERRIDES["Jordan Bardella"] = Object.assign(OVERRIDES["Jordan Bardella"] || {}, {4: 5.5, 15: 3, 60: 5, 64: 4.5, 66: 6.5, 108: 3});
+  // Éric Zemmour : Q64 3.5→4
+  OVERRIDES["Éric Zemmour"] = Object.assign(OVERRIDES["Éric Zemmour"] || {}, {64: 4});
+  // Nicolas Dupont-Aignan : Q9 2→3.5 · Q101 3→6 · Q103 2.5→4.5 · Q20 5→7.5 · Q105 1→2.5 · Q32 1→2.5 · Q64 2→4 · Q86 5.5→6.5 · Q100 5→4
+  OVERRIDES["Nicolas Dupont-Aignan"] = Object.assign(OVERRIDES["Nicolas Dupont-Aignan"] || {}, {9: 3.5, 20: 7.5, 32: 2.5, 64: 4, 86: 6.5, 100: 4, 101: 6, 103: 4.5, 105: 2.5});
+  // Florian Philippot : Q4 8.5→9.5 · Q12 4→6.5 · Q49 3→5 · Q54 2→5 · Q58 7→8.5 · Q24 5→3 · Q95 4→2.5 · Q89 5→4.5
+  OVERRIDES["Florian Philippot"] = Object.assign(OVERRIDES["Florian Philippot"] || {}, {4: 9.5, 12: 6.5, 24: 3, 49: 5, 54: 5, 58: 8.5, 89: 4.5, 95: 2.5});
+  // François Asselineau : Q3 5→7 · Q4 8.5→10 · Q9 5→7 · Q101 3→5.5 · Q102 8→6 · Q11 5→4 · Q16 7→8.5 · Q17 6→4.5 · Q28 3→2 · Q37 3→1 · Q44 5→7 · Q66 8→4.5 · Q67 8.5→9.5 · Q100 6→7 · Q108 5.5→4 · Q112 4→3
+  OVERRIDES["François Asselineau"] = Object.assign(OVERRIDES["François Asselineau"] || {}, {3: 7, 4: 10, 9: 7, 11: 4, 16: 8.5, 17: 4.5, 28: 2, 37: 1, 44: 7, 66: 4.5, 67: 9.5, 100: 7, 101: 5.5, 102: 6, 108: 4, 112: 3});
+  // David Lisnard : Q27 1.5→0.5 · Q29 3→1 · Q42 1.5→0.5 · Q86 2.5→6 · Q17 2→3.5 · Q50 2→4 · Q52 1.5→3 · Q100 1.5→3 · Q85 1.5→0.5 · Q6 1.5→2.5 · Q15 0→1.5 · Q90 2→3
+  OVERRIDES["David Lisnard"] = Object.assign(OVERRIDES["David Lisnard"] || {}, {6: 2.5, 15: 1.5, 17: 3.5, 27: 0.5, 29: 1, 42: 0.5, 50: 4, 52: 3, 85: 0.5, 86: 6, 90: 3, 100: 3});
+  // Bruno Retailleau : Q86 4→5.5
+  OVERRIDES["Bruno Retailleau"] = Object.assign(OVERRIDES["Bruno Retailleau"] || {}, {86: 5.5});
+  // Xavier Bertrand : Q82 1.5→3
+  OVERRIDES["Xavier Bertrand"] = Object.assign(OVERRIDES["Xavier Bertrand"] || {}, {82: 3});
+  // Édouard Philippe : Q71 4→1.5 · Q44 3→2
+  OVERRIDES["Édouard Philippe"] = Object.assign(OVERRIDES["Édouard Philippe"] || {}, {44: 2, 71: 1.5});
+  // Gabriel Attal : Q76 6→9
+  OVERRIDES["Gabriel Attal"] = Object.assign(OVERRIDES["Gabriel Attal"] || {}, {76: 9});
+  // Bruno Le Maire : Q3 1→4 · Q4 3→1.5 · Q6 3→6 · Q9 2→3.5 · Q18 3→1 · Q33 5→3 · Q59 8.5→7 · Q67 5.5→7 · Q68 4.5→6 · Q110 5→2.5 · Q75 8.5→5 · Q77 1.5→3 · Q81 7→4
+  OVERRIDES["Bruno Le Maire"] = Object.assign(OVERRIDES["Bruno Le Maire"] || {}, {3: 4, 4: 1.5, 6: 6, 9: 3.5, 18: 1, 33: 3, 59: 7, 67: 7, 68: 6, 75: 5, 77: 3, 81: 4, 110: 2.5});
+  // Dominique de Villepin : Q2 3→5.5 · Q64 3.5→5
+  OVERRIDES["Dominique de Villepin"] = Object.assign(OVERRIDES["Dominique de Villepin"] || {}, {2: 5.5, 64: 5});
+  // Raphaël Glucksmann : Q3 5→7 · Q11 5→7 · Q25 7→5 · Q36 5.5→6.5 · Q66 6→7.5 · Q67 4→7.5 · Q82 7→8 · Q85 6→5 · Q110 6→8 · Q111 5.5→4
+  OVERRIDES["Raphaël Glucksmann"] = Object.assign(OVERRIDES["Raphaël Glucksmann"] || {}, {3: 7, 11: 7, 25: 5, 36: 6.5, 66: 7.5, 67: 7.5, 82: 8, 85: 5, 110: 8, 111: 4});
+  // François Hollande : Q83 7→5
+  OVERRIDES["François Hollande"] = Object.assign(OVERRIDES["François Hollande"] || {}, {83: 5});
+  // Bernard Cazeneuve : Q8 4.5→3 · Q21 5→6.5 · Q41 5→7 · Q59 7→5 · Q100 6→7 · Q102 5.5→7
+  OVERRIDES["Bernard Cazeneuve"] = Object.assign(OVERRIDES["Bernard Cazeneuve"] || {}, {8: 3, 21: 6.5, 41: 7, 59: 5, 100: 7, 102: 7});
+  // Jean-Luc Mélenchon : Q107 4→2 · Q74 10→8.5 · Q32 10→7.5
+  OVERRIDES["Jean-Luc Mélenchon"] = Object.assign(OVERRIDES["Jean-Luc Mélenchon"] || {}, {32: 7.5, 74: 8.5, 107: 2});
+  // François Ruffin : Q8 6→3 · Q21 7→9 · Q59 1.5→5 · Q64 3.5→5 · Q107 3→4.5 · Q69 10→8.5
+  OVERRIDES["François Ruffin"] = Object.assign(OVERRIDES["François Ruffin"] || {}, {8: 3, 21: 9, 59: 5, 64: 5, 69: 8.5, 107: 4.5});
+  // Fabien Roussel : Q38 4→5
+  OVERRIDES["Fabien Roussel"] = Object.assign(OVERRIDES["Fabien Roussel"] || {}, {38: 5});
+  // Clémentine Autain : Q29 10→8.5 · Q36 10→8.5 · Q49 10→8.5
+  OVERRIDES["Clémentine Autain"] = Object.assign(OVERRIDES["Clémentine Autain"] || {}, {29: 8.5, 36: 8.5, 49: 8.5});
+  // Marine Tondelier : Q110 7.5→8.5 · Q56 8.5→9 · Q62 6→7 · Q32 8→7 · Q77 7→5.5
+  OVERRIDES["Marine Tondelier"] = Object.assign(OVERRIDES["Marine Tondelier"] || {}, {32: 7, 56: 9, 62: 7, 77: 5.5, 110: 8.5});
+  // Delphine Batho : Q56 5→6.5
+  OVERRIDES["Delphine Batho"] = Object.assign(OVERRIDES["Delphine Batho"] || {}, {56: 6.5});
+  // Nathalie Arthaud : Q86 10→8.5
+  OVERRIDES["Nathalie Arthaud"] = Object.assign(OVERRIDES["Nathalie Arthaud"] || {}, {86: 8.5});
+  // Selma Labib : Q86 10→8.5
+  OVERRIDES["Selma Labib"] = Object.assign(OVERRIDES["Selma Labib"] || {}, {86: 8.5});
+  // Anasse Kazib : Q86 10→8.5 · Q77 8.5→10 · Q82 8.5→10 · Q110 7.5→9
+  OVERRIDES["Anasse Kazib"] = Object.assign(OVERRIDES["Anasse Kazib"] || {}, {77: 10, 82: 10, 86: 8.5, 110: 9});
+  // Olivier Faure : Q6 6→7 · Q7 8→9 · Q8 6→5 · Q18 7→8.5 · Q21 7→8.5 · Q27 6→7.5 · Q104 8→9 · Q105 9→10 · Q41 7→6 · Q56 7→8.5 · Q59 7→8 · Q67 5.5→8.5 · Q110 6.5→7.5 · Q85 6→5
+  OVERRIDES["Olivier Faure"] = Object.assign(OVERRIDES["Olivier Faure"] || {}, {6: 7, 7: 9, 8: 5, 18: 8.5, 21: 8.5, 27: 7.5, 41: 6, 56: 8.5, 59: 8, 67: 8.5, 85: 5, 104: 9, 105: 10, 110: 7.5});
+  // Ségolène Royal : Q28 7→5.5 · Q37 6→5 · Q41 7→5.5 · Q42 7→5 · Q48 7→6 · Q50 8→6 · Q66 7→5.5 · Q67 5.5→7
+  OVERRIDES["Ségolène Royal"] = Object.assign(OVERRIDES["Ségolène Royal"] || {}, {28: 5.5, 37: 5, 41: 5.5, 42: 5, 48: 6, 50: 6, 66: 5.5, 67: 7});
+  // Jérôme Guedj : Q8 6→4 · Q18 9→10 · Q41 7→6 · Q62 6→5 · Q78 8→6 · Q80 7→6 · Q110 6.5→5.5
+  OVERRIDES["Jérôme Guedj"] = Object.assign(OVERRIDES["Jérôme Guedj"] || {}, {8: 4, 18: 10, 41: 6, 62: 5, 78: 6, 80: 6, 110: 5.5});
+  // Emmanuel Maurel : Q18 10→8 · Q21 8.5→10 · Q29 7→5.5 · Q36 7→5 · Q38 4→5.5 · Q42 6→5 · Q53 8→5 · Q55 3→4.5 · Q59 4→2 · Q64 2→4 · Q68 3→4.5 · Q103 10→8.5 · Q111 5.5→4
+  OVERRIDES["Emmanuel Maurel"] = Object.assign(OVERRIDES["Emmanuel Maurel"] || {}, {18: 8, 21: 10, 29: 5.5, 36: 5, 38: 5.5, 42: 5, 53: 5, 55: 4.5, 59: 2, 64: 4, 68: 4.5, 103: 8.5, 111: 4});
+  // Philippe Brun : Q1 7.5→9 · Q6 4.5→7.5 · Q7 4.5→7 · Q14 4→6 · Q17 6→7.5 · Q21 5→6 · Q56 8.5→6 · Q86 5.5→7 · Q101 8.5→7.5 · Q104 8→6
+  OVERRIDES["Philippe Brun"] = Object.assign(OVERRIDES["Philippe Brun"] || {}, {1: 9, 6: 7.5, 7: 7, 14: 6, 17: 7.5, 21: 6, 56: 6, 86: 7, 101: 7.5, 104: 6});
+
   function candPos(q, c) {
     if (!q || !c) return null;
     var ov = OVERRIDES[c.name]; if (ov && ov[q.id] != null) return ov[q.id];

@@ -1,4 +1,5 @@
 // Fusion des sorties des agents (out/*.json) → rapport de validation + fichier candidats normalisé.
+// Fenêtre de dates : POL_FROM / POL_TO (défaut 2026-09-01 → 2026-10-12).
 // usage : node merge.js            (rapport seulement)
 //         node merge.js --write    (réécrit massup/politique/actus.js avec les nouveaux items validés)
 const fs = require('fs'), path = require('path');
@@ -26,7 +27,8 @@ for (const f of outs) {
   for (const it of (J.items || [])) {
     const why = [];
     if (!NAMES.has(it.c)) why.push('nom inconnu « ' + it.c + ' »');
-    if (!/^2026-(09-\d\d|10-(0\d|1[0-2]))$/.test(it.d || '')) why.push('date hors fenêtre ' + it.d);
+    const FROM = process.env.POL_FROM || '2026-09-01', TO = process.env.POL_TO || '2026-10-12';
+    if (!/^\d{4}-\d\d-\d\d$/.test(it.d || '') || it.d < FROM || it.d > TO) why.push('date hors fenêtre ' + it.d);
     if (!THEMES.includes(it.th)) why.push('thème ' + it.th);
     if (!it.src || (BAD_SRC.test(it.src) && !OK_SRC.test(it.src.replace(BAD_SRC, '')))) why.push('source ' + it.src);
     if (!it.txt || it.txt.length < 25) why.push('txt vide');

@@ -55,6 +55,27 @@ const pkgScripts = (JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 
 if (pkgScripts.build || pkgScripts['vercel-build']) ko('massup/package.json contient un script build/vercel-build → Vercel échouera (« No Output Directory named public »). Les scripts de dev vont dans MUSCU/package.json.');
 else ok('massup/package.json sans script de build (déploiement Vercel statique)');
 
+// 3 ter. Quiz politique : données cohérentes (positions complètes et bornées, scores-thèmes = moyenne des positions)
+console.log('3 ter. Données du quiz politique');
+try {
+  const vm = require('vm'), ctx = { window: {} }; ctx.window.window = ctx.window; vm.createContext(ctx);
+  ['data.js', 'parties.js', 'positions.js', 'actus.js'].forEach(f => vm.runInContext(fs.readFileSync(path.join(ROOT, 'politique', f), 'utf8'), ctx, { filename: f }));
+  const P = ctx.window.POL, names = new Set(P.CANDIDATES.map(c => c.name)), probs = [];
+  P.CANDIDATES.forEach(c => {
+    const byTheme = {};
+    P.QUESTIONS.forEach(q => {
+      const p = P.candPos(q, c), sc = q.options.map(o => o.score);
+      if (p == null) probs.push(c.name + ' Q' + q.id + ' sans position');
+      else if (p < Math.min(...sc) || p > Math.max(...sc)) probs.push(c.name + ' Q' + q.id + ' hors bornes (' + p + ')');
+      else (byTheme[q.theme] = byTheme[q.theme] || []).push(p);
+    });
+    for (const th in byTheme) { const m = Math.round(byTheme[th].reduce((a, b) => a + b, 0) / byTheme[th].length * 2) / 2; if (Math.abs(m - c.scores[th]) > 0.01) probs.push(c.name + ' score ' + th + ' = ' + c.scores[th] + ' ≠ moyenne des positions ' + m); }
+  });
+  P.ACTUS.forEach(a => { if (!names.has(a.c)) probs.push('fil d’actu : nom inconnu « ' + a.c + ' »'); });
+  if (probs.length) ko(probs.length + ' incohérence(s) :\n     ' + probs.slice(0, 12).join('\n     ') + '\n     → scores : recalculer la moyenne des positions par thème (voir /pol-update)');
+  else ok(P.CANDIDATES.length + ' candidats × ' + P.QUESTIONS.length + ' questions cohérents, ' + P.ACTUS.length + ' items de fil d’actu valides');
+} catch (e) { ko('chargement du quiz politique impossible : ' + e.message); }
+
 // 4. Version du cache du service worker
 console.log('4. Cache du service worker');
 const sw = fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8');

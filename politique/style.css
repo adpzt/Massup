@@ -39,7 +39,7 @@
   /* ── SÉMANTIQUE ── */
   --pol-ok: #18753C;        /* sur surface 5,1:1 · sur ok-soft 4,6:1 */
   --pol-ok-soft: #E9F4ED;  --pol-ok-line: #C6E2D0;
-  --pol-warn: #9A5410;      /* sur surface 5,7:1 · sur warn-soft 5,0:1 */
+  --pol-warn: #7E4410;      /* (12/10 : #9A5410 → #7E4410, mesuré 3,9:1 sur warn-soft → 6,9:1) */
   --pol-warn-soft: #FAF1E0; --pol-warn-line: #EAD9B4; --pol-warn-deep: #7A4A00;
   --pol-amber: #E29A0C;     /* décoratif uniquement */
   --pol-violet: #5B21B6;    --pol-violet-soft: #F0EBFB;
@@ -1232,3 +1232,42 @@ body.pol-body { background: var(--pol-bg); font-family: 'Manrope', system-ui, sa
   .pol-rv-chips::-webkit-scrollbar { display: none; }
   .pol-rv-chips > .pol-rv-chip { flex: 0 0 auto; }
 }
+
+/* (12/10/2026) En-tête mobile : le sélecteur Adrien / Melati / Invité écrasait le titre (« Q… »).
+   Il n'affiche plus que le profil actif (▾) ; un toucher déroule les deux autres sous l'en-tête. */
+@media (max-width: 999px) {
+  .pol-header-actions { position: relative; }
+  .pol-prof-switch:not(.open) .pol-prof-btn:not(.on) { display: none; }
+  .pol-prof-switch .pol-prof-btn.on::after { content: ' ▾'; font-size: .75em; opacity: .85; }
+  .pol-prof-switch.open { position: absolute; right: 0; top: calc(100% + 6px); flex-direction: column; z-index: 60;
+    background: var(--pol-surface, var(--pol-bg)); box-shadow: 0 8px 24px rgba(21, 29, 49, .18); min-width: 8.5rem; }
+  .pol-prof-switch.open .pol-prof-btn { text-align: left; }
+}
+
+/* (12/10/2026) Quiz mobile : l'explication repoussait les réponses sous l'écran → repliée à 3 lignes + « En savoir plus ». */
+.pol-q-more { display: none; }
+@media (max-width: 999px) {
+  .pol-q-expl:not(.open) { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .pol-q-more { display: inline-block; margin: .35rem 0 .2rem; padding: .3rem 0; background: none; border: 0; color: var(--pol-blue); font: inherit; font-size: .85rem; font-weight: 700; cursor: pointer; }
+}
+
+/* (12/10/2026) Lien compact vers le fil d'actu (accueil) */
+.pol-home-link { display: flex; align-items: center; justify-content: space-between; gap: .8rem; width: 100%; margin: 1.2rem 0;
+  padding: .85rem 1rem; text-align: left; font: inherit; color: var(--pol-ink, inherit); background: var(--pol-surface, #fff);
+  border: 1px solid var(--pol-line-2, rgba(0,0,0,.1)); border-radius: 12px; cursor: pointer; }
+.pol-home-link > span:last-child { font-size: 1.4rem; color: var(--pol-mut); }
+
+/* (12/10/2026) Résultats épurés : candidats éloignés et méthode de calcul repliés */
+.pol-more-cands { display: block; width: 100%; margin: .6rem 0; padding: .75rem 0; background: none; border: 0; border-top: 1px solid var(--pol-line-2, rgba(0,0,0,.1)); font: inherit; font-weight: 700; color: var(--pol-blue); text-align: left; cursor: pointer; }
+:not(.show-far) > .pol-cand.pol-far { display: none; }
+.pol-calc-details > summary { cursor: pointer; list-style: none; font-weight: 700; color: var(--pol-blue); padding: .7rem 0; }
+.pol-calc-details > summary::-webkit-details-marker { display: none; }
+.pol-calc-details > summary::after { content: ' ▾'; }
+.pol-calc-details[open] > summary::after { content: ' ▴'; }
+.pol-calc-details > summary { color: inherit; }
+
+/* (12/10/2026) Mes réponses : les notes chiffrées des options (0 → 10) alourdissaient la lecture → masquées
+   (le détail reste dans « Voir le calcul »). Noms de partis coupés net → points de suspension. */
+.pol-rv-oscore { display: none; }
+.pol-cand-party, .pol-cd-party, .pol-summary-cand-party { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.pol-cmp-pick .pol-select { min-width: 0; width: 100%; text-overflow: ellipsis; }

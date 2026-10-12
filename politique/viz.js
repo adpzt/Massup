@@ -59,10 +59,10 @@
     s += '<line x1="' + r1(X(5)) + '" y1="' + P + '" x2="' + r1(X(5)) + '" y2="' + (H - P) + '" stroke="' + LINE + '" stroke-width="1.2"/>';
     s += '<line x1="' + P + '" y1="' + r1(Y(5)) + '" x2="' + (W - P) + '" y2="' + r1(Y(5)) + '" stroke="' + LINE + '" stroke-width="1.2"/>';
     // légendes des axes
-    s += '<text x="' + P + '" y="' + (P - 9) + '" font-size="9.5" font-weight="800" fill="' + RED + '">◀ Gauche éco · redistribution</text>';
-    s += '<text x="' + (W - P) + '" y="' + (P - 9) + '" text-anchor="end" font-size="9.5" font-weight="800" fill="' + BLUE + '">marché · Droite éco ▶</text>';
-    s += '<text x="' + (W / 2) + '" y="' + (P + 12) + '" text-anchor="middle" font-size="9" font-weight="700" fill="' + MUT + '">▲ Progressiste · ouverture</text>';
-    s += '<text x="' + (W / 2) + '" y="' + (H - P - 5) + '" text-anchor="middle" font-size="9" font-weight="700" fill="' + MUT + '">▼ Conservateur · autorité</text>';
+    s += '<text x="' + P + '" y="' + (P - 9) + '" font-size="9.5" font-weight="800" fill="' + RED + '">◀ Gauche éco</text>';
+    s += '<text x="' + (W - P) + '" y="' + (P - 9) + '" text-anchor="end" font-size="9.5" font-weight="800" fill="' + BLUE + '">Droite éco ▶</text>';
+    s += '<text x="' + (W / 2) + '" y="' + (P + 12) + '" text-anchor="middle" font-size="9" font-weight="700" fill="' + MUT + '">▲ Progressiste</text>';
+    s += '<text x="' + (W / 2) + '" y="' + (H - P - 5) + '" text-anchor="middle" font-size="9" font-weight="700" fill="' + MUT + '">▼ Conservateur</text>';
     // candidats (non-moi d'abord, moi au-dessus)
     var others = points.filter(function (p) { return !p.me; }), me = points.filter(function (p) { return p.me; });
     others.forEach(function (p) {

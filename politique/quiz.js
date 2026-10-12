@@ -334,7 +334,10 @@
     }).join('');
   }
   function switchProfile(p) {
-    if (p === state.profile) return;
+    // (12/10) Mobile : le sélecteur n'affiche que le profil actif ; le toucher déroule les autres
+    var sw = el('polProfileSwitch');
+    if (p === state.profile) { if (sw) sw.classList.toggle('open'); return; }
+    if (sw) sw.classList.remove('open');
     try { saveCurrentNote(); } catch (e) {}
     saveDraftLocal();
     state.profile = p;
@@ -407,11 +410,8 @@
     var actus = allActus(), seenD = lsGet(LS_ACTU_SEEN, ''), nNew = actus.filter(function (a) { return a.d > seenD; }).length;
     var actuCard = '';
     if (actus.length) {
-      var ev = (POL.EVENTS || [])[0];
-      actuCard = '<div class="pol-slbl">Fil d\'actu de la campagne' + (nNew ? ' <span class="pol-actu-n">' + nNew + ' nouv.</span>' : '') + '</div><div class="pol-card pol-actu-home">' +
-        (ev ? '<div class="pol-actu-event-mini"><strong>' + esc(ev.label) + '</strong> · ' + esc(fmtDecl(ev.d)) + '<br><span class="pol-sub">' + esc(ev.txt.length > 240 ? ev.txt.slice(0, 237) + '…' : ev.txt) + '</span></div>' : '') +
-        actus.slice(0, 3).map(function (a) { var c = candByName(a.c); return '<div class="pol-actu-mini"><span class="pol-cand-dot" style="background:' + (c ? c.color : '#888') + '"></span><span><strong>' + esc(surname(a.c)) + '</strong> · ' + POL.themeEmoji(a.th) + ' ' + esc(a.txt.length > 120 ? a.txt.slice(0, 117) + '…' : a.txt) + (live ? ' ' + actuTag(a, live.profile) : '') + '</span></div>'; }).join('') +
-        '<button class="pol-btn pol-btn-line pol-btn-sm" style="margin-top:.7rem;width:100%" onclick="POLQ.openActu()">Tout le fil d\'actu (' + actus.length + ' prises de position)</button></div>';
+      // (12/10) Accueil épuré : le fil d'actu n'est plus qu'un lien (le détail vit dans Candidats › Actu)
+      actuCard = '<button class="pol-home-link" onclick="POLQ.openActu()"><span><strong>Fil d\'actu de la campagne</strong><br><span class="pol-sub">' + actus.length + ' prises de position datées et sourcées' + (nNew ? ' · <span class="pol-actu-n">' + nNew + ' nouv.</span>' : '') + '</span></span><span aria-hidden="true">›</span></button>';
     }
 
     var dates = POL.KEY_DATES.filter(function (d) { return daysUntil(d.date) >= -1; }).slice(0, 3);
@@ -606,7 +606,7 @@
       '<div style="padding-top:.6rem">' +
         persoTag + newTag + '<span class="pol-q-badge">' + esc(POL.SECTION_LABELS[q.theme]) + '</span>' +
         '<h2 class="pol-q-title">' + esc(q.question) + '</h2>' +
-        '<div class="pol-q-body"><div class="pol-q-left"><div class="pol-q-expl">' + q.explanation + '</div></div><div class="pol-q-right">' +
+        '<div class="pol-q-body"><div class="pol-q-left"><div class="pol-q-expl">' + q.explanation + '</div><button type="button" class="pol-q-more" onclick="var e=this.previousElementSibling;e.classList.toggle(\'open\');this.textContent=e.classList.contains(\'open\')?\'Réduire\':\'En savoir plus\'">En savoir plus</button></div><div class="pol-q-right">' +
         '<div class="pol-opts">' + optsHtml + '</div>' +
         '<div class="pol-who-toggle"><button class="pol-linkbtn" onclick="POLQ.toggleWho(' + q.id + ',\'polWhoQ\')">Qui répond quoi ? (position des candidats)</button></div><div id="polWhoQ" class="pol-hidden"></div>' +
         (notesAllowed() ? '<div class="pol-pending-box' + (isPending ? ' on' : '') + '">' + (isPending ? '<strong>Réponse en note, à faire valider par l\'IA</strong> (aucune option cochée). Tu pourras la transformer en option plus tard (Résultats → notes à valider).' : '') + '</div>' : '') +
@@ -1019,7 +1019,7 @@
       var pct = POL.POLLS ? POL.POLLS[m.name] : null;
       var c = candByName(m.name);
       var partyLine = partyLogo(c) + ((POL.STATUS_ICONS || {})[c.status] || '') + ' ' + esc(m.party) + (pct != null ? ' · sondages ~' + pctLabel(pct) : '');
-      return (i === 10 ? '<div class="pol-strate-lbl">Plus éloignés de toi</div>' : '') + '<div class="pol-cand' + (i >= 10 ? ' compact' : '') + (POL.isRunning(c) ? '' : ' retired') + '" id="polCand' + i + '">' +
+      return (i === 10 ? '<button type="button" class="pol-more-cands" onclick="var p=this.parentElement;p.classList.toggle(\'show-far\');this.textContent=p.classList.contains(\'show-far\')?\'Masquer les candidats les plus éloignés\':\'Voir les ' + (r.matches.length - 10) + ' autres candidats, plus éloignés de toi\'">Voir les ' + (r.matches.length - 10) + ' autres candidats, plus éloignés de toi</button>' : '') + '<div class="pol-cand' + (i >= 10 ? ' compact pol-far' : '') + (POL.isRunning(c) ? '' : ' retired') + '" id="polCand' + i + '">' +
         '<div class="pol-cand-head" onclick="POLQ.toggleCand(' + i + ')">' +
           '<span class="pol-cand-rank">' + (i + 1) + '</span>' + candAvatar(m, 'sm') +
           '<span class="pol-cand-info"><span class="pol-cand-name">' + esc(m.name) + '</span><div class="pol-cand-party">' + partyLine + '</div></span>' +
@@ -1068,7 +1068,7 @@
       '<div class="pol-card"><div class="pol-bars">' + renderBars(r.profile) + '</div>' +
         '<div class="pol-axis-legend"><span style="color:var(--pol-left)">← Gauche</span><span>Centre</span><span style="color:var(--pol-right)">Droite →</span></div>' +
       '</div>' +
-      '<div class="pol-matching-note"><strong>Comment c\'est calculé</strong> — <strong>question par question</strong> : chaque candidat a une position sur chacune des ' + (isPerso ? r.total + ' questions du quiz créa' : Q.length + ' questions') + ' (programme, votes, déclarations — pas son « camp »). Pour chaque question à laquelle tu as répondu, la concordance va de <strong>+1</strong> (même option) à <strong>−1</strong> (option opposée), pondérée par la pertinence que tu as donnée (×2 si question essentielle). Le % ramène cette moyenne sur 0-100 (50 % = neutre). Le RN peut donc être noté comme la gauche sur la retraite et comme LR sur l\'immigration : rien n\'est recentré par la moyenne. Touche « Qui répond quoi ? » ' + (isPerso ? 'sur chaque question du quiz créa' : 'dans <em>Mes réponses</em>') + ' pour voir la position de chacun, question par question. Positions au ' + esc(POL.POSITIONS_DATE || POL.DATA_DATE) + '.</div>' +
+      '<details class="pol-matching-note pol-calc-details"><summary><strong>Comment c\'est calculé</strong></summary><strong>question par question</strong> : chaque candidat a une position sur chacune des ' + (isPerso ? r.total + ' questions du quiz créa' : Q.length + ' questions') + ' (programme, votes, déclarations — pas son « camp »). Pour chaque question à laquelle tu as répondu, la concordance va de <strong>+1</strong> (même option) à <strong>−1</strong> (option opposée), pondérée par la pertinence que tu as donnée (×2 si question essentielle). Le % ramène cette moyenne sur 0-100 (50 % = neutre). Le RN peut donc être noté comme la gauche sur la retraite et comme LR sur l\'immigration : rien n\'est recentré par la moyenne. Touche « Qui répond quoi ? » ' + (isPerso ? 'sur chaque question du quiz créa' : 'dans <em>Mes réponses</em>') + ' pour voir la position de chacun, question par question. Positions au ' + esc(POL.POSITIONS_DATE || POL.DATA_DATE) + '.</details>' +
       '<div class="pol-btn-row" style="margin-top:1.2rem"><button class="pol-btn pol-btn-line" onclick="POLQ.goReview()">Mes réponses</button>' + (isPerso ? '' : '<button class="pol-btn pol-btn-line" onclick="POLQ.saveBilan()">Enregistrer ce bilan</button>') + '</div>' +
       '<div style="text-align:center;margin-top:14px"><a class="pol-linkbtn" style="font-size:.85rem" onclick="POLQ.exportTxt()">Exporter mes résultats (.txt)</a></div></div></div>';
   }
@@ -1543,7 +1543,7 @@
     var running = POL.CANDIDATES.filter(POL.isRunning), retired = POL.CANDIDATES.filter(function (c) { return !POL.isRunning(c); });
     var nOff = POL.CANDIDATES.filter(function (c) { return c.status === 'déclaré'; }).length, nPrim = POL.CANDIDATES.filter(function (c) { return c.status === 'primaire'; }).length, nPres = POL.CANDIDATES.filter(function (c) { return c.status === 'pressenti' || c.status === 'conditionnel'; }).length;
     var chips = '<button class="pol-rv-chip' + (state.candFilter === 'all' && state.candView === 'list' ? ' on' : '') + '" onclick="POLQ.setCandFilter(\'all\')">Sondages · ' + running.length + '</button>' +
-      '<button class="pol-rv-chip' + (state.candView === 'duel' ? ' on' : '') + '" onclick="POLQ.openDuel()">Duel</button>' +
+      '<button class="pol-rv-chip' + (state.candView === 'duel' ? ' on' : '') + '" onclick="POLQ.openDuel()">Comparer</button>' +
       '<button class="pol-rv-chip' + (state.candFilter === 'actu' && state.candView === 'list' ? ' on' : '') + '" style="--rv:#7C3AED" onclick="POLQ.openActu()">Actu · ' + allActus().length + '</button>' +
       '<button class="pol-rv-chip' + (state.candFilter === 'official' && state.candView === 'list' ? ' on' : '') + '" style="--rv:#18753C" onclick="POLQ.setCandFilter(\'official\')">Officiellement déclarés · ' + nOff + '</button>' +
       (nPrim ? '<button class="pol-rv-chip' + (state.candFilter === 'primaire' && state.candView === 'list' ? ' on' : '') + '" style="--rv:#AD1457" onclick="POLQ.setCandFilter(\'primaire\')">Primaire PS/PP · ' + nPrim + '</button>' : '') +
@@ -1673,7 +1673,7 @@
     if (!state.duel.a) state.duel.a = 'Marine Le Pen';
     if (!state.duel.b) state.duel.b = r && r.matches[0] && r.matches[0].name !== state.duel.a ? r.matches[0].name : 'Édouard Philippe';
     var A = candByName(state.duel.a), B = candByName(state.duel.b);
-    function sel(side, cur) { return '<select class="pol-select" onchange="POLQ.setDuel(\'' + side + '\', this.value)">' + running.map(function (c) { return '<option value="' + esc(c.name) + '"' + (c.name === cur ? ' selected' : '') + '>' + esc(c.name) + (POL.isRunning(c) ? '' : ' (retiré)') + '</option>'; }).join('') + '</select>'; }
+    function sel(side, cur) { return '<select class="pol-select" onchange="POLQ.setDuel(\'' + side + '\', this.value)">' + running.map(function (c) { return '<option value="' + esc(c.name) + '"' + (c.name === cur ? ' selected' : '') + '>' + esc(shortName(c.name)) + (POL.isRunning(c) ? '' : ' (retiré)') + '</option>'; }).join('') + '</select>'; }
     function side(c, k) {
       var pct = pollOf(c);
       return '<div class="pol-cmp-side" style="--ac:' + c.color + '">' + candAvatar(c, 'big') + sel(k, c.name) + '<span class="pol-cd-party">' + partyLogo(c) + esc(c.party) + '</span><div class="pol-cmp-meta">' + statusChip(c) + (pct >= 0 && POL.isRunning(c) ? '<span class="pol-cd-poll-badge">~' + pctLabel(pct) + '</span>' : '') + '</div></div>';

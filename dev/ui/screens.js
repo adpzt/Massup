@@ -43,6 +43,8 @@ const POLITIQUE = [
   ['p_comparer', ['POLQ.goCompare()'], { full: true }],
   ['p_methodo', ['POLQ.goMethodo()'], { full: true }],
   ['p_profil', ['POLQ.goProfile()'], { full: true }],
+  ['p_fiche', ['POLQ.goCandidats()', 'POLQ.toggleCandDir(0)', "(document.getElementById('polCandDir0')||document.body).scrollIntoView()"]],
+  ['p_revue', ['POLQ.goReview()'], { full: true }],
 ];
 const POLITIQUE_OWNER = POLITIQUE.map(([n, a, o]) => [n.replace('p_', 'po_'), a, o]);
 module.exports = {
