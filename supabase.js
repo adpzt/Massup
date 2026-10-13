@@ -67,6 +67,22 @@ function bootWithSync() {
 }
 var _stateAdopted = false; // true si un snapshot cloud a été adopté en bloc (base locale vierge)
 
+// (13/10) Repère de synchro de CE stockage (Safari et l'icône ont chacun le leur) — voir state_sync.js
+var SYNC_META_KEY = 'massup_sync';
+function _localRev() { return (DB.profile && DB.profile.rev) || 0; }
+// Écrit un snapshot cloud dans le stockage local. Son compteur repart AU-DESSUS du compteur local :
+// la garde anti-onglet périmé (_flushSaveDB) recharge alors au lieu de réécrire l'ancien état.
+function _adoptCloudSnapshot(data) {
+  if (!data.profile) data.profile = {};
+  data.profile.rev = Math.max(_localRev(), data.profile.rev || 0) + 1;
+  try { localStorage.setItem('massup_db', JSON.stringify(data)); return true; }
+  catch(e) {
+    console.warn('[MASSUP] Adoption du cloud impossible (stockage local) :', e && e.message);
+    try { showToast('⚠️ Stockage du téléphone plein : la version du cloud n’a pas pu être reprise.'); } catch(_e) {}
+    return false;
+  }
+}
+
 function bootApp() {
   try { init(); } catch(e) {
     document.getElementById('main-app').style.display = 'block';
@@ -160,8 +176,9 @@ async function syncFromSupabase() {
         .order('date'),
       // Snapshot complet de la base (user_state.sql — 11/08). Erreur tolérée tant
       // que la table n'existe pas : le sync des 3 tables historiques continue.
+      // select('*') : lit aussi la colonne rev quand elle existe (user_state_cas.sql), sans casser avant
       sbClient.from('user_state')
-        .select('data,updated_at')
+        .select('*')
         .eq('user_id', userId)
         .maybeSingle()
     ]);
@@ -181,20 +198,30 @@ async function syncFromSupabase() {
 
     // ── user_state d'abord : couvre TOUT (profil, poignet, nutrition, rank,
     // templates, détente...) — ce que les 3 tables historiques ne portent pas.
-    if (stateRow && stateRow.data && typeof mergeBackupIntoDB === 'function') {
-      // (12/08) LE PLUS RÉCENT GAGNE : chaque save porte un numéro de version (profile.rev).
-      // Cloud plus récent que le local (localStorage cassé/purgé, onglet périmé) → adoption
-      // en bloc. Sinon merge non destructif (le local, plus récent, gagne).
-      var cloudRev = (stateRow.data.profile && stateRow.data.profile.rev) || 0;
-      var localRev = (DB.profile && DB.profile.rev) || 0;
-      var virgin = typeof isLocalDBVirgin === 'function' && isLocalDBVirgin();
-      if (virgin || cloudRev > localRev) {
-        try { localStorage.setItem('massup_db', JSON.stringify(stateRow.data)); } catch(e) {}
+    // (13/10) Version SERVEUR du snapshot (null tant que user_state_cas.sql n'est pas appliqué)
+    var serverRev = stateRow && typeof stateRow.rev === 'number' ? stateRow.rev : null;
+    var meta = STATE_SYNC.metaFor(SYNC_META_KEY, userId);
+    if (stateRow && stateRow.data && stateRow.data.app !== 'melati' && typeof mergeBackupIntoDB === 'function') {
+      // (13/10) Le serveur dit si le cloud a bougé depuis NOTRE dernière synchro (STATE_SYNC.plan) :
+      // cloud plus récent et rien de non envoyé ici → adoption en bloc ; les deux ont bougé → fusion
+      // non destructive (le local gagne à clé égale) puis envoi conditionnel ; cloud inchangé → rien.
+      var action = STATE_SYNC.plan({
+        virgin: typeof isLocalDBVirgin === 'function' && isLocalDBVirgin(),
+        meta: meta, cloudRev: serverRev, localRev: _localRev(),
+        legacyCloudRev: (stateRow.data.profile && stateRow.data.profile.rev) || 0
+      });
+      if (action === 'adopt' && _adoptCloudSnapshot(stateRow.data)) {
         loadDB();
         _stateAdopted = true;
+        if (serverRev !== null) STATE_SYNC.writeMeta(SYNC_META_KEY, { uid: userId, base: serverRev, lrev: _localRev() });
       } else {
-        mergeBackupIntoDB(stateRow.data);
+        if (action !== 'keep') mergeBackupIntoDB(stateRow.data);
+        // Fusion = des modifs locales à envoyer (lrev -1 force l'envoi) ; « keep » garde le repère tel quel
+        if (serverRev !== null) STATE_SYNC.writeMeta(SYNC_META_KEY, { uid: userId, base: serverRev, lrev: action === 'keep' && meta ? meta.lrev : -1 });
       }
+    } else if (!stateRow && results[3] && !results[3].error) {
+      // Pas encore de ligne : le 1er envoi la crée (base 0)
+      STATE_SYNC.writeMeta(SYNC_META_KEY, { uid: userId, base: 0, lrev: -1 });
     }
 
     // ── Merge strategy : localStorage = source primaire, Supabase comble les trous ──
@@ -287,8 +314,13 @@ async function syncFromSupabase() {
     _cloudPullOk = true;
 
     // Sauvegarder le résultat mergé localement et pousser vers Supabase
-    try { localStorage.setItem('massup_db', JSON.stringify(DB)); } catch(e) {}
-    _doSyncToSupabase(userId);
+    try { localStorage.setItem('massup_db', JSON.stringify(DB)); }
+    catch(e) { console.warn('[MASSUP] Sauvegarde locale après synchro impossible :', e && e.message); }
+    // (13/10) Snapshot renvoyé seulement s'il y a du neuf ici : renvoyer une copie identique ferait
+    // croire aux autres appareils que le cloud a changé. Les 3 tables historiques, elles, repartent.
+    var metaAfter = STATE_SYNC.metaFor(SYNC_META_KEY, userId);
+    if (!metaAfter || STATE_SYNC.isDirty(metaAfter, _localRev())) _doSyncToSupabase(userId);
+    else _pushTables(userId);
     // « Nous deux » (26/08) : lecture du résumé de Melati (partner_state) — jamais bloquant
     try { if (typeof PV !== 'undefined') PV.pull(true); } catch(e) {}
   } catch(e) {
@@ -313,6 +345,14 @@ function syncToSupabase() {
 }
 
 function _doSyncToSupabase(userId) {
+  // (13/10) Avec un pull réussi, le snapshot passe EN PREMIER par l'écriture conditionnelle : tant
+  // qu'il est refusé (un autre appareil a écrit), rien d'autre n'est envoyé — surtout pas le
+  // nettoyage des séances cloud absentes d'ici, qui effacerait celles de l'autre appareil.
+  if (_cloudPullOk) { _pushSnapshot(userId); return; }
+  _pushTables(userId);
+}
+
+function _pushTables(userId) {
   // ── Poids par exercice ──
   var wRows = [];
   Object.keys(DB.weights).forEach(function(exoId) {
@@ -407,21 +447,70 @@ function _doSyncToSupabase(userId) {
       .catch(function(e) { console.warn('[MASSUP] weights tombstones:', e.message); });
   });
 
-  // ── Snapshot complet (user_state — 11/08) : TOUTE la base à chaque save. ──
-  // C'est ce qui rend l'app réellement multi-navigateur : profil, journal
-  // poignet, nutrition, déclarations hebdo, pauses rank, templates, détente...
-  // Garde anti-écrasement : le snapshot n'est poussé QUE si le pull cloud a
-  // réussi cette session (l'upsert remplace la ligne entière — un état local
-  // partiel ne doit jamais écraser un snapshot cloud plus riche).
-  if (_cloudPullOk) {
-    sbClient.from('user_state')
-      .upsert({ user_id: userId, data: DB, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
-      .then(function(r) { if (r && r.error) console.warn('[MASSUP] user_state upsert:', r.error.message); })
-      .catch(function(e) { console.warn('[MASSUP] user_state upsert:', e.message); });
-    // « Nous deux » (26/08) : MA ligne partner_state = résumé lecture seule pour Melati
-    // (compteurs, jours, bilans, petit mot). Dérivé de DB, jamais l'inverse.
-    try { if (typeof PV !== 'undefined') PV.push(); } catch(e) {}
-  }
+  // « Nous deux » (26/08) : MA ligne partner_state = résumé lecture seule pour Melati
+  // (compteurs, jours, bilans, petit mot). Dérivé de DB, jamais l'inverse.
+  if (_cloudPullOk) { try { if (typeof PV !== 'undefined') PV.push(); } catch(e) {} }
+}
+
+// ── Snapshot complet (user_state — 11/08) : TOUTE la base, c'est ce qui rend l'app multi-navigateur.
+// Envoyé seulement après un pull réussi (_cloudPullOk). (13/10) Écriture CONDITIONNELLE :
+// user_state_put(DB, base) n'écrit que si le cloud est encore à la version « base » vue par ce
+// stockage ; sinon _resolveCloudConflict relit, fusionne, et un nouvel envoi part.
+var _casConflicts = 0, _casInFlight = false, _casAgain = false;
+function _pushSnapshot(userId) {
+  var meta = STATE_SYNC.metaFor(SYNC_META_KEY, userId);
+  if (!meta) { _legacySnapshotUpsert(userId); return; } // serveur sans colonne rev : ancien mode
+  // Un envoi à la fois : deux envois partis de la même base se refuseraient l'un l'autre
+  if (_casInFlight) { _casAgain = true; return; }
+  if (!STATE_SYNC.isDirty(meta, _localRev())) { _pushTables(userId); return; } // rien de neuf à écrire
+  _casInFlight = true;
+  var sentRev = _localRev();
+  STATE_SYNC.put(sbClient, DB, meta.base).then(function(res) {
+    if (res.legacy) { _legacySnapshotUpsert(userId); return; }
+    if (res.ok) {
+      _casConflicts = 0;
+      STATE_SYNC.writeMeta(SYNC_META_KEY, { uid: userId, base: res.rev, lrev: sentRev });
+      _pushTables(userId);
+      return;
+    }
+    // Refusé : un autre appareil a écrit la version res.rev
+    if (++_casConflicts > 3) {
+      console.warn('[MASSUP] user_state : conflits répétés, envoi suspendu jusqu’à la prochaine modif');
+      _casConflicts = 0;
+      return;
+    }
+    return _resolveCloudConflict(userId);
+  }).catch(function(e) { console.warn('[MASSUP] user_state_put :', e && e.message); })
+  .then(function() {
+    _casInFlight = false;
+    if (_casAgain) { _casAgain = false; _pushSnapshot(userId); }
+  });
+}
+function _legacySnapshotUpsert(userId) {
+  sbClient.from('user_state')
+    .upsert({ user_id: userId, data: DB, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
+    .then(function(r) {
+      if (r && r.error) { console.warn('[MASSUP] user_state upsert:', r.error.message); return; }
+      _pushTables(userId);
+    })
+    .catch(function(e) { console.warn('[MASSUP] user_state upsert:', e.message); });
+}
+// Conflit : relire le cloud, y ajouter ce qui manque ici (fusion non destructive, tombstones locales
+// respectées ; une suppression faite sur l'autre appareil peut revenir — jamais l'inverse), retenir sa version comme nouvelle base, puis sauvegarder → nouvel envoi conditionnel.
+function _resolveCloudConflict(userId) {
+  return sbClient.from('user_state').select('*').eq('user_id', userId).maybeSingle().then(function(r) {
+    var row = r && r.data;
+    if (r.error || !row || !row.data || typeof row.rev !== 'number') {
+      console.warn('[MASSUP] Conflit de synchro : relecture du cloud impossible', r && r.error && r.error.message);
+      return;
+    }
+    if (row.data.app === 'melati') { console.warn('[MASSUP] Ligne user_state Melati : jamais fusionnée ici'); return; }
+    var meta = STATE_SYNC.metaFor(SYNC_META_KEY, userId);
+    mergeBackupIntoDB(row.data);
+    STATE_SYNC.writeMeta(SYNC_META_KEY, { uid: userId, base: row.rev, lrev: meta ? meta.lrev : -1 });
+    saveDB(); // compteur local +1 → toujours « à envoyer » → syncToSupabase repart avec la bonne base
+    try { if (typeof refreshAfterCloudMerge === 'function') refreshAfterCloudMerge(); } catch(e) {}
+  });
 }
 
 // ─────────────────────────────────────────────────
@@ -447,13 +536,22 @@ function fgCloudCheck() {
   sbClient.auth.getUser().then(function(res) {
     var userId = res.data && res.data.user && res.data.user.id;
     if (!userId) return;
-    return sbClient.from('user_state').select('data,updated_at').eq('user_id', userId).maybeSingle().then(function(r) {
+    return sbClient.from('user_state').select('*').eq('user_id', userId).maybeSingle().then(function(r) {
       var row = r && r.data;
       if (r.error || !row || !row.data || row.data.app === 'melati') return;
-      var cloudRev = (row.data.profile && row.data.profile.rev) || 0;
-      var localRev = (DB.profile && DB.profile.rev) || 0;
-      if (cloudRev <= localRev) return;
-      try { localStorage.setItem('massup_db', JSON.stringify(row.data)); } catch(e) { return; }
+      var serverRev = typeof row.rev === 'number' ? row.rev : null;
+      var meta = STATE_SYNC.metaFor(SYNC_META_KEY, userId);
+      if (serverRev !== null && meta) {
+        // (13/10) Repère serveur : le cloud a-t-il bougé depuis notre dernière synchro ?
+        if (serverRev <= meta.base) return;
+        // Modifs locales pas encore envoyées → l'envoi conditionnel sera refusé puis fusionnera
+        if (STATE_SYNC.isDirty(meta, _localRev())) { _doSyncToSupabase(userId); return; }
+      } else {
+        var cloudRev = (row.data.profile && row.data.profile.rev) || 0;
+        if (cloudRev <= _localRev()) return;
+      }
+      if (!_adoptCloudSnapshot(row.data)) return;
+      if (serverRev !== null) STATE_SYNC.writeMeta(SYNC_META_KEY, { uid: userId, base: serverRev, lrev: row.data.profile.rev });
       location.reload();
     });
   }).catch(function(e) { console.warn('[MASSUP] fgCloudCheck:', e && e.message); });

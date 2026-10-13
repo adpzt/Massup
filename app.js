@@ -3909,6 +3909,15 @@ function mergeBackupIntoDB(bk){
   return true;
 }
 
+// Après une fusion avec le cloud en cours d'utilisation : redessiner l'écran ouvert (jamais pendant
+// une séance LiveUp, qui a son propre état) et le dire.
+function refreshAfterCloudMerge(){
+  if(typeof AS!=='undefined'&&AS) return;
+  var b=document.querySelector('.bni.active');
+  if(b) switchView(_currentView,b);
+  showToast('🔄 Synchronisé avec ton autre appareil');
+}
+
 // La base locale est-elle « vierge » (fraîche après une purge Safari) ?
 // Si oui, le snapshot cloud est adopté en bloc au lieu d'un merge champ à champ.
 function isLocalDBVirgin(){

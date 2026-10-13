@@ -626,7 +626,7 @@ if(!DB) DB={v:3,weights:{},logs:[],mobiDays:{},tests:[],pesees:[],salsa:{},eau:{
 //   ressenti global /5, douleur, et le ressenti facile/correct/dur/trop par position
 //   pv (26/08) : « Nous deux » — mon petit mot pour Adrien {id,text,at} + id du dernier mot de lui que j'ai vu
 function dbNormalize(){
-  ['pesees','logs','tests'].forEach(function(k){ if(!DB[k]) DB[k]=[]; });
+  ['pesees','logs','tests','deletedPesees'].forEach(function(k){ if(!DB[k]) DB[k]=[]; });
   ['salsa','eau','crea','mobiDays','weights','mobiLog'].forEach(function(k){ if(!DB[k]) DB[k]={}; });
   if(!DB.reminders) DB.reminders={};
   var reminderDefaults={enabled:false,hydrationEnabled:true,hydrationTimes:['08:30','14:30','19:00'],
@@ -1093,6 +1093,8 @@ function editPesee(date,input){
 }
 function deletePesee(date){
   DB.pesees=DB.pesees.filter(function(x){return x.date!==date;});
+  // (13/10) Tombstone : une fusion avec le cloud (autre téléphone) ne doit pas la faire revenir
+  if(DB.deletedPesees.indexOf(date)<0) DB.deletedPesees.push(date);
   saveDB();
   renderBilanProfile(); renderSanteChart(); renderSanteHisto(); renderHdate();
   showToast('Pesée du '+fmtShort(date)+' supprimée');
@@ -1131,6 +1133,7 @@ function savePesee(){
   v=Math.round(v*10)/10;
   var ex=DB.pesees.find(function(p){return p.date===date;});
   if(ex) ex.kg=v; else DB.pesees.push({date:date,kg:v});
+  DB.deletedPesees=DB.deletedPesees.filter(function(d){return d!==date;}); // ressaisie = plus supprimée
   DB.pesees.sort(function(a,b){return a.date.localeCompare(b.date);});
   saveDB(); closePeseeModal();
   renderBilanProfile(); renderSanteChart(); renderSanteHisto(); renderHdate();
@@ -3955,7 +3958,8 @@ function mlPull(){
   mlSb.auth.getUser().then(function(res){
     var uid=res.data&&res.data.user&&res.data.user.id;
     if(!uid){ mlBadge('off'); return; }
-    mlSb.from('user_state').select('data,updated_at').eq('user_id',uid).maybeSingle().then(function(r){
+    // select('*') : lit aussi la version serveur (colonne rev, user_state_cas.sql) quand elle existe
+    mlSb.from('user_state').select('*').eq('user_id',uid).maybeSingle().then(function(r){
       if(r.error){ mlBadge('off'); return; }
       var row=r.data;
       if(row&&row.data){
@@ -3965,18 +3969,29 @@ function mlPull(){
           showToast('⚠️ Ce compte est déjà utilisé par une autre app MASSUP — la synchro est coupée pour protéger ses données.');
           return;
         }
-        var cloudRev=row.data.rev||0, localRev=DB.rev||0;
-        if(mlLocalVirgin()||cloudRev>localRev){
-          DB=row.data; dbNormalize();
-          try{ localStorage.setItem(DBK,JSON.stringify(DB)); }catch(e){}
-          buildSeances(); renderAll(); // restauration silencieuse (demande Adrien 24/08)
-          mlRenderPushSettings();
+        // (13/10, parité MASSUP) Le serveur dit si le cloud a bougé depuis NOTRE dernière synchro :
+        // cloud plus récent et rien de non envoyé ici → adoption ; les deux ont bougé → fusion douce
+        // (rien n'est remplacé ici) puis envoi conditionnel ; cloud inchangé → rien à reprendre.
+        var serverRev=typeof row.rev==='number'?row.rev:null;
+        var meta=STATE_SYNC.metaFor(ML_SYNC_KEY,uid);
+        var action=STATE_SYNC.plan({virgin:mlLocalVirgin(),meta:meta,cloudRev:serverRev,localRev:DB.rev||0,legacyCloudRev:row.data.rev||0});
+        if(action==='adopt'&&mlAdoptCloud(row.data)){
+          if(serverRev!==null) STATE_SYNC.writeMeta(ML_SYNC_KEY,{uid:uid,base:serverRev,lrev:DB.rev});
+        } else {
+          if(action!=='keep'){ mlMergeCloud(row.data); mlSaveLocal(); buildSeances(); renderAll(); }
+          if(serverRev!==null) STATE_SYNC.writeMeta(ML_SYNC_KEY,{uid:uid,base:serverRev,lrev:action==='keep'&&meta?meta.lrev:-1});
         }
+      } else if(!row){
+        STATE_SYNC.writeMeta(ML_SYNC_KEY,{uid:uid,base:0,lrev:-1}); // pas encore de ligne : le 1er envoi la crée
       }
       _mlPullOk=true;
       mlBadge('ok');
       if(_mlPushWatch) setTimeout(function(){ _mlPushWatch.run(true); },1500);
-      mlQueuePush(); // pousse l'état courant (crée la ligne au premier login)
+      // Envoi seulement s'il y a du neuf ici (crée aussi la ligne au premier login) : renvoyer une copie
+      // identique ferait croire à l'autre téléphone que le cloud a changé
+      var metaAfter=STATE_SYNC.metaFor(ML_SYNC_KEY,uid);
+      if(!metaAfter||STATE_SYNC.isDirty(metaAfter,DB.rev||0)) mlQueuePush();
+      else { mlBadge('ok'); try{ if(typeof PV!=='undefined') PV.push(); }catch(e){} }
       mlUpdateBackupInfo();
       try{ if(typeof PV!=='undefined') PV.pull(true); }catch(e){} // « Nous deux » : la semaine d'Adrien
     });
@@ -3988,17 +4003,122 @@ function mlQueuePush(){
   clearTimeout(_mlPushTimer);
   _mlPushTimer=setTimeout(function(){ _mlPushTimer=null; mlPushNow(); },1500); // (07/10) remis à null : sinon le pull au retour au premier plan était bloqué
 }
+// (13/10, parité MASSUP) Écriture CONDITIONNELLE du snapshot (state_sync.js) : user_state_put(DB, base)
+// n'écrit que si le cloud est encore à la version « base » vue par ce téléphone ; sinon on relit,
+// on fusionne (mlMergeCloud) et un nouvel envoi part. Serveur sans la fonction → ancien upsert.
+var ML_SYNC_KEY='melati_sync';
+var _mlCasInFlight=false,_mlCasAgain=false,_mlCasConflicts=0;
 function mlPushNow(){
   if(!mlSb||!_mlPullOk||_mlForeign) return;
   mlSb.auth.getUser().then(function(res){
     var uid=res.data&&res.data.user&&res.data.user.id;
     if(!uid){ mlBadge('off'); return; }
-    mlSb.from('user_state')
-      .upsert({user_id:uid,data:DB,updated_at:new Date().toISOString()},{onConflict:'user_id'})
-      .then(function(r){ mlBadge(r.error?'off':'ok'); });
+    mlPushSnapshot(uid);
     // « Nous deux » (26/08) : MA ligne partner_state = résumé lecture seule pour Adrien (dérivé de DB)
     try{ if(typeof PV!=='undefined') PV.push(); }catch(e){}
   });
+}
+function mlPushSnapshot(uid){
+  var meta=STATE_SYNC.metaFor(ML_SYNC_KEY,uid);
+  if(!meta){ mlLegacyUpsert(uid); return; }
+  if(_mlCasInFlight){ _mlCasAgain=true; return; }
+  if(!STATE_SYNC.isDirty(meta,DB.rev||0)){ mlBadge('ok'); return; }
+  _mlCasInFlight=true;
+  var sentRev=DB.rev||0;
+  STATE_SYNC.put(mlSb,DB,meta.base).then(function(res){
+    if(res.legacy){ mlLegacyUpsert(uid); return; }
+    if(res.ok){
+      _mlCasConflicts=0;
+      STATE_SYNC.writeMeta(ML_SYNC_KEY,{uid:uid,base:res.rev,lrev:sentRev});
+      mlBadge('ok');
+      return;
+    }
+    if(++_mlCasConflicts>3){ console.warn('[Melati] user_state : conflits répétés, envoi suspendu'); _mlCasConflicts=0; mlBadge('off'); return; }
+    return mlResolveConflict(uid);
+  }).catch(function(e){ console.warn('[Melati] user_state_put :',e&&e.message); mlBadge('off'); })
+  .then(function(){
+    _mlCasInFlight=false;
+    if(_mlCasAgain){ _mlCasAgain=false; mlPushSnapshot(uid); }
+  });
+}
+function mlLegacyUpsert(uid){
+  mlSb.from('user_state')
+    .upsert({user_id:uid,data:DB,updated_at:new Date().toISOString()},{onConflict:'user_id'})
+    .then(function(r){ if(r.error) console.warn('[Melati] user_state upsert :',r.error.message); mlBadge(r.error?'off':'ok'); });
+}
+function mlResolveConflict(uid){
+  return mlSb.from('user_state').select('*').eq('user_id',uid).maybeSingle().then(function(r){
+    var row=r&&r.data;
+    if(r.error||!row||!row.data||typeof row.rev!=='number'){ console.warn('[Melati] Conflit : relecture du cloud impossible'); mlBadge('off'); return; }
+    if(row.data.app!=='melati'){ _mlForeign=true; mlBadge('foreign'); return; } // jamais la ligne d'Adrien
+    var meta=STATE_SYNC.metaFor(ML_SYNC_KEY,uid);
+    mlMergeCloud(row.data);
+    STATE_SYNC.writeMeta(ML_SYNC_KEY,{uid:uid,base:row.rev,lrev:meta?meta.lrev:-1});
+    saveDB(); // compteur +1 → toujours « à envoyer » → nouvel envoi avec la bonne base
+    if(!(typeof AS!=='undefined'&&AS)&&!(typeof DZ_RUN!=='undefined'&&DZ_RUN)){ buildSeances(); renderAll(); }
+  });
+}
+// Adoption du snapshot cloud : son compteur repart AU-DESSUS du compteur local (la garde anti-page
+// périmée de saveDB recharge alors au lieu de réécrire l'ancien état)
+function mlAdoptCloud(data){
+  var next=Math.max(DB.rev||0,data.rev||0)+1;
+  var prev=DB;
+  DB=data; DB.rev=next; dbNormalize();
+  try{ localStorage.setItem(DBK,JSON.stringify(DB)); }
+  catch(e){
+    DB=prev;
+    console.warn('[Melati] Adoption du cloud impossible (stockage) :',e&&e.message);
+    try{ showToast('⚠️ Stockage du téléphone plein : la version du cloud n’a pas pu être reprise.'); }catch(_e){}
+    return false;
+  }
+  buildSeances(); renderAll(); // restauration silencieuse (demande Adrien 24/08)
+  mlRenderPushSettings();
+  return true;
+}
+function mlSaveLocal(){
+  try{ localStorage.setItem(DBK,JSON.stringify(DB)); }
+  catch(e){ try{ showToast('⚠️ Sauvegarde sur le téléphone IMPOSSIBLE ('+((e&&e.name)||'erreur')+') — seule la synchro cloud te protège. Préviens Adrien !'); }catch(_e){} }
+}
+// Fusion douce d'un snapshot cloud quand CE téléphone a aussi des modifs pas encore envoyées :
+// on AJOUTE ce qui manque ici, on ne remplace rien (à même id / même date, le local gagne).
+// Pesées supprimées ici (deletedPesees) jamais ressuscitées.
+function mlMergeCloud(bk){
+  if(!bk||typeof bk!=='object') return;
+  var ids={};
+  DB.logs.forEach(function(l){ ids[String(l.id)]=1; });
+  (bk.logs||[]).forEach(function(l){ if(l&&!ids[String(l.id)]) DB.logs.push(l); });
+  DB.logs.sort(function(a,b){return a.date.localeCompare(b.date);});
+  Object.keys(bk.weights||{}).forEach(function(k){
+    var arr=bk.weights[k]; if(!Array.isArray(arr)) return;
+    if(!Array.isArray(DB.weights[k])) DB.weights[k]=[];
+    var loc=DB.weights[k];
+    arr.forEach(function(e){ if(e&&!loc.some(function(x){return x.date===e.date;})) loc.push(e); });
+    loc.sort(function(a,b){return a.date<b.date?-1:1;});
+  });
+  var delP=DB.deletedPesees||[];
+  (bk.pesees||[]).forEach(function(p){
+    if(!p||delP.indexOf(p.date)>=0) return;
+    if(!DB.pesees.some(function(x){return x.date===p.date;})) DB.pesees.push(p);
+  });
+  DB.pesees.sort(function(a,b){return a.date.localeCompare(b.date);});
+  var tids={};
+  DB.tests.forEach(function(t){ tids[JSON.stringify(t)]=1; });
+  (bk.tests||[]).forEach(function(t){ if(t&&!tids[JSON.stringify(t)]) DB.tests.push(t); });
+  // Journaux par jour : on ajoute les jours absents d'ici
+  ['salsa','eau','crea','mobiDays','mobiLog'].forEach(function(key){
+    var src=bk[key]; if(!src||typeof src!=='object') return;
+    Object.keys(src).forEach(function(d){ if(DB[key][d]===undefined) DB[key][d]=src[d]; });
+  });
+  if(bk.health&&typeof bk.health==='object'){
+    Object.keys(bk.health).forEach(function(d){
+      var loc=DB.health[d]||(DB.health[d]={});
+      Object.keys(bk.health[d]||{}).forEach(function(k){ if(loc[k]==null) loc[k]=bk.health[d][k]; });
+    });
+  }
+  Object.keys(bk.healthMeta||{}).forEach(function(k){ if(DB.healthMeta[k]==null) DB.healthMeta[k]=bk.healthMeta[k]; });
+  // Toute autre clé absente d'ici (nutrition, réglages…) est reprise telle quelle
+  Object.keys(bk).forEach(function(k){ if(DB[k]===undefined) DB[k]=bk[k]; });
+  dbNormalize();
 }
 
 // ══════════════════════ NOUS DEUX 💞 (26/08) — adaptateur MELATI pour partner.js ══════════════════════
