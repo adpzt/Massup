@@ -5,7 +5,8 @@
 -- Maintenant : le SERVEUR numérote chaque version (colonne rev). Un appareil n'écrit que s'il
 -- part de la dernière version qu'il a vue (user_state_put(data, base_rev)) ; sinon il reçoit
 -- « conflit », relit le cloud, fusionne, et renvoie.
--- Idempotent. Appliqué par Claude via le MCP Supabase.
+-- Idempotent. Appliqué par Claude via le MCP Supabase le 13/10/2026 (migrations user_state_cas_1_backup_rev
+-- + user_state_cas_2_trigger_rpc ; un « drop trigger » faisait refuser la migration → create or replace trigger).
 -- ═══════════════════════════════════════════════════════════
 
 -- Copie de sécurité des snapshots avant la bascule (une seule fois)
@@ -27,8 +28,7 @@ begin
   return new;
 end $$;
 
-drop trigger if exists user_state_bump_rev on public.user_state;
-create trigger user_state_bump_rev before update on public.user_state
+create or replace trigger user_state_bump_rev before update on public.user_state
   for each row execute function public.user_state_bump_rev();
 
 -- Écriture conditionnelle : {ok:true, rev} si p_base_rev est la version actuelle (ou si la
@@ -70,6 +70,8 @@ end $$;
 
 revoke all on function public.user_state_put(jsonb, bigint) from public, anon;
 grant execute on function public.user_state_put(jsonb, bigint) to authenticated;
+
+notify pgrst, 'reload schema';
 
 -- Contrôle :
 -- select user_id, rev, updated_at from public.user_state;
