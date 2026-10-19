@@ -102,6 +102,9 @@ var SPORT=(function(){
 
   // ── navigation ──
   function startRun(){ S={step:'warm',sport:'course',warmIdx:0,startTs:null,warmTs:Date.now(),target:targetKm()}; save(); render(); }
+  // (19/10) Course : dehors (sortie guidée ci-dessous) ou à la salle (panneau cardio du LiveUp, cardio.js)
+  function runWhere(){ S={step:'where'}; render(); }
+  function gym(type){ S=null; close(); if(typeof asStartCardio==='function') asStartCardio(type); }
   function warmGoto(i){ if(!S) return; S.warmIdx=Math.max(0,Math.min(WARMUP.length-1,i)); S.stepEnd=null; save(); render(); }
   function warmNext(){
     if(S.warmIdx<WARMUP.length-1){ warmGoto(S.warmIdx+1); return; }
@@ -124,6 +127,7 @@ var SPORT=(function(){
   }
   function back(){
     if(!S) return;
+    if(S.step==='where'){ S={step:'pick'}; render(); return; }
     if(S.step==='other'||(S.step==='warm'&&!S.logId)){ if(S.step==='warm'&&!confirm('Annuler cette course ?')) return; S={step:'pick'}; clear(); render(); return; }
     if(S.step==='run'){ S.step='warm'; save(); render(); }
   }
@@ -239,7 +243,7 @@ var SPORT=(function(){
     if(S.step==='pick'){
       h+=hdr('Un autre sport&#x202F;?','pas de muscu aujourd\'hui',false);
       h+='<div class="as-scroll"><div class="sp-pick">';
-      h+='<button class="sp-run-card" onclick="SPORT.startRun()">'
+      h+='<button class="sp-run-card" onclick="SPORT.runWhere()">'
         +'<span class="sp-run-ico" aria-hidden="true">&#x1F3C3;</span>'
         +'<span class="sp-run-name">Course</span>'
         +'<span class="sp-run-sub">&#xC9;chauffement guid&#xE9;, conseils pendant la sortie, puis tes stats Strava.</span>'
@@ -250,6 +254,18 @@ var SPORT=(function(){
       OTHERS.forEach(function(o){ h+='<button class="sp-other" onclick="SPORT.pickOther(\''+o.id+'\')"><span class="sp-other-ico">'+o.ico+'</span><span class="sp-other-name">'+esc(o.name)+'</span></button>'; });
       h+='</div></div></div>';
       foot='<button class="as-ghost-btn" onclick="SPORT.close()">Annuler</button>';
+    } else if(S.step==='where'){
+      h+=hdr('Course','dehors ou &#xE0; la salle&#x202F;?',true);
+      h+='<div class="as-scroll"><div class="sp-where">'
+        +'<button class="sp-run-card sp-where-card" onclick="SPORT.startRun()">'
+        +'<span class="sp-run-ico" aria-hidden="true">&#x1F333;</span><span class="sp-run-name">Dehors</span>'
+        +'<span class="sp-run-sub">&#xC9;chauffement guid&#xE9;, conseils pendant la sortie, puis tes stats Strava.</span>'
+        +'<span class="sp-run-target">Aujourd\'hui : vise ~'+fmtKm(targetKm())+' km en allure facile</span></button>'
+        +'<button class="sp-run-card sp-where-card gym" onclick="SPORT.gym(\'course\')">'
+        +'<span class="sp-run-ico" aria-hidden="true">&#x1F3CB;&#xFE0F;</span><span class="sp-run-name">&#xC0; la salle</span>'
+        +'<span class="sp-run-sub">Tapis (course ou marche), escalier, v&#xE9;lo, rameur, elliptique : tu choisis la machine et tes paliers, l\'app calcule km, d&#xE9;nivel&#xE9; et calories.</span></button>'
+        +'</div></div>';
+      foot='<button class="as-ghost-btn" onclick="SPORT.back()">&#x2039; Retour</button>';
     } else if(S.step==='warm'){
       var w=WARMUP[S.warmIdx];
       h+=hdr('&#xC9;chauffement','course &#xB7; '+(S.warmIdx+1)+'/'+WARMUP.length,true);
@@ -359,7 +375,7 @@ var SPORT=(function(){
       +'<button class="dle-del" data-id="'+l.id+'" title="Supprimer">&#x1F5D1;</button></div></div>';
   }
 
-  return {open:open,resume:resume,active:active,close:close,abandon:abandon,back:back,startRun:startRun,
+  return {open:open,resume:resume,active:active,close:close,abandon:abandon,back:back,startRun:startRun,runWhere:runWhere,gym:gym,
     warmGoto:warmGoto,warmNext:warmNext,go:go,stepTimer:stepTimer,finish:finish,pickOther:pickOther,
     field:field,setEffort:setEffort,setPain:setPain,saveRun:saveRun,saveOther:saveOther,edit:edit,
     dayCardHtml:dayCardHtml,_test:{targetKm:targetKm,fmtPace:fmtPace,fmtSpeed:fmtSpeed,fmtDur:fmtDur}};

@@ -260,3 +260,23 @@ function asCardioDone(){
   asValidateSet();
   if(c.type==='course') showToast('&#x1F3C3; Course enregistr&#xE9;e &#x2014; objectif &#xAB;&#x202F;Courir&#x202F;&#xBB; coch&#xE9;');
 }
+
+// ── Séance CARDIO SEULE (19/10) : « Un autre sport ? › Course › À la salle » ──
+// Un LiveUp d'un seul exo cardio, ouvert directement sur le panneau. Pas de note /20,
+// 0 séance de salle (logWeight ignore le cardio) ; une course tapis coche « Courir ».
+function asStartCardio(type){
+  asLoad();
+  if(AS&&AS.step&&AS.step!=='setup'&&AS.step!=='setup2'&&AS.step!=='report'&&AS.exos&&AS.exos.length){
+    showToast('Un LiveUp est d&#xE9;j&#xE0; en cours &#x2014; je te le rouvre');
+    asShowOverlay(); return;
+  }
+  var x=asMakeExo('cardio_liss',false);
+  AS={createdTs:Date.now(),step:'exo',sel:{sid:null,chosen:{},extras:[],legsMain:null},sound:true,
+      startTs:Date.now(),exos:[x],cur:0,setIdx:1,phase:'work',introIdx:0,restEnd:null,restTotal:0,
+      end:{energy:null,feeling:null,pain:null,painNote:''},applied:[],repIdx:0,hype:asPick(AS_HYPE),
+      sid:null,sname:'Cardio salle',stype:'bonus'};
+  cardioEnsure(x);
+  if(type&&type!==x.cardio.type){ var t=cardioType(type); x.cardio.type=type; x.cardio.segs=[cardioSegDefault(type)]; if(!t.tapis) x.cardio.kmM=null; }
+  try{ initReminders(); DB.reminders.workoutStartedDate=todayStr(); saveDB(); }catch(e){}
+  asSave(); asShowOverlay();
+}

@@ -102,3 +102,9 @@
 .hc-log .hc-pts-v.sp-km.cd-kc{color:var(--acc2);}
 .as-grade-wrap .cd-stats{display:flex;flex-wrap:wrap;justify-content:center;width:100%;align-self:stretch;}
 .as-grade-wrap .cd-stats .sp-stat{flex:0 0 calc(33.333% - .3rem);}
+
+/* Course : dehors ou à la salle (19/10) */
+.sp-where{display:flex;flex-direction:column;gap:.75rem;}
+.sp-where-card{flex:none;min-height:30vh;}
+.sp-where-card.gym{border-color:var(--x-acc-45);background:linear-gradient(160deg,var(--x-acc-15),var(--x-acc-08) 70%);}
+.sp-where-card.gym .sp-run-name{color:var(--acc);}

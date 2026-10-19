@@ -70,6 +70,17 @@ const ADRIEN = [
     asHideOverlay();renderBilanWeekNut();showDayModal(todayStr());
   })()`], { scroll: '#dayModal .modal,#dayModal' }],
   ['a_cardio_only_report', ["asOpen();AS.step='exo';AS.sname='Cardio';AS.startTs=Date.now();AS.exos=[asMakeExo('cardio_liss',true)];AS.cur=0;AS.setIdx=1;AS.phase='work';asRender();asCardioType('velo');asCardioFeel('ok');AS.end=AS.end||{};asCardioDone();asPersistLog();AS.step='report';AS.repIdx=0;asRender()"], { scroll: '#asOverlay .as-scroll' }],
+  // (19/10) Course dehors / à la salle → LiveUp cardio seul ; séance MAISON (2 haltères, tout en reps)
+  ['a_sport_where', ['SPORT.open()', 'SPORT.runWhere()'], { scroll: '#spOverlay .as-scroll' }],
+  ['a_cardio_gym', ['SPORT.open()', 'SPORT.runWhere()', "SPORT.gym('course')"], { scroll: '#asOverlay .as-scroll' }],
+  ['a_maison_setup', ['asOpen()', "asChooseSeance('sm')"], { scroll: '#asOverlay .as-scroll' }],
+  ['a_maison_exo', ['asOpen()', "asChooseSeance('sm')", 'asToReady()', 'asGoReal()', 'asWarmupGo()'], { scroll: '#asOverlay .as-scroll' }],
+  ['a_maison_count', [`(function(){
+    var l={id:880,date:todayStr(),time:'10:00',sessions:['sm','exo:pompes'],duration_min:35};
+    if(logWeight(l)!==0.5) throw new Error('ECHEC poids séance MAISON '+logWeight(l));
+    if(logWeight({sessions:['exo:cardio_liss']})!==0) throw new Error('ECHEC cardio seul');
+    DB.logs.push(l); switchView('progression',document.querySelectorAll('.bni')[2]); renderHisto(); document.getElementById('calGrid').scrollIntoView();
+  })()`]],
   ['a_liveflow', ['asOpen()', "document.querySelector('#asOverlay .as-bigcard').click()", "asPickLegsMain('leg_press')", 'AS.fromPrep=true;asToReady()'], { scroll: '#asOverlay' }],
 ];
 const MELATI = [

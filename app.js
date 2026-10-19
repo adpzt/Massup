@@ -290,6 +290,22 @@ var DATA = [
     {key:"cardio_liss",cat:"cardio",name:"Cardio (tapis, escalier, vélo…)",unite:"min",cnt:"min",inc:5,repTarget:true,serie:"1×20",rest:0,cue:"TAPIS : inclinaison 5 · vitesse 6,5 km/h · 20 à 25 min NON-STOP, allure constante. Repère : ~130-140 bpm, tu dois pouvoir parler en marchant.",tips:["Tes réglages viennent de TES mesures : 4,5/6 = 120 bpm (trop facile), 5,5/7 = 145 bpm (trop haut). 5 / 6,5 te met pile dedans.","Ajuste en direct SANS changer le format : >140 bpm → −0,5 de vitesse · <125 bpm → +0,5 d'inclinaison. Puis tu ne touches plus à rien.","Un seul bloc continu, APRÈS PUSH ou PULL — jamais avant une séance, jamais après LEGS. +100 pts, max 2/semaine.","Vélo à la place du tapis : résistance moyenne, 70-80 tours/min, mêmes 130-140 bpm."],errs:["Ne pas faire de pyramide (5 min facile / 5 min dur) : la zone 2 est une allure CONSTANTE, pas des intervalles.","Ne pas transformer ça en HIIT (interférence + appétit saccagé) ni le caler un jour LEGS."],img:"bikeimg"},
     {key:"cardio_rameur",cat:"cardio",name:"Rameur Intervalles 30/30",unite:"min",cnt:"min",inc:1,repTarget:true,serie:"1×10",rest:0,cue:"10 min au rameur : 30s d'allure soutenue / 30s tranquille, en alternance.",tips:["Soutenu = tu pousses fort MAIS tu tiens les 10 min — ce n'est pas un sprint.","Jambes d'abord, dos droit, tirée franche.","Parfait en sortie de PUSH/PULL les semaines chargées. +100 pts, max 2/semaine."],errs:["Ne pas sprinter les 30s au maximum (ce n'est pas du HIIT).","Ne pas arrondir le dos en fin de tirée."],img:"rowerimg"},
     {key:"gripper",cat:"corps",name:"Gripper",unite:"kg",inc:5,serie:"3×30s/main",rest:45,uni:true,cue:"Ferme le gripper à fond, tiens 1s, relâche lentement.",tips:["Poignet droit, dans l'axe de l'avant-bras.","Serre au maximum en fin de course.","Travaille les deux mains à égalité."],errs:["Ne pas relâcher d'un coup sec.","Ne pas plier le poignet."]}
+  ]},
+  // 19/10/2026 — MAISON 🏠 (demande Adrien) : 2 haltères au MÊME poids pour tout (il ne veut pas changer
+  // les disques), pas de barre, pas d'élastique. Tout se compte en RÉPÉTITIONS (repTarget) : la charge ne
+  // bouge pas, la progression passe par les reps puis le tempo. Prises neutres (poignet), unilatéral =
+  // gauche d'abord, hanche plutôt que genou (genou fragile). Compte 0,5 séance comme OTHERS.
+  {id:"sm",t:"bonus",num:"Maison",icon:"&#x1F3E0;",name:"MAISON",sub:"2 haltères · Pecs · Dos · Jambes · Abdos",exos:[
+    {key:"m_floor_press",imp:true,name:"Floor Press haltères (prise neutre)",unite:"reps",inc:1,repTarget:true,serie:"3×12",rest:75,bless:"Poignet : paumes face à face, poignet droit dans l'axe de l'avant-bras.",cue:"Allongé au sol, genoux pliés, haltères paumes face à face : descends jusqu'à poser les triceps au sol, 1 s de pause, puis pousse en rapprochant les coudes.",tips:["Ton meilleur exo pecs sans banc : la pause au sol enlève l'élan, les pecs font tout le travail.","Coudes à ~45° du corps, pas collés ni écartés à 90°.","Quand 3×15 passent facilement : descente en 3 s, même poids."],errs:["Ne pas rebondir sur le sol.","Ne pas cambrer pour pousser."]},
+    {key:"m_rowing",name:"Rowing haltère un bras (appui canapé ou chaise)",unite:"reps",inc:1,repTarget:true,serie:"3×12/bras",rest:60,uni:true,cue:"Main et genou du même côté sur le canapé, dos plat : tire l'haltère vers la hanche, coude près du corps, 1 s en haut, redescends lentement. Bras GAUCHE d'abord.",tips:["Initie avec l'omoplate, le bras n'est qu'un câble.","Le coude va vers la hanche, pas vers le plafond.","Prise neutre : le poignet ne tourne pas."],errs:["Ne pas tourner le buste pour arracher.","Ne pas arrondir le dos."]},
+    {key:"pompes",cat:"corps",name:"Pompes",unite:"reps",inc:1,repTarget:true,serie:"3×10",rest:60,bless:"Poignet : mains sur les haltères posés au sol (poignet droit), jamais à plat. Stop à la moindre douleur.",cue:"Mains sur les haltères, corps gainé : descends la poitrine entre les haltères et pousse fort.",tips:["Sur les haltères, tu descends plus bas qu'au sol : plus d'étirement pour les pecs.","Gainage : fesses et ventre serrés, le corps reste une planche.","Trop dur : genoux au sol. Trop facile : pieds sur le canapé."],errs:["Ne pas laisser le bassin s'affaisser.","Ne pas écarter les coudes à 90°."]},
+    {key:"m_rdl",name:"Soulevé de terre roumain haltères",unite:"reps",inc:1,repTarget:true,serie:"3×12",rest:75,cue:"Debout, haltères devant les cuisses, genoux légèrement fléchis : recule les fesses, les haltères glissent le long des jambes jusqu'à mi-tibia, dos plat, puis remonte en serrant les fessiers.",tips:["C'est la hanche qui bouge, pas le genou : le genou reste fixe et souple.","Tu dois sentir l'arrière des cuisses s'étirer.","Descente en 3 s : avec un poids fixe, c'est le tempo qui rend l'exo dur."],errs:["Ne pas arrondir le dos.","Ne pas plier les genoux comme un squat."]},
+    {key:"m_marteau",name:"Curl marteau (2 haltères)",unite:"reps",inc:1,repTarget:true,serie:"3×12",rest:60,cue:"Debout, paumes face à face, coudes collés au corps : monte les haltères, serre 1 s, redescends en 2-3 s.",tips:["Prise neutre = poignet en sécurité.","Les coudes ne bougent pas vers l'avant.","Gauche et droite ensemble, ou en alterné si tu triches."],errs:["Ne pas balancer le buste.","Ne pas lâcher la descente."]},
+    {key:"dead_bug",cat:"abdo",name:"Dead Bug",unite:"reps",inc:1,repTarget:true,serie:"3×10/côté",rest:45,cue:"Sur le dos, bas du dos PLAQUÉ au sol : tends lentement bras et jambe opposés.",tips:["Le bas du dos ne décolle JAMAIS — c'est tout l'exercice.","Le correctif direct de ton antéversion.","Expire en tendant, très lent."],errs:["Ne pas creuser le bas du dos.","Ne pas aller vite."]},
+    {key:"gainage",cat:"corps",imp:true,name:"Gainage planche",unite:"s",inc:5,repTarget:true,serie:"3×40",rest:60,cue:"Aligne tête-dos-bassin, serre le ventre et les fessiers.",tips:["Coudes sous les épaules, appui sur les avant-bras.","Abdos et fessiers contractés tout du long.","Respire normalement, ne bloque pas."],errs:["Ne pas creuser le bas du dos.","Ne pas lever les fesses vers le haut."]},
+    {key:"m_goblet",bonus:true,name:"Goblet squat (1 haltère)",unite:"reps",inc:1,repTarget:true,serie:"3×12",rest:60,bless:"Genou : amplitude sans douleur seulement, stop au moindre pincement.",cue:"Un haltère tenu vertical contre la poitrine, pieds largeur d'épaules : descends en gardant le buste droit, genoux dans l'axe des pieds, remonte.",tips:["Descends seulement jusqu'où le genou reste confortable.","Talons au sol, poitrine haute.","Pause 1 s en bas si c'est trop facile."],errs:["Ne pas laisser les genoux rentrer vers l'intérieur.","Ne pas forcer sur une douleur de genou."]},
+    {key:"m_triceps",bonus:true,name:"Extension triceps au-dessus de la tête (1 haltère)",unite:"reps",inc:1,repTarget:true,serie:"3×12",rest:60,cue:"Assis ou debout, un haltère tenu à deux mains au-dessus de la tête : descends-le derrière la nuque en pliant les coudes, puis tends.",tips:["Les coudes pointent vers le plafond et restent serrés.","Descends loin derrière la tête : l'étirement fait travailler le triceps.","Gaine le ventre pour ne pas cambrer."],errs:["Ne pas écarter les coudes.","Ne pas cambrer le bas du dos."]},
+    {key:"m_mollets",bonus:true,name:"Mollets debout sur une marche (haltères en main)",unite:"reps",inc:1,repTarget:true,serie:"3×15",rest:45,cue:"Avant des pieds sur une marche, haltères en main : monte sur la pointe, 1 s en haut, descends le talon le plus bas possible.",tips:["Amplitude complète : c'est l'étirement en bas qui compte.","Une main sur le mur pour l'équilibre si besoin (un seul haltère).","Lent : 2 s en bas, 1 s en haut."],errs:["Ne pas rebondir.","Ne pas faire des demi-répétitions."]}
   ]}
 ];
 
@@ -1227,7 +1243,9 @@ var CANONICAL_WEIGHTS = {
   'poulie_triceps_av':18,'dev_militaire':14,'triceps_barre':18,'tirage_pulldown':50,'shoulder_press':16,
   'traction_assist':25,
   'pompes':10,'gainage':40,'crunch':15,'gripper':20,
-  'crunch_poulie':15,'releve_chaise':10,'pallof':10,'dead_bug':10,'hollow_hold':20,'crunch_leste':5,'crunch_decline':12,'cardio_liss':20,'cardio_rameur':10
+  'crunch_poulie':15,'releve_chaise':10,'pallof':10,'dead_bug':10,'hollow_hold':20,'crunch_leste':5,'crunch_decline':12,'cardio_liss':20,'cardio_rameur':10,
+  // MAISON (19/10) : objectifs de reps de départ (poids des haltères fixe)
+  'm_floor_press':12,'m_rowing':12,'m_rdl':12,'m_marteau':12,'m_goblet':12,'m_triceps':12,'m_mollets':15
 };
 
 // Full progression history seed (source: MASSUP_progression.md)
@@ -1337,7 +1355,7 @@ function findExoIndex(key){
 // Un exercice isolé ('exo:') n'a pas de poids propre : c'est le log entier (voir logWeight) qui
 // décide si une sélection d'exos à la carte vaut une séance complète.
 function sessionWeight(sid){
-  if(sid==='sb'||sid.indexOf('autre:')===0) return 0.5;
+  if(sid==='sb'||sid==='sm'||sid.indexOf('autre:')===0) return 0.5; // sm = MAISON haltères (19/10)
   if(sid.indexOf('exo:')===0) return 0;
   return 1;
 }
@@ -1348,12 +1366,12 @@ function sessionWeight(sid){
 //   séance salle déjà comptée dans le même log.
 function logWeight(l){
   if(l&&l.sport==='course') return 0; // course (12/10) : objectif « Courir », jamais une séance de gym
-  var w=0, hasExo=false;
+  var w=0, hasExo=false, home=(l&&l.sessions||[]).indexOf('sm')>=0;
   (l && l.sessions || []).forEach(function(sid){
     if(sid.indexOf('exo:')===0){ if(!exoIsCardio(sid.slice(4))) hasExo=true; } // 19/10 : du cardio seul n'est pas une séance de salle
     else w+=sessionWeight(sid);
   });
-  if(hasExo && w<1) w=1;
+  if(hasExo && w<1 && !home) w=1; // un exo ajouté à la séance MAISON ne la transforme pas en salle
   return w;
 }
 // Valeur pondérée totale d'un ensemble de logs (peut être décimale, ex. 2,5)
@@ -7556,7 +7574,9 @@ var DZ_MUSCLE_OF={
   hip_thrust:['fessiers','ischios','lombaires'],abduct:['fessiers'],adduct:['adducteurs'],
   crunch_poulie:['abdos'],releve_chaise:['abdos','hanches'],pallof:['abdos'],dead_bug:['abdos'],crunch_leste:['abdos'],crunch_decline:['abdos'],
   hollow_hold:['abdos'],crunch:['abdos'],gainage:['abdos'],
-  cardio_liss:['quadris','mollets'],cardio_rameur:['dos','quadris']
+  cardio_liss:['quadris','mollets'],cardio_rameur:['dos','quadris'],
+  m_floor_press:['pecs','triceps'],m_rowing:['dos','biceps'],m_rdl:['ischios','fessiers','lombaires'],m_marteau:['biceps','avantbras'],
+  m_goblet:['quadris','fessiers'],m_triceps:['triceps'],m_mollets:['mollets']
 };
 // Cardio détaillé (19/10) : les muscles suivent la machine choisie (cardio.js › CARDIO_TYPES)
 CARDIO_TYPES.forEach(function(t){ DZ_MUSCLE_OF['cardio_t_'+t.id]=t.mus.filter(function(m){ return m!=='biceps'; }); });
@@ -8760,12 +8780,12 @@ function renderBilanProfile(){
 // ══════════════════════════════════════════════════
 var _radarChart=null;
 var RADAR_GROUPS=[
-  {label:'Pecs',keys:['chestpress_v','pecdeck','dev_incline','cable_fly','seated_dips','dips_assist']},
+  {label:'Pecs',keys:['chestpress_v','pecdeck','dev_incline','cable_fly','seated_dips','dips_assist','m_floor_press']},
   {label:'Épaules',keys:['elev_lat','shrug_halt','face_pull','shoulder_press','dev_militaire']},
-  {label:'Triceps',keys:['triceps_corde','triceps_barre']},
-  {label:'Dos',keys:['tirage_vert','rowing_pb','rowing_uni','rowing_appui','tirage_pulldown','traction_assist']},
-  {label:'Biceps',keys:['curl_marteau','curl_marteau_croise','curl_incline_neutre','curl_corde','curl_halt','curl_poulie','curl_incline']},
-  {label:'Jambes',keys:['leg_press','leg_ext','leg_curl','mollets','abduct','adduct','hip_thrust']},
+  {label:'Triceps',keys:['triceps_corde','triceps_barre','m_triceps']},
+  {label:'Dos',keys:['tirage_vert','rowing_pb','rowing_uni','rowing_appui','tirage_pulldown','traction_assist','m_rowing']},
+  {label:'Biceps',keys:['curl_marteau','curl_marteau_croise','curl_incline_neutre','curl_corde','curl_halt','curl_poulie','curl_incline','m_marteau']},
+  {label:'Jambes',keys:['leg_press','leg_ext','leg_curl','mollets','abduct','adduct','hip_thrust','m_rdl','m_goblet','m_mollets']},
   // Abdos ajoutés au volume hebdo le 06/08 (demande Adrien) — gainage inclus (c'est du tronc)
   {label:'Abdos',keys:['crunch_poulie','releve_chaise','pallof','dead_bug','hollow_hold','crunch','gainage','crunch_leste','crunch_decline']}
 ];
@@ -8778,7 +8798,8 @@ var VOL_SECONDARY={
   rowing_pb:{'Biceps':.5},rowing_appui:{'Biceps':.5},rowing_uni:{'Biceps':.5},
   chestpress_v:{'Épaules':.5,'Triceps':.5},dev_incline:{'Épaules':.5,'Triceps':.5},
   seated_dips:{'Triceps':.5},dips_assist:{'Triceps':.5},dev_militaire:{'Triceps':.5},shoulder_press:{'Triceps':.5},
-  face_pull:{'Dos':.5}
+  face_pull:{'Dos':.5},
+  m_floor_press:{'Triceps':.5},m_rowing:{'Biceps':.5}
 };
 function volAddSets(vol,key,n){
   if(!n) return;
@@ -9480,7 +9501,7 @@ function rankCompute(season){
   //  - autre sport (foot...) ou pause déclarée → GÈLE le jour (ni reset, ni incrément)
   var resetDays={}, freezeDays={};
   logs.forEach(function(l){
-    if(rankLogIsSalle(l)||(l.sessions||[]).indexOf('sb')>=0) resetDays[l.date]=true;
+    if(rankLogIsSalle(l)||(l.sessions||[]).indexOf('sb')>=0||(l.sessions||[]).indexOf('sm')>=0) resetDays[l.date]=true;
     else freezeDays[l.date]=true;
   });
   var decayEnd=today<season.end?today:season.end;
@@ -10093,7 +10114,7 @@ function wrAnalyze(ws){
     (l.sessions||[]).forEach(function(sid){
       if(type) return;
       if(sid.indexOf('exo:')===0){ var inf=findExoIndex(sid.slice(4)); if(inf) type=inf.seance.t; return; }
-      if(sid.indexOf('autre:')===0||sid==='sb'){ type='maison'; return; }
+      if(sid.indexOf('autre:')===0||sid==='sb'||sid==='sm'){ type='maison'; return; }
       var sd=DATA.find(function(x){return x.id===sid;}); if(sd) type=sd.t;
     });
     var note=liveLogNote20(l); // note FIGÉE de la séance (15/08)
