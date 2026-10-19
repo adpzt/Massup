@@ -75,9 +75,10 @@ const ADRIEN = [
   ['a_cardio_gym', ['SPORT.open()', 'SPORT.runWhere()', "SPORT.gym('course')"], { scroll: '#asOverlay .as-scroll' }],
   ['a_maison_setup', ['asOpen()', "asChooseSeance('sm')"], { scroll: '#asOverlay .as-scroll' }],
   ['a_maison_exo', ['asOpen()', "asChooseSeance('sm')", 'asToReady()', 'asGoReal()', 'asWarmupGo()'], { scroll: '#asOverlay .as-scroll' }],
+  ['a_maison_report', ['asOpen()', "asChooseSeance('sm')", 'asToReady()', 'asGoReal()', "AS.exos.forEach(function(x){x.sets=[{reps:x.reps,feel:'ok',w:x.weight}];x.status='done';});AS.end=AS.end||{};asPersistLog();var l=DB.logs.find(function(y){return String(y.id)===String(AS.savedLogId);});if(liveLogNote20(l)!==null||logWeight(l)!==0) throw new Error('ECHEC routine notée ou comptée');AS.step='report';AS.repIdx=0;asRender()"], { scroll: '#asOverlay .as-scroll' }],
   ['a_maison_count', [`(function(){
     var l={id:880,date:todayStr(),time:'10:00',sessions:['sm','exo:pompes'],duration_min:35};
-    if(logWeight(l)!==0.5) throw new Error('ECHEC poids séance MAISON '+logWeight(l));
+    if(logWeight(l)!==0) throw new Error('ECHEC routine maison doit compter 0 séance : '+logWeight(l));
     if(logWeight({sessions:['exo:cardio_liss']})!==0) throw new Error('ECHEC cardio seul');
     DB.logs.push(l); switchView('progression',document.querySelectorAll('.bni')[2]); renderHisto(); document.getElementById('calGrid').scrollIntoView();
   })()`]],
