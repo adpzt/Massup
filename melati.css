@@ -3006,3 +3006,28 @@ span.bn-hero-bar i.n-gold,.bn-hero-bar i.n-blue{color:transparent;}
   .wr-hero-num.n-blue .wr-hero-v{background:linear-gradient(120deg,#5B1A7F,#1C0B8E);-webkit-background-clip:text;background-clip:text;}
   .wr-th-green .wr-hero-v{background:linear-gradient(120deg,#12874D,#21784D);-webkit-background-clip:text;background-clip:text;}
 }
+
+/* ── Mes compléments (19/10, melati.js › suppCardHtml) ── */
+.su-card{margin-top:.55rem;background:rgba(255,255,255,.035);border:1px solid var(--gb);border-radius:var(--x-r-md);padding:.6rem .7rem .55rem;}
+.su-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.7rem;font-weight:800;color:var(--txt);}
+.su-dots{display:flex;gap:.25rem;flex:none;}
+.su-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.12);display:block;}
+.su-dot.half{background:linear-gradient(90deg,var(--acc) 50%,rgba(255,255,255,.12) 50%);}
+.su-dot.full{background:var(--acc);}
+.su-dot.today{box-shadow:0 0 0 1.5px var(--txt);}
+.su-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem;margin-top:.5rem;}
+.su-btn{display:flex;flex-direction:column;align-items:flex-start;gap:.2rem;min-width:0;padding:.6rem .65rem;text-align:left;
+  background:rgba(255,255,255,.03);border:1.5px solid var(--gb);border-radius:var(--x-r-md);color:var(--txt);font-family:inherit;cursor:pointer;}
+.su-btn.on{border-color:var(--acc);background:var(--x-acc-08);}
+.su-top{display:flex;align-items:center;justify-content:space-between;gap:.3rem;width:100%;font-size:.76rem;font-weight:800;}
+.su-ck{font-size:.6rem;font-weight:800;color:var(--mut);white-space:nowrap;}
+.su-btn.on .su-ck{color:var(--acc);}
+.su-items{font-size:.64rem;line-height:1.35;color:var(--txt);overflow-wrap:anywhere;}
+.su-when{font-size:.6rem;color:var(--mut);overflow-wrap:anywhere;}
+.su-hint{margin-top:.45rem;font-size:.6rem;color:var(--mut);overflow-wrap:anywhere;}
+@media (prefers-color-scheme: light){
+  .su-card,.su-btn{background:rgba(13,18,37,.03);}
+  .su-dot{background:rgba(13,18,37,.14);}
+  .su-btn.on .su-ck{color:var(--txt);}
+  .su-dot.half{background:linear-gradient(90deg,var(--acc) 50%,rgba(13,18,37,.14) 50%);}
+}

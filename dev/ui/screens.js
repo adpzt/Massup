@@ -80,6 +80,8 @@ const MELATI = [
   ['m_pesee', ['openPeseeModal()']],
   ['m_detente', ['dzOpen()']],
   ['m_steps', ['STEPS.open()']],
+  // (19/10) Mes compléments (ordonnances du 13/10) : midi coché, soir à prendre
+  ['m_supp', ["toggleSupp('m');(document.getElementById('bilanWeekNut')||document.body).scrollIntoView()"]],
   ['m_nutri', ['nutOpen()'], { scroll: '#nutri' }],
   ['m_nutri_recettes', ['nutOpen()', tab('#nutri', 'recet')], { scroll: '#nutri' }],
   ['m_nutri_journee', ['nutOpen()', tab('#nutri', 'journ')], { scroll: '#nutri' }],

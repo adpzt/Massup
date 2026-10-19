@@ -696,3 +696,21 @@ test("a rest timer without any push subscription asks for a repair instead of fa
   await timer.update(null);
   assert.equal(missing, 1); // une annulation ne réclame rien
 });
+
+test("Melati supplement reminders fire at noon/evening until checked, and stop after the prescription", () => {
+  const base = { enabled: true, hydrationEnabled: false, workoutEnabled: false, sleepLogEnabled: false, bedtimeEnabled: false,
+    suppEnabled: true, suppNoonTime: "12:30", suppEveningTime: "20:00", suppUntil: "2027-04-13", suppVitCUntil: "2027-01-13" };
+  const at = (date, hm, supp) => scheduledReminders({ app: "melati", reminders: base, rank: { pauses: [] }, supp },
+    { date, minute: Number(hm.slice(0, 2)) * 60 + Number(hm.slice(3)) });
+  const noon = at("2026-10-20", "12:30", {});
+  assert.equal(noon.length, 1);
+  assert.match(noon[0].title, /midi/);
+  assert.match(noon[0].body, /vitamine C/);
+  assert.equal(at("2026-10-20", "12:30", { "2026-10-20": { m: true } }).length, 0);
+  assert.match(at("2026-10-20", "20:00", { "2026-10-20": { m: true } })[0].body, /loin du thé/);
+  assert.doesNotMatch(at("2027-02-01", "12:30", {})[0].body, /vitamine C/);
+  assert.equal(at("2027-04-14", "12:30", {}).length, 0);
+  // MASSUP (aucun réglage compléments) : jamais de rappel
+  assert.equal(scheduledReminders({ reminders: { enabled: true, hydrationEnabled: false, workoutEnabled: false, sleepLogEnabled: false, bedtimeEnabled: false }, rank: { pauses: [] } },
+    { date: "2026-10-20", minute: 12 * 60 + 30 }).length, 0);
+});

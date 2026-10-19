@@ -149,6 +149,12 @@ html,body{overflow-x:hidden;max-width:100vw;}
           <label>Premier rappel <span class="ml-time-field" id="mlWorkoutNoon"></span></label>
           <label>Deuxième rappel <span class="ml-time-field" id="mlWorkoutEvening"></span></label>
         </div>
+        <label><input id="mlSuppEnabled" type="checkbox" onchange="mlSaveReminderOption('suppEnabled',this.checked)"/> Rappels pour mes compléments</label>
+        <div class="ml-notif-times">
+          <label>Midi <span class="ml-time-field" id="mlSuppNoon"></span></label>
+          <label>Soir <span class="ml-time-field" id="mlSuppEvening"></span></label>
+        </div>
+        <div class="ml-notif-hint">Le rappel ne part pas si tu as déjà coché la prise dans « Mes compléments ».</div>
         <div class="ml-notif-hint">Le chrono de repos envoie aussi une notification quand il se termine, même si Melati est en arrière-plan.</div>
       </div>
     </div>

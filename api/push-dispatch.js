@@ -213,6 +213,17 @@ function scheduledReminders(state, clock) {
     }
   }
 
+  // (19/10) Compléments de Melati : midi + soir, seulement si la prise n'est pas déjà cochée,
+  // jusqu'à la fin de l'ordonnance (suppUntil). Opt-in explicite : MASSUP n'a pas ce réglage.
+  if (reminders.suppEnabled === true && (!reminders.suppUntil || clock.date <= reminders.suppUntil)) {
+    const taken = (db.supp && db.supp[clock.date]) || {};
+    const vitC = !reminders.suppVitCUntil || clock.date <= reminders.suppVitCUntil;
+    if (!taken.m) addScheduledItem(groups, clock, reminders.suppNoonTime || "12:30", "supp", "Tes compléments du midi 💊",
+      "Avec ton déjeuner : " + (vitC ? "fer + vitamine C" : "fer") + ", magnésium, oméga-3 et tes 3 gouttes de vitamine D.");
+    if (!taken.s) addScheduledItem(groups, clock, reminders.suppEveningTime || "20:00", "supp", "Tes compléments du soir 🌙",
+      "Avec ton dîner, loin du thé : fer, magnésium et oméga-3.");
+  }
+
   if (reminders.bedtimeEnabled !== false) {
     const bedtime = reminders.bedtimeTime || "23:30";
     addScheduledItem(groups, clock, bedtime, "bedtime", "Va dodo 🌙", reminderVariant(BEDTIME_MESSAGES, clock.date, bedtime));
@@ -360,7 +371,7 @@ module.exports = async function handler(req, res) {
     }
     const ids = Array.from(new Set(subscriptions.map((item) => item.user_id)));
     const states = await rest("user_state?" + new URLSearchParams({
-      select: "user_id,app:data->>app,reminders:data->reminders,rank:data->rank",
+      select: "user_id,app:data->>app,reminders:data->reminders,rank:data->rank,supp:data->supp",
       user_id: "in.(" + ids.join(",") + ")"
     }).toString(), {});
     const stateByUser = new Map(states.map((item) => [item.user_id, item]));

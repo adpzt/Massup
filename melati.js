@@ -618,6 +618,36 @@ function formatTime(sec){ return Math.floor(sec/60)+':'+String(sec%60).padStart(
 // Durée en français lisible : 45 → « 45 s », 90 → « 1 min 30 », 120 → « 2 min »
 function fmtDur(s){ if(s<60) return s+' s'; var m=Math.floor(s/60),r=s%60; return r?m+' min '+(r<10?'0':'')+r:m+' min'; }
 
+// ── Compléments prescrits (ordonnances du 13/10/2026, ajout 19/10) ──
+// DB.supp['YYYY-MM-DD'] = {m:true, s:true} (midi / soir). Pris AVEC le repas : fer + vitamine C,
+// magnésium, oméga-3, vitamine D le midi ; fer, magnésium, oméga-3 le soir (fer loin du thé).
+// Vitamine C 3 mois, le reste 6 mois : la carte et les rappels s'arrêtent seuls. Jamais de score.
+var SUPP_START='2026-10-13', SUPP_VITC_END='2027-01-13', SUPP_END='2027-04-13';
+function suppActive(d){ return d>=SUPP_START&&d<=SUPP_END; }
+function suppMoments(d){
+  return [{id:'m',ico:'☀️',name:'Midi',when:'avec ton déjeuner',items:[d<=SUPP_VITC_END?'fer + vitamine C':'fer','magnésium','oméga-3','vitamine D (3 gouttes)']},
+          {id:'s',ico:'🌙',name:'Soir',when:'avec ton dîner, loin du thé',items:['fer','magnésium','oméga-3']}];
+}
+function toggleSupp(m){
+  var t=todayStr(), o=DB.supp[t]||{};
+  if(o[m]) delete o[m]; else o[m]=true;
+  if(Object.keys(o).length) DB.supp[t]=o; else delete DB.supp[t];
+  saveDB(); renderBilanWeekNut();
+}
+function suppCardHtml(){
+  var t=todayStr(); if(!suppActive(t)) return '';
+  var o=DB.supp[t]||{}, mon=mondayOf(t), dots='';
+  for(var i=0;i<7;i++){ var d=addDays(mon,i), x=DB.supp[d]||{}, n=(x.m?1:0)+(x.s?1:0);
+    dots+='<span class="su-dot'+(n===2?' full':n===1?' half':'')+(d===t?' today':'')+'" title="'+d+'"></span>'; }
+  return '<div class="su-card"><div class="su-head"><span>💊 Mes compléments</span><span class="su-dots">'+dots+'</span></div>'
+    +'<div class="su-row">'+suppMoments(t).map(function(mo){
+      return '<button class="su-btn'+(o[mo.id]?' on':'')+'" onclick="toggleSupp(\''+mo.id+'\')" aria-pressed="'+(o[mo.id]?'true':'false')+'">'
+        +'<span class="su-top"><span>'+mo.ico+' '+mo.name+'</span><span class="su-ck">'+(o[mo.id]?'✓ pris':'à prendre')+'</span></span>'
+        +'<span class="su-items">'+mo.items.join(' · ')+'</span><span class="su-when">'+mo.when+'</span></button>';
+    }).join('')+'</div>'
+    +'<div class="su-hint">Ordonnance du 13/10 · jusqu’au '+(t<=SUPP_VITC_END?'13/01 pour la vitamine C, 13/04 pour le reste':'13/04')+'</div></div>';
+}
+
 var DB;
 try{ DB=JSON.parse(localStorage.getItem(DBK)||'null'); }catch(e){ DB=null; }
 if(!DB) DB={v:3,weights:{},logs:[],mobiDays:{},tests:[],pesees:[],salsa:{},eau:{}};
@@ -627,11 +657,12 @@ if(!DB) DB={v:3,weights:{},logs:[],mobiDays:{},tests:[],pesees:[],salsa:{},eau:{
 //   pv (26/08) : « Nous deux » — mon petit mot pour Adrien {id,text,at} + id du dernier mot de lui que j'ai vu
 function dbNormalize(){
   ['pesees','logs','tests','deletedPesees'].forEach(function(k){ if(!DB[k]) DB[k]=[]; });
-  ['salsa','eau','crea','mobiDays','weights','mobiLog'].forEach(function(k){ if(!DB[k]) DB[k]={}; });
+  ['salsa','eau','crea','mobiDays','weights','mobiLog','supp'].forEach(function(k){ if(!DB[k]) DB[k]={}; });
   if(!DB.reminders) DB.reminders={};
   var reminderDefaults={enabled:false,hydrationEnabled:true,hydrationTimes:['08:30','14:30','19:00'],
     workoutEnabled:true,workoutNoonTime:'12:00',workoutEveningTime:'18:00',workoutStartedDate:'',
-    sleepLogEnabled:false,bedtimeEnabled:false};
+    sleepLogEnabled:false,bedtimeEnabled:false,
+    suppEnabled:true,suppNoonTime:'12:30',suppEveningTime:'20:00'}; // compléments (19/10)
   Object.keys(reminderDefaults).forEach(function(k){
     if(DB.reminders[k]===undefined) DB.reminders[k]=Array.isArray(reminderDefaults[k])?reminderDefaults[k].slice():reminderDefaults[k];
   });
@@ -642,6 +673,8 @@ function dbNormalize(){
     waterTimes=[0,1,2].map(function(i){ return waterTimes[Math.round((waterTimes.length-1)*i/2)]; });
   }
   DB.reminders.hydrationTimes=waterTimes.length?waterTimes:reminderDefaults.hydrationTimes.slice();
+  // Fin de l'ordonnance : le serveur arrête les rappels compléments après ces dates (19/10)
+  DB.reminders.suppUntil=SUPP_END; DB.reminders.suppVitCUntil=SUPP_VITC_END;
   if(!DB.health) DB.health={};
   if(!DB.healthMeta) DB.healthMeta={};
   if(!DB.pv) DB.pv={msg:null,seen:null};
@@ -908,6 +941,7 @@ function renderBilanWeekNut(){
     +'<span style="flex:1;display:flex;gap:.3rem;align-items:center;">'+mSegs+'</span>'
     +'<span style="font-family:\'Saira\',system-ui,sans-serif;font-style:italic;font-weight:800;font-size:.9rem;">'+wk.mobi+'<small style="color:var(--mut);font-size:.62rem;font-weight:600;">/5</small></span>'
     +'</div>'
+    +suppCardHtml()
     +'</div>';
 }
 function toggleDay(kind){
@@ -1673,6 +1707,7 @@ function showDayModal(date){
   if(DB.salsa[date]) marks.push('💃 salsa');
   if(DB.eau[date]) marks.push('💧 gourde ×2');
   if(DB.crea&&DB.crea[date]) marks.push('🧪 créatine');
+  if(DB.supp&&DB.supp[date]) marks.push('💊 compléments'+(DB.supp[date].m&&DB.supp[date].s?'':DB.supp[date].m?' (midi)':' (soir)'));
   if(pes) marks.push('⚖️ '+String(pes.kg).replace('.',',')+' kg');
   if(marks.length) html+='<div class="dm-zen">'+marks.join(' · ')+'</div>';
   $id('dayModalContent').innerHTML=html;
@@ -3950,7 +3985,7 @@ function mlSignOut(){
 function mlLocalVirgin(){
   return !DB.logs.length&&!DB.tests.length
     &&!Object.keys(DB.salsa).length&&!Object.keys(DB.eau).length
-    &&!Object.keys(DB.crea).length&&!Object.keys(DB.mobiDays).length
+    &&!Object.keys(DB.crea).length&&!Object.keys(DB.mobiDays).length&&!Object.keys(DB.supp||{}).length
     &&DB.pesees.length<=4;
 }
 function mlPull(){
@@ -4105,7 +4140,7 @@ function mlMergeCloud(bk){
   DB.tests.forEach(function(t){ tids[JSON.stringify(t)]=1; });
   (bk.tests||[]).forEach(function(t){ if(t&&!tids[JSON.stringify(t)]) DB.tests.push(t); });
   // Journaux par jour : on ajoute les jours absents d'ici
-  ['salsa','eau','crea','mobiDays','mobiLog'].forEach(function(key){
+  ['salsa','eau','crea','mobiDays','mobiLog','supp'].forEach(function(key){
     var src=bk[key]; if(!src||typeof src!=='object') return;
     Object.keys(src).forEach(function(d){ if(DB[key][d]===undefined) DB[key][d]=src[d]; });
   });
@@ -4237,6 +4272,10 @@ function mlRenderPushSettings(){
   var water=$id('mlWaterEnabled'), workout=$id('mlWorkoutEnabled');
   if(water) water.checked=!!r.hydrationEnabled;
   if(workout) workout.checked=!!r.workoutEnabled;
+  var supp=$id('mlSuppEnabled'); if(supp) supp.checked=r.suppEnabled!==false;
+  var sn=$id('mlSuppNoon'), se=$id('mlSuppEvening');
+  if(sn) sn.innerHTML=mlTimeField(r.suppNoonTime||'12:30','mlSaveSuppTime("suppNoonTime")');
+  if(se) se.innerHTML=mlTimeField(r.suppEveningTime||'20:00','mlSaveSuppTime("suppEveningTime")');
   var noon=$id('mlWorkoutNoon'), evening=$id('mlWorkoutEvening');
   if(noon) noon.innerHTML=mlTimeField(r.workoutNoonTime||'12:00','mlSaveWorkoutTime("workoutNoonTime")');
   if(evening) evening.innerHTML=mlTimeField(r.workoutEveningTime||'18:00','mlSaveWorkoutTime("workoutEveningTime")');
@@ -4263,6 +4302,13 @@ function mlSaveWaterTime(index,value){
   value=mlTimeValue('mlWaterTime'+index);
   if(!value) return;
   DB.reminders.hydrationTimes[index]=value;
+  saveDB();
+}
+function mlSaveSuppTime(key){
+  if(key!=='suppNoonTime'&&key!=='suppEveningTime') return;
+  var value=mlTimeValue(key==='suppNoonTime'?'mlSuppNoon':'mlSuppEvening');
+  if(!value) return;
+  DB.reminders[key]=value;
   saveDB();
 }
 function mlSaveWorkoutTime(key){
