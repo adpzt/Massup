@@ -83,6 +83,10 @@ const MELATI = [
   ['m_nutri', ['nutOpen()'], { scroll: '#nutri' }],
   ['m_nutri_recettes', ['nutOpen()', tab('#nutri', 'recet')], { scroll: '#nutri' }],
   ['m_nutri_journee', ['nutOpen()', tab('#nutri', 'journ')], { scroll: '#nutri' }],
+  // (19/10) Plan 14 jours de Melati : jour du jour, jour de salsa, vendredi repas libre, liste de courses, « mettre dans ma journée »
+  ['m_nutri_plan', ['nutOpen()', "(function(){var st=document.createElement('style');st.textContent='#nutri *{animation:none!important;transition:none!important}';document.head.appendChild(st);})()", tab('#nutri', 'plan')], { scroll: '#nutri' }],
+  ['m_nutri_plan_libre', ['nutOpen()', "(function(){var st=document.createElement('style');st.textContent='#nutri *{animation:none!important;transition:none!important}';document.head.appendChild(st);})()", tab('#nutri', 'plan'), "document.querySelector('#n-p-plan [data-pd=\"4\"]').click()", "document.querySelector('#n-p-plan .pl-courses').open=true"], { scroll: '#nutri' }],
+  ['m_nutri_plan_use', ['nutOpen()', "(function(){var st=document.createElement('style');st.textContent='#nutri *{animation:none!important;transition:none!important}';document.head.appendChild(st);})()", tab('#nutri', 'plan'), "window.confirm=function(){return true;};document.querySelector('#n-p-plan [data-pd=\"1\"]').click();document.querySelector('#n-p-plan [data-puse]').click()"], { scroll: '#nutri' }],
   ['m_nutri_semaine', ['nutOpen()', tab('#nutri', 'semaine')], { scroll: '#nutri' }],
   ['m_push_lost', ["DB.reminders.enabled=true;_mlPushState={state:'lost',reason:'subscribe'};mlRenderPushSettings();document.getElementById('mlPushStatus').scrollIntoView()"]],
   ['m_liveflow', ['asOpen()', "document.querySelector('#asOverlay .as-bigcard').click()"], { scroll: '#asOverlay' }],

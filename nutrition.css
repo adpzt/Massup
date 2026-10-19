@@ -322,3 +322,51 @@
 #nutri .pclear{display:block;margin:12px auto 0;background:none;border:0;font:inherit;font-size:11px;font-weight:800;color:var(--ink3);text-decoration:underline;}
 #nutri .tag.v{background:var(--leaf-s);color:var(--leaf);}
 #nutri .tag.miss{background:rgba(255,122,147,.14);color:#c9445f;}
+
+/* ── Plan 14 jours (19/10, nutrition.js › rendrePlan) ── */
+#nutri .tab[data-p="plan"].on{background:var(--peach-s);color:var(--peach);}
+#nutri #n-p-plan .eyebrow{color:var(--peach);}
+#nutri .pl-intro{background:linear-gradient(168deg,var(--peach-s),var(--card) 46%);border-color:rgba(255,169,138,.24);}
+#nutri .pl-intro b{color:var(--ink);font-weight:800;}
+#nutri .pl-weeks{margin-top:12px;}
+#nutri .pl-weeks button.on{background:var(--peach-s);color:var(--peach);box-shadow:inset 0 0 0 1px rgba(255,169,138,.35);}
+#nutri .pl-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;margin-top:10px;}
+#nutri .pl-day{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0;padding:7px 0 5px;border-radius:13px;
+  background:var(--card);border:1px solid var(--line);color:var(--ink2);}
+#nutri .pl-day span{font-size:10px;font-weight:800;}
+#nutri .pl-day b{font-size:15px;font-weight:800;color:var(--ink);}
+#nutri .pl-day i{font-style:normal;font-size:10px;line-height:1;min-height:11px;}
+#nutri .pl-day.today{border-color:rgba(255,169,138,.55);}
+#nutri .pl-day.on{background:var(--peach-s);border-color:var(--peach);color:var(--peach);}
+#nutri .pl-head{margin:16px 2px 8px;font-size:15px;font-weight:800;color:var(--ink);}
+#nutri .pl-head small{font-size:11px;font-weight:700;color:var(--ink2);}
+#nutri .pl-meal .slot-h small{color:var(--ink2);}
+#nutri .pl-open{width:100%;text-align:left;color:var(--ink);font-family:inherit;}
+#nutri .pl-arr{flex:none;font-size:20px;color:var(--ink3);line-height:1;}
+#nutri .pl-libre{display:flex;gap:9px;align-items:center;}
+#nutri .pl-libre span{font-size:26px;flex:none;}
+#nutri .pl-libre p{margin:0;font-size:12px;line-height:1.45;color:var(--ink2);}
+#nutri .pl-libre b{color:var(--ink);}
+#nutri .pl-tot{margin-top:12px;}
+#nutri .pl-tip{margin-top:12px;}
+#nutri .pl-use{margin-top:12px;}
+#nutri .pl-courses{margin-top:12px;}
+#nutri .pl-courses summary{cursor:pointer;font-size:13px;font-weight:800;color:var(--ink);}
+#nutri .pl-ray{margin:12px 0 4px;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--peach);}
+#nutri .pl-list{list-style:none;margin:0;padding:0;}
+#nutri .pl-list li{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--ink);}
+#nutri .pl-list li span{min-width:0;overflow-wrap:anywhere;}
+#nutri .pl-list li b{flex:none;font-weight:800;color:var(--ink2);}
+#nutri .pl-arr{color:var(--ink2);}
+#nutri .pl-intro .hint{color:var(--ink);}
+#nutri .pl-tot .eyebrow{color:var(--ink2);}
+#nutri .pl-tot .hint{color:var(--ink);}
+#nutri .pl-tot .jm{background:var(--card2);color:var(--ink);min-width:0;}
+#nutri .pl-tot .jm b{font-size:18px;color:var(--ink);overflow-wrap:anywhere;}
+#nutri .pl-tot .jm b i{display:block;font-style:normal;font-family:'Manrope',system-ui,sans-serif;font-size:10.5px;font-weight:700;color:var(--ink2);}
+#nutri .pl-tot .jm small{color:var(--ink2);}
+#nutri .pl-tot .jm b i,#nutri .pl-tot .jm small{opacity:1;}
+#nutri #n-p-plan .pl-tot .eyebrow{color:var(--ink2);}
+#nutri #n-p-plan .pl-ray{color:var(--ink);}
+#nutri #n-p-plan .pl-list li b{color:var(--ink);}
+#nutri #n-p-plan .pl-tot .eyebrow,#nutri .pl-courses .hint{color:var(--ink);}

@@ -335,7 +335,7 @@ var NUTRI=(function(){
 
   /* ---------- journée (persistée par date → cloud) ---------- */
   var SLOTS={dej:{t:'Déjeuner',fam:'plat',pct:0.345},din:{t:'Dîner',fam:'plat',pct:0.345},
-             col:{t:'Collation 16h30',fam:'sucre',pct:0.145},ext:{t:'Dessert / extra',fam:'sucre',pct:0.165,opt:true}};
+             col:{t:'Collation 16h30',fam:'sucre',pct:0.145},ext:{t:'Petit-déj / extra',fam:'sucre',pct:0.165,opt:true}};
   var pickSlot=null;
   function J(){
     var t=todayStr();
@@ -466,6 +466,139 @@ var NUTRI=(function(){
     $('n-pick').scrollTop=0;
   }
 
+
+  /* ── PLAN 14 JOURS (19/10/2026, demande Adrien pour Melati) ──
+     Deux semaines de repas complets, chiffrés au plat près avec SES recettes (mêmes grammages, mêmes
+     kcal que partout ailleurs — tout passe par ingr()/nut(), donc le plan suit sa prochaine pesée).
+     Chaque jour = 4 prises (petit-déj · déjeuner · collation · dîner), dans sa zone kcal, protéines
+     couvertes. Le dîner se cuisine en double : la 2e part = la lunchbox du lendemain (moins de cuisine).
+     Priorités nutritionnelles intégrées : poisson gras 3-4×/sem (oméga-3, vitamine D), viande rouge 2×/sem
+     (fer, avec légumes riches en vitamine C), œufs, pois chiches, oléagineux et chocolat noir (magnésium).
+     Salsa mardi · jeudi · samedi : collation banane + skyr avant la danse, dîner avec féculent après.
+     Vendredi soir = repas libre (validé dans son dossier) : jamais de compensation.
+     Cycle de 14 jours ancré sur le lundi 19/10/2026 (aucun nouveau champ de DB).
+     Ligne : [salsa, petit-déj, déjeuner, féculent au déj, restes d'hier soir, collation, dîner|null, féculent au dîner] */
+  var PLAN_START='2026-10-19';
+  var PLAN14=[
+    [0,"skyrpoire","sakedon",0,1,"yaourtfigue","boeufbroc",1],
+    [1,"moussevanille","boeufbroc",1,1,"smoothiebanane","saumon",1],
+    [0,"skyrkiwi","saumon",1,1,"skyrpomme","chili",0],
+    [1,"pancakesskyr","chili",0,1,"smoothiemyrtille","pouletgochu",1],
+    [0,"cheesecakefraise","pouletgochu",1,1,"carpacciorange",null,0],
+    [1,"crepes","sardine",0,0,"bananasplit","tandoori",1],
+    [0,"pancakesskyr","tandoori",1,1,"yaourtfigue","saumonasperges",0],
+    [0,"pancakes","saumonasperges",1,1,"fbgrenade","bulgogi",1],
+    [1,"dragonbowl","bulgogi",1,1,"skyrbdc","patessaumon",0],
+    [0,"pancakesskyr","patessaumon",0,1,"yaourtfigue","oyakodon",0],
+    [1,"skyrfraise","oyakodon",0,1,"bananasplit","japchae",0],
+    [0,"skyrpeche","japchae",0,1,"kiwicoco",null,0],
+    [1,"skyrmyrtille","saladepc",0,0,"bananasplit","curryvert",1],
+    [0,"skyrkiwi","curryvert",1,1,"skyrpomme","sakedon",0]
+  ];
+  var PJOURS=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'], PJ1=['L','M','M','J','V','S','D'];
+  var planSel=null;
+  function pDays(a,b){ return Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/86400000); }
+  function pAdd(d,n){ var x=new Date(d+'T12:00:00'); x.setDate(x.getDate()+n); return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'); }
+  function planToday(){ return ((pDays(PLAN_START,todayStr())%14)+14)%14; }
+  function planDate(i){ return pAdd(todayStr(),i-planToday()); }
+  // Les 4 prises d'un jour du plan → [{slot, k, fec, ...}] (dîner absent = repas libre)
+  function planMeals(i){
+    var d=PLAN14[i];
+    return [{s:'pd',t:'Petit-déj',k:d[1],fec:false},
+            {s:'dej',t:'Déjeuner',k:d[2],fec:!!d[3],left:!!d[4]},
+            {s:'col',t:d[0]?'Collation · avant la salsa':'Collation 16h30',k:d[5],fec:false,salsa:!!d[0]},
+            {s:'din',t:d[0]?'Dîner · après la salsa':'Dîner',k:d[6],fec:!!d[7],dbl:!!(d[6]&&PLAN14[(i+1)%14][4])}];
+  }
+  function planTot(i){
+    var t={k:0,p:0,l:0,g:0};
+    planMeals(i).forEach(function(m){ var r=m.k&&rByKey(m.k); if(!r) return; var n=nut(ingr(r,m.fec)); t.k+=n.k;t.p+=n.p;t.l+=n.l;t.g+=n.g; });
+    return t;
+  }
+  function planTags(i){
+    var keys=[]; planMeals(i).forEach(function(m){ var r=m.k&&rByKey(m.k); if(r) r.i.forEach(function(e){ keys.push(e[0]); }); });
+    var has=function(l){ return l.some(function(k){ return keys.indexOf(k)>=0; }); };
+    return {red:has(['boeuf','boeuffin','steak']),fish:has(['saumon','saumoncru','sardine','maquereau']),egg:has(['oeuf']),leg:has(['poischiche','edamame'])};
+  }
+  function planTip(i){
+    var d=PLAN14[i], tg=planTags(i);
+    if(!d[6]) return ['🍔','<b>Ce soir, repas libre.</b> Profite vraiment, avec qui tu veux. Demain tu reprends le plan normalement : il n’y a rien à compenser.'];
+    if(d[0]) return ['💃','<b>Salsa ce soir.</b> Ta collation 1 h à 1 h 30 avant la danse, une gourde d’eau dans le sac. Ton dîner après la danse, c’est ta récupération : féculent compris.'];
+    if(tg.red) return ['🥩','<b>Viande rouge aujourd’hui = du fer.</b> Le poivron, le brocoli ou un fruit (kiwi, orange, fraises) dans le même repas aident ton corps à mieux l’absorber.'];
+    if(tg.fish) return ['🐟','<b>Poisson gras aujourd’hui</b> : oméga-3 et vitamine D, pour ta récupération, ta peau et ton énergie.'];
+    var rot=[['🍵','<b>Ton thé vert ou ton matcha</b> : plutôt entre les repas (1 h avant ou après), pas pendant. Au repas, il freine l’absorption du fer.'],
+             ['☀️','<b>10-15 min dehors</b> à ta pause déjeuner : la lumière du jour, c’est ta vitamine D (et ça fait du bien à la tête).'],
+             ['🌰','<b>Magnésium</b> : amandes, noix, chocolat noir, épinards, pois chiches. Ta collation en contient déjà.']];
+    return rot[i%rot.length];
+  }
+  // Liste de courses d'une semaine du plan (tout ce qui se mange ces 7 jours, cuisine double comprise)
+  var PRAY=['Viandes & poissons','Frais & œufs','Fruits & légumes','Féculents & légumineuses','Épicerie','Huile & aromates'];
+  function planCourses(w){
+    var tot={};
+    for(var i=w*7;i<w*7+7;i++) planMeals(i).forEach(function(m){
+      var r=m.k&&rByKey(m.k); if(!r) return;
+      ingr(r,m.fec).forEach(function(e){ tot[e[0]]=(tot[e[0]]||0)+e[1]; });
+    });
+    var by={};
+    Object.keys(tot).forEach(function(k){
+      if(k==='herbes'||k==='matcha') return;
+      var ray=RAY[k]!=null?RAY[k]:4, g=tot[k], q;
+      if(k==='oeuf') q=Math.max(1,Math.round(g/55))+' œufs';
+      else q=(g>=1000?String(Math.round(g/100)/10).replace('.',',')+' kg':Math.max(10,Math.round(g/10)*10)+' g');
+      (by[ray]=by[ray]||[]).push('<li><span>'+(F[k]?F[k][0]:k)+'</span><b class="num">'+q+'</b></li>');
+    });
+    return PRAY.map(function(lbl,ri){ return by[ri]?'<p class="pl-ray">'+lbl+'</p><ul class="pl-list">'+by[ri].join('')+'</ul>':''; }).join('');
+  }
+  function rendrePlan(){
+    var el=$('n-p-plan'); if(!el) return;
+    var c=cibles(poids), ti=planToday(), i=planSel!=null?planSel:ti, w=i<7?0:1;
+    var d=PLAN14[i], dt=planDate(i);
+    var h='<div class="card pl-intro"><p class="eyebrow">Ton plan · 2 semaines</p>'
+      +'<p class="hint">Chaque journée tient dans ta zone (<b class="num">'+(c.kcal-200)+' – '+c.kcal+'</b> kcal) avec tes protéines. Le dîner se cuisine <b>en double</b> : la 2e part, c’est ta lunchbox du lendemain. Touche un plat pour voir les grammages et la recette.</p></div>';
+    h+='<div class="seg pl-weeks"><button data-pw="0" class="'+(w===0?'on':'')+'">Semaine 1</button><button data-pw="1" class="'+(w===1?'on':'')+'">Semaine 2</button></div>';
+    h+='<div class="pl-days">';
+    for(var j=w*7;j<w*7+7;j++){
+      h+='<button class="pl-day'+(j===i?' on':'')+(j===ti?' today':'')+'" data-pd="'+j+'"><span>'+PJ1[j%7]+'</span><b class="num">'+planDate(j).slice(8)+'</b><i>'+(PLAN14[j][0]?'💃':(PLAN14[j][6]?'':'🍔'))+'</i></button>';
+    }
+    h+='</div>';
+    h+='<p class="pl-head">'+PJOURS[i%7]+' '+fmtShort(dt)+' <small>· jour '+(i+1)+'/14'+(i===ti?' · aujourd’hui':'')+'</small></p>';
+    planMeals(i).forEach(function(m){
+      var r=m.k?rByKey(m.k):null;
+      h+='<div class="slot pl-meal"><div class="slot-h"><h4>'+m.t+'</h4>'
+        +(m.left?'<small>🍱 restes d’hier soir</small>':m.dbl?'<small>🍳 cuisine double</small>':m.salsa?'<small>1 h – 1 h 30 avant</small>':'')+'</div>';
+      if(!r) h+='<div class="pl-libre"><span>🍔</span><p><b>Repas libre</b> · resto, sortie entre amies, ce qui te fait envie. Rien à compenser demain.</p></div>';
+      else{
+        var n=nut(ingr(r,m.fec));
+        h+='<button class="slot-r pl-open" data-pk="'+r.img+'" data-pf="'+(m.fec?1:0)+'">'
+          +'<img src="'+IMG[r.img]+'" alt="">'
+          +'<span class="slot-b"><b>'+r.n+'</b><span>'+n.k+' kcal · '+n.p+' g prot.'+(m.fec&&r.f?' · '+FECLABEL[r.f[0]].toLowerCase():'')+'</span></span>'
+          +'<span class="pl-arr">›</span></button>';
+      }
+      h+='</div>';
+    });
+    var t=planTot(i), libre=!d[6];
+    h+='<div class="card pl-tot"><p class="eyebrow">Total de la journée</p><div class="jmacros">'
+      +'<div class="jm"><b class="num">'+t.k+'<i>'+(libre?'+ repas libre':'sur '+c.kcal)+'</i></b><small>kcal</small></div>'
+      +'<div class="jm"><b class="num">'+t.p+'<i>sur '+c.pro+' g</i></b><small>protéines</small></div>'
+      +'<div class="jm"><b class="num">'+t.l+'<i>sur '+c.lip+' g</i></b><small>lipides</small></div></div>'
+      +(libre?'<p class="hint" style="margin-top:8px">Le repas libre ne se compte pas : la journée est pensée pour lui laisser de la place.</p>':'')+'</div>';
+    var tip=planTip(i);
+    h+='<div class="note pl-tip"><span class="ic">'+tip[0]+'</span><div>'+tip[1]+'</div></div>';
+    h+='<button class="go pl-use" data-puse="'+i+'">Mettre ce jour dans ma journée</button>';
+    h+='<details class="card pl-courses"><summary>🛒 Liste de courses · semaine '+(w+1)+'</summary>'+planCourses(w)
+      +'<p class="hint" style="margin-top:8px">Quantités pour toi seule, à ton poids actuel, cuisine double comprise. Les épices, herbes et le sel ne sont pas listés.</p></details>';
+    el.innerHTML=h;
+  }
+  function planUse(i){
+    var j=J(), busy=['dej','din','col','ext'].some(function(s){ return j[s]; });
+    if(busy&&!confirm('Remplacer les repas déjà choisis dans ta journée d’aujourd’hui ?')) return;
+    var m=planMeals(i);
+    j.ext={k:m[0].k,fec:false}; j.dej={k:m[1].k,fec:m[1].fec}; j.col={k:m[2].k,fec:false};
+    j.din=m[3].k?{k:m[3].k,fec:m[3].fec}:null;
+    saveDB(); rendreJournee();
+    showToast('🌸 Journée remplie avec le jour '+(i+1)+' du plan');
+    var tb=document.querySelector('#nutri .tab[data-p="journee"]'); if(tb) tb.click();
+  }
+
   /* ---------- calculateur ---------- */
   var r5=function(n){return Math.max(5,Math.round(n/5)*5);}, r10=function(n){return Math.max(20,Math.round(n/10)*10);};
   function majCible(){
@@ -534,7 +667,15 @@ var NUTRI=(function(){
       document.querySelectorAll('#nutri .pane').forEach(function(x){x.classList.remove('on');});
       b.classList.add('on'); $('n-p-'+b.dataset.p).classList.add('on'); $('nutri').scrollTop=0;
       if(b.dataset.p==='semaine'&&typeof NP!=='undefined') NP.renderWeek();
+      if(b.dataset.p==='plan') rendrePlan();
     };});
+    $('n-p-plan').onclick=function(e){
+      var b;
+      if((b=e.target.closest('[data-pw]'))){ var nw=+b.dataset.pw, ti=planToday(); planSel=(ti<7)===(nw===0)?ti:nw*7+(ti%7); rendrePlan(); return; }
+      if((b=e.target.closest('[data-pd]'))){ planSel=+b.dataset.pd; rendrePlan(); return; }
+      if((b=e.target.closest('[data-puse]'))){ planUse(+b.dataset.puse); return; }
+      if((b=e.target.closest('[data-pk]'))){ var r=rByKey(b.dataset.pk); if(!r) return; ouvrir(R.indexOf(r)); fec=b.dataset.pf==='1'; dessine(); }
+    };
     document.querySelectorAll('#nutri [data-fam]').forEach(function(b){ b.onclick=function(){
       document.querySelectorAll('#nutri [data-fam]').forEach(function(x){x.classList.remove('on');});
       b.classList.add('on'); fam=b.dataset.fam; rendreListe();
