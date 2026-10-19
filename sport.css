@@ -63,3 +63,42 @@
   .cal-day.has-session.day-course{color:var(--run);text-shadow:none;border-color:rgba(90,100,0,.4);background:linear-gradient(160deg,rgba(232,255,58,.55),rgba(232,255,58,.15) 72%);}
   .chip-course{background:rgba(232,255,58,.35);}
 }
+
+/* ═══ Cardio salle détaillé du LiveUp (19/10/2026, cardio.js) ═══ */
+.cd-panel{display:flex;flex-direction:column;min-width:0;padding-bottom:1rem;}
+.cd-types{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.45rem;}
+.cd-type{display:flex;flex-direction:column;align-items:center;gap:.2rem;min-width:0;padding:.6rem .25rem;background:var(--x-glass);box-shadow:var(--x-inset);
+  border:1.5px solid var(--gb);border-radius:var(--x-r-md);color:var(--mut);font-family:inherit;font-size:.7rem;font-weight:700;cursor:pointer;}
+.cd-type-ico{font-size:1.35rem;line-height:1;}
+.cd-type-name{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cd-type.on{border-color:var(--acc);background:var(--x-acc-08);color:var(--txt);}
+.cd-type.run.on{border-color:var(--run);background:rgba(232,255,58,.1);}
+.cd-note{margin-top:.55rem;padding:.5rem .7rem;border-radius:var(--x-r-md);border:1px solid var(--gb);background:var(--x-glass);font-size:.74rem;line-height:1.45;color:var(--txt);overflow-wrap:anywhere;}
+.cd-note.run{border-color:rgba(232,255,58,.4);background:rgba(232,255,58,.07);}
+.cd-link{background:none;border:0;padding:0 0 0 .2rem;color:var(--acc);font-family:inherit;font-size:inherit;font-weight:800;text-decoration:underline;cursor:pointer;}
+.cd-seg{margin-bottom:.5rem;padding:.55rem .65rem .65rem;border-radius:var(--x-r-lg);border:1px solid var(--gb);background:var(--x-glass);box-shadow:var(--x-inset);}
+.cd-seg-head{display:flex;align-items:center;justify-content:space-between;min-height:24px;margin-bottom:.35rem;font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);}
+.cd-seg-del{width:28px;height:28px;border-radius:50%;border:1px solid var(--gb);background:none;color:var(--mut);font-size:.75rem;cursor:pointer;}
+.cd-seg-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.45rem;}
+.cd-seg-grid.two{grid-template-columns:repeat(2,minmax(0,1fr));}
+.cd-field{display:flex;flex-direction:column;gap:.25rem;min-width:0;}
+.cd-field-lbl{font-size:.64rem;font-weight:700;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cd-field-box{position:relative;display:block;min-width:0;}
+.cd-input{font-size:1rem;font-weight:800;padding:.55rem 2.4rem .55rem .6rem;font-variant-numeric:tabular-nums;}
+.cd-unit{position:absolute;right:.55rem;top:50%;transform:translateY(-50%);font-size:.62rem;font-weight:700;color:var(--mut);pointer-events:none;}
+.cd-add{width:100%;padding:.6rem;border-radius:var(--x-r-md);border:1px dashed var(--gb);background:none;color:var(--acc);font-family:inherit;font-size:.78rem;font-weight:800;cursor:pointer;}
+.cd-stats{margin-top:.7rem;}
+.cd-mus{font-size:.72rem;color:var(--mut);line-height:1.4;overflow-wrap:anywhere;}
+.cd-more{margin-top:.6rem;}
+.cd-more summary{cursor:pointer;font-size:.74rem;font-weight:700;color:var(--txt);padding:.35rem 0;}
+.cd-more .cd-seg-grid{margin-top:.35rem;}
+.cd-feels{grid-template-columns:repeat(3,minmax(0,1fr));}
+.cd-done{margin-top:.9rem;}
+@media (prefers-color-scheme: light){
+  .cd-type.run.on,.cd-note.run{border-color:rgba(90,100,0,.4);background:rgba(232,255,58,.22);}
+}
+.cd-hint{text-transform:none;letter-spacing:0;font-weight:500;color:var(--mut);}
+.as-cta.cd-wait{filter:saturate(.55);}
+.hc-log .hc-pts-v.sp-km.cd-kc{color:var(--acc2);}
+.as-grade-wrap .cd-stats{display:flex;flex-wrap:wrap;justify-content:center;width:100%;align-self:stretch;}
+.as-grade-wrap .cd-stats .sp-stat{flex:0 0 calc(33.333% - .3rem);}

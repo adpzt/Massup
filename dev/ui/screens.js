@@ -56,6 +56,20 @@ const ADRIEN = [
     if(to.slice(0,7)===todayStr().slice(0,7)&&(!cell||cell.className.indexOf('has-session')<0)) throw new Error('ECHEC case calendrier '+to);
     document.getElementById('calGrid').scrollIntoView();
   })()`]],
+  // (19/10) Cardio détaillé du LiveUp (cardio.js) : machine, paliers, stats, muscles ; course tapis → objectif Courir + 🏃
+  ['a_cardio_course', ["asOpen();AS.step='exo';AS.sname='PUSH';AS.startTs=Date.now();AS.exos=[asMakeExo('cardio_liss',true)];AS.cur=0;AS.setIdx=1;AS.phase='work';asRender();asCardioType('course');asCardioInput(0,'kmh',6);asCardioInput(0,'inc',5);asCardioAddSeg();asCardioInput(1,'min',5);asCardioInput(1,'kmh',9);asCardioFeel('dur')"], { scroll: '#asOverlay .as-scroll' }],
+  ['a_cardio_escalier', ["asOpen();AS.step='exo';AS.sname='PUSH';AS.startTs=Date.now();AS.exos=[asMakeExo('cardio_liss',true)];AS.cur=0;AS.setIdx=1;AS.phase='work';asRender();asCardioType('escalier');asCardioInput(-1,'kcalM',145)"], { scroll: '#asOverlay .as-scroll' }],
+  ['a_cardio_saved', [`(function(){
+    asOpen();AS.step='exo';AS.sname='PUSH';AS.startTs=Date.now();AS.exos=[asMakeExo('cardio_liss',true)];AS.cur=0;AS.setIdx=1;AS.phase='work';asRender();asCardioType('course');asCardioInput(0,'min',10);asCardioInput(0,'kmh',6);asCardioInput(0,'inc',5);asCardioFeel('dur');
+    var before=runWeekAuto(rankMonday(todayStr()));
+    AS.end=AS.end||{};asCardioDone();asPersistLog();
+    var l=DB.logs.find(function(x){return String(x.id)===String(AS.savedLogId);});
+    var cx=l&&l.live.exos[0];
+    if(!cx||!cx.cardio||cx.cardio.type!=='course'||!cx.cardio.res||cx.cardio.res.km!==1||cx.cardio.res.dplus!==50) throw new Error('ECHEC log cardio '+JSON.stringify(cx&&cx.cardio));
+    if(runWeekAuto(rankMonday(todayStr()))!==before+1) throw new Error('ECHEC objectif Courir');
+    asHideOverlay();renderBilanWeekNut();showDayModal(todayStr());
+  })()`], { scroll: '#dayModal .modal,#dayModal' }],
+  ['a_cardio_only_report', ["asOpen();AS.step='exo';AS.sname='Cardio';AS.startTs=Date.now();AS.exos=[asMakeExo('cardio_liss',true)];AS.cur=0;AS.setIdx=1;AS.phase='work';asRender();asCardioType('velo');asCardioFeel('ok');AS.end=AS.end||{};asCardioDone();asPersistLog();AS.step='report';AS.repIdx=0;asRender()"], { scroll: '#asOverlay .as-scroll' }],
   ['a_liveflow', ['asOpen()', "document.querySelector('#asOverlay .as-bigcard').click()", "asPickLegsMain('leg_press')", 'AS.fromPrep=true;asToReady()'], { scroll: '#asOverlay' }],
 ];
 const MELATI = [

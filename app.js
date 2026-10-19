@@ -287,7 +287,7 @@ var DATA = [
     // 08/08/2026 — réglages tapis CALIBRÉS sur les mesures d'Adrien (séance test) : 4,5/6 → 120 bpm
     // (bas de zone 2), 5,5/7 → 145 bpm (déjà zone 3). Sa cible 130-140 bpm tombe donc entre les deux
     // → 5 / 6,5. Se compte en MINUTES (cnt:"min"), plus jamais en « reps ».
-    {key:"cardio_liss",cat:"cardio",name:"Cardio Zone 2 (tapis / vélo)",unite:"min",cnt:"min",inc:5,repTarget:true,serie:"1×20",rest:0,cue:"TAPIS : inclinaison 5 · vitesse 6,5 km/h · 20 à 25 min NON-STOP, allure constante. Repère : ~130-140 bpm, tu dois pouvoir parler en marchant.",tips:["Tes réglages viennent de TES mesures : 4,5/6 = 120 bpm (trop facile), 5,5/7 = 145 bpm (trop haut). 5 / 6,5 te met pile dedans.","Ajuste en direct SANS changer le format : >140 bpm → −0,5 de vitesse · <125 bpm → +0,5 d'inclinaison. Puis tu ne touches plus à rien.","Un seul bloc continu, APRÈS PUSH ou PULL — jamais avant une séance, jamais après LEGS. +100 pts, max 2/semaine.","Vélo à la place du tapis : résistance moyenne, 70-80 tours/min, mêmes 130-140 bpm."],errs:["Ne pas faire de pyramide (5 min facile / 5 min dur) : la zone 2 est une allure CONSTANTE, pas des intervalles.","Ne pas transformer ça en HIIT (interférence + appétit saccagé) ni le caler un jour LEGS."],img:"bikeimg"},
+    {key:"cardio_liss",cat:"cardio",name:"Cardio (tapis, escalier, vélo…)",unite:"min",cnt:"min",inc:5,repTarget:true,serie:"1×20",rest:0,cue:"TAPIS : inclinaison 5 · vitesse 6,5 km/h · 20 à 25 min NON-STOP, allure constante. Repère : ~130-140 bpm, tu dois pouvoir parler en marchant.",tips:["Tes réglages viennent de TES mesures : 4,5/6 = 120 bpm (trop facile), 5,5/7 = 145 bpm (trop haut). 5 / 6,5 te met pile dedans.","Ajuste en direct SANS changer le format : >140 bpm → −0,5 de vitesse · <125 bpm → +0,5 d'inclinaison. Puis tu ne touches plus à rien.","Un seul bloc continu, APRÈS PUSH ou PULL — jamais avant une séance, jamais après LEGS. +100 pts, max 2/semaine.","Vélo à la place du tapis : résistance moyenne, 70-80 tours/min, mêmes 130-140 bpm."],errs:["Ne pas faire de pyramide (5 min facile / 5 min dur) : la zone 2 est une allure CONSTANTE, pas des intervalles.","Ne pas transformer ça en HIIT (interférence + appétit saccagé) ni le caler un jour LEGS."],img:"bikeimg"},
     {key:"cardio_rameur",cat:"cardio",name:"Rameur Intervalles 30/30",unite:"min",cnt:"min",inc:1,repTarget:true,serie:"1×10",rest:0,cue:"10 min au rameur : 30s d'allure soutenue / 30s tranquille, en alternance.",tips:["Soutenu = tu pousses fort MAIS tu tiens les 10 min — ce n'est pas un sprint.","Jambes d'abord, dos droit, tirée franche.","Parfait en sortie de PUSH/PULL les semaines chargées. +100 pts, max 2/semaine."],errs:["Ne pas sprinter les 30s au maximum (ce n'est pas du HIIT).","Ne pas arrondir le dos en fin de tirée."],img:"rowerimg"},
     {key:"gripper",cat:"corps",name:"Gripper",unite:"kg",inc:5,serie:"3×30s/main",rest:45,uni:true,cue:"Ferme le gripper à fond, tiens 1s, relâche lentement.",tips:["Poignet droit, dans l'axe de l'avant-bras.","Serre au maximum en fin de course.","Travaille les deux mains à égalité."],errs:["Ne pas relâcher d'un coup sec.","Ne pas plier le poignet."]}
   ]}
@@ -1350,7 +1350,7 @@ function logWeight(l){
   if(l&&l.sport==='course') return 0; // course (12/10) : objectif « Courir », jamais une séance de gym
   var w=0, hasExo=false;
   (l && l.sessions || []).forEach(function(sid){
-    if(sid.indexOf('exo:')===0){ hasExo=true; }
+    if(sid.indexOf('exo:')===0){ if(!exoIsCardio(sid.slice(4))) hasExo=true; } // 19/10 : du cardio seul n'est pas une séance de salle
     else w+=sessionWeight(sid);
   });
   if(hasExo && w<1) w=1;
@@ -2065,7 +2065,7 @@ function renderCal(){
   var days=new Date(calYear,calMonth2+1,0).getDate();
   var today=todayStr();
   var sessionMap={}, runDays={};
-  DB.logs.forEach(function(l){ if(!sessionMap[l.date]) sessionMap[l.date]=[]; sessionMap[l.date]=sessionMap[l.date].concat(l.sessions); if(l.sport==='course') runDays[l.date]=true; });
+  DB.logs.forEach(function(l){ if(!sessionMap[l.date]) sessionMap[l.date]=[]; sessionMap[l.date]=sessionMap[l.date].concat(l.sessions); if(cardioLogHasRun(l)) runDays[l.date]=true; });
   // 04/09 (demande Adrien) : plus de trous en début/fin de mois — les cases des semaines à cheval
   // affichent les VRAIS jours du mois d'avant/d'après (grisés .other, mêmes couleurs, cliquables).
   var trail=(7-(offset+days)%7)%7;
@@ -2141,6 +2141,14 @@ function liveLogDetailHtml(l){
     if(side&&!sets.length) return; // annexe jamais commencé → pas dans l'historique
     if(!side&&!sets.length&&x.status==='skipped') {
       rows+='<div class="dld-row"><span class="dld-name" style="color:var(--mut)">'+getExoName(x.key)+'</span><span class="dld-tag" style="color:var(--mut)">passé</span></div>';
+      return;
+    }
+    // Cardio détaillé (19/10) : type de machine, paliers et stats au lieu de « 20 min »
+    if(x.cardio&&sets.length){
+      var _cr=x.cardio.res||cardioCalc(x.cardio,getProfileBodyWeight());
+      rows+='<div class="dld-row"><span class="dld-name">'+cardioType(x.cardio.type).ico+' '+cardioType(x.cardio.type).name+'</span>'
+        +'<span class="dld-tag" style="color:var(--mut)">'+(_cr.kcal?_cr.kcal+' kcal':'cardio')+'</span>'
+        +'<div class="dld-sets">'+cardioSummary(x.cardio).split(' &#xB7; ').slice(1).join(' &#xB7; ')+'<br><span style="color:var(--mut)">'+cardioSegsTxt(x.cardio)+'</span></div></div>';
       return;
     }
     var setsTxt=fmtSetsW(x,sets);
@@ -2274,10 +2282,15 @@ function showDayModal(date){
     }
     var canResume=!!l.live&&l.date===todayStr();
     var hasLive=!!(l.live&&(l.live.exos||[]).length);
+    var _cdx=note===null&&l.live?(l.live.exos||[]).find(function(x){ return x.cardio&&(x.sets||[]).length; }):null;
+    var _cdr=_cdx?(_cdx.cardio.res||cardioCalc(_cdx.cardio,getProfileBodyWeight())):null;
     html+='<div class="hc-log'+(_tc?' dm-t-'+_tc:'')+'">'
       +'<div class="hc-chips">'+chips+'</div>'
       +'<div class="hc-hero">'
-      +(note!==null
+      +(_cdx
+        ?'<div class="hc-pts"><span class="hc-pts-v sp-km'+(_cdx.cardio.type==='course'?'':' cd-kc')+'">'+(_cdr.km?cardioFr(_cdr.km,2)+'<small> km</small>':_cdr.kcal+'<small> kcal</small>')+'</span>'
+          +'<span class="hc-pts-l">'+cardioType(_cdx.cardio.type).ico+' '+cardioType(_cdx.cardio.type).name+' &#xB7; hors note</span></div>'
+      :note!==null
         ?'<div class="hc-pts"><span class="hc-pts-v '+note20Cls(note)+'">'+note+'<small style="font-size:.42em;font-weight:800;color:var(--mut);"> /20</small></span>'
           +'<span class="hc-pts-l">'+(note>=18?'&#x1F3C6; s&#xE9;ance en or':note>=14?'&#x1F4AA; grosse s&#xE9;ance':note>=11?'&#x2705; s&#xE9;ance solide':note>=8?'&#x1F615; s&#xE9;ance en retrait':'&#x1F6A8; s&#xE9;ance rat&#xE9;e')+'</span></div>'
         :'<div class="hc-pts"><span class="hc-pts-v" style="font-size:1.1rem;color:var(--mut);">s&#xE9;ance manuelle</span><span class="hc-pts-l">pas de d&#xE9;tail s&#xE9;rie par s&#xE9;rie</span></div>')
@@ -4335,7 +4348,7 @@ function exportCoachDossier(opts){
       var sp=l.sport==='course'?'Course':txt(((l.sessions||[]).find(function(s){return s.indexOf('autre:')===0;})||'autre:').slice(6));
       return [l.date,l.time||'',sp,r.km||null,r.sec?r1(r.sec/60):(l.duration_min||null),pace?Math.floor(pace/60)+':'+String(pace%60).padStart(2,'0'):'',pace,
         r.km&&r.sec?r1(r.km/(r.sec/3600)):null,r.dplus,r.hr,r.hrMax,r.cad,r.kcal,(r.effort!=null?EF[r.effort]:(l.effort!=null?EF[l.effort]:'')),r.pain||'',l.run?(r.warmup?'oui':'non'):'',txt(l.comment)];
-    })});
+    }).concat(cardioExportRows(logs,txt,r1)).sort(function(a,b){ return String(a[0]+a[1]).localeCompare(String(b[0]+b[1])); })});
 
   // ── Pas ──
   sheets.push({name:'Pas',cols:[{h:'Date',w:11},{h:'Jour',w:6},{h:'Pas',w:9},{h:'Distance (km)',w:9},{h:'Calories actives (kcal)',w:10},{h:'Étages',w:7},{h:'Saisie manuelle',w:9}],
@@ -4951,6 +4964,7 @@ function asRenderBubble(){
 // ── Rendu principal ──
 function asMoodClass(){
   if(AS.step!=='report') return '';
+  if(!liveNotedExos(AS.exos).length) return ''; // cardio seul (19/10) : pas de note, pas d'ambiance « ratée »
   var g=asGlobalScore();
   return g<7?'as-mood-bad':g<11?'as-mood-mid':g<15?'':g<18?'as-mood-good':'as-mood-top';
 }
@@ -5729,15 +5743,19 @@ function asRenderExo(){
   var h=asHeader(AS.sname,sub,true);
   // Écrans série + timer : tout tient SANS scroll (retour Adrien 02/08)
   var fit=(AS.phase==='work'||AS.phase==='rest'||AS.phase==='exorest');
-  h+='<div class="as-scroll'+(AS.phase!=='intro'?' as-center':'')+(fit?' as-fit':'')+'" data-t="'+(x.t||'')+'">';
-  if(AS.phase==='intro') h+=asRenderIntro(x);
+  // Cardio (19/10, cardio.js) : un seul panneau type de machine + paliers remplace intro, chrono et saisie
+  var cardio=exoIsCardio(x.key)&&(AS.phase==='intro'||AS.phase==='work'||AS.phase==='ask');
+  if(cardio) fit=false;
+  h+='<div class="as-scroll'+(AS.phase!=='intro'&&!cardio?' as-center':'')+(fit?' as-fit':'')+'" data-t="'+(x.t||'')+'">';
+  if(cardio) h+=asCardioPanelHtml(x);
+  else if(AS.phase==='intro') h+=asRenderIntro(x);
   else if(AS.phase==='work') h+=asRenderWork(x);
   else if(AS.phase==='ask') h+=asRenderAsk(x);
   else if(AS.phase==='rest') h+=asRenderRest(x,false);
   else if(AS.phase==='exorest') h+=asRenderRest(x,true);
   h+='</div>';
   h+=asDots();
-  h+=asExoFoot(x);
+  if(!cardio) h+=asExoFoot(x);
   h+=asSheet();
   return h;
 }
@@ -6719,14 +6737,14 @@ function asPersistLog(){
   var live={
     // main = statut principal/bonus FIGÉ au moment de la séance (15/08) : les refontes de
     // programme ne réécrivent plus les notes passées. note20 = la note /20 gravée (idem).
-    exos:AS.exos.map(function(x){return {key:x.key,w:x.weight,w0:x.w0,n:x.n,reps:x.reps,unite:x.unite,cnt:x.cnt||null,status:x.status,extra:!!(x.extra||x.added),main:!liveExoSide(x),sets:x.sets,sk:x.skippedSets||0,pain:!!x.pain,evo:x.evo?{from:x.evo.from,to:x.evo.to,hi:x.evo.hi}:null};}),
+    exos:AS.exos.map(function(x){return {key:x.key,w:x.weight,w0:x.w0,n:x.n,reps:x.reps,unite:x.unite,cnt:x.cnt||null,status:x.status,extra:!!(x.extra||x.added),main:!liveExoSide(x),sets:x.sets,sk:x.skippedSets||0,pain:!!x.pain,evo:x.evo?{from:x.evo.from,to:x.evo.to,hi:x.evo.hi}:null,cardio:x.cardio&&(x.sets||[]).length?x.cardio:undefined};}),
     pain:AS.end.pain,painAny:AS.end.painAny,pains:(AS.end.pains||[]).filter(function(p){return p.lvl;}),painNote:AS.end.painNote||'',
     context:AS.end.context||null,
     stretch:AS.end.stretch===true,
     // (rituel posture de fin supprimé le 04/08 — abdo obligatoire au setup + routines dans Détente)
     warmup:AS.warmupDone===true
   };
-  try{ live.note20=asGlobalScore(); }catch(e){} // la note /20 se grave ici, une fois pour toutes
+  try{ if(liveNotedExos(AS.exos).length) live.note20=asGlobalScore(); }catch(e){} // la note /20 se grave ici, une fois pour toutes (cardio seul : pas de note, 19/10)
   // Reprise après gel (26/08) : contexte figé avec la note — le coach relit la séance avec
   try{ live.reprise=gelRepriseCtx(prevLog?prevLog.date:todayStr()); }catch(e){ live.reprise=null; }
   DB.logs.push({id:logId,date:prevLog?prevLog.date:todayStr(),
@@ -6935,7 +6953,7 @@ function asAnalyzeExo(x){
   if(exoIsCardio(x.key)){
     out.tone=counted?'good':'skip';
     out.lines.push(counted
-      ?'&#x1F3C3; Cardio valid&#xE9; &#x2014; +100 pts (max 2/semaine). La zone 2 ne se note pas&#x202F;: elle limite le gras du bulk sans voler ta r&#xE9;cup. Bien jou&#xE9; de l\'avoir cal&#xE9; en fin de s&#xE9;ance.'
+      ?(x.cardio?cardioSummary(x.cardio)+' &#x2014; hors note /20.':'&#x1F3C3; Cardio valid&#xE9; &#x2014; hors note /20.')
       :'&#x1F3C3; Cardio commenc&#xE9; mais pas termin&#xE9; &#x2014; non compt&#xE9;, z&#xE9;ro p&#xE9;nalit&#xE9;.');
     return out;
   }
@@ -7540,6 +7558,8 @@ var DZ_MUSCLE_OF={
   hollow_hold:['abdos'],crunch:['abdos'],gainage:['abdos'],
   cardio_liss:['quadris','mollets'],cardio_rameur:['dos','quadris']
 };
+// Cardio détaillé (19/10) : les muscles suivent la machine choisie (cardio.js › CARDIO_TYPES)
+CARDIO_TYPES.forEach(function(t){ DZ_MUSCLE_OF['cardio_t_'+t.id]=t.mus.filter(function(m){ return m!=='biceps'; }); });
 // Bibliothèque d'étirements : covers = muscles couverts (le générateur fait du set-cover pondéré),
 // secs = chrono proposé (null = pas de chrono, ex. mouvements lents), side = à faire des 2 côtés.
 var DZ_LIB=[
@@ -7592,7 +7612,7 @@ function dzPlanMinutes(plan){
 function dzLogKeys(l){
   var keys=[];
   function push(k){ if(keys.indexOf(k)<0) keys.push(k); }
-  if(l.live&&l.live.exos){ l.live.exos.forEach(function(x){ if((x.sets||[]).length) push(x.key); }); }
+  if(l.live&&l.live.exos){ l.live.exos.forEach(function(x){ if((x.sets||[]).length) push(x.cardio?'cardio_t_'+x.cardio.type:x.key); }); }
   else (l.sessions||[]).forEach(function(sid){
     if(sid.indexOf('exo:')===0){ push(sid.slice(4)); return; }
     var s=DATA.find(function(x){return x.id===sid;});
@@ -8053,7 +8073,16 @@ function asRenderReport(){
   var nSlides=FEATURE_FULL_BILAN?5:2;
   var view=FEATURE_FULL_BILAN?i:(i===0?0:4);
   h+='<div class="as-scroll'+(i===0?' as-center':'')+'">';
-  if(view===0){
+  var _cdOnly=!_eng.length?AS.exos.find(function(x){ return x.cardio&&(x.sets||[]).length; }):null;
+  if(view===0&&_cdOnly){
+    var _ct=cardioType(_cdOnly.cardio.type);
+    h+='<div class="as-grade-wrap">'
+      +'<div class="as-grade-emoji">'+_ct.ico+'</div>'
+      +'<div class="as-grade-title">'+_ct.name+'</div>'
+      +'<div class="as-grade-sum">Cardio enregistr&#xE9; &#x2014; il ne se note pas sur 20.'+(_cdOnly.cardio.type==='course'?' Ta sortie &#xAB;&#x202F;Courir&#x202F;&#xBB; de la semaine est coch&#xE9;e.':'')+'</div>'
+      +asCardioTotalsHtml(_cdOnly.cardio)
+      +'</div>';
+  } else if(view===0){
     h+='<div class="as-grade-wrap g-'+gi.cls+'">'
       +'<div class="as-grade-emoji anim-'+gi.anim+'">'+gi.emoji+'</div>'
       +'<div class="as-grade-note"><span class="as-grade-num" data-cu="'+g+'">0</span><span class="as-grade-sur">/20</span></div>'
@@ -9837,9 +9866,10 @@ function cardioWeekAuto(monday){
   return c;
 }
 // Sorties course de la semaine (12/10) : séances « Un autre sport ? › Course » du calendrier
+// + course sur tapis saisie dans le cardio d'un LiveUp (19/10, cardio.js)
 function runWeekAuto(monday){
   var end=rankAddDays(monday,6);
-  return (DB.logs||[]).filter(function(l){ return l.date>=monday&&l.date<=end&&l.sport==='course'; }).length;
+  return (DB.logs||[]).filter(function(l){ return l.date>=monday&&l.date<=end&&cardioLogHasRun(l); }).length;
 }
 function renderBilanWeekNut(){
   var el=document.getElementById('bilanWeekNut'); if(!el) return;
