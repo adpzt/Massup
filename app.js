@@ -274,7 +274,10 @@ var DATA = [
     {key:"releve_chaise",cat:"abdo",name:"Relevés de Jambes (chaise romaine)",unite:"reps",inc:1,repTarget:true,serie:"3×10",rest:60,cue:"Dos contre le dossier, appui sur les coudes : monte les genoux JUSQU'À ce que le bassin s'enroule et que le bas du dos s'écrase contre le dossier.",tips:["Le repère = bassin enroulé + bas du dos écrasé contre le dossier. Si seules les jambes montent, c'est du psoas et ça aggrave ton antéversion.","Descente lente 2-3s, zéro balancier.","Progression : quand 3×15 passent, haltère de 4 kg entre les pieds."],errs:["Ne pas se balancer.","Ne pas s'arrêter à « lever les genoux » sans enrouler le bassin."],img:"hanglegraise"},
     {key:"crunch_leste",cat:"abdo",name:"Crunch Lesté",poids:5,unite:"kg",inc:2.5,serie:"3×12",rest:75,cue:"Au sol ou sur le banc à crunch, plaque de 5-10 kg tenue sur la poitrine : arrondis le dos, sternum vers le nombril.",tips:["Amplitude courte 20-30 cm, pas plus — c'est une FLEXION haute, pas un sit-up.","Le dos s'arrondit, le bas du dos reste collé : les hanches ne bougent jamais.","Progression : +2,5 kg dès que 3×15 passent proprement."],errs:["Ne pas tirer sur la nuque.","Ne pas monter le buste entier (ça devient du psoas)."]},
     // 12/10/2026 — ajouté à la demande d'Adrien : banc décliné, tête en bas, pieds bloqués en haut.
-    {key:"crunch_decline",cat:"abdo",name:"Crunch Banc Décliné",unite:"reps",inc:1,repTarget:true,serie:"3×12",rest:60,cue:"Banc décliné, pieds bloqués sous les boudins, tête vers le bas : enroule le buste vers les genoux, une vertèbre après l'autre, puis redescends lentement.",tips:["Enroule le dos (sternum vers le bassin) au lieu de monter le buste droit : ce sont les abdos qui travaillent, pas les fléchisseurs de hanche.","Remonte jusqu'à ~45° maximum, puis redescends en 2-3 s sans reposer complètement le dos.","Progression : quand 3×15 passent proprement, tiens un disque de 2,5-5 kg contre la poitrine."],errs:["Ne pas tirer sur la nuque avec les mains.","Ne pas monter jusqu'à la verticale en tirant avec les jambes (ça devient du psoas et ça aggrave ton antéversion)."]},
+    {key:"crunch_decline",cat:"abdo",name:"Crunch Banc Décliné",unite:"reps",inc:1,repTarget:true,serie:"3×12",rest:60,cue:"Banc décliné, pieds bloqués sous les boudins, tête vers le bas : enroule le buste vers les genoux, une vertèbre après l'autre, puis redescends lentement.",tips:["Enroule le dos (sternum vers le bassin) au lieu de monter le buste droit : ce sont les abdos qui travaillent, pas les fléchisseurs de hanche.","Remonte jusqu'à ~45° maximum, puis redescends en 2-3 s sans reposer complètement le dos.","Progression : quand 3×15 passent proprement, passe au « Crunch Banc Décliné Lesté » (disque contre la poitrine)."],errs:["Ne pas tirer sur la nuque avec les mains.","Ne pas monter jusqu'à la verticale en tirant avec les jambes (ça devient du psoas et ça aggrave ton antéversion)."]},
+    // 26/10/2026 — demande d'Adrien : la suite lestée du crunch décliné, en exo à part (comme le
+    // marteau croisé) : la valeur d'un exo « repTarget » est un nombre de reps, pas une charge.
+    {key:"crunch_decline_leste",cat:"abdo",name:"Crunch Banc Décliné Lesté",poids:2.5,unite:"kg",inc:2.5,serie:"3×12",rest:75,cue:"Banc décliné, pieds bloqués sous les boudins, disque tenu à plat contre la poitrine (bras croisés dessus) : enroule le buste vers les genoux, puis redescends lentement.",tips:["À prendre quand le crunch décliné au poids de corps passe en 3×15 propres : on repart à 3×12 avec 2,5 kg.","Le disque reste collé au sternum : plus il s'éloigne (bras tendus, derrière la tête), plus c'est dur — ne change pas de position en cours de série.","Progression : +2,5 kg dès que 3×15 passent proprement."],errs:["Ne pas tirer sur la nuque ni lancer le disque pour remonter.","Ne pas monter jusqu'à la verticale en tirant avec les jambes (ça devient du psoas et ça aggrave ton antéversion)."]},
     // 22/08/2026 — le Pallof repasse en REPS (décision Adrien) : 3×8-10/côté, chaque rep = une
     // tenue gainée de 2-3 s puis retour. La version « 20 s en continu » du 08/08 est remplacée.
     {key:"pallof",cat:"abdo",name:"Pallof Press (poulie)",poids:10,unite:"kg",inc:1,serie:"3×10/côté",rest:45,uni:true,cue:"Poulie à hauteur de sternum, de profil, perpendiculaire à la machine : tends les bras, TIENS 2-3 s sans pivoter, reviens — et recommence.",tips:["Chaque rep = 2-3 s de tenue bras tendus — la pause EST l'exercice.","Fessiers serrés, côtes basses, épaules loin des oreilles.","Très léger par principe : si tu tournes ou te penches, c'est trop lourd. 3×10 propres des deux côtés ? +1 cran de poulie."],errs:["Ne pas laisser la poulie te faire pivoter.","Ne pas enchaîner les reps sans la tenue de 2-3 s."],img:"pallofimg"},
@@ -1246,7 +1249,7 @@ var CANONICAL_WEIGHTS = {
   'poulie_triceps_av':18,'dev_militaire':14,'triceps_barre':18,'tirage_pulldown':50,'shoulder_press':16,
   'traction_assist':25,
   'pompes':10,'gainage':40,'crunch':15,'gripper':20,
-  'crunch_poulie':15,'releve_chaise':10,'pallof':10,'dead_bug':10,'hollow_hold':20,'crunch_leste':5,'crunch_decline':12,'cardio_liss':20,'cardio_rameur':10,
+  'crunch_poulie':15,'releve_chaise':10,'pallof':10,'dead_bug':10,'hollow_hold':20,'crunch_leste':5,'crunch_decline':12,'crunch_decline_leste':2.5,'cardio_liss':20,'cardio_rameur':10,
   // MAISON (19/10) : objectifs de reps de départ (poids des haltères fixe)
   'm_floor_press':12,'m_rowing':12,'m_rdl':12,'m_marteau':12,'m_goblet':12,'m_triceps':12,'m_mollets':20,'m_releves':12,'m_posture_y':12,'m_fentes':10
 };
@@ -7577,7 +7580,7 @@ var DZ_MUSCLE_OF={
   gripper:['avantbras'],
   leg_press:['quadris','fessiers'],leg_ext:['quadris'],leg_curl:['ischios'],mollets:['mollets'],
   hip_thrust:['fessiers','ischios','lombaires'],abduct:['fessiers'],adduct:['adducteurs'],
-  crunch_poulie:['abdos'],releve_chaise:['abdos','hanches'],pallof:['abdos'],dead_bug:['abdos'],crunch_leste:['abdos'],crunch_decline:['abdos'],
+  crunch_poulie:['abdos'],releve_chaise:['abdos','hanches'],pallof:['abdos'],dead_bug:['abdos'],crunch_leste:['abdos'],crunch_decline:['abdos'],crunch_decline_leste:['abdos'],
   hollow_hold:['abdos'],crunch:['abdos'],gainage:['abdos'],
   cardio_liss:['quadris','mollets'],cardio_rameur:['dos','quadris'],
   m_floor_press:['pecs','triceps'],m_rowing:['dos','biceps'],m_rdl:['ischios','fessiers','lombaires'],m_marteau:['biceps','avantbras'],
@@ -8799,7 +8802,7 @@ var RADAR_GROUPS=[
   {label:'Biceps',keys:['curl_marteau','curl_marteau_croise','curl_incline_neutre','curl_corde','curl_halt','curl_poulie','curl_incline','m_marteau']},
   {label:'Jambes',keys:['leg_press','leg_ext','leg_curl','mollets','abduct','adduct','hip_thrust','m_rdl','m_fentes','m_mollets']},
   // Abdos ajoutés au volume hebdo le 06/08 (demande Adrien) — gainage inclus (c'est du tronc)
-  {label:'Abdos',keys:['crunch_poulie','releve_chaise','pallof','dead_bug','hollow_hold','crunch','gainage','crunch_leste','crunch_decline','m_releves']}
+  {label:'Abdos',keys:['crunch_poulie','releve_chaise','pallof','dead_bug','hollow_hold','crunch','gainage','crunch_leste','crunch_decline','crunch_decline_leste','m_releves']}
 ];
 // Crédit « muscle assistant » pour le VOLUME hebdo (05/08, question Adrien) : chaque série
 // d'un polyarticulaire compte 1 pour son muscle cible + 0,5 pour l'assistant (un tirage

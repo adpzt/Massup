@@ -221,7 +221,9 @@
   padding:11px 13px;font-size:11.8px;line-height:1.5;margin-top:12px;color:var(--txt);}
 #nutria .adj{font-size:10px;font-weight:700;color:var(--mut);text-align:right;margin-top:7px;font-style:italic;}
 
-/* étapes — badges de plaque rc/N1/N2/N3 : la jauge de feu, signature produit */
+/* étapes — badges de plaque rc/N1…N9 : la jauge de feu, signature produit.
+   26/10/2026 : vitro 1–9 (avant fer 1/2/3) — couleur par palier doux 1-3 / moyen 4-6 / fort 7-9,
+   jauge remplie à niveau/9 (--na-fire posé par lvlBadge). */
 #nutria .steps{display:flex;flex-direction:column;gap:9px;}
 #nutria .step{display:flex;gap:11px;align-items:flex-start;}
 #nutria .step p{margin:0;font-size:12px;color:var(--txt);line-height:1.55;font-weight:500;flex:1;padding-top:3px;}
@@ -230,9 +232,9 @@
   box-shadow:inset 0 1px 0 rgba(255,255,255,.08);}
 #nutria .lvl::after{content:"";width:26px;height:3px;border-radius:2px;
   background:linear-gradient(to right,currentColor var(--na-fire,0%),rgba(255,255,255,.14) var(--na-fire,0%));}
-#nutria .lvl.n1{background:var(--x-acc2-15);color:var(--acc2);--na-fire:34%;}
-#nutria .lvl.n2{background:rgba(255,201,77,.14);color:var(--yellow);--na-fire:67%;}
-#nutria .lvl.n3{background:rgba(255,107,122,.15);color:var(--red);--na-fire:100%;}
+#nutria .lvl.lo{background:var(--x-acc2-15);color:var(--acc2);}
+#nutria .lvl.mid{background:rgba(255,201,77,.14);color:var(--yellow);}
+#nutria .lvl.hi{background:rgba(255,107,122,.15);color:var(--red);}
 #nutria .lvl.rc{background:var(--x-acc-15);color:var(--acc);font-size:14px;font-style:normal;--na-fire:0%;}
 #nutria .lvl.z{background:var(--x-glass-quiet);color:var(--mut);}
 #nutria .lvl.z::after{display:none;}
@@ -439,6 +441,8 @@
   #nutria .disc{box-shadow:var(--na-plate-rim), 0 0 0 1.5px rgba(18,21,28,0.06), 0 10px 24px rgba(18,21,28,0.12);}
   #nutria .disc.tr{box-shadow:var(--na-plate-rim), 0 0 0 1.5px var(--x-acc-30), 0 10px 24px rgba(18,21,28,0.12);}
   #nutria .disc.tp{box-shadow:var(--na-plate-rim), 0 0 0 1.5px var(--na-heat-35), 0 10px 24px rgba(18,21,28,0.12);}
+  #nutria .lvl.hi{background:rgba(255,107,122,.08);} /* N7-N9 : 4,38 → AA sur fond rosé plus léger */
+  #nutria .lvl.lo{background:var(--x-acc2-08);color:color-mix(in srgb,var(--acc2) 75%,var(--txt));} /* N1-N3 : 3,88 → AA (fond verre gris de la fiche) */
   #nutria .lvl::after{background:linear-gradient(to right,currentColor var(--na-fire,0%),rgba(18,21,28,0.12) var(--na-fire,0%));}
   #nutria .na-kbig b{text-shadow:none;}
   #nutria .tag.n{background:rgba(30,98,200,0.10);}

@@ -234,7 +234,8 @@ var NUTRIA=(function(){
   function lvlBadge(l){
     if(l==='rc') return '<span class="lvl rc">🍚</span>';
     if(l===0) return '<span class="lvl z">—</span>';
-    return '<span class="lvl n'+l+'">N'+l+'</span>';
+    // vitro 1–9 (26/10) : palier de couleur doux/moyen/fort, jauge = niveau/9
+    return '<span class="lvl '+(l<=3?'lo':l<=6?'mid':'hi')+'" style="--na-fire:'+Math.round(l/9*100)+'%">N'+l+'</span>';
   }
   function fmtQ(x){
     var i=Math.floor(x+1e-9), fr=x-i, f='';
@@ -320,8 +321,9 @@ var NUTRIA=(function(){
       +ingMain.map(function(i){return '<div class="li">'+i+'</div>';}).join('')
       +(ingSce.length?'<div class="scebox"><p class="sce-t">🥣 La sauce · assaisonnement</p>'
         +ingSce.map(function(i){return '<span class="sci">'+i+'</span>';}).join('')+'</div>':'')
-      +(typeof NP!=='undefined'?NP.flavorHtml({fam:'plat',pan:r.s.some(function(x){return x[0]===1||x[0]===2||x[0]===3;}),text:r.ing.join(' ')+' '+r.s.map(function(x){return x[1];}).join(' ')}):'')
-      +'<p class="eyebrow" style="margin:22px 0 8px">Préparation · niveaux de plaque</p>'
+      +(typeof NP!=='undefined'?NP.flavorHtml({fam:'plat',pan:r.s.some(function(x){return typeof x[0]==='number'&&x[0]>0;}),text:r.ing.join(' ')+' '+r.s.map(function(x){return x[1];}).join(' ')}):'')
+      +'<p class="eyebrow" style="margin:22px 0 8px">Préparation · niveaux de plaque 1–9</p>'
+      +(r.custom?'':'<p class="np-gsub">Grande zone : eau et viande à saisir · petite zone : sauces et pancakes. Fort → doux : poêle hors du feu 30 s (la vitro refroidit lentement).</p>')
       +'<div class="steps">'+r.s.map(function(st){return '<div class="step">'+lvlBadge(st[0])+'<p>'+st[1]+'</p></div>';}).join('')+'</div>';
     if(r.notes&&r.notes.length) h+='<p class="eyebrow" style="margin:20px 0 6px">Notes</p>'+r.notes.map(function(n){return '<div class="li dim">'+n+'</div>';}).join('');
     if(r.custom) h+='<button class="np-editbtn" type="button" onclick="NP.openEdit(\''+r.id+'\')">✏️ Modifier mon plat</button>';

@@ -84,7 +84,8 @@ test("home card requires explicit manual save and labels the full night range", 
 });
 
 test("full-screen editing saves to the selected night and cancel discards changes", () => {
-  const ctx = setup();
+  // date figée : la nuit du 20/09 doit rester dans la fenêtre « 30 nuits »
+  const ctx = setup("2026-10-01T12:07:00");
   const selected = "2026-09-20";
   ctx.db.sleepLog[selected] = { bed: "22:30", wake: "06:30" };
   ctx.SLEEP.open();

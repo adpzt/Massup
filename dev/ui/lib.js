@@ -1,7 +1,8 @@
 // Navigateur de test SANS RÉSEAU : seul 127.0.0.1 répond, donc le CDN Supabase ne charge pas,
 // les apps démarrent en mode local et un test ne peut JAMAIS écrire dans le cloud réel.
 const fs = require('fs'), path = require('path'), http = require('http');
-const PW = '/Volumes/Adrien SSD/x_ia/IA Creative Space/node_modules/playwright-core';
+// PW_CORE = autre copie de playwright-core quand le SSD n'est pas branché
+const PW = process.env.PW_CORE || '/Volumes/Adrien SSD/x_ia/IA Creative Space/node_modules/playwright-core';
 const { chromium } = require(PW);
 const ROOT = path.join(__dirname, '..', '..');
 const UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1';
