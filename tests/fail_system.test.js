@@ -35,13 +35,19 @@ const ex = (key, w0, lo, hi, sets) => ({
 });
 const app = load();
 
-test("8 · 8 · 8 puis max au haut de fourchette = 5/5, séance à 20, hausse d'un cran", () => {
-  const a = ex("tirage_vert", 56, 8, 10, [[56, 8, "ok"], [56, 8, "dur"], [56, 8, "dur"], [56, 11, "echec"]]);
-  const b = ex("dev_incline", 24, 8, 10, [[24, 8, "ok"], [24, 8, "dur"], [24, 8, "echec"], [24, 10, "echec"]]);
+test("10-10-10-11 en 8-10 (OK · DUR · DUR · ÉCHEC) = 5/5, séance à 20, hausse d'un cran", () => {
+  const a = ex("tirage_vert", 56, 8, 10, [[56, 10, "ok"], [56, 10, "dur"], [56, 10, "dur"], [56, 11, "echec"]]);
+  const b = ex("dev_incline", 24, 8, 10, [[24, 10, "ok"], [24, 10, "dur"], [24, 10, "echec"], [24, 10, "echec"]]);
   assert.equal(app.score(a), 5);
   assert.equal(app.note20([a, b]), 20);
   assert.deepEqual(app.analyze(a), { suggest: 1, to: 60 });
-  assert.deepEqual(app.analyze(b), { suggest: 1, to: 26 }); // S3 à l'échec à 8 : la fatigue, la dernière décide
+  assert.deepEqual(app.analyze(b), { suggest: 1, to: 26 }); // échec en S3 : autorisé
+});
+
+test("8-8-8-11 ne suffit pas ; échec en S1 ou S2 = pas prêt de monter", () => {
+  assert.notEqual(app.analyze(ex("tirage_vert", 56, 8, 10, [[56, 8, "ok"], [56, 8, "dur"], [56, 8, "dur"], [56, 11, "echec"]])).suggest, 1);
+  assert.notEqual(app.analyze(ex("tirage_vert", 56, 8, 10, [[56, 10, "echec"], [56, 10, "dur"], [56, 10, "dur"], [56, 11, "echec"]])).suggest, 1);
+  assert.notEqual(app.analyze(ex("tirage_vert", 56, 8, 10, [[56, 10, "ok"], [56, 10, "echec"], [56, 10, "dur"], [56, 11, "echec"]])).suggest, 1);
 });
 
 test("série 1 à l'échec : 4/5 max ; sous le bas → un cran en dessous, au bas → on garde", () => {
@@ -53,13 +59,6 @@ test("série 1 à l'échec : 4/5 max ; sous le bas → un cran en dessous, au ba
   assert.notEqual(app.analyze(atLo).suggest, -1);
   const old = ex("pecdeck", 49, 10, 12, [[54, 10, "echec"], [54, 10, "echec"], [54, 10, "echec"], [54, 10, "echec"]]); delete old.rHi;
   assert.equal(app.score(old), 5); // séance d'avant le 28/10 : ancien barème intact
-});
-
-test("pas de hausse si la dernière n'atteint pas le haut ou si une série est sous le bas", () => {
-  const lastShort = ex("tirage_vert", 56, 8, 10, [[56, 8, "ok"], [56, 8, "dur"], [56, 8, "dur"], [56, 9, "echec"]]);
-  assert.notEqual(app.analyze(lastShort).suggest, 1);
-  const under = ex("tirage_vert", 56, 8, 10, [[56, 8, "ok"], [56, 7, "dur"], [56, 8, "dur"], [56, 10, "echec"]]);
-  assert.notEqual(app.analyze(under).suggest, 1);
 });
 
 test("+1 rep ne baisse jamais la note (même ressenti)", () => {  const feels = ["facile", "ok", "dur", "echec"];
