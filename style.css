@@ -2963,7 +2963,7 @@ span.bn-hero-bar i.n-gold,.bn-hero-bar i.n-blue{color:transparent;}
 
 /* ── Système « une seule charge » (28/10) : plan d'exo, consigne par série, bouton de consigne ── */
 .as-fs-plan{margin:.35rem auto .5rem;max-width:360px;display:flex;flex-direction:column;align-items:center;gap:.35rem;text-align:center;}
-.as-fs-warm,.as-fs-rule{font-size:.68rem;font-weight:700;color:var(--mut);line-height:1.35;overflow-wrap:anywhere;}
+.as-fs-rule{font-size:.68rem;font-weight:700;color:var(--mut);line-height:1.35;overflow-wrap:anywhere;}
 .as-fs-steps{display:flex;flex-wrap:wrap;justify-content:center;gap:.3rem;}
 .as-fs-steps span,.as-fs-goal{border:1px solid;border-radius:var(--x-r-pill);font-weight:800;letter-spacing:.02em;}
 .as-fs-steps span{padding:.22rem .6rem;font-size:.66rem;}

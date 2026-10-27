@@ -35,39 +35,34 @@ const ex = (key, w0, lo, hi, sets) => ({
 });
 const app = load();
 
-test("exécution conforme (OK · DUR · DUR · ÉCHEC dans la fourchette) = 5/5, séance à 20", () => {
-  const a = ex("tirage_vert", 56, 8, 10, [[56, 8, "ok"], [56, 8, "dur"], [56, 8, "dur"], [56, 10, "echec"]]);
-  const b = ex("dev_incline", 24, 8, 10, [[24, 9, "ok"], [24, 9, "dur"], [24, 8, "dur"], [24, 9, "echec"]]);
+test("8 · 8 · 8 puis max au haut de fourchette = 5/5, séance à 20, hausse d'un cran", () => {
+  const a = ex("tirage_vert", 56, 8, 10, [[56, 8, "ok"], [56, 8, "dur"], [56, 8, "dur"], [56, 11, "echec"]]);
+  const b = ex("dev_incline", 24, 8, 10, [[24, 8, "ok"], [24, 8, "dur"], [24, 8, "echec"], [24, 10, "echec"]]);
   assert.equal(app.score(a), 5);
   assert.equal(app.note20([a, b]), 20);
+  assert.deepEqual(app.analyze(a), { suggest: 1, to: 60 });
+  assert.deepEqual(app.analyze(b), { suggest: 1, to: 26 }); // S3 à l'échec à 8 : la fatigue, la dernière décide
 });
 
-test("toutes les séries à l'échec = 2,5 max même reps faites ; l'ancien barème donnait 5", () => {
-  const sets = [[54, 10, "echec"], [54, 10, "echec"], [54, 10, "echec"], [54, 10, "echec"]];
-  assert.ok(app.score(ex("pecdeck", 49, 10, 12, sets)) <= 2.5);
-  const old = ex("pecdeck", 49, 10, 12, sets); delete old.rHi; // séance d'avant le 28/10
-  assert.equal(app.score(old), 5);
+test("série 1 à l'échec : 4/5 max ; sous le bas → un cran en dessous, au bas → on garde", () => {
+  const under = ex("dev_incline", 24, 8, 10, [[24, 7, "echec"], [24, 8, "dur"], [24, 8, "dur"], [24, 8, "echec"]]);
+  assert.ok(app.score(under) <= 4);
+  assert.deepEqual(app.analyze(under), { suggest: -1, to: 22 });
+  const atLo = ex("dev_incline", 24, 8, 10, [[24, 8, "echec"], [24, 8, "dur"], [24, 8, "dur"], [24, 8, "echec"]]);
+  assert.ok(app.score(atLo) <= 4);
+  assert.notEqual(app.analyze(atLo).suggest, -1);
+  const old = ex("pecdeck", 49, 10, 12, [[54, 10, "echec"], [54, 10, "echec"], [54, 10, "echec"], [54, 10, "echec"]]); delete old.rHi;
+  assert.equal(app.score(old), 5); // séance d'avant le 28/10 : ancien barème intact
 });
 
-test("série 1 à l'échec = 4 max et proposition d'un cran en dessous ; dernière à l'échec = normal", () => {
-  const s1 = ex("dev_incline", 24, 8, 10, [[24, 8, "echec"], [24, 8, "dur"], [24, 8, "dur"], [24, 8, "echec"]]);
-  assert.ok(app.score(s1) <= 4);
-  assert.deepEqual(app.analyze(s1), { suggest: -1, to: 22 });
-  const last = ex("dev_incline", 24, 8, 10, [[24, 8, "ok"], [24, 8, "dur"], [24, 8, "dur"], [24, 7, "echec"]]);
-  assert.equal(app.score(last), 5);
+test("pas de hausse si la dernière n'atteint pas le haut ou si une série est sous le bas", () => {
+  const lastShort = ex("tirage_vert", 56, 8, 10, [[56, 8, "ok"], [56, 8, "dur"], [56, 8, "dur"], [56, 9, "echec"]]);
+  assert.notEqual(app.analyze(lastShort).suggest, 1);
+  const under = ex("tirage_vert", 56, 8, 10, [[56, 8, "ok"], [56, 7, "dur"], [56, 8, "dur"], [56, 10, "echec"]]);
+  assert.notEqual(app.analyze(under).suggest, 1);
 });
 
-test("hausse proposée seulement si toutes les séries atteignent le haut sans échec avant la dernière", () => {
-  const top = ex("tirage_vert", 56, 8, 10, [[56, 10, "ok"], [56, 10, "dur"], [56, 10, "dur"], [56, 11, "echec"]]);
-  assert.deepEqual(app.analyze(top), { suggest: 1, to: 60 });
-  const early = ex("tirage_vert", 56, 8, 10, [[56, 10, "ok"], [56, 10, "echec"], [56, 10, "dur"], [56, 10, "echec"]]);
-  assert.notEqual(app.analyze(early).suggest, 1);
-  const notTop = ex("tirage_vert", 56, 8, 10, [[56, 10, "ok"], [56, 9, "dur"], [56, 10, "dur"], [56, 10, "echec"]]);
-  assert.notEqual(app.analyze(notTop).suggest, 1);
-});
-
-test("+1 rep ne baisse jamais la note (même ressenti)", () => {
-  const feels = ["facile", "ok", "dur", "echec"];
+test("+1 rep ne baisse jamais la note (même ressenti)", () => {  const feels = ["facile", "ok", "dur", "echec"];
   for (let i = 0; i < 400; i++) {
     const sets = [0, 1, 2, 3].map(() => [56, 4 + Math.floor(Math.random() * 9), feels[Math.floor(Math.random() * 4)]]);
     const base = app.score(ex("tirage_vert", 56, 8, 10, sets));
