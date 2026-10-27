@@ -2960,3 +2960,23 @@ span.bn-hero-bar i.n-gold,.bn-hero-bar i.n-blue{color:transparent;}
   .wr-hero-num.n-gold .wr-hero-v{background:linear-gradient(135deg,#8E6F0B,#896310 60%,#8E6D0B);-webkit-background-clip:text;background-clip:text;}
   .wr-hero-num.n-blue .wr-hero-v{background:linear-gradient(120deg,#0B748E,#0B268E);-webkit-background-clip:text;background-clip:text;}
 }
+
+/* ── Système « une seule charge » (28/10) : plan d'exo, consigne par série, bouton de consigne ── */
+.as-fs-plan{margin:.35rem auto .5rem;max-width:360px;display:flex;flex-direction:column;align-items:center;gap:.35rem;text-align:center;}
+.as-fs-warm,.as-fs-rule{font-size:.68rem;font-weight:700;color:var(--mut);line-height:1.35;overflow-wrap:anywhere;}
+.as-fs-steps{display:flex;flex-wrap:wrap;justify-content:center;gap:.3rem;}
+.as-fs-steps span,.as-fs-goal{border:1px solid;border-radius:var(--x-r-pill);font-weight:800;letter-spacing:.02em;}
+.as-fs-steps span{padding:.22rem .6rem;font-size:.66rem;}
+.as-fs-goal{display:block;width:fit-content;max-width:100%;margin:.45rem auto .2rem;padding:.38rem .8rem;font-size:.74rem;text-align:center;line-height:1.35;overflow-wrap:anywhere;border-radius:var(--x-r-md);}
+.as-fs-goal strong{font-family:'Saira',system-ui,sans-serif;font-style:italic;font-weight:900;font-size:.95rem;}
+.as-fs-goal small{display:block;font-weight:700;font-size:.62rem;color:var(--mut);}
+.g-ok{color:var(--acc);border-color:var(--x-acc-45);background:var(--x-acc-08);}
+.g-dur{color:var(--yellow);border-color:var(--x-yellow-55);background:var(--x-yellow-10);}
+.g-echec{color:var(--red);border-color:var(--x-red-50);background:var(--x-red-10);}
+.as-feel.goal{border-style:dashed;border-color:var(--acc);color:var(--txt);}
+.as-feel em{font-style:normal;font-size:.52rem;font-weight:800;color:var(--acc);text-transform:uppercase;letter-spacing:.04em;}
+.as-fs-defs{margin-top:.45rem;font-size:.62rem;font-weight:700;color:var(--mut);text-align:center;line-height:1.35;}
+@media (prefers-color-scheme: light){
+  /* consignes : fond quasi blanc en clair pour garder le texte coloré ≥ 4,5:1 */
+  .g-ok,.g-dur,.g-echec{background:var(--x-glass-hi);}
+}

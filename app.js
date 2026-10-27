@@ -122,6 +122,10 @@ var DB = {
 var FEATURE_RANK=false;   // médaille profil, section rank du Bilan, RP dans bilans / modal jour
 var FEATURE_GOALS=false;  // section « Objectifs & repères — 1er janvier » (Progression)
 var FEATURE_RADAR=false;  // radar « Ton niveau » / araignée des notes d'exo (Progression)
+// ⚡ Évolution de charge (poids haut sur les premières séries) : débranchée le 28/10 — le système
+// « une seule charge » d'Adrien (même poids sur toutes les séries, double progression) la remplace.
+// DB.evolution est gardé tel quel (rien d'effacé) ; true = la remettre.
+var FEATURE_EVO=false;
 var FEATURE_FULL_BILAN=true; // bilan de SÉANCE complet (slides analyse/notes par exo/classements) — réactivé le 18/08 (retour Adrien : l'épuré du 15/08 enlevait les retours par exo, les classements et la progression des charges qu'il voulait garder). false = note /20 + suggestions seulement.
 
 function loadDB(){
@@ -245,11 +249,13 @@ var DATA = [
     // shrug_halt ajouté le 01/08/2026 (demande Adrien) : trapèzes hauts = carrure vue de face, prise neutre.
     {key:"shrug_halt",bonus:true,name:"Shrugs Haltères (trapèzes)",poids:20,unite:"kg/main",serie:"3×12",rest:75,bless:"Prise neutre, bras le long du corps : le poignet ne travaille pas.",cue:"Hausse les épaules le plus haut possible, tiens 1s en haut, redescends lentement.",tips:["Bras tendus : ce sont les épaules qui montent, pas les coudes.","La pause d'1s en haut fait tout l'exo.","Amplitude complète : laisse bien étirer en bas entre les reps."],errs:["Ne pas rouler les épaules (juste haut ↔ bas).","Ne pas plier les coudes pour tricher."],img:"shrug"},
     // curl_halt réactivé le 01/08/2026 en BONUS de PULL (demande Adrien) — reprise en douceur, charge légère.
-    {key:"curl_halt",bonus:true,name:"Curl Haltères",poids:10,unite:"kg",serie:"4×8",rest:90,bless:"Reprise en douceur : charge légère, poignet dans l'axe — stoppe à la moindre gêne.",cue:"Coudes collés au corps. Que les avant-bras qui pivotent.",tips:["Coudes fixes contre les côtes.","Contraction 1s en haut.","Descente lente (3s)."],errs:["Ne pas monter les épaules.","Ne pas balancer le dos."],img:"dumbbellcurl"},
+    // 28/10/2026 : RETIRÉ (hidden) — pas de supination chargée jusqu'au 30/11 (poignet gauche, décision Adrien).
+    {key:"curl_halt",bonus:true,hidden:true,name:"Curl Haltères",poids:10,unite:"kg",serie:"4×8",rest:90,bless:"Reprise en douceur : charge légère, poignet dans l'axe — stoppe à la moindre gêne.",cue:"Coudes collés au corps. Que les avant-bras qui pivotent.",tips:["Coudes fixes contre les côtes.","Contraction 1s en haut.","Descente lente (3s)."],errs:["Ne pas monter les épaules.","Ne pas balancer le dos."],img:"dumbbellcurl"},
     {key:"curl_poulie",hidden:true,name:"Curl Poulie Basse",poids:10,unite:"kg",serie:"4×10",rest:90,cue:"Serre les biceps en haut pendant 1 seconde.",tips:["Coudes stables, ne bougent pas.","Descente contrôlée.","Garde la tension."],errs:["Ne pas avancer les coudes.","Ne pas remonter trop vite."],img:"cablecurl"},
     // curl_incline (supination) réactivé en BONUS le 15/08 (demande Adrien) — même statut que le
     // curl haltères : reprise légère, supination progressive, stop à la moindre gêne au poignet.
-    {key:"curl_incline",bonus:true,name:"Curl Incliné Haltères (banc)",poids:8,unite:"kg",serie:"3×10",rest:90,bless:"Supination = à doser : charge légère, tourne les paumes SANS forcer, stoppe à la moindre gêne au poignet.",cue:"Laisse les bras pendre derriere toi au depart.",tips:["Banc incline a 45-60 deg.","Etirement complet du biceps en bas.","Descente lente."],errs:["Ne pas avancer les coudes.","Ne pas descendre rapidement."],img:"inclinecurl"}
+    // 28/10/2026 : RETIRÉ (hidden) — supination interdite jusqu'au 30/11, comme le curl haltères.
+    {key:"curl_incline",bonus:true,hidden:true,name:"Curl Incliné Haltères (banc)",poids:8,unite:"kg",serie:"3×10",rest:90,bless:"Supination = à doser : charge légère, tourne les paumes SANS forcer, stoppe à la moindre gêne au poignet.",cue:"Laisse les bras pendre derriere toi au depart.",tips:["Banc incline a 45-60 deg.","Etirement complet du biceps en bas.","Descente lente."],errs:["Ne pas avancer les coudes.","Ne pas descendre rapidement."],img:"inclinecurl"}
   ]},
   {id:"s3",t:"legs",num:"Séance 3",icon:"&#x1F9B5;",name:"LEGS",sub:"Force + Masse",exos:[
     {key:"leg_press",imp:true,name:"Leg Press",poids:60,unite:"kg",serie:"4×10",rest:150,cue:"Pousse avec les talons — pas les orteils.",tips:["Pieds à largeur d'épaules.","Ne pas tendre complètement les jambes.","Cuisses parallèles au sol en bas."],errs:["Genoux qui rentrent vers l'intérieur.","Fesses qui décollent du siège."],img:"legpress"},
@@ -1103,6 +1109,24 @@ function init(){
     DB.profile.milHalt1408=true;
     saveDB();
   }
+  // Système « une seule charge » (28/10, demande Adrien) : références recalées sur une charge
+  // où la SÉRIE 1 finit à OK (vérifié sur tout l'historique). On AJOUTE une entrée datée du jour,
+  // rien n'est effacé ; un exo déjà à la bonne valeur n'est pas touché.
+  if(!DB.profile.oneLoad2810){
+    var _ol={dev_incline:24,pecdeck:49,chestpress_v:50,elev_lat:6,shoulder_press:30,triceps_barre:18,
+      triceps_corde:18,tirage_vert:56,traction_assist:16,rowing_pb:52,rowing_appui:40,face_pull:20,
+      curl_marteau_croise:8,curl_incline_neutre:8,mollets:90,abduct:30,adduct:18,leg_press:85};
+    Object.keys(_ol).forEach(function(k){
+      var cur=getCurrentWeight(k);
+      if(cur==null||Math.abs(cur-_ol[k])<0.01) return;
+      var arr=DB.weights[k]||[], t=todayStr();
+      if(arr.length&&arr[arr.length-1].date===t) arr[arr.length-1].val=_ol[k];
+      else arr.push({date:t,val:_ol[k]});
+      DB.weights[k]=arr; DB.weightSetDate[k]=t;
+    });
+    DB.profile.oneLoad2810=true;
+    saveDB();
+  }
   setHeader();
   buildSeances();
   // Mise de côté (15/08) : masque les sections statiques du HTML selon les flags FEATURE_*
@@ -1577,6 +1601,7 @@ function buildSeances(){
         if(m){var n=parseInt(m[1]),r=m[2];for(var k=1;k<=n;k++)sets+='<div class="sbbl" id="set-'+s.id+'-'+ei+'-'+k+'" onclick="toggleSet(\''+s.id+'\','+ei+','+k+','+n+',\''+e.key+'\')"><span>Série '+k+'</span><span class="sbbl-r">'+r+'</span></div>';}
       }
       var serieLabel=e.repTarget?csLabel(e,w):e.serie;
+      if(!e.repTarget&&REP_RANGE[e.key]){ var _sm=(e.serie||'').match(/^(\d+)[×x]\d+(.*)$/); if(_sm) serieLabel=_sm[1]+'×'+REP_RANGE[e.key].r[0]+'-'+REP_RANGE[e.key].r[1]+_sm[2]; }
       var tips=e.tips.map(function(t){return '<div class="tip"><div class="tdot"></div>'+t+'</div>';}).join('');
       var errs=e.errs.map(function(er){return '<div class="erritem"><span class="errx">✕</span>'+er+'</div>';}).join('');
       var days=getDaysSinceWeightChange(e.key);
@@ -4226,11 +4251,15 @@ function exportCoachDossier(opts){
       try{ sc=asScoreExo(x); }catch(e){}
       var st=exoStats[k]||(exoStats[k]={n:0,n30:0,last:null,best:null,bestDate:null,bestSet:''});
       if(counted){ st.n++; if(l.date>=d30) st.n30++; if(!st.last||l.date>st.last) st.last=l.date; }
+      var xn=x.n||x.sets.length;
       x.sets.forEach(function(s,si){
         var w=s.w!=null?s.w:x.w, est=load?e1rm(w,s.reps):null;
+        var pos=si+1>xn?'bonus':si===0&&xn>1?'série 1':si+1===xn?'dernière':'intermédiaire';
+        var goal=fsGoal(x,si+1);
         if(est!=null&&(!st.best||est>st.best)){ st.best=est; st.bestDate=l.date; st.bestSet=w+' × '+s.reps; }
         setRows.push([l.date,jour(l.date),lbl,xi+1,name(k),group(k),liveExoSide(x)?'bonus':'principal',exoStatus(x),counted,sc,si+1,
-          w,u,inv,s.reps,cu,x.reps,(s.reps!=null&&x.reps!=null)?s.reps-x.reps:null,s.feel||'',s.feelG||'',s.feelD||'',x.w0!=null?x.w0:null,r1(est)]);
+          w,u,inv,s.reps,cu,x.reps,(s.reps!=null&&x.reps!=null)?s.reps-x.reps:null,s.feel||'',s.feelG||'',s.feelD||'',x.w0!=null?x.w0:null,r1(est),
+          pos,x.rHi||null,goal||'',goal?(s.feel===goal?'oui':'non'):'']);
       });
     });
   });
@@ -4238,7 +4267,7 @@ function exportCoachDossier(opts){
   // ── Lisez-moi ──
   var last=bw.length?bw[bw.length-1]:null;
   var readme=[
-    ['Qui','Adrien, '+(p.age||DEFAULT_AGE)+' ans, '+(p.height||172)+' cm, ectomorphe. Musculation depuis le 28/02/2026, salle à 1 min, séances le soir. Objectif '+getWeekGoal()+' séances de salle par semaine.'],
+    ['Qui','Adrien, '+(p.age||DEFAULT_AGE)+' ans, '+(p.height||172)+' cm, ectomorphe. Musculation depuis le 28/02/2026, salle à 1 min, séances tôt le matin depuis le 27/10/2026 (avant : le soir). Objectif '+getWeekGoal()+' séances de salle par semaine.'],
     ['Phase actuelle','Fin de prise de masse « propre » jusqu\'au 3 janvier 2027 : poids stable (73-74 kg max), on garde et on pousse la force.'],
     ['Phase suivante','Sèche du lundi 4 janvier au 1er juin 2027 : cible ~12 % de gras (~68 kg), 3 séances de muscu + 1 course par semaine, charges lourdes conservées.'],
     ['Poids','Départ '+(bw[0]?bw[0].weight_kg+' kg le '+bw[0].date:'?')+' · dernier '+(last?last.weight_kg+' kg le '+last.date:'?')+'. Composition (borne de salle, 31/08/2026, conditions non standardisées) : 21,3 % de gras affiché (fourchette réaliste 17-22 %), jambes à 97 % de la norme, bras au-dessus.'],
@@ -4247,8 +4276,9 @@ function exportCoachDossier(opts){
     ['Nutrition','Volontairement absente de ce fichier.'],
     ['Charges','En kg. Haltères : kg par main (« kg/main », « kg/côté »). Exos au poids du corps ou en temps : la « charge » est l\'objectif (reps, s, min).'],
     ['Assistance','Traction assistée et Dips assistée : la charge est l\'ASSISTANCE de la machine → moins = plus fort (colonne « Assistance (moins = mieux) »).'],
-    ['Ressenti','Par série : facile / ok / dur / echec. « echec » = muscle au bout à la fin de la série (pas un raté) ; un raté se lit dans « Écart cible » < 0.'],
-    ['Note /20','Note de séance calculée par l\'app sur l\'exécution des exos principaux (séries faites, reps vs cible, charge vs référence). Note /5 = même chose par exercice.'],
+    ['Ressenti','Par série : facile = 4 reps ou plus en réserve · ok = 2-3 en réserve · dur = 1 en réserve · echec = plus une seule possible. Un raté se lit dans « Écart cible » < 0.'],
+    ['Système de charge (28/10/2026)','Même charge sur toutes les séries, 1-2 séries d\'échauffement non comptées. Consigne : série 1 = ok, séries intermédiaires = dur, dernière = echec (max de reps). Double progression : chaque exo a une fourchette (ex. 8-10) ; la charge monte quand toutes les séries atteignent le haut sans échec avant la dernière ; série 1 en échec = charge trop lourde. « Cible » = bas de la fourchette. Indicateurs clés (Synthèse, Semaines) : % de séries 1 en échec et % d\'échec hors dernière série, cible < 10 %.'],
+    ['Note /20','Note de séance calculée par l\'app sur l\'exécution des exos principaux (séries faites, reps vs cible, charge vs référence). Note /5 = même chose par exercice. Depuis le 28/10/2026 : chaque série est aussi jugée sur son ressenti face à la consigne ; série 1 en échec = exo plafonné à 4/5, toutes les séries en échec = 2,5/5. Les notes /20 déjà enregistrées ne changent jamais.'],
     ['Note de semaine','Note de l\'app : assiduité, exécution, objectifs hebdo de l\'app (dont des objectifs non sportifs) et pas. Pour le sport seul, lire « Exécution moyenne ».'],
     ['Séries dures','Séries comptées par muscle (1 par série + 0,5 pour le muscle assistant des polyarticulaires). Repère : 10-20 par muscle et par semaine.'],
     ['e1RM','Force estimée par série (Epley : charge × (1 + reps / 30)), seulement pour les exos chargés en kg (pas les assistances).'],
@@ -4282,6 +4312,12 @@ function exportCoachDossier(opts){
     add('Séries des exos principaux',sp30.length,'séries','30 jours');
     add('Séries principales sous la cible',Math.round(sp30.filter(function(r){return r[17]!=null&&r[17]<0;}).length/sp30.length*100),'%','30 jours','reps faites < reps visées');
     add('Séries principales notées « echec »',Math.round(sp30.filter(function(r){return r[18]==='echec';}).length/sp30.length*100),'%','30 jours','muscle au bout en fin de série');
+    // Système « une seule charge » (28/10) : l'échec se garde pour la DERNIÈRE série — cible < 10 %
+    var s1=sp30.filter(function(r){return r[23]==='série 1';}), nl=sp30.filter(function(r){return r[23]==='série 1'||r[23]==='intermédiaire';});
+    if(s1.length) add('% de séries 1 en échec',Math.round(s1.filter(function(r){return r[18]==='echec';}).length/s1.length*100),'%','30 jours','cible < 10 % · '+s1.length+' séries 1 (charge mal choisie si échec)');
+    if(nl.length) add('% de séries en échec hors dernière série',Math.round(nl.filter(function(r){return r[18]==='echec';}).length/nl.length*100),'%','30 jours','cible < 10 % · '+nl.length+' séries avant la dernière');
+    var cf=sp30.filter(function(r){return r[25];});
+    if(cf.length) add('Ressentis conformes à la consigne',Math.round(cf.filter(function(r){return r[26]==='oui';}).length/cf.length*100),'%','30 jours (système du 28/10)','S1 = OK · intermédiaires = DUR · dernière = ÉCHEC · '+cf.length+' séries');
     add('Séries principales notées « facile »',Math.round(sp30.filter(function(r){return r[18]==='facile';}).length/sp30.length*100),'%','30 jours');
   }
   var ups=[], stag=[];
@@ -4293,7 +4329,7 @@ function exportCoachDossier(opts){
   });
   add('Charges de référence en hausse',ups.length,'exercices','30 jours',ups.join(' · '));
   add('Exercices stagnants (≥ 6 séances au même poids, encore pratiqués)',stag.length,'exercices','',stag.join(' · '));
-  var ev=Object.keys(DB.evolution||{}).filter(function(k){return EXO[k];});
+  var ev=FEATURE_EVO?Object.keys(DB.evolution||{}).filter(function(k){return EXO[k];}):[];
   if(ev.length) add('Évolutions de charge en cours',ev.length,'exercices','',ev.map(function(k){var e=DB.evolution[k]; return name(k)+' '+e.from+' → '+e.to+' ('+e.hi+' série(s) au poids haut)';}).join(' · '));
   var st=[]; for(var j=1;j<=30;j++){ var h=DB.health&&DB.health[rankAddDays(today,-j)]; if(h&&h.steps) st.push(h.steps); }
   if(st.length) add('Pas moyens par jour',Math.round(avg(st)),'pas','30 jours',st.length+' jours renseignés');
@@ -4316,13 +4352,16 @@ function exportCoachDossier(opts){
     var rk=wl.filter(function(l){return l.sport==='course'&&l.run;});
     var bn=null; try{ bn=bilanNoteWeek(ws).note; }catch(e){}
     var gel=0; try{ gel=gelDaysInWeek(ws); }catch(e){}
+    var wsr=setRows.filter(function(r){return r[0]>=ws&&r[0]<=we&&r[6]==='principal';});
+    var pctF=function(rows){ return rows.length?Math.round(rows.filter(function(r){return r[18]==='echec';}).length/rows.length*100):null; };
+    var wS1=pctF(wsr.filter(function(r){return r[23]==='série 1';})), wNl=pctF(wsr.filter(function(r){return r[23]==='série 1'||r[23]==='intermédiaire';}));
     W.push([ws,ws===curMon?'oui':'',weekValue(wl),getWeekGoal(),notes.length?r1(avg(notes)):null,notes.length,bn]
       .concat(GROUPS.map(function(g){return r1(vol[g]||0);}))
-      .concat([r1(tot),Math.round(ton)||null,stp.length?Math.round(avg(stp)):null,rk.length,rk.length?r1(rk.reduce(function(s,l){return s+(l.run.km||0);},0)):null,bwk,slp.length?r1(avg(slp)/60):null,gel||null]));
+      .concat([r1(tot),Math.round(ton)||null,stp.length?Math.round(avg(stp)):null,rk.length,rk.length?r1(rk.reduce(function(s,l){return s+(l.run.km||0);},0)):null,bwk,slp.length?r1(avg(slp)/60):null,gel||null,wS1,wNl]));
   }
   sheets.push({name:'Semaines',cols:[{h:'Semaine du (lundi)',w:13},{h:'Semaine en cours',w:8},{h:'Séances de salle',w:10},{h:'Objectif',w:9},{h:'Exécution moyenne /20',w:12},{h:'Séances notées',w:9},{h:'Note de semaine /20 (app)',w:12}]
     .concat(GROUPS.map(function(g){return {h:'Séries dures '+g,w:10};}))
-    .concat([{h:'Séries dures total',w:10},{h:'Tonnage (kg × reps)',w:12},{h:'Pas moyens / jour',w:11},{h:'Courses',w:8},{h:'Km de course',w:9},{h:'Poids fin de semaine (kg)',w:11},{h:'Sommeil moyen (h)',w:10},{h:'Jours gelés (vacances / blessure)',w:12}]),rows:W});
+    .concat([{h:'Séries dures total',w:10},{h:'Tonnage (kg × reps)',w:12},{h:'Pas moyens / jour',w:11},{h:'Courses',w:8},{h:'Km de course',w:9},{h:'Poids fin de semaine (kg)',w:11},{h:'Sommeil moyen (h)',w:10},{h:'Jours gelés (vacances / blessure)',w:12},{h:'% séries 1 en échec (cible < 10)',w:11},{h:'% échec hors dernière série (cible < 10)',w:12}]),rows:W});
 
   // ── Séances ──
   sheets.push({name:'Séances',cols:[{h:'Date',w:11},{h:'Jour',w:6},{h:'Heure',w:7},{h:'Type',w:22},{h:'Exercices / contenu',w:60,wrap:true},{h:'Source',w:22},{h:'Compte en séances de salle',w:11},{h:'Durée (min)',w:8},{h:'Note /20',w:8},{h:'Énergie (1-5)',w:8},{h:'Ressenti (1-5)',w:8},{h:'Exos principaux faits',w:9},{h:'Exos bonus faits',w:9},{h:'Séries totales',w:8},{h:'Tonnage (kg × reps)',w:10},{h:'Échauffement',w:10},{h:'Imprévu déclaré',w:16},{h:'Douleurs (fin de séance)',w:22,wrap:true},{h:'Commentaire',w:44,wrap:true}],
@@ -4339,7 +4378,7 @@ function exportCoachDossier(opts){
     })});
 
   // ── Séries ──
-  sheets.push({name:'Séries',cols:[{h:'Date',w:11},{h:'Jour',w:6},{h:'Séance',w:16},{h:'Ordre de l\'exo',w:7},{h:'Exercice',w:30},{h:'Groupe musculaire',w:11},{h:'Rôle',w:9},{h:'Statut de l\'exo',w:14},{h:'Exo compté',w:7},{h:'Note exo /5',w:7},{h:'N° série',w:6},{h:'Charge',w:8},{h:'Unité de charge',w:9},{h:'Assistance (moins = mieux)',w:9},{h:'Réalisé',w:8},{h:'Unité réalisée',w:8},{h:'Cible',w:7},{h:'Écart cible',w:7},{h:'Ressenti',w:9},{h:'Ressenti gauche',w:9},{h:'Ressenti droit',w:9},{h:'Charge de référence du jour',w:10},{h:'e1RM (kg)',w:9}],rows:setRows});
+  sheets.push({name:'Séries',cols:[{h:'Date',w:11},{h:'Jour',w:6},{h:'Séance',w:16},{h:'Ordre de l\'exo',w:7},{h:'Exercice',w:30},{h:'Groupe musculaire',w:11},{h:'Rôle',w:9},{h:'Statut de l\'exo',w:14},{h:'Exo compté',w:7},{h:'Note exo /5',w:7},{h:'N° série',w:6},{h:'Charge',w:8},{h:'Unité de charge',w:9},{h:'Assistance (moins = mieux)',w:9},{h:'Réalisé',w:8},{h:'Unité réalisée',w:8},{h:'Cible',w:7},{h:'Écart cible',w:7},{h:'Ressenti',w:9},{h:'Ressenti gauche',w:9},{h:'Ressenti droit',w:9},{h:'Charge de référence du jour',w:10},{h:'e1RM (kg)',w:9},{h:'Position de la série',w:11},{h:'Haut de fourchette (reps)',w:9},{h:'Consigne de ressenti',w:9},{h:'Ressenti conforme',w:8}],rows:setRows});
 
   // ── Exercices ──
   var exoRows=[];
@@ -4348,12 +4387,14 @@ function exportCoachDossier(opts){
     if(d.e.hidden&&!es) return; // retiré et jamais fait en LiveUp
     var cur=a.length?a[a.length-1]:null, first=a.length?a[0]:null, prev=null; a.forEach(function(e){ if(e.date<d30) prev=e; });
     var inv=asIsInverse(k), dl=(cur&&first)?r1(inv?first.val-cur.val:cur.val-first.val):null, d30v=(cur&&prev)?r1(inv?prev.val-cur.val:cur.val-prev.val):null;
-    var evo=DB.evolution&&DB.evolution[k];
-    exoRows.push([name(k),k,txt(d.s.name),d.e.hidden?'retiré':d.e.bonus?'bonus':'principal',d.e.imp?'oui':'',group(k),d.e.serie||'',d.e.rest||null,unitOf(k),inv,
+    var evo=FEATURE_EVO&&DB.evolution&&DB.evolution[k];
+    var rg=!d.e.repTarget&&REP_RANGE[k], presc=d.e.serie||'';
+    if(rg){ var _pm=presc.match(/^(\d+)[×x]\d+(.*)$/); presc=(_pm?_pm[1]:'4')+'×'+rg.r[0]+'-'+rg.r[1]+(_pm?_pm[2]:''); }
+    exoRows.push([name(k),k,txt(d.s.name),d.e.hidden?'retiré':d.e.bonus?'bonus':'principal',d.e.imp?'oui':'',group(k),presc,d.e.rest||null,unitOf(k),inv,
       cur?cur.val:null,cur?cur.date:'',getSessionsAtWeight(k)||null,first?first.val:null,first?first.date:'',dl,(first&&first.val&&dl!=null)?Math.round(dl/first.val*100):null,d30v,
       es?es.n:0,es?es.n30:0,es&&es.last||'',es&&es.best?r1(es.best):null,es&&es.bestDate||'',es&&es.bestSet||'',evo?evo.from+' → '+evo.to+' ('+evo.hi+' série(s) au poids haut)':'',txt(d.e.bless||'')]);
   });
-  sheets.push({name:'Exercices',cols:[{h:'Exercice',w:30},{h:'Clé',w:16},{h:'Séance du programme',w:10},{h:'Rôle',w:9},{h:'Exo clé',w:6},{h:'Groupe musculaire',w:11},{h:'Prescription (séries × reps)',w:11},{h:'Repos (s)',w:7},{h:'Unité',w:8},{h:'Assistance (moins = mieux)',w:9},{h:'Charge de référence actuelle',w:10},{h:'Depuis le',w:11},{h:'Séances au même poids',w:9},{h:'Charge de départ',w:9},{h:'Date de départ',w:11},{h:'Progression totale',w:9},{h:'Progression %',w:9},{h:'Variation sur 30 j',w:9},{h:'Exécutions LiveUp',w:9},{h:'Exécutions 30 j',w:9},{h:'Dernière exécution',w:11},{h:'Meilleure e1RM (kg)',w:9},{h:'Date meilleure e1RM',w:11},{h:'Meilleure série (charge × reps)',w:12},{h:'Évolution de charge en cours',w:22},{h:'Consigne blessure',w:50,wrap:true}],rows:exoRows});
+  sheets.push({name:'Exercices',cols:[{h:'Exercice',w:30},{h:'Clé',w:16},{h:'Séance du programme',w:10},{h:'Rôle',w:9},{h:'Exo clé',w:6},{h:'Groupe musculaire',w:11},{h:'Prescription (séries × fourchette de reps)',w:12},{h:'Repos (s)',w:7},{h:'Unité',w:8},{h:'Assistance (moins = mieux)',w:9},{h:'Charge de référence actuelle',w:10},{h:'Depuis le',w:11},{h:'Séances au même poids',w:9},{h:'Charge de départ',w:9},{h:'Date de départ',w:11},{h:'Progression totale',w:9},{h:'Progression %',w:9},{h:'Variation sur 30 j',w:9},{h:'Exécutions LiveUp',w:9},{h:'Exécutions 30 j',w:9},{h:'Dernière exécution',w:11},{h:'Meilleure e1RM (kg)',w:9},{h:'Date meilleure e1RM',w:11},{h:'Meilleure série (charge × reps)',w:12},{h:'Évolution de charge en cours',w:22},{h:'Consigne blessure',w:50,wrap:true}],rows:exoRows});
 
   // ── Historique des charges de référence ──
   var hist=[];
@@ -4463,7 +4504,7 @@ var _asDrag=null;       // état du drag & drop de réordonnancement du burger
 // « À l'échec » = état en fin de série (allé au bout du muscle), PAS un ratage — voir setHardFail.
 var AS_FEELS=[
   {v:'facile',ico:'&#x1F60C;',lbl:'Facile'},
-  {v:'ok',ico:'&#x1F44D;',lbl:'Correct'},
+  {v:'ok',ico:'&#x1F44D;',lbl:'OK'}, // « OK » (28/10, vocabulaire d'Adrien) — c'était « Correct »
   {v:'dur',ico:'&#x1F975;',lbl:'Dur'},
   {v:'echec',ico:'&#x1F4A5;',lbl:'&#xC0; l\'&#xE9;chec'}
 ];
@@ -4549,6 +4590,80 @@ function asParseSerie(e){
   return {n:m2?parseInt(m2[1],10):3,reps:10};
 }
 function asIsInverse(key){ return key==='traction_assist'||key==='dips_assist'; } // seated_dips = charge depuis le 06/08 (dips machine assise)
+
+// ── SYSTÈME « UNE SEULE CHARGE » (28/10/2026, demande Adrien) ──
+// Constat (30 j au 27/10) : 53 % des séries principales notées « échec », 31 % des séries 1 à
+// l'échec → reps perdues ensuite, stagnation, coude/poignet chargés au pire moment.
+// Règles : même charge sur toutes les séries · 1-2 séries d'échauffement légères non comptées ·
+// série 1 = viser OK (2-3 reps en réserve) · séries intermédiaires = viser DUR (1 en réserve) ·
+// dernière = viser ÉCHEC (max de reps). Double progression : fourchette [bas, haut] ; la charge
+// monte quand TOUTES les séries atteignent le haut sans échec avant la dernière ; série 1 à
+// l'échec = charge trop lourde → on redescend. step = 1 cran (kg) ; warm = séries d'échauffement.
+// Le bas de fourchette devient la cible (x.reps) ; le haut est gravé dans le log (x.rHi) : c'est
+// lui qui fait basculer la note sur le barème v4 — les séances d'avant gardent leur barème.
+var REP_RANGE={
+  dev_incline:{r:[8,10],step:2,warm:2}, chestpress_v:{r:[8,10],step:5}, pecdeck:{r:[10,12],step:5},
+  elev_lat:{r:[15,20],step:2}, triceps_corde:{r:[10,12],step:2}, triceps_barre:{r:[10,12],step:2},
+  shoulder_press:{r:[8,10],step:5}, seated_dips:{r:[8,10],step:5}, dips_assist:{r:[8,10],step:4},
+  cable_fly:{r:[10,12],step:1}, dev_militaire:{r:[8,10],step:2},
+  tirage_vert:{r:[8,10],step:4}, rowing_pb:{r:[8,10],step:4}, rowing_uni:{r:[8,10],step:2},
+  curl_marteau_croise:{r:[10,12],step:2}, curl_incline_neutre:{r:[8,10],step:2}, face_pull:{r:[12,15],step:2},
+  rowing_appui:{r:[10,12],step:5}, curl_marteau:{r:[10,12],step:2}, curl_corde:{r:[10,12],step:2},
+  tirage_pulldown:{r:[8,10],step:5}, traction_assist:{r:[8,10],step:4}, shrug_halt:{r:[10,12],step:2},
+  leg_press:{r:[10,12],step:5}, leg_ext:{r:[10,12],step:5}, hip_thrust:{r:[10,12],step:5},
+  mollets:{r:[12,15],step:5}, abduct:{r:[12,15],step:5}, adduct:{r:[12,15],step:2},
+  crunch_leste:{r:[12,15],step:2.5}, crunch_decline_leste:{r:[12,15],step:2.5}, pallof:{r:[10,12],step:1}
+};
+// Consigne de ressenti d'une série (1-based) : 'ok' | 'dur' | 'echec' — null hors système
+// (exo sans fourchette, série bonus au-delà du programme).
+function fsGoal(x,setNo){
+  if(!x||!x.rHi) return null;
+  var n=x.n||3;
+  if(setNo<1||setNo>n) return null;
+  if(setNo===n) return 'echec';
+  return setNo===1?'ok':'dur';
+}
+var FS_GOAL_LBL={ok:'OK',dur:'DUR',echec:'&#xC9;CHEC'};
+var FS_GOAL_HINT={ok:'2-3 reps en r&#xE9;serve',dur:'1 rep en r&#xE9;serve',echec:'max de reps, plus une seule possible'};
+function fsRangeStr(x){ return x&&x.rHi&&x.rHi>x.reps?x.reps+'&#x2013;'+x.rHi:String(x?x.reps:''); }
+// Nombre de séries d'échauffement : celui de l'exo s'il est fixé (incliné = 2), sinon 2 pour le
+// 1er exo de la séance (corps froid le matin) et 1 ensuite.
+function fsWarmCount(x,idx){ var rg=REP_RANGE[x.key]; if(rg&&rg.warm) return rg.warm; return idx===0?2:1; }
+// Le cran de hausse/baisse (kg) : celui de la table, sinon l'incrément de l'exo.
+function fsStep(x){ var rg=REP_RANGE[x.key]; return (rg&&rg.step)||x.inc||1; }
+// Intro d'exo : échauffement + plan des consignes (« S1 OK · S2-S3 DUR · S4 ÉCHEC »)
+function fsPlanHtml(x){
+  var n=x.n||3, inv=asIsInverse(x.key);
+  var wc=fsWarmCount(x,AS?AS.cur:1);
+  var wTxt='';
+  if(/kg/.test(x.unite||'')&&x.weight>0){
+    var u=x.unite||'kg';
+    if(inv) wTxt=' (plus d\'assistance que '+x.weight+' kg)';
+    else {
+      var r=function(f){ var v=x.weight*f; return v<10?Math.round(v*2)/2:Math.round(v); };
+      wTxt=' ('+(wc>=2?r(0.5)+' puis '+r(0.75):r(0.6))+' '+u+')';
+    }
+  }
+  var h='<div class="as-fs-plan">';
+  h+='<div class="as-fs-warm">&#x1F525; &#xC9;chauffement : '+wc+' s&#xE9;rie'+(wc>1?'s':'')+' l&#xE9;g&#xE8;re'+(wc>1?'s':'')+wTxt+' &#x2014; non compt&#xE9;e'+(wc>1?'s':'')+'</div>';
+  h+='<div class="as-fs-steps">';
+  h+='<span class="g-ok">S1 OK</span>';
+  if(n>=3) h+='<span class="g-dur">'+(n===3?'S2':'S2-S'+(n-1))+' DUR</span>';
+  if(n>=2) h+='<span class="g-echec">S'+n+' &#xC9;CHEC</span>';
+  h+='</div>';
+  h+='<div class="as-fs-rule">M&#xEA;me charge sur toutes les s&#xE9;ries &#xB7; '+n+' &#xD7; '+x.rHi+' sans &#xE9;chec avant la derni&#xE8;re &#x2192; '+(inv?'moins d\'assistance':'la charge monte')+'</div>';
+  h+='</div>';
+  return h;
+}
+// Écran de série : « 🎯 Série 1 — 56 kg × 8–10 — vise OK »
+function fsGoalHtml(x,setNo){
+  var g=fsGoal(x,setNo); if(!g) return '';
+  var inv=asIsInverse(x.key);
+  var wHtml='<span id="as-fs-w">'+x.weight+' '+x.unite+'</span>'+(inv?' d\'assist.':'');
+  var reps=g==='echec'?' &#xD7; max ('+x.rHi+'+ vis&#xE9;)':' &#xD7; '+fsRangeStr(x);
+  return '<div class="as-fs-goal g-'+g+'">&#x1F3AF; S&#xE9;rie '+setNo+' &#x2014; '+wHtml+reps+' &#x2014; vise <strong>'+FS_GOAL_LBL[g]+'</strong>'
+    +'<small>'+FS_GOAL_HINT[g]+'</small></div>';
+}
 // eDef/sDef optionnels : quand un même exo vit dans DEUX séances (ex. elev_lat en PUSH 4×10
 // et en fin de PULL 3×12 — même clé, même historique), la définition de LA séance lancée fait foi.
 function asMakeExo(key,extra,eDef,sDef){
@@ -4558,10 +4673,12 @@ function asMakeExo(key,extra,eDef,sDef){
   var t=asParseSerie(e);
   // Évolution de charge en cours : le poids de départ = palier HAUT (il se travaille frais, 22/08)
   var ev=asEvoOf(key);
+  // Fourchette de reps (système « une seule charge », 28/10) : le bas = la cible, le haut = rHi
+  var rg=(!e.repTarget&&REP_RANGE[key])?REP_RANGE[key].r:null;
   return {key:key,name:e.name,img:e.img||null,cue:e.cue||'',bless:e.bless||'',
     tips:(e.tips||[]).slice(0,3),errs:(e.errs||[]).slice(0,2),
     unite:e.unite||'kg',cnt:e.cnt||null,rest:e.rest||60,inc:e.inc||1,repT:!!e.repTarget,uni:!!e.uni,
-    n:t.n,reps:t.reps,w0:getCurrentWeight(key),weight:ev?ev.to:getCurrentWeight(key),
+    n:t.n,reps:rg?rg[0]:t.reps,rHi:rg?rg[1]:null,w0:getCurrentWeight(key),weight:ev?ev.to:getCurrentWeight(key),
     evo:ev?{from:ev.from,to:ev.to,hi:Math.min(ev.hi||1,t.n)}:null,
     t:st,extra:!!extra,added:false,status:'pending',sets:[]};
 }
@@ -4575,7 +4692,7 @@ function asMakeExo(key,extra,eDef,sDef){
 // Contrepartie de la fraîcheur : la SÉRIE 1 au poids haut doit passer à la CIBLE PLEINE
 // (doctrine 14/08 : série 1 à la cible avec de la réserve), les suivantes gardent la tolérance.
 // La référence (DB.weights) ne bouge PAS pendant l'évolution — elle ne bascule qu'à la fin.
-function asEvoOf(key){ return (DB.evolution&&DB.evolution[key])?DB.evolution[key]:null; }
+function asEvoOf(key){ return (FEATURE_EVO&&DB.evolution&&DB.evolution[key])?DB.evolution[key]:null; }
 function asEvoWeightFor(x,setNo){
   if(!x||!x.evo) return null;
   return setNo<=(x.evo.hi||0)?x.evo.to:x.evo.from;
@@ -4886,7 +5003,7 @@ function asResumeLog(id){
   l.live.exos.forEach(function(x){
     var e=asMakeExo(x.key,!!x.extra); if(!e) return;
     e.weight=(x.w!=null?x.w:e.weight); e.w0=(x.w0!=null?x.w0:e.w0);
-    e.n=x.n||e.n; e.reps=x.reps||e.reps;
+    e.n=x.n||e.n; e.reps=x.reps||e.reps; e.rHi=x.rHi||null; // fourchette gravée : une vieille séance garde son barème
     e.status=x.status||'pending'; e.sets=(x.sets||[]).slice(); e.skippedSets=x.sk||0; e.pain=!!x.pain;
     if(x.main!=null) e.main=x.main; // statut principal/bonus gravé — une reprise ne le perd pas (31/08)
     if(e.status==='skipped'&&e.sets.length>=(e.n||3)) e.status='done'; // état hérité : jamais « écourté » à séries pleines
@@ -4929,7 +5046,7 @@ function asViewReport(id){
   l.live.exos.forEach(function(x){
     var e=asMakeExo(x.key,!!x.extra); if(!e) return;
     e.weight=(x.w!=null?x.w:e.weight); e.w0=(x.w0!=null?x.w0:e.w0);
-    e.n=x.n||e.n; e.reps=x.reps||e.reps;
+    e.n=x.n||e.n; e.reps=x.reps||e.reps; e.rHi=x.rHi||null; // fourchette gravée : une vieille séance garde son barème
     e.status=x.status||'done'; e.sets=(x.sets||[]).slice(); e.skippedSets=x.sk||0; e.pain=!!x.pain;
     if(x.main!=null) e.main=x.main; // le bilan relu affiche les statuts gravés, pas ceux du programme du jour
     if(e.status==='skipped'&&e.sets.length>=(e.n||3)) e.status='done';
@@ -5852,6 +5969,7 @@ function asChgW(dir){
   asSave();
   var inp=document.getElementById('asW'); if(inp) inp.value=x.weight;
   var chip=document.getElementById('as-wchip'); if(chip) chip.textContent=x.weight+' '+x.unite;
+  var fsw=document.getElementById('as-fs-w'); if(fsw) fsw.textContent=x.weight+' '+x.unite;
   // repTarget : la valeur réglée EST l'objectif de la série — l'objectif affiché doit suivre
   if(x.repT){ var tg=document.querySelector('.as-target-reps'); if(tg) tg.innerHTML=cntFmt(x,x.reps); }
 }
@@ -5862,6 +5980,7 @@ function asSetW(input){
   x.weight=Math.max(0,Math.round(v*2)/2);
   if(x.repT) x.reps=x.weight;
   input.value=x.weight; asSave();
+  var fsw=document.getElementById('as-fs-w'); if(fsw) fsw.textContent=x.weight+' '+x.unite;
 }
 // Intro en 3 slides : présentation → conseils → erreurs à éviter
 function asRenderIntro(x){
@@ -5871,8 +5990,9 @@ function asRenderIntro(x){
     var hasImg=x.img&&IMGS[x.img];
     h+='<div class="as-exo-kicker">Exercice '+(AS.cur+1)+'</div>';
     h+='<div class="as-exo-name xl">'+x.name+'</div>';
-    h+='<div class="as-exo-target">'+x.n+' s&#xE9;rie'+(x.n>1?'s':'')+' &#xD7; '+cntFmt(x,x.reps)+(x.uni?'/c&#xF4;t&#xE9;':'')
+    h+='<div class="as-exo-target">'+x.n+' s&#xE9;rie'+(x.n>1?'s':'')+' &#xD7; '+(x.rHi?fsRangeStr(x)+' reps':cntFmt(x,x.reps))+(x.uni?'/c&#xF4;t&#xE9;':'')
       +(x.rest>0?' &#xB7; repos '+(x.rest>=90?formatTime(x.rest):x.rest+'s'):'')+'</div>';
+    if(x.rHi) h+=fsPlanHtml(x);
     // Record actuel de l'exo (22/08, demande Adrien) : la meilleure exécution passée, même juge
     // que la slide Classements (force estimée e1RM par série, toutes charges confondues).
     try{
@@ -5923,8 +6043,9 @@ function asRenderWork(x){
     // deux fois la même chose (« objectif 20 min · 20 min ») → on n'en affiche qu'un.
     var _same=x.repT&&cntU(x)===x.unite;
     h+='<div class="as-serie-big"><span class="as-serie-lbl">S&#xC9;RIE</span><span class="as-serie-num">'+AS.setIdx+'<em>/'+x.n+'</em></span>'
-      +'<span class="as-serie-target">objectif <strong class="as-target-reps">'+cntFmt(x,x.reps)+'</strong>'+(x.uni?' par c&#xF4;t&#xE9;':'')
+      +'<span class="as-serie-target">objectif <strong class="as-target-reps">'+(x.rHi?fsRangeStr(x)+' reps':cntFmt(x,x.reps))+'</strong>'+(x.uni?' par c&#xF4;t&#xE9;':'')
       +(_same?'<span id="as-wchip" hidden></span>':' &#xB7; <span id="as-wchip">'+x.weight+' '+x.unite+'</span>')+'</span></div>';
+    h+=fsGoalHtml(x,AS.setIdx);
   }
   if(asIsTimedExercise(x)){
     h+='<div class="as-work-timer"><div class="as-work-timer-readout"><span class="as-work-time" id="as-work-time">'+formatTime(asWorkRemain())+'</span><span class="as-work-timer-status" id="as-work-timer-status">'+(asWorkRemain()?'Temps restant':'Temps cible atteint')+'</span></div>'
@@ -6017,6 +6138,7 @@ function asRenderAsk(x){
   h+='<div class="as-ask-card">';
   h+='<div class="as-lbl">'+cntAsk(x)+(x.uni?' <span class="as-lbl-hint">par c&#xF4;t&#xE9;</span>':'')+'</div>';
   var _st=cntStep(x);
+  var _fsG=fsGoal(x,p.setNo); // consigne de ressenti de cette série (système 28/10)
   h+='<div class="as-reps-row"><button class="as-wbtn" onclick="asPendReps(-'+_st+')">&#x2212;</button>'
     +'<span class="as-reps-val" id="asPendReps">'+cntShort(x,p.reps)+'</span>'
     +'<button class="as-wbtn plus" onclick="asPendReps('+_st+')">+</button></div>';
@@ -6034,23 +6156,24 @@ function asRenderAsk(x){
     h+='<div class="as-lbl" style="margin-top:.9rem;">&#x1F448; C&#xF4;t&#xE9; GAUCHE &#x2014; c\'&#xE9;tait comment ?</div>';
     h+='<div class="as-feel-row">';
     AS_FEELS.forEach(function(f){
-      h+='<button class="as-feel'+(p.feelG===f.v?' on':'')+'" onclick="asPendFeel(\''+f.v+'\',\'g\')"><span>'+f.ico+'</span>'+f.lbl+'</button>';
+      h+='<button class="as-feel'+(p.feelG===f.v?' on':'')+(f.v===_fsG?' goal':'')+'" onclick="asPendFeel(\''+f.v+'\',\'g\')"><span>'+f.ico+'</span>'+f.lbl+(f.v===_fsG?'<em>consigne</em>':'')+'</button>';
     });
     h+='</div>';
     h+='<div class="as-lbl" style="margin-top:.7rem;">C&#xF4;t&#xE9; DROIT &#x1F449; &#x2014; c\'&#xE9;tait comment ?</div>';
     h+='<div class="as-feel-row">';
     AS_FEELS.forEach(function(f){
-      h+='<button class="as-feel'+(p.feelD===f.v?' on':'')+'" onclick="asPendFeel(\''+f.v+'\',\'d\')"><span>'+f.ico+'</span>'+f.lbl+'</button>';
+      h+='<button class="as-feel'+(p.feelD===f.v?' on':'')+(f.v===_fsG?' goal':'')+'" onclick="asPendFeel(\''+f.v+'\',\'d\')"><span>'+f.ico+'</span>'+f.lbl+(f.v===_fsG?'<em>consigne</em>':'')+'</button>';
     });
     h+='</div>';
   } else {
     h+='<div class="as-lbl" style="margin-top:.9rem;">C\'&#xE9;tait comment ?</div>';
     h+='<div class="as-feel-row">';
     AS_FEELS.forEach(function(f){
-      h+='<button class="as-feel'+(p.feel===f.v?' on':'')+'" onclick="asPendFeel(\''+f.v+'\')"><span>'+f.ico+'</span>'+f.lbl+'</button>';
+      h+='<button class="as-feel'+(p.feel===f.v?' on':'')+(f.v===_fsG?' goal':'')+'" onclick="asPendFeel(\''+f.v+'\')"><span>'+f.ico+'</span>'+f.lbl+(f.v===_fsG?'<em>consigne</em>':'')+'</button>';
     });
     h+='</div>';
   }
+  if(fsGoal(x,p.setNo)) h+='<div class="as-fs-defs">Facile = 4+ reps en r&#xE9;serve &#xB7; OK = 2-3 &#xB7; Dur = 1 &#xB7; &#xC9;chec = 0</div>';
   var okFeel=x.uni?(p.feelG&&p.feelD):!!p.feel;
   h+='<div class="as-ask-hint" id="as-ask-hint">'+(AS.restOver?'&#x23F1; Repos termin&#xE9; &#x2014; valide et encha&#xEE;ne !':'')+'</div>';
   h+='<button class="as-cta as-cta-full" '+(okFeel?'':'disabled')+' onclick="asValidateSet()">Valider &#x2713;</button>';
@@ -6793,7 +6916,7 @@ function asPersistLog(){
   var live={
     // main = statut principal/bonus FIGÉ au moment de la séance (15/08) : les refontes de
     // programme ne réécrivent plus les notes passées. note20 = la note /20 gravée (idem).
-    exos:AS.exos.map(function(x){return {key:x.key,w:x.weight,w0:x.w0,n:x.n,reps:x.reps,unite:x.unite,cnt:x.cnt||null,status:x.status,extra:!!(x.extra||x.added),main:!liveExoSide(x),sets:x.sets,sk:x.skippedSets||0,pain:!!x.pain,evo:x.evo?{from:x.evo.from,to:x.evo.to,hi:x.evo.hi}:null,cardio:x.cardio&&(x.sets||[]).length?x.cardio:undefined};}),
+    exos:AS.exos.map(function(x){return {key:x.key,w:x.weight,w0:x.w0,n:x.n,reps:x.reps,rHi:x.rHi||undefined,unite:x.unite,cnt:x.cnt||null,status:x.status,extra:!!(x.extra||x.added),main:!liveExoSide(x),sets:x.sets,sk:x.skippedSets||0,pain:!!x.pain,evo:x.evo?{from:x.evo.from,to:x.evo.to,hi:x.evo.hi}:null,cardio:x.cardio&&(x.sets||[]).length?x.cardio:undefined};}),
     pain:AS.end.pain,painAny:AS.end.painAny,pains:(AS.end.pains||[]).filter(function(p){return p.lvl;}),painNote:AS.end.painNote||'',
     context:AS.end.context||null,
     stretch:AS.end.stretch===true,
@@ -6874,6 +6997,31 @@ function asSetQuality(s,target,isLast){
 // Note /5 AFFICHÉE : arrondie VERS LE BAS au demi-point — la note se mérite. Les moyennes
 // (/20, courbe de fatigue, clean sweep) utilisent asScoreExoRaw : le double arrondi coûtait
 // jusqu'à ~2 pts de /20 (5 exos à 4,8 réels → affichés 4,5 → 18/20 au lieu de 19) — audit 19/08.
+// ── Barème v4 « une seule charge » (28/10, demande Adrien) — exos dont le log porte x.rHi ──
+// Qualité d'une série = ressenti face à la CONSIGNE × reps face au BAS de la fourchette.
+// Ressenti conforme = pleine valeur (c'est le bonus : tout l'exo conforme = 5/5) ; série 1 à
+// l'échec = 0,5 (charge mal choisie, même si les reps y sont) ; échec sur une série
+// intermédiaire = 0,7 ; échec sur la dernière = normal (pleine valeur).
+// Reps : ≥ bas = 1 · à ≤ tolérance sous le bas = 0,8 (1 si dernière série à l'échec : c'est
+// le max honnête) · plus loin = 0,5. Une série plus lourde que la référence qui frôle le bas
+// garde ses reps pleines (plus lourd ne coûte pas). +1 rep ne baisse jamais la note.
+var FS_FEEL_Q={
+  ok:{ok:1,dur:0.9,facile:0.8,echec:0.5},
+  dur:{dur:1,ok:0.9,facile:0.75,echec:0.7},
+  echec:{echec:1,dur:0.9,ok:0.8,facile:0.6}
+};
+function asSetQualityV4(x,s,setNo){
+  var g=fsGoal(x,setNo)||'echec';
+  var fq=(FS_FEEL_Q[g]&&FS_FEEL_Q[g][s.feel]!=null)?FS_FEEL_Q[g][s.feel]:0.8;
+  var lo=x.reps, rq=1;
+  if(lo&&s.reps<lo){
+    var near=s.reps>=lo-setTol(lo);
+    var sw=(s.w!=null?s.w:x.w)||0;
+    var heavier=/kg/.test(x.unite||'')&&x.w0>0&&!asIsInverse(x.key)&&sw>x.w0;
+    rq=near?((g==='echec'&&s.feel==='echec')||heavier?1:0.8):0.5;
+  }
+  return fq*rq;
+}
 function asScoreExo(x){ return Math.max(0,Math.floor(asScoreExoRaw(x)*2)/2); }
 function asScoreExoRaw(x){
   if(!x.sets.length) return 0;
@@ -6890,7 +7038,9 @@ function asScoreExoRaw(x){
   var inv=asIsInverse(x.key);
   var isKg=/kg/.test(x.unite||'')&&x.w0>0;
   var qSum=0;
+  var v4=!!x.rHi&&!exoIsCardio(x.key); // barème « une seule charge » (28/10)
   sets.forEach(function(s,si){
+    if(v4){ qSum+=asSetQualityV4(x,s,si+1); return; }
     var q=asSetQuality(s,x.reps,si===progLast-1);
     // Série de TEST au-dessus de la référence (04/08, demande Adrien) : à ≤2 reps de la cible,
     // la surcharge compense les reps manquantes (force estimée PLUS HAUTE qu'une série pleine
@@ -6907,7 +7057,9 @@ function asScoreExoRaw(x){
   // Effondrement (fix 19/08, audit) : mesuré depuis min(série 1, CIBLE) — des reps AU-DESSUS de
   // la cible en série 1 n'arment plus le malus (13·10·10·10 cible 10 valait 4,5 : absurde). Et pas
   // de malus si la dernière série reste dans la tolérance de la cible (c'est une série réussie).
-  if(!x.pain&&sets.length>=2){
+  // v4 : pas de malus d'effondrement — les reps sous le bas de fourchette et les échecs trop tôt
+  // sont déjà payés série par série (et le malus cassait « +1 rep ne baisse jamais la note »).
+  if(!x.pain&&sets.length>=2&&!v4){
     var _lastS=sets[sets.length-1];
     var _effDrop=Math.min(sets[0].reps,x.reps||sets[0].reps)-_lastS.reps;
     if(_effDrop>=3&&!(x.reps&&_lastS.reps>=x.reps-setTol(x.reps))){
@@ -6956,6 +7108,13 @@ function asScoreExoRaw(x){
     if(domin&&isKg&&!inv&&sets.some(function(s){ var sw=(s.w!=null?s.w:(x.w!=null?x.w:x.weight))||0; return sw>x.w0; })) domin=false;
     if(domin) val=Math.min(val,4.5);
   }
+  // v4 : deux plafonds qui disent la même chose que l'analyse (28/10, règles d'Adrien) —
+  // toutes les séries à l'échec = mauvaise note même reps faites (2,5 max) ; série 1 à l'échec
+  // = charge mal choisie (4 max). Pas sur un arrêt douleur (la douleur explique la série).
+  if(v4&&!x.pain&&sets.length>=2){
+    if(sets.every(function(s){ return s.feel==='echec'; })) val=Math.min(val,2.5);
+    else if(sets[0].feel==='echec'&&(x.n||3)>1) val=Math.min(val,4);
+  }
   return val; // valeur BRUTE — l'arrondi d'affichage vit dans asScoreExo
 }
 // ── /20 v3.2 (31/08, demande Adrien « regarde si mes 18/20 sont mérités ») ──
@@ -6999,6 +7158,75 @@ function asGradeSummary(g,doneCt,skipCt,total){
   if(g<15) return 'S&#xE9;ance solide&#x202F;: '+doneCt+'/'+total+' exos men&#xE9;s au bout. Pas parfaite, mais c\'est ce genre de s&#xE9;ances r&#xE9;guli&#xE8;res qui font les prises de masse r&#xE9;ussies.';
   if(g<18) return 'Grosse s&#xE9;ance&#x202F;: '+doneCt+'/'+total+' exos, s&#xE9;ries pleines, ex&#xE9;cution propre. Continue exactement comme &#xE7;a.';
   return total+'/'+total+' ou presque, s&#xE9;ries pleines, z&#xE9;ro rel&#xE2;chement. La d&#xE9;finition d\'une s&#xE9;ance parfaite. Chapeau.';
+}
+// Analyse v4 « une seule charge » (28/10) : verdict de charge + conformité des ressentis.
+// Hausse UNIQUEMENT si toutes les séries atteignent le haut de la fourchette, à la même charge
+// (≥ référence), sans échec avant la dernière. Série 1 (ou tout) à l'échec → un cran en dessous.
+function fsAnalyze(out,x,c){
+  var n=c.n, lo=c.lo, hi=x.rHi, inv=c.inv, u=x.unite;
+  var sets=c.sets.slice(0,n), ws=c.ws.slice(0,n);
+  var step=fsStep(x), ref=x.w0;
+  var wTxt=function(w){ return w+' '+u+(inv?' d\'assistance':''); };
+  var goals=sets.map(function(s,i){ return fsGoal(x,i+1); });
+  var conf=sets.filter(function(s,i){ return s.feel===goals[i]; }).length;
+  var allFail=sets.length>=2&&sets.every(function(s){ return s.feel==='echec'; });
+  var s1Fail=sets.length>=2&&n>1&&sets[0].feel==='echec';
+  var early=sets.slice(0,n-1).filter(function(s){ return s.feel==='echec'; }).length;
+  var topAll=c.fullSets&&sets.every(function(s){ return s.reps>=hi; });
+  var under=sets.filter(function(s){ return s.reps<lo; }).length;
+  var sameW=ws.every(function(w){ return w===ws[0]; });
+  var atRefAll=!c.isKg||!(ref>0)||ws.every(c.atRef);
+  var suggestDown=function(){
+    if(!c.isKg||!(ref>0)) return '';
+    // Base = la charge de la série 1 si elle était sous la réf. (sinon la réf.) : un échec sur
+    // une série 1 PLUS lourde que la réf. se règle en revenant à la réf., pas en dessous.
+    var w1=ws[0]!=null?ws[0]:ref;
+    var heavierS1=inv?w1<ref:w1>ref;
+    if(heavierS1) return ' Reste &#xE0; <strong>'+wTxt(ref)+'</strong> (la r&#xE9;f&#xE9;rence).';
+    var to=inv?ref+step:Math.max(0,ref-step);
+    out.suggest=-1; out.suggestTo=to;
+    return ' Prochaine fois&#x202F;: <strong>'+wTxt(to)+'</strong>.';
+  };
+  if(allFail){
+    out.tone='down';
+    out.lines.push('&#x1F4A5; Toutes les s&#xE9;ries &#xE0; l\'&#xE9;chec &#x2014; m&#xEA;me avec les reps, ce n\'est pas le syst&#xE8;me&#x202F;: la s&#xE9;rie 1 doit laisser 2-3 reps, les suivantes 1. Note plafonn&#xE9;e &#xE0; 2,5/5.'+suggestDown());
+  } else if(s1Fail){
+    out.tone='down';
+    out.lines.push('&#x1F4A5; S&#xE9;rie 1 &#xE0; l\'&#xE9;chec = charge mal choisie (elle doit finir &#xE0; OK, 2-3 reps en r&#xE9;serve). Note plafonn&#xE9;e &#xE0; 4/5.'+suggestDown()
+      +' Et '+fsWarmCount(x,1)+' s&#xE9;rie'+(fsWarmCount(x,1)>1?'s':'')+' d\'&#xE9;chauffement l&#xE9;g&#xE8;re'+(fsWarmCount(x,1)>1?'s':'')+' avant.');
+  } else if(topAll&&early===0&&sameW&&atRefAll){
+    out.tone='up'; out.suggest=1;
+    if(c.isKg&&ref>0) out.suggestTo=inv?Math.max(0,ref-step):ref+step;
+    out.lines.push('&#x1F680; '+n+'&#xD7;'+hi+'+ &#xE0; '+wTxt(ref)+' sans &#xE9;chec avant la derni&#xE8;re s&#xE9;rie&#x202F;: la double progression est valid&#xE9;e'
+      +(out.suggestTo!=null?' &#x2192; <strong>'+wTxt(out.suggestTo)+'</strong> la prochaine fois, en repartant &#xE0; '+lo+' reps.':'.'));
+  } else if(topAll&&early>0){
+    out.tone='good';
+    out.lines.push('&#x1F3AF; Haut de fourchette atteint, mais '+early+' &#xE9;chec'+(early>1?'s':'')+' avant la derni&#xE8;re s&#xE9;rie &#x2192; on garde '+wTxt(ref)+'. La hausse viendra quand les s&#xE9;ries 2'+(n>3?'-'+(n-1):'')+' finiront &#xE0; DUR.');
+  } else if(early>0){
+    out.tone='mid';
+    out.lines.push('&#x26A0;&#xFE0F; '+early+' s&#xE9;rie'+(early>1?'s':'')+' &#xE0; l\'&#xE9;chec avant la derni&#xE8;re &#x2014; l\'&#xE9;chec se garde pour la derni&#xE8;re. Sur les s&#xE9;ries interm&#xE9;diaires, arr&#xEA;te-toi &#xE0; DUR (1 rep en r&#xE9;serve)&#x202F;: tu garderas des reps pour la suite.');
+  } else if(!under){
+    out.tone='good';
+    out.lines.push('&#x2705; Dans la fourchette ('+lo+'&#x2013;'+hi+') sans &#xE9;chec avant la derni&#xE8;re&#x202F;: charge juste. Prochaine fois&#x202F;: m&#xEA;me charge, +1 rep l&#xE0; o&#xF9; tu peux (objectif '+n+'&#xD7;'+hi+').');
+  } else {
+    out.tone='mid';
+    out.lines.push('&#x1F4C9; '+under+' s&#xE9;rie'+(under>1?'s':'')+' sous '+lo+' reps sans &#xE9;chec avant la fin &#x2014; soit la charge est un cran trop haute, soit la s&#xE9;rie s\'est arr&#xEA;t&#xE9;e t&#xF4;t. Le bas de fourchette ('+lo+') est le minimum de chaque s&#xE9;rie.');
+  }
+  // Dernière série pas menée à l'échec : c'est elle qui donne le signal de hausse
+  var lastS=sets[sets.length-1];
+  if(c.fullSets&&lastS&&lastS.feel!=='echec'&&!allFail){
+    var fl={facile:'Facile',ok:'OK',dur:'Dur'}[lastS.feel]||lastS.feel;
+    out.lines.push('&#x1F50B; Derni&#xE8;re s&#xE9;rie finie &#xE0; &#xAB;&#x202F;'+fl+'&#x202F;&#xBB;&#x202F;: elle se pousse jusqu\'&#xE0; l\'&#xE9;chec (max de reps) &#x2014; c\'est elle qui dit quand la charge peut monter.');
+  }
+  // Conformité ressenti / consigne, série par série
+  if(sets.length){
+    var parts=sets.map(function(s,i){
+      var g=goals[i]; if(!g) return '';
+      return 'S'+(i+1)+' '+(s.feel===g?'&#x2713;':'&#x2717; '+FS_GOAL_LBL[g]+' vis&#xE9;');
+    }).filter(Boolean);
+    out.lines.push('&#x1F3AF; Ressentis conformes &#xE0; la consigne&#x202F;: <strong>'+conf+'/'+sets.length+'</strong> ('+parts.join(' &#xB7; ')+')');
+  }
+  if(!sameW&&c.isKg) out.lines.push('&#x2696;&#xFE0F; Charges diff&#xE9;rentes d\'une s&#xE9;rie &#xE0; l\'autre ('+ws.join(' &#xB7; ')+') &#x2014; le syst&#xE8;me&#x202F;: la m&#xEA;me charge sur toutes les s&#xE9;ries.');
 }
 function asAnalyzeExo(x){
   var out={key:x.key,name:x.name,lines:[],suggest:0,tone:'mid'};
@@ -7086,7 +7314,7 @@ function asAnalyzeExo(x){
   // séries faites AU nouveau poids : cible tenue ou frôlée (≤2 reps, même à l'échec) = test VALIDÉ.
   // Seul un vrai décrochage (3+ reps sous la cible au nouveau poids) = test prématuré, dit sans drame.
   var wUpVerdict=null;
-  if(wUp&&!inv&&isKg&&tRep){
+  if(wUp&&!inv&&isKg&&tRep&&!x.rHi){ // v4 : pas de « test de charge » en séance, la hausse suit la double progression
     var topSets=sets.filter(function(s){ return (s.w!=null?s.w:x.weight)>=x.weight; });
     if(!topSets.length) topSets=[sets[sets.length-1]];
     var topMiss=topSets.filter(function(s){ return s.reps<tRep-setTol(tRep); }).length;
@@ -7124,7 +7352,9 @@ function asAnalyzeExo(x){
   if(wDown&&inv) out.lines.push('&#x1F53D; Assistance r&#xE9;duite &#xE0; '+x.weight+' kg &#x2014; c\'est &#xC7;A la progression sur cet exo&#x202F;!');
 
   var batteryFired=false;
-  if(wUpVerdict==='test'||wUpVerdict==='fail'){
+  if(x.rHi){
+    fsAnalyze(out,x,{n:n,lo:tRep,sets:sets,reps:reps,feels:feels,ws:ws,inv:inv,isKg:isKg,fullSets:fullSets,atRef:atRef,side:side});
+  } else if(wUpVerdict==='test'||wUpVerdict==='fail'){
     // Le verdict du test de charge dit déjà quoi faire — pas de double lecture contradictoire derrière.
   } else if(fullSets&&hitAll&&someUnder){
     // Des séries sous la référence : PAS de suggestion de hausse, quelle que soit la facilité.
@@ -7221,7 +7451,7 @@ function asAnalyzeExo(x){
       '&#x1F4C8; Les reps tiennent du d&#xE9;but &#xE0; la fin &#x2014; pacing propre, rien &#xE0; retoucher.',
       '&#x1F4C8; Aucune s&#xE9;rie sacrifi&#xE9;e en route&#x202F;: la charge et le repos sont au bon r&#xE9;glage.']));
   }
-  if(softFails>0&&!fullSets){
+  if(softFails>0&&!fullSets&&!x.rHi){
     out.lines.push('&#x1F6A9; Et sur les s&#xE9;ries faites, '+softFails+' arr&#xEA;t&#xE9;e'+(softFails>1?'s':'')+' sous la cible sans &#xE9;chec &#x2014; termine tes s&#xE9;ries&#x202F;: cible ou &#xE9;chec, pas entre les deux.');
   }
   // « Compteur mental » : ≥3 séries pile au même chiffre SOUS la cible, quasi sans échec →
@@ -7252,14 +7482,14 @@ function asAnalyzeExo(x){
   }
   // ── Situations additionnelles (01/08 — enrichissement du moteur) ──
   // Cible littéralement explosée → proposer un saut de 2 crans
-  if(fullSets&&allAtRef&&echecs===0&&tRep&&reps.every(function(r){return r>=tRep+3;})){
+  if(!x.rHi&&fullSets&&allAtRef&&echecs===0&&tRep&&reps.every(function(r){return r>=tRep+3;})){
     out.suggest=1; out.suggestBig=true; out.tone='up';
     out.lines.push('&#x1F680;&#x1F680; Toutes les s&#xE9;ries &#xE0; +3 reps ou plus au-dessus de la cible &#x2014; ce poids est trop l&#xE9;ger pour toi&#x202F;: saute directement 2 crans.');
   }
   // Échec dès la série 1 : ne le signaler que s'il a COÛTÉ la suite (reps qui déclinent après).
   // L'échec est un état, pas un ratage (règle Adrien) — si les séries suivantes tiennent ou montent
   // (ex. 8·8·10·10), la 1re série à l'échec n'a rien cassé : on se tait.
-  if(s1Fail){
+  if(s1Fail&&!x.rHi){
     out.lines.push('&#x1F975; &#xC0; l\'&#xE9;chec d&#xE8;s la s&#xE9;rie 1 et les reps d&#xE9;clinent derri&#xE8;re &#x2014; &#xE9;chauffement trop court ou charge du jour ambitieuse&#x202F;: garde 1-2 reps de marge sur la premi&#xE8;re s&#xE9;rie, elle pr&#xE9;pare les suivantes.');
   }
   // Séries volontaires au-delà du prévu
@@ -7316,7 +7546,9 @@ function asAnalyzeExo(x){
         var _plan=out.suggest===-1
           ?(inv?'un cran d\'assistance EN PLUS (plus facile)':'un cran de charge EN DESSOUS')
           :'le m&#xEA;me poids';
-        out.lines.push('&#x1F4CC; Plan pour la prochaine&#x202F;: '+_plan+', '+n+' s&#xE9;ries, objectif <strong>'+tRep+unit+'</strong> par s&#xE9;rie, derni&#xE8;re s&#xE9;rie &#xE0; l\'&#xE9;chec honn&#xEA;te. On rejuge l&#xE0;-dessus.');
+        out.lines.push(x.rHi
+          ?'&#x1F4CC; Plan pour la prochaine&#x202F;: '+(out.suggestTo!=null?out.suggestTo+' '+x.unite:'la r&#xE9;f&#xE9;rence ('+x.w0+' '+x.unite+')')+' sur toutes les s&#xE9;ries, <strong>'+fsRangeStr(x)+unit+'</strong>&#x202F;: S1 OK, s&#xE9;ries interm&#xE9;diaires DUR, derni&#xE8;re &#xE0; l\'&#xE9;chec. On rejuge l&#xE0;-dessus.'
+          :'&#x1F4CC; Plan pour la prochaine&#x202F;: '+_plan+', '+n+' s&#xE9;ries, objectif <strong>'+tRep+unit+'</strong> par s&#xE9;rie, derni&#xE8;re s&#xE9;rie &#xE0; l\'&#xE9;chec honn&#xEA;te. On rejuge l&#xE0;-dessus.');
       }
     }
   }catch(e){}
@@ -8265,7 +8497,9 @@ function asRenderReport(){
       var reco=r.suggestTo!=null?r.suggestTo
               :(up?(inv?Math.max(0,x.weight-inc):x.weight+inc*(r.suggestBig?2:1))
                   :(inv?x.weight+inc:Math.max(0,x.weight-inc)));
-      var hdr=r.suggestTo!=null
+      var hdr=x.rHi
+        ?(up?(inv?'&#x1F53C; moins d\'assistance':'&#x1F53C; haut de fourchette atteint'):(inv?'&#x1F53D; plus d\'assistance':'&#x1F53D; un cran en dessous'))
+        :r.suggestTo!=null
         ?(inv?'&#x1F9ED; assistance &#xE0; caler':(r.suggest===1?'&#x1F53C; test valid&#xE9; &#x2014; ent&#xE9;rine':'&#x1F9ED; r&#xE9;f&#xE9;rence &#xE0; caler'))
         :(up?(inv?'&#x1F53C; moins d\'assistance valid&#xE9;e':'&#x1F53C; hausse valid&#xE9;e')
             :(inv?'&#x1F53D; plus d\'assistance conseill&#xE9;e':'&#x1F53D; baisse conseill&#xE9;e'));
@@ -8295,7 +8529,7 @@ function asRenderReport(){
           +'</div>';
         // ⚡ Alternative à la bascule sèche (15/08, demande Adrien) : hausse validée sur un exo
         // en kg → proposer la transition progressive 55·55·50·50 (poids haut frais en premier, 22/08).
-        if(up&&!inv&&!x.repT&&/kg/.test(x.unite||'')&&(x.n||0)>=2){
+        if(FEATURE_EVO&&up&&!inv&&!x.repT&&/kg/.test(x.unite||'')&&(x.n||0)>=2){
           h+='<button class="as-apply as-evo-start" onclick="asStartEvo(\''+x.key+'\')">&#x26A1; Commencer l\'&#xE9;volution <small>('+x.weight+'&#x2192;'+nw+' en douceur : le poids haut en premier, frais)</small></button>';
         }
       }
@@ -10186,9 +10420,11 @@ function wrAnalyze(ws){
       var sets=x.sets||[],n=x.n||3;
       var sf=sets.slice(0,n).filter(function(s){return setSoftFail(s,x.reps);}).length;
       var hf=sets.slice(0,n).filter(function(s){return setHardFail(s,x.reps);}).length;
-      if(sf||hf){
-        if(!errs[x.key]) errs[x.key]={soft:0,hard:0};
-        errs[x.key].soft+=sf; errs[x.key].hard+=hf;
+      // Système « une seule charge » (28/10) : un échec AVANT la dernière série est une erreur
+      var ef=x.rHi?sets.slice(0,Math.max(0,n-1)).filter(function(s){return s.feel==='echec';}).length:0;
+      if(sf||hf||ef){
+        if(!errs[x.key]) errs[x.key]={soft:0,hard:0,early:0};
+        errs[x.key].soft+=sf; errs[x.key].hard+=hf; errs[x.key].early=(errs[x.key].early||0)+ef;
       }
       if(sets.length>n) bonusSeries+=sets.length-n;
       if(/kg/.test(x.unite||'')&&!asIsInverse(x.key)) sets.forEach(function(s){ tonnage+=(s.w!=null?s.w:x.w||0)*s.reps; });
@@ -10201,8 +10437,9 @@ function wrAnalyze(ws){
     var e=errs[k];
     var inf=findExoIndex(k);
     var reps=null; try{ if(inf) reps=asParseSerie(inf.exo).reps; }catch(e2){}
+    if(REP_RANGE[k]&&inf&&!inf.exo.repTarget) reps=REP_RANGE[k].r[0]; // bas de fourchette (28/10)
     var wNow=null; try{ wNow=weightAtDate(k,we); }catch(e3){}
-    return {key:k,name:getExoName(k),soft:e.soft,hard:e.hard,tot:e.soft+e.hard,reps:reps,w:wNow};
+    return {key:k,name:getExoName(k),soft:e.soft,hard:e.hard,early:e.early||0,tot:e.soft+e.hard+(e.early||0),reps:reps,w:wNow};
   }).sort(function(a,b){return b.tot-a.tot;}).filter(function(e){return e.tot>=2;}).slice(0,3);
   // Volume par muscle + délaissés (<6 = à peine touché) + sous la fenêtre (<12)
   var vol=muscleVolume(ws,we);
@@ -10371,9 +10608,12 @@ function wrRender(){
       h+='<div class="as-lbl">&#x1F3AF; &#xC0; corriger la semaine prochaine</div>';
       A.topErrs.forEach(function(e){
         var plan;
-        if(e.soft>e.hard){
+        if(e.early&&e.early>=e.soft&&e.early>=e.hard){
+          plan=e.early+' s&#xE9;rie'+(e.early>1?'s':'')+' &#xE0; l\'&#xE9;chec avant la derni&#xE8;re. Le plan&#x202F;: '+(e.w?'&#xE0; <strong>'+e.w+' kg</strong> sur toutes les s&#xE9;ries, ':'')
+            +'S1 &#xE0; OK (2-3 reps en r&#xE9;serve), s&#xE9;ries interm&#xE9;diaires &#xE0; DUR (1 en r&#xE9;serve), l\'&#xE9;chec seulement sur la derni&#xE8;re. Si la s&#xE9;rie 1 part encore &#xE0; l\'&#xE9;chec &#x2192; un cran en dessous.';
+        } else if(e.soft>e.hard){
           plan=e.soft+' s&#xE9;rie'+(e.soft>1?'s':'')+' pos&#xE9;e'+(e.soft>1?'s':'')+' entre la cible et l\'&#xE9;chec. Le plan&#x202F;: '
-            +(e.w?'&#xE0; <strong>'+e.w+' kg</strong>, ':'')+'chaque s&#xE9;rie se termine &#xE0; <strong>'+(e.reps||'la cible')+(e.reps?' reps':'')+'</strong> OU &#xE0; l\'&#xE9;chec r&#xE9;el &#x2014; jamais entre les deux. Si &#xE7;a cale encore 2 s&#xE9;ances &#x2192; un cran en dessous et tu remplis.';
+            +(e.w?'&#xE0; <strong>'+e.w+' kg</strong>, ':'')+'chaque s&#xE9;rie atteint au moins <strong>'+(e.reps||'la cible')+(e.reps?' reps':'')+'</strong> (bas de fourchette)&#x202F;; s\'arr&#xEA;ter avant sans &#xE9;chec, c\'est laisser des reps. Si &#xE7;a cale encore 2 s&#xE9;ances &#x2192; un cran en dessous et tu remplis.';
         } else {
           plan=e.hard+' vrai'+(e.hard>1?'s':'')+' rat&#xE9;'+(e.hard>1?'s':'')+' (3+ reps sous la cible). Le plan&#x202F;: un cran sous '+(e.w?'<strong>'+e.w+' kg</strong>':'ta r&#xE9;f&#xE9;rence')+', tu remplis toutes les s&#xE9;ries &#xE0; <strong>'+(e.reps||'la cible')+(e.reps?' reps':'')+'</strong> proprement, et tu retestes seulement quand tout passe.';
         }
@@ -10570,7 +10810,8 @@ function mrAnalyze(mk){
       if(exoIsCardio(x.key)) return;
       var sf=sets.slice(0,n).filter(function(s){return setSoftFail(s,x.reps);}).length;
       var hf=sets.slice(0,n).filter(function(s){return setHardFail(s,x.reps);}).length;
-      if(sf||hf){ if(!errs[x.key]) errs[x.key]={soft:0,hard:0}; errs[x.key].soft+=sf; errs[x.key].hard+=hf; }
+      var ef=x.rHi?sets.slice(0,Math.max(0,n-1)).filter(function(s){return s.feel==='echec';}).length:0; // échec avant la dernière (28/10)
+      if(sf||hf||ef){ if(!errs[x.key]) errs[x.key]={soft:0,hard:0,early:0}; errs[x.key].soft+=sf; errs[x.key].hard+=hf; errs[x.key].early+=ef; }
     });
     tonnage+=lt;
     if(!bestTon||lt>bestTon.kg) bestTon={date:l.date,kg:Math.round(lt)};
@@ -10582,7 +10823,7 @@ function mrAnalyze(mk){
   });
   var notes=logs.map(function(l){return l._mrNote;}).filter(function(n){return n!=null;});
   var avgNote=notes.length?Math.round(notes.reduce(function(a,b){return a+b;},0)/notes.length*10)/10:null;
-  var topErrs=Object.keys(errs).map(function(k){var e=errs[k];return {name:getExoName(k),soft:e.soft,hard:e.hard,tot:e.soft+e.hard};})
+  var topErrs=Object.keys(errs).map(function(k){var e=errs[k];return {name:getExoName(k),soft:e.soft,hard:e.hard,early:e.early||0,tot:e.soft+e.hard+(e.early||0)};})
     .sort(function(a,b){return b.tot-a.tot;}).filter(function(e){return e.tot>=3;}).slice(0,3);
   // Évolutions / régressions des charges sur le mois (dédupliqué, inversé traction/dips)
   var ups=[],downs=[],seenK={};
@@ -10721,7 +10962,8 @@ function mrRender(){
     if(A.topErrs.length){
       h+='<div class="as-lbl">&#x1F6A9; Tes patterns du mois</div>';
       A.topErrs.forEach(function(e){
-        h+='<div class="as-rep-note tone-down"><strong>'+e.name+'</strong> &#x2014; '+(e.soft>e.hard?e.soft+' s&#xE9;ries arr&#xEA;t&#xE9;es sous la cible sans &#xE9;chec sur le mois. C\'est LE r&#xE9;flexe &#xE0; casser&#x202F;: cible ou &#xE9;chec.':e.hard+' vrais rat&#xE9;s sur le mois &#x2014; charge chroniquement trop haute, un cran en dessous et on remplit.')+'</div>';
+        h+='<div class="as-rep-note tone-down"><strong>'+e.name+'</strong> &#x2014; '+(e.early&&e.early>=e.soft&&e.early>=e.hard?e.early+' s&#xE9;ries &#xE0; l\'&#xE9;chec avant la derni&#xE8;re sur le mois &#x2014; S1 OK, interm&#xE9;diaires DUR, l\'&#xE9;chec seulement &#xE0; la fin&#x202F;; s&#xE9;rie 1 encore &#xE0; l\'&#xE9;chec = un cran en dessous.'
+          :e.soft>e.hard?e.soft+' s&#xE9;ries arr&#xEA;t&#xE9;es sous la cible sans &#xE9;chec sur le mois. C\'est LE r&#xE9;flexe &#xE0; casser&#x202F;: au moins le bas de fourchette &#xE0; chaque s&#xE9;rie.':e.hard+' vrais rat&#xE9;s sur le mois &#x2014; charge chroniquement trop haute, un cran en dessous et on remplit.')+'</div>';
       });
     } else if(A.salle.length){
       h+='<div class="as-rep-note">&#x2728; Aucun pattern d\'erreur r&#xE9;current sur le mois. S&#xE9;rieux et rare.</div>';
