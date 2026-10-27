@@ -82,6 +82,19 @@ const ADRIEN = [
     if(logWeight({sessions:['exo:cardio_liss']})!==0) throw new Error('ECHEC cardio seul');
     DB.logs.push(l); switchView('progression',document.querySelectorAll('.bni')[2]); renderHisto(); document.getElementById('calGrid').scrollIntoView();
   })()`]],
+  // (27/10) Jambes / abdo dus seulement si la séance d'avant n'en avait pas
+  ['a_setup_free', [`(function(){
+    var t=rankAddDays(todayStr(),1);
+    DB.logs.push({id:991,date:t,time:'06:00',sessions:['s1','exo:leg_press','exo:crunch_decline'],live:{exos:[{key:'leg_press',sets:[{reps:10}]},{key:'crunch_decline',sets:[{reps:12}]}]}});
+    asOpen(); asChooseSeance('s1');
+    if(!asLegsRequirement().ok||asLegsRequirement().need||!asAbdoRequirement().ok||asAbdoRequirement().need) throw new Error('ECHEC jambes/abdo devraient etre facultatifs');
+  })()`], { scroll: '#asOverlay .as-scroll' }],
+  ['a_setup_due', [`(function(){
+    var t=rankAddDays(todayStr(),1), k=DATA.find(function(x){return x.id==='s1';}).exos[0].key;
+    DB.logs.push({id:991,date:t,time:'06:00',sessions:['s1'],live:{exos:[{key:k,sets:[{reps:10}]},{key:'leg_press',sets:[]}]}});
+    asOpen(); asChooseSeance('s1');
+    if(asLegsRequirement().ok||!asLegsRequirement().need||asAbdoRequirement().ok||!asAbdoRequirement().need) throw new Error('ECHEC jambes/abdo devraient etre dus');
+  })()`], { scroll: '#asOverlay .as-scroll' }],
   ['a_liveflow', ['asOpen()', "document.querySelector('#asOverlay .as-bigcard').click()", "asPickLegsMain('leg_press')", 'AS.fromPrep=true;asToReady()'], { scroll: '#asOverlay' }],
 ];
 const MELATI = [

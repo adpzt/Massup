@@ -4243,7 +4243,7 @@ function exportCoachDossier(opts){
     ['Phase suivante','Sèche du lundi 4 janvier au 1er juin 2027 : cible ~12 % de gras (~68 kg), 3 séances de muscu + 1 course par semaine, charges lourdes conservées.'],
     ['Poids','Départ '+(bw[0]?bw[0].weight_kg+' kg le '+bw[0].date:'?')+' · dernier '+(last?last.weight_kg+' kg le '+last.date:'?')+'. Composition (borne de salle, 31/08/2026, conditions non standardisées) : 21,3 % de gras affiché (fourchette réaliste 17-22 %), jambes à 97 % de la norme, bras au-dessus.'],
     ['Blessures','Poignet gauche : ancienne fracture de la styloïde ulnaire → prises neutres, pas de supination jusqu\'à ~novembre 2026. Genou : douleur en flexion chargée par épisodes. Coude gauche : douleur interne signalée fin septembre / début octobre. Détail daté : onglet Douleurs.'],
-    ['Programme','Rotation PUSH / PULL / LEGS + exos « à la carte ». Règles de l\'app : chaque PUSH/PULL contient 1 exo jambes principal ; depuis le 12/10/2026, 1 exo abdo obligatoire (principal) ; 5 exos minimum. Détail : onglet Exercices.'],
+    ['Programme','Rotation PUSH / PULL / LEGS + exos « à la carte ». Règles de l\'app : depuis le 27/10/2026, 1 exo jambes (PUSH/PULL) et 1 exo abdo ne sont obligatoires que si la séance précédente n\'en avait pas (exo du jour alors principal) ; 5 exos minimum. Détail : onglet Exercices.'],
     ['Nutrition','Volontairement absente de ce fichier.'],
     ['Charges','En kg. Haltères : kg par main (« kg/main », « kg/côté »). Exos au poids du corps ou en temps : la « charge » est l\'objectif (reps, s, min).'],
     ['Assistance','Traction assistée et Dips assistée : la charge est l\'ASSISTANCE de la machine → moins = plus fort (colonne « Assistance (moins = mieux) »).'],
@@ -5179,31 +5179,60 @@ function asLastLegsPick(){
   }
   return [];
 }
+// 27/10/2026 (demande Adrien) : jambes et abdo ne sont plus obligatoires à CHAQUE séance —
+// seulement si la séance de salle précédente n'en avait pas (au moins 1 série faite).
+// Séance précédente = dernier log de salle (hors course, autre sport, cardio seul, routine maison).
+function asPrevSessionHas(){
+  var legsKeys=asLegsKeys();
+  var isLegs=function(k){ return rankGroupOf(k)==='Jambes'||legsKeys.indexOf(k)>=0; };
+  var isAbdo=function(k){ var i=findExoIndex(k); return !!(i&&i.exo&&i.exo.cat==='abdo'); };
+  var logs=(DB.logs||[]).slice().sort(function(a,b){return b.date.localeCompare(a.date)||((b.time||'').localeCompare(a.time||''));});
+  for(var i=0;i<logs.length;i++){
+    var l=logs[i];
+    if(l.sport||logWeight(l)<=0) continue;
+    if((l.sessions||[]).some(function(sid){return sid.indexOf('autre:')===0;})) continue;
+    var r={legs:false,abdo:false};
+    if(l.live&&l.live.exos){
+      l.live.exos.forEach(function(x){
+        if(!x.sets||!x.sets.length) return;
+        if(isLegs(x.key)) r.legs=true;
+        if(isAbdo(x.key)) r.abdo=true;
+      });
+    } else {
+      (l.sessions||[]).forEach(function(sid){
+        if(sid==='s3') r.legs=true;
+        if(sid.indexOf('exo:')!==0) return;
+        if(isLegs(sid.slice(4))) r.legs=true;
+        if(isAbdo(sid.slice(4))) r.abdo=true;
+      });
+    }
+    return r;
+  }
+  return {legs:false,abdo:false}; // aucune séance avant : les deux sont dus
+}
 // v3 (02/08) : l'exo jambes du jour est UN SEUL exo (sel.legsMain) et il est PRINCIPAL
 // (il compte dans le /20). Les autres exos jambes se prennent en bonus comme le reste.
-// Anti-routine : si c'est le même exo jambes seul que la dernière fois → il faut un 2e en bonus.
+// 27/10 : dû seulement si la séance précédente n'avait pas de jambes (asPrevSessionHas) ;
+// l'ancien anti-routine (même exo seul → un 2e en bonus) est retiré, seul le tag « dernière fois » reste.
 function asLegsRequirement(){
   var sel=AS.sel;
   if(!sel.sid) return {ok:true,msg:''};
   var s=DATA.find(function(x){return x.id===sel.sid;});
   if(!s||(s.t!=='push'&&s.t!=='pull')) return {ok:true,msg:''};
-  if(!sel.legsMain) return {ok:false,msg:'&#x1F9B5; Choisis <strong>ton exo jambes du jour</strong> pour valider ta s&#xE9;ance.'};
-  var legsKeys=asLegsKeys();
-  var bonusLegs=(sel.extras||[]).filter(function(k){return legsKeys.indexOf(k)>=0&&k!==sel.legsMain;});
-  var prev=asLastLegsPick();
-  if(!bonusLegs.length&&prev.length===1&&prev[0]===sel.legsMain){
-    return {ok:false,msg:'&#x1F9B5; <strong>'+getExoName(sel.legsMain)+'</strong> &#xE9;tait d&#xE9;j&#xE0; ton seul exo jambes la derni&#xE8;re fois &#x2014; garde-le si tu veux, mais ajoute un 2e exo jambes en bonus.'};
-  }
-  return {ok:true,msg:''};
+  if(asPrevSessionHas().legs) return {ok:true,msg:''};
+  if(!sel.legsMain) return {ok:false,need:true,msg:'&#x1F9B5; Pas de jambes &#xE0; ta derni&#xE8;re s&#xE9;ance &#x2014; choisis <strong>ton exo jambes du jour</strong> pour valider celle-ci.'};
+  return {ok:true,need:true,msg:''};
 }
 // ── Règle abdos (04/08) : toute séance PUSH/PULL/LEGS doit embarquer AU MOINS 1 exo abdo,
 // choisi AU SETUP (remplace le rituel posture de fin — les étirements vivent dans Détente 🧘).
 // 12/10/2026 (demande Adrien : « obligation d'un exo abdo par séance ») : vaut aussi à la carte, et l'exo
 // abdo choisi devient PRINCIPAL et non supprimable (abdoPick, comme l'exo jambes du jour).
+// 27/10 : dû seulement si la séance précédente n'avait pas d'abdo (asPrevSessionHas).
 function asAbdoRequirement(){
   var sel=AS.sel;
   var s=sel.sid?DATA.find(function(x){return x.id===sel.sid;}):null;
   if(sel.sid&&(!s||s.t==='bonus')) return {ok:true,msg:''};
+  if(asPrevSessionHas().abdo) return {ok:true,msg:''};
   var keys=(sel.extras||[]).slice();
   if(sel.legsMain) keys.push(sel.legsMain);
   if(s) s.exos.forEach(function(e){
@@ -5211,8 +5240,8 @@ function asAbdoRequirement(){
     if(sel.chosen[e.key]!==false&&(sel.chosen[e.key]===true||!e.bonus)) keys.push(e.key);
   });
   var has=keys.some(function(k){ var i=findExoIndex(k); return !!(i&&i.exo&&i.exo.cat==='abdo'); });
-  if(has) return {ok:true,msg:''};
-  return {ok:false,msg:'&#x1F525; Choisis <strong>ton exo abdo du jour</strong> (relev&#xE9;s, crunch d&#xE9;clin&#xE9;, crunch lest&#xE9;, pallof, dead bug) &#x2014; obligatoire dans chaque s&#xE9;ance, il compte dans la note /20.'};
+  if(has) return {ok:true,need:true,msg:''};
+  return {ok:false,need:true,msg:'&#x1F525; Pas d\'abdo &#xE0; ta derni&#xE8;re s&#xE9;ance &#x2014; choisis <strong>ton exo abdo du jour</strong> (relev&#xE9;s, crunch d&#xE9;clin&#xE9;, crunch lest&#xE9;, pallof, dead bug), il compte dans la note /20.'};
 }
 // Marqueur d'exo dans les listes de choix (règle Adrien 02/08) :
 // cle (U+1F511) = exo clé du profil · étoile = exo principal · rien = bonus. La clé gagne sur l'étoile.
@@ -5259,11 +5288,11 @@ function asRenderSetup2(){
       h+='</div>';
     }
     h+='</div>';
-    // ── Bloc 2 (violet) : l'exo JAMBES du jour — UN principal, obligatoire sur PUSH / PULL ──
+    // ── Bloc 2 (violet) : l'exo JAMBES du jour — UN principal, sur PUSH / PULL (obligatoire si la séance d'avant n'en avait pas, 27/10) ──
     if(isPP){
       var req=asLegsRequirement();
       h+='<div class="as-sec sec-req as-legs-zone'+(req.ok?' ok':'')+'" style="animation-delay:.06s">';
-      h+='<div class="as-sec-head"><span>&#x1F9B5; Ton exo jambes du jour</span><span class="as-sec-lock">1 seul &#x2014; principal</span></div>';
+      h+='<div class="as-sec-head"><span>&#x1F9B5; Ton exo jambes du jour</span><span class="as-sec-lock">'+(req.need?'obligatoire aujourd\'hui':'facultatif')+'</span></div>';
       h+='<div class="as-exo-picks" id="asLegsPicks">';
       var prev=asLastLegsPick();
       asLegsKeys().forEach(function(k){
@@ -5276,12 +5305,12 @@ function asRenderSetup2(){
       h+='</div>';
     }
   }
-  // ── Bloc 3 (violet) : l'exo ABDO du jour — obligatoire sur toute séance salle (règle 04/08),
+  // ── Bloc 3 (violet) : l'exo ABDO du jour — obligatoire si la séance d'avant n'en avait pas (27/10 ; avant : toute séance salle, règle 04/08),
   // à la carte comprise depuis le 12/10 ──
   if(!s||s.t!=='bonus'){
     var reqA0=asAbdoRequirement();
     h+='<div class="as-sec sec-req'+(reqA0.ok?' ok':'')+'" id="asAbdoZone" style="animation-delay:.12s">';
-    h+='<div class="as-sec-head"><span>&#x1F525; Ton exo abdo du jour</span><span class="as-sec-lock">1 obligatoire</span></div>';
+    h+='<div class="as-sec-head"><span>&#x1F525; Ton exo abdo du jour</span><span class="as-sec-lock">'+(reqA0.need?'obligatoire aujourd\'hui':'facultatif')+'</span></div>';
     h+='<div class="as-exo-picks">';
     asAbdoOptions().forEach(function(e){
       var onA=(sel.extras||[]).indexOf(e.key)>=0;
@@ -5679,8 +5708,9 @@ function asToReady(){
     list.push(x);
   });
   if(!list.length) return;
-  // Exo abdo du jour (12/10) : le premier abdo de la séance est PRINCIPAL et non supprimable
-  var _ab=list.find(function(x){ var i=findExoIndex(x.key); return !!(i&&i.exo&&i.exo.cat==='abdo'); });
+  // Exo abdo du jour (12/10) : le premier abdo de la séance est PRINCIPAL et non supprimable —
+  // seulement quand il était dû (27/10) ; sinon il suit le choix 🎯 comme tout exo.
+  var _ab=asAbdoRequirement().need?list.find(function(x){ var i=findExoIndex(x.key); return !!(i&&i.exo&&i.exo.cat==='abdo'); }):null;
   if(_ab){ _ab.abdoPick=true; _ab.main=true; }
   // Les principaux d'abord, les bonus en fin de séance (l'ordre reste réglable à l'écran suivant)
   list.sort(function(a,b){ return (a.main===false?1:0)-(b.main===false?1:0); });
