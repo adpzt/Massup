@@ -110,3 +110,10 @@ test("une séance plus légère ne remet pas le compteur de séries à zéro (cu
   const r = JSON.parse(app3.eval(logs, 54, "DB.weights.curl_marteau_croise=[{date:'2026-08-18',val:10}];JSON.stringify(loadCount('curl_marteau_croise'))"));
   assert.equal(r.done, 7);
 });
+
+test("durée de séance = de la 1re à la dernière série validée (oubli de « terminé » ignoré)", () => {
+  const app4 = load();
+  const t0 = Date.now() - 3 * 3600000; // séance commencée il y a 3 h, fin oubliée
+  const r = app4.eval([], 54, "AS={step:'end',startTs:" + (t0 - 600000) + ",exos:[{key:'tirage_vert',sets:[{t:" + t0 + "},{t:" + (t0 + 20 * 60000) + "}]},{key:'rowing_pb',sets:[{t:" + (t0 + 55 * 60000) + "}]}]};asElapsedMin()");
+  assert.equal(Number(r), 55);
+});

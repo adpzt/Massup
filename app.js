@@ -4876,7 +4876,17 @@ function asNextSetIdx(x){ return (x.sets||[]).length+(x.skippedSets||0)+1; }
 // Suppressible du burger : bonus/ajoutés uniquement — JAMAIS les exos de la séance
 // ni l'exo jambes choisi au départ du LiveUp (règle Adrien 02/08).
 function asExoDeletable(x){ return liveExoSide(x)&&!x.legsPick&&!x.abdoPick; }
-function asElapsedMin(){ return AS.startTs?Math.max(1,Math.round((Date.now()-AS.startTs)/60000)):0; }
+// Durée de séance (01/11, Adrien : « j'oublie parfois d'appuyer sur terminé ») : de la 1re série validée
+// à la dernière (en cours de séance : jusqu'à maintenant). Les séries portent leur heure (s.t) ;
+// une séance sans heures (avant le 01/11, reprise) garde l'ancien calcul depuis le début.
+function asElapsedMin(){
+  var ts=[]; (AS&&AS.exos||[]).forEach(function(x){ (x.sets||[]).forEach(function(st){ if(st.t) ts.push(st.t); }); });
+  if(ts.length){
+    var a=Math.min.apply(null,ts), b=AS.step==='exo'?Date.now():Math.max.apply(null,ts);
+    return Math.max(1,Math.round((b-a)/60000));
+  }
+  return AS.startTs?Math.max(1,Math.round((Date.now()-AS.startTs)/60000)):0;
+}
 function asPick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 // Tirage SANS REMISE à l'échelle d'un bilan (05/08, retour Adrien « ça se répète ») :
 // une variante déjà servie sur un exo n'est resservie sur un autre que si tout le pool est épuisé.
@@ -6373,7 +6383,7 @@ function asValidateSet(){
     AS.phase=AS.restEnd?'rest':'work';
     asSave(); asRender(); return;
   }
-  var set={reps:p.reps,feel:p.feel,w:x.weight};
+  var set={reps:p.reps,feel:p.feel,w:x.weight,t:Date.now()}; // t : heure de validation (durée de séance)
   if(x.uni){ set.feelG=p.feelG; set.feelD=p.feelD; }
   x.sets.push(set);
   AS.pend=null;
