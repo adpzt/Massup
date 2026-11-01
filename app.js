@@ -255,7 +255,8 @@ var DATA = [
     {key:"curl_poulie",hidden:true,name:"Curl Poulie Basse",poids:10,unite:"kg",serie:"4×10",rest:90,cue:"Serre les biceps en haut pendant 1 seconde.",tips:["Coudes stables, ne bougent pas.","Descente contrôlée.","Garde la tension."],errs:["Ne pas avancer les coudes.","Ne pas remonter trop vite."],img:"cablecurl"},
     // curl_incline (supination) réactivé en BONUS le 15/08 (demande Adrien) — même statut que le
     // curl haltères : reprise légère, supination progressive, stop à la moindre gêne au poignet.
-    {key:"curl_incline",bonus:true,name:"Curl Incliné Haltères (banc)",poids:8,unite:"kg",serie:"3×10",rest:90,bless:"Supination = à doser : charge légère, tourne les paumes SANS forcer, stoppe à la moindre gêne au poignet.",cue:"Laisse les bras pendre derriere toi au depart.",tips:["Banc incline a 45-60 deg.","Etirement complet du biceps en bas.","Descente lente."],errs:["Ne pas avancer les coudes.","Ne pas descendre rapidement."],img:"inclinecurl"}
+    // 01/11/2026 : MASQUÉ — doublon du Curl Incliné Neutre selon Adrien (aucune série en LiveUp, rien à fusionner).
+    {key:"curl_incline",bonus:true,hidden:true,name:"Curl Incliné Haltères (banc)",poids:8,unite:"kg",serie:"3×10",rest:90,bless:"Supination = à doser : charge légère, tourne les paumes SANS forcer, stoppe à la moindre gêne au poignet.",cue:"Laisse les bras pendre derriere toi au depart.",tips:["Banc incline a 45-60 deg.","Etirement complet du biceps en bas.","Descente lente."],errs:["Ne pas avancer les coudes.","Ne pas descendre rapidement."],img:"inclinecurl"}
   ]},
   {id:"s3",t:"legs",num:"Séance 3",icon:"&#x1F9B5;",name:"LEGS",sub:"Force + Masse",exos:[
     {key:"leg_press",imp:true,name:"Leg Press",poids:60,unite:"kg",serie:"4×10",rest:150,cue:"Pousse avec les talons — pas les orteils.",tips:["Pieds à largeur d'épaules.","Ne pas tendre complètement les jambes.","Cuisses parallèles au sol en bas."],errs:["Genoux qui rentrent vers l'intérieur.","Fesses qui décollent du siège."],img:"legpress"},
@@ -5673,8 +5674,45 @@ function asBonusOptions(){
   });
   return out;
 }
-function asExoNeverDone(key){
-  try{ return execsBetween(key,'2026-03-01',todayStr())===0; }catch(e){ return false; }
+// Exécutions RÉELLES (01/11, Adrien : « hip thrust, je ne l'ai jamais fait » — il était compté parce
+// qu'il avait été mis dans une séance puis passé) : une séance détaillée compte un exo seulement s'il a
+// au moins UNE série enregistrée ; une ancienne séance sans détail, seulement s'il y est coché à part (exo:).
+function exoLastDone(key){
+  var last=null;
+  (DB.logs||[]).forEach(function(l){
+    if(!l.date) return;
+    var did=false;
+    if(l.live&&l.live.exos) did=l.live.exos.some(function(x){ return x.key===key&&(x.sets||[]).length>0; });
+    else did=(l.sessions||[]).indexOf('exo:'+key)>=0;
+    if(did&&(!last||l.date>last)) last=l.date;
+  });
+  return last;
+}
+function asExoNeverDone(key){ return exoLastDone(key)===null; }
+// Séances de salle passées depuis la dernière exécution réelle (null = jamais fait)
+function exoSessionsSince(key){
+  var last=exoLastDone(key); if(!last) return null;
+  return (DB.logs||[]).filter(function(l){ return l.date>last&&rankLogIsSalle(l); }).length;
+}
+var EXO_STALE_SESSIONS=8; // « pas fait depuis longtemps » = 8 séances de salle ou plus sans lui (01/11, Adrien)
+function asExoToRevisit(key){ var n=exoSessionsSince(key); return n===null||n>=EXO_STALE_SESSIONS; }
+function asRevisitListHtml(opts,btn){
+  var never=opts.filter(function(o){ return asExoNeverDone(o.e.key); });
+  var old=opts.filter(function(o){ var n=exoSessionsSince(o.e.key); return n!==null&&n>=EXO_STALE_SESSIONS; })
+    .sort(function(a,b){ return exoSessionsSince(b.e.key)-exoSessionsSince(a.e.key); });
+  if(!never.length&&!old.length) return '<div class="as-bonus-empty">Tout a &#xE9;t&#xE9; fait r&#xE9;cemment &#x1F389;</div>';
+  var h='';
+  if(never.length){
+    h+='<div class="as-lbl">&#x1F195; Jamais fait</div><div class="as-exo-picks">';
+    never.forEach(function(o){ h+=btn(o.e); });
+    h+='</div>';
+  }
+  if(old.length){
+    h+='<div class="as-lbl">&#x23F3; Pas fait depuis '+EXO_STALE_SESSIONS+'+ s&#xE9;ances</div><div class="as-exo-picks">';
+    old.forEach(function(o){ h+=btn(o.e).replace('<span class="as-pick-tick">','<em class="as-pick-last">'+exoSessionsSince(o.e.key)+' s&#xE9;ances</em><span class="as-pick-tick">'); });
+    h+='</div>';
+  }
+  return h;
 }
 function asWeekSalleCount(){
   var ws=rankMonday(todayStr());
@@ -5712,11 +5750,12 @@ function asSetup2ChipsHtml(){
   var chips=[{id:'all',lbl:'Tout'}];
   DATA.forEach(function(sx){ if(sx.id!==AS.sel.sid&&sx.id!=='sm') chips.push({id:sx.id,lbl:sx.icon+' '+sx.name}); });
   var opts=asBonusOptions();
-  if(opts.some(function(o){return asExoNeverDone(o.e.key);})) chips.push({id:'new',lbl:'&#x1F195; Jamais fait'});
-  if(asWeekSalleCount()>=2) chips.push({id:'gap',lbl:'&#x1F50B; En retard'});
+  // 01/11 (Adrien) : « Jamais fait » + « En retard » (presque tout y était) → une seule puce ⏳ :
+  // jamais faits + pas faits depuis 8 séances de salle ou plus
+  if(opts.some(function(o){return asExoToRevisit(o.e.key);})) chips.push({id:'stale',lbl:'&#x23F3;',title:'Jamais faits ou pas faits depuis '+EXO_STALE_SESSIONS+' s&#xE9;ances'});
   if(!chips.some(function(c){return c.id===f;})){ AS.sel.bFilter='all'; f='all'; }
   return chips.map(function(c){
-    return '<button class="as-chip'+(f===c.id?' on':'')+'" onclick="asSetBFilter(\''+c.id+'\')">'+c.lbl+'</button>';
+    return '<button class="as-chip'+(f===c.id?' on':'')+'"'+(c.title?' title="'+c.title+'" aria-label="'+c.title+'"':'')+' onclick="asSetBFilter(\''+c.id+'\')">'+c.lbl+'</button>';
   }).join('');
 }
 function asSetup2BonusListHtml(){
@@ -5727,14 +5766,7 @@ function asSetup2BonusListHtml(){
     return '<button class="as-pick bonus'+(on?' on':'')+'" data-k="'+e.key+'" onclick="asToggleExtra(\''+e.key+'\',this)">'+exoPickMark(e)+e.name+'<span class="as-pick-tick">&#x2713;</span></button>';
   }
   var h='';
-  if(f==='new'){
-    var news=opts.filter(function(o){return asExoNeverDone(o.e.key);});
-    if(!news.length) return '<div class="as-bonus-empty">Tout a d&#xE9;j&#xE0; &#xE9;t&#xE9; fait au moins une fois &#x1F389;</div>';
-    h+='<div class="as-exo-picks">';
-    news.forEach(function(o){ h+=pickBtn(o.e); });
-    h+='</div>';
-    return h;
-  }
+  if(f==='stale') return asRevisitListHtml(opts,pickBtn);
   if(f==='gap'){
     var gaps=asGapGroups();
     if(!gaps.length) return '<div class="as-bonus-empty">&#x1F50B; Tous les muscles sont &#xE0; 15+ s&#xE9;ries cette semaine &#x2014; rien &#xE0; rattraper.</div>';
@@ -6568,24 +6600,17 @@ function asLiveAddChipsHtml(){
     chips.push({id:sx.id,lbl:sx.icon+' '+sx.name});
   });
   var opts=asLiveAddRestOpts();
-  if(opts.some(function(o){return asExoNeverDone(o.e.key);})) chips.push({id:'new',lbl:'&#x1F195; Jamais fait'});
-  if(asWeekSalleCount()>=2) chips.push({id:'gap',lbl:'&#x1F50B; En retard'});
+  if(opts.some(function(o){return asExoToRevisit(o.e.key);})) chips.push({id:'stale',lbl:'&#x23F3;',title:'Jamais faits ou pas faits depuis '+EXO_STALE_SESSIONS+' s&#xE9;ances'});
   if(!chips.some(function(c){return c.id===f;})){ _asAddFilter='all'; f='all'; }
   return chips.map(function(c){
-    return '<button class="as-chip'+(f===c.id?' on':'')+'" onclick="asAddSetFilter(\''+c.id+'\')">'+c.lbl+'</button>';
+    return '<button class="as-chip'+(f===c.id?' on':'')+'"'+(c.title?' title="'+c.title+'" aria-label="'+c.title+'"':'')+' onclick="asAddSetFilter(\''+c.id+'\')">'+c.lbl+'</button>';
   }).join('');
 }
 function asLiveAddListHtml(){
   var f=_asAddFilter;
   var opts=asLiveAddRestOpts();
   var h='';
-  if(f==='new'){
-    var news=opts.filter(function(o){return asExoNeverDone(o.e.key);});
-    if(!news.length) return '<div class="as-bonus-empty">Tout a d&#xE9;j&#xE0; &#xE9;t&#xE9; fait au moins une fois &#x1F389;</div>';
-    h+='<div class="as-exo-picks">';
-    news.forEach(function(o){ h+=asAddPickBtn(o.e); });
-    return h+'</div>';
-  }
+  if(f==='stale') return asRevisitListHtml(opts,asAddPickBtn);
   if(f==='gap'){
     var gaps=asLiveGapGroups();
     if(!gaps.length) return '<div class="as-bonus-empty">&#x1F50B; Tous les muscles sont &#xE0; 15+ s&#xE9;ries cette semaine &#x2014; rien &#xE0; rattraper.</div>';
