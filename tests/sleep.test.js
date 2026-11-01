@@ -70,11 +70,11 @@ test("home card requires explicit manual save and labels the full night range", 
   const key = ctx.SLEEP._night();
   assert.equal(ctx.saves(), 0);
   assert.equal(ctx.db.sleepLog[key], undefined);
-  assert.match(ctx.card.innerHTML, /Enregistrer/);
-  assert.match(ctx.card.innerHTML, /Historique/);
+  // v4 (01/11) : carte au langage de l'écran Pas — bouton OK, ⛶ pour ouvrir, saisie « Couché / Levé »
+  assert.match(ctx.card.innerHTML, />OK</);
+  assert.match(ctx.card.innerHTML, /Ouvrir la page Sommeil/);
   assert.match(ctx.card.innerHTML, /Nuit du .+ au .+/);
-  assert.match(ctx.card.innerHTML, /approximatif/i);
-  assert.match(ctx.card.innerHTML, /Heure de dodo/);
+  assert.match(ctx.card.innerHTML, /Couch&#xE9;/);
   assert.doesNotMatch(ctx.card.innerHTML, /Je vais dormir|Réveillé/);
 
   ctx.SLEEP._saveHome();
@@ -94,9 +94,9 @@ test("full-screen editing saves to the selected night and cancel discards change
 
   assert.match(ctx.body.innerHTML, /Nuit du .+ au .+/);
   assert.match(ctx.body.innerHTML, /Nuit du dimanche 20 septembre au lundi 21 septembre/);
-  assert.match(ctx.body.innerHTML, /Modifier cette nuit/);
-  assert.match(ctx.body.innerHTML, /Heure de dodo/);
-  assert.match(ctx.body.innerHTML, /Enregistrer cette nuit/);
+  assert.match(ctx.body.innerHTML, /Modifier une nuit/);
+  assert.match(ctx.body.innerHTML, /Couch&#xE9;/);
+  assert.match(ctx.body.innerHTML, /estimation, pas une mesure/);
   ctx.values["slp-edit-bed"] = { value: "23:00" };
   ctx.values["slp-edit-wake"] = { value: "07:00" };
   ctx.SLEEP._cancelEdit();
