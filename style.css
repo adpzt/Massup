@@ -3045,3 +3045,5 @@ span.bn-hero-bar i.n-gold,.bn-hero-bar i.n-blue{color:transparent;}
 .lc-bar3 .holo-fill{background:linear-gradient(100deg,#8BE9FD 0%,#B38CFF 26%,#FF8CC8 52%,#FFE9A0 76%,#8BFFC9 100%);}
 .lc-bar3 .lc-l{background:repeating-linear-gradient(90deg,var(--gb) 0 4px,transparent 4px 7px);}
 @media (prefers-color-scheme: light){ .lc-live{background:rgba(18,21,28,.03);} }
+/* Repos : barre de séries plus courte (01/11) */
+.lc-live{max-width:280px;}

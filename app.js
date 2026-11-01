@@ -1179,13 +1179,13 @@ function renderGymGreet(){
   var wstart=new Date(now); var dow=wstart.getDay(); var off=dow===0?6:dow-1;
   wstart.setDate(wstart.getDate()-off); wstart.setHours(0,0,0,0);
   var count=weekValue((DB.logs||[]).filter(function(l){return new Date(l.date)>=wstart;}));
-  var GOAL=getWeekGoal();
+  var GOAL=getWeekGoal(), GOLD=GOAL+1; // 01/11 (Adrien) : affiché sur 5 (le gold), la semaine reste validée à 4
   var sub;
   if(count<=0) sub='C\'est parti pour la semaine&#x202F;!';
   else if(count<GOAL) sub='Plus que <strong>'+fmtSeances(GOAL-count)+'</strong> pour valider ta semaine &#x1F3AF;';
-  else if(count>GOAL) sub='En feu cette semaine&#x202F;! &#x1F525;';
-  else sub='Objectif atteint, semaine validée&#x202F;! &#x2705;';
-  el.innerHTML='<div class="gym-greet-count"><span class="ggc-num">'+fmtSeances(count)+'</span><span class="ggc-goal">/ '+GOAL+'</span>'
+  else if(count>=GOLD) sub='Semaine gold&#x202F;! &#x1F947;';
+  else sub='Valid&#xE9;e &#x2705; &#xB7; encore <strong>'+fmtSeances(GOLD-count)+'</strong> pour le gold&#xA0;&#x1F947;';
+  el.innerHTML='<div class="gym-greet-count"><span class="ggc-num">'+fmtSeances(count)+'</span><span class="ggc-goal">/ '+GOLD+'</span>'
     +'<span class="ggc-cap">séance'+(count>1?'s':'')+'<br>cette semaine</span></div>'
     +'<div class="gym-greet-sub">'+sub+'</div>'
     // 04/08 (demande Adrien) : ＋ = LiveUp (l'entrée principale), 🧘 = espace Détente.
@@ -1559,7 +1559,7 @@ function lcLiveHtml(x){
   var wB=pc(base.done), wT=Math.min(100-wB,pc(today)), wL=Math.min(100-wB-wT,pc(left));
   var cls=r>=1?' hot':r>=0.75?' warn':'';
   return '<div class="lc-live'+cls+'"><div class="lc-top"><span>&#x1F4CA; S&#xE9;ries &#xE0; '+W+' '+base.unite+'</span>'
-    +'<strong>'+tot+(today?' <em>(+'+today+' auj.)</em>':'')+' / '+T+'</strong></div>'
+    +'<strong>'+tot+' / '+T+'</strong></div>'
     +'<div class="lc-bar lc-bar3"><i class="lc-b" style="width:'+wB.toFixed(1)+'%"></i><i class="lc-t holo-fill" style="width:'+wT.toFixed(1)+'%"></i><i class="lc-l" style="width:'+wL.toFixed(1)+'%"></i></div>'
     +(r>=1?'<div class="lc-sub">Objectif d&#xE9;pass&#xE9;&#x202F;: c\'est le moment de monter.</div>':'')
     +'</div>';
@@ -6426,11 +6426,11 @@ function asRenderRest(x,inter){
     +'<div class="as-ring-center"><div class="as-ring-time" id="as-rest-time">'+formatTime(rem)+'</div><div class="as-ring-sub">'+(inter&&nxt?'ensuite&#x202F;:':'prochaine s&#xE9;rie')+'</div></div></div>';
   if(inter&&nxt) h+='<div class="as-next-exo">&#x1F449; '+nxt.name+'</div>';
   else if(!inter) h+='<div class="as-next-exo dim">'+(x.bonusMode?'S&#xE9;rie bonus':'S&#xE9;rie '+AS.setIdx+'/'+x.n)+' &#xB7; '+x.weight+' '+x.unite+'</div>';
-  h+=lcLiveHtml(inter?(nxt||null):x);
+  // 01/11 (Adrien) : boutons d'abord, puis la barre de séries ; la bulle de stats « depuis tes débuts » est retirée du repos
   h+='<div class="as-rest-btns"><button class="as-ghost-btn" onclick="asAddRest(30)">+30s</button>'
     +(inter?'<button class="as-ghost-btn" onclick="asOneMoreSet()">&#x21BB; S&#xE9;ries bonus</button>':'')
     +'<button class="as-ghost-btn" onclick="asSkipRest()">Passer &#x23ED;</button></div>';
-  h+=asStatBubble(inter&&nxt?nxt:x);
+  h+=lcLiveHtml(inter?(nxt||null):x);
   h+='</div>';
   return h;
 }
