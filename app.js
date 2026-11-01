@@ -1529,7 +1529,7 @@ function loadCount(key,liveX){
   var count=function(x){ return (x.sets||[]).filter(function(st){ return at(st.w!=null?st.w:x.w); }).length; };
   var done=0;
   if(liveX) done+=count(liveX);
-  var logs=(DB.logs||[]).filter(function(l){ return l.live&&l.live.exos&&(!liveX||String(l.id)!==String(AS&&AS.savedLogId)); })
+  var logs=(DB.logs||[]).filter(function(l){ return l.live&&l.live.exos&&(!liveX||(String(l.id)!==String(AS&&AS.savedLogId)&&String(l.id)!==String(AS&&AS.resumeLogId))); })
     .sort(function(a,b){ return b.date.localeCompare(a.date)||(b.time||'').localeCompare(a.time||''); });
   for(var i=0;i<logs.length;i++){
     logs[i].live.exos.forEach(function(x){ if(x.key===key&&liveExoCounted(x)) done+=count(x); });
@@ -1543,6 +1543,25 @@ function getProgressNudge(key){
   if(lc.ratio>=1) return {lvl:'hot',chip:'&#x1F534; '+lc.done+'/'+lc.target+' séries',msg:lbl+' &#x2014; l\'objectif de s&#xE9;ries est d&#xE9;pass&#xE9; sans monter&#x202F;: il est temps de charger plus (ou de changer d\'angle&#x202F;: tempo, +1 rep).'};
   if(lc.ratio>=0.75) return {lvl:'warn',chip:'&#x26A0; '+lc.done+'/'+lc.target+' séries',msg:lbl+' &#x2014; si tes s&#xE9;ries passent proprement, la hausse arrive bient&#xF4;t.'};
   return null;
+}
+// Même barre EN SÉANCE (01/11, demande Adrien : « avoir un œil dessus » à l'intro et pendant le repos) :
+// plein = séries déjà faites à la charge, irisé = celles du jour, pointillé = celles qui restent prévues.
+function lcLiveHtml(x){
+  if(!x||exoIsCardio(x.key)) return '';
+  var base=loadCount(x.key,{key:x.key,sets:[]}); if(!base) return '';
+  var withToday=loadCount(x.key,x)||base;
+  var today=Math.max(0,withToday.done-base.done), T=base.target;
+  var W=base.w, inv=asIsInverse(x.key), atW=inv?x.weight<=W:x.weight>=W;
+  var left=atW&&!x.bonusMode?Math.max(0,(x.n||0)-(x.sets||[]).length-(x.skippedSets||0)):0;
+  var tot=base.done+today, r=tot/T;
+  var pc=function(v){ return Math.max(0,Math.min(100,v/T*100)); };
+  var wB=pc(base.done), wT=Math.min(100-wB,pc(today)), wL=Math.min(100-wB-wT,pc(left));
+  var cls=r>=1?' hot':r>=0.75?' warn':'';
+  return '<div class="lc-live'+cls+'"><div class="lc-top"><span>&#x1F4CA; S&#xE9;ries &#xE0; '+W+' '+base.unite+'</span>'
+    +'<strong>'+tot+(today?' <em>(+'+today+' auj.)</em>':'')+' / '+T+'</strong></div>'
+    +'<div class="lc-bar lc-bar3"><i class="lc-b" style="width:'+wB.toFixed(1)+'%"></i><i class="lc-t holo-fill" style="width:'+wT.toFixed(1)+'%"></i><i class="lc-l" style="width:'+wL.toFixed(1)+'%"></i></div>'
+    +(r>=1?'<div class="lc-sub">Objectif d&#xE9;pass&#xE9;&#x202F;: c\'est le moment de monter.</div>':'')
+    +'</div>';
 }
 // Barre « séries à cette charge » de la fiche d'un exo (toujours visible dès qu'il y a des séries)
 function loadCountHtml(key){
@@ -4949,7 +4968,7 @@ function exoStatsHTML(key,title){
     +'<div class="as-sb-item"><span>'+approx+st.series+'</span>s&#xE9;ries au total</div>'
     +'<div class="as-sb-item"><span>'+approx+st.reps+'</span>reps cumul&#xE9;es</div>'
     +'</div>'
-    +'<div class="as-sb-foot">'+(st.lc?st.lc.done+' / '+st.lc.target+' s&#xE9;ries &#xE0; la charge actuelle':st.atW+' s&#xE9;ance'+(st.atW>1?'s':'')+' au poids actuel')+' &#xB7; '+st.measures+' mesures'
+    +'<div class="as-sb-foot">'+st.measures+' mesures' // les séries à la charge vivent dans la barre juste au-dessus (01/11)
     +(st.estim?' &#xB7; &#x2248; estim&#xE9; sur l\'historique d\'avant le mode direct':'')+'</div>'
     +'</div>';
 }
@@ -6093,6 +6112,7 @@ function asRenderIntro(x){
         h+='<div class="as-record-chip first">&#x1F3C6; Premi&#xE8;re fois &#x2014; la perf du jour pose le record.</div>';
       }
     }catch(e){}
+    h+=lcLiveHtml(x);
     if(hasImg) h+='<div class="as-demo"><img src="'+IMGS[x.img]+'" alt="'+x.name+'" loading="lazy"/></div>';
     h+='<div class="as-cue">&#x27A1; '+x.cue+(x.bless?'<div class="cue-bless">&#x1FA79; '+x.bless+'</div>':'')+'</div>';
     h+='<div class="as-lbl" style="text-align:center;">Poids de travail <span class="as-lbl-hint">cette s&#xE9;ance seulement &#xB7; r&#xE9;f. '+x.w0+' '+x.unite+'</span></div>'+asWeightRow(x);
@@ -6364,6 +6384,7 @@ function asRenderRest(x,inter){
     +'<div class="as-ring-center"><div class="as-ring-time" id="as-rest-time">'+formatTime(rem)+'</div><div class="as-ring-sub">'+(inter&&nxt?'ensuite&#x202F;:':'prochaine s&#xE9;rie')+'</div></div></div>';
   if(inter&&nxt) h+='<div class="as-next-exo">&#x1F449; '+nxt.name+'</div>';
   else if(!inter) h+='<div class="as-next-exo dim">'+(x.bonusMode?'S&#xE9;rie bonus':'S&#xE9;rie '+AS.setIdx+'/'+x.n)+' &#xB7; '+x.weight+' '+x.unite+'</div>';
+  h+=lcLiveHtml(inter?(nxt||null):x);
   h+='<div class="as-rest-btns"><button class="as-ghost-btn" onclick="asAddRest(30)">+30s</button>'
     +(inter?'<button class="as-ghost-btn" onclick="asOneMoreSet()">&#x21BB; S&#xE9;ries bonus</button>':'')
     +'<button class="as-ghost-btn" onclick="asSkipRest()">Passer &#x23ED;</button></div>';

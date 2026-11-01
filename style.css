@@ -3034,3 +3034,14 @@ span.bn-hero-bar i.n-gold,.bn-hero-bar i.n-blue{color:transparent;}
 .as-rep-exo.compact .setw,.as-rep-exo.compact .setw.up,.as-rep-exo.compact .setw.down{color:inherit;}
 .as-rep-exo.compact .as-rep-exo-name .abdo-mark{display:none;}
 .as-rep-bonus{font-style:normal;color:var(--mut);}
+/* Séries à la charge, en séance (01/11) : plein = avant, irisé = aujourd'hui, pointillé = encore prévu */
+.lc-live{width:100%;max-width:360px;margin:.55rem auto .2rem;padding:.5rem .65rem;border:1px solid var(--gb);border-radius:var(--x-r-md);background:rgba(255,255,255,.03);text-align:left;}
+.lc-live .lc-top strong em{font-family:'Manrope',system-ui,sans-serif;font-style:normal;font-weight:700;font-size:.6rem;color:var(--mut);}
+.lc-bar3{display:flex;}
+.lc-bar3 i{display:block;height:100%;border-radius:0;}
+.lc-bar3 .lc-b{background:var(--acc);}
+.lc-live.warn .lc-b{background:var(--yellow);} .lc-live.hot .lc-b{background:var(--red);}
+.lc-live.warn .lc-top strong{color:var(--yellow);} .lc-live.hot .lc-top strong{color:var(--red);} .lc-live.hot{border-color:var(--x-red-50);}
+.lc-bar3 .holo-fill{background:linear-gradient(100deg,#8BE9FD 0%,#B38CFF 26%,#FF8CC8 52%,#FFE9A0 76%,#8BFFC9 100%);}
+.lc-bar3 .lc-l{background:repeating-linear-gradient(90deg,var(--gb) 0 4px,transparent 4px 7px);}
+@media (prefers-color-scheme: light){ .lc-live{background:rgba(18,21,28,.03);} }
