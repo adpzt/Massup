@@ -1569,7 +1569,8 @@ function buildSeances(){
   gridMain.innerHTML=''; gridMini.innerHTML=''; panelsDiv.innerHTML='';
 
   DATA.forEach(function(s,si){
-    var mini=si>=2; // PUSH + PULL en grand, le reste (Jambes, Bonus, Maison) en petites bulles
+    if(s.id==='sm') return; // ROUTINE MAISON (01/11, Adrien) : pas de bulle ici — elle se lance depuis le LiveUp
+    var mini=si>=2; // PUSH + PULL en grand, le reste (Jambes, Others) en petites bulles
     var grid=mini?gridMini:gridMain;
     var card=document.createElement('div');
     card.className='sc'+(si===0?' active':'')+(mini?' sc-mini':'');
@@ -5563,6 +5564,7 @@ function asBonusOptions(){
   var s=sel.sid?DATA.find(function(x){return x.id===sel.sid;}):null;
   DATA.forEach(function(sx){
     if(sx.id===sel.sid) return;
+    if(sx.id==='sm') return; // ROUTINE MAISON (01/11, Adrien) : jamais proposée en complément — elle se lance seule depuis sa carte
     sx.exos.forEach(function(e){
       if(e.hidden) return;
       if(sel.sid&&(e.cat||'')==='abdo') return;
@@ -5611,7 +5613,7 @@ function asGapGroups(){
 function asSetup2ChipsHtml(){
   var f=AS.sel.bFilter||'all';
   var chips=[{id:'all',lbl:'Tout'}];
-  DATA.forEach(function(sx){ if(sx.id!==AS.sel.sid) chips.push({id:sx.id,lbl:sx.icon+' '+sx.name}); });
+  DATA.forEach(function(sx){ if(sx.id!==AS.sel.sid&&sx.id!=='sm') chips.push({id:sx.id,lbl:sx.icon+' '+sx.name}); });
   var opts=asBonusOptions();
   if(opts.some(function(o){return asExoNeverDone(o.e.key);})) chips.push({id:'new',lbl:'&#x1F195; Jamais fait'});
   if(asWeekSalleCount()>=2) chips.push({id:'gap',lbl:'&#x1F50B; En retard'});
@@ -6415,7 +6417,7 @@ function asSheet(){
 var _asAddFilter='all';
 function asLiveAddOpts(){
   var out=[];
-  DATA.forEach(function(sx){ sx.exos.forEach(function(e){
+  DATA.forEach(function(sx){ if(sx.id==='sm'&&AS.sid!=='sm') return; sx.exos.forEach(function(e){
     if(e.hidden) return;
     // Un exo passé sans aucune série faite = « retiré » → il redevient proposable (asAddKey le ravive)
     if(AS.exos.some(function(x){return x.key===e.key&&!(x.status==='skipped'&&!(x.sets||[]).length);})) return;

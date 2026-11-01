@@ -79,6 +79,8 @@ const ADRIEN = [
   ['a_sport_where', ['SPORT.open()', 'SPORT.runWhere()'], { scroll: '#spOverlay .as-scroll' }],
   ['a_cardio_gym', ['SPORT.open()', 'SPORT.runWhere()', "SPORT.gym('course')"], { scroll: '#asOverlay .as-scroll' }],
   ['a_maison_setup', ['asOpen()', "asChooseSeance('sm')"], { scroll: '#asOverlay .as-scroll' }],
+  // (01/11) Une séance de salle ne propose jamais les exos de la routine maison (setup + ajout en séance)
+  ['a_setup_nomaison', ["asOpen()", "asChooseSeance('s1')", "(function(){if(asBonusOptions().some(function(o){return o.sx.id==='sm';}))throw new Error('ECHEC exo maison propose');if(document.querySelector('#sgridMain [data-id=sm],#sgridMini [data-id=sm]'))throw new Error('ECHEC bulle maison');})()"], { scroll: '#asOverlay .as-scroll' }],
   ['a_maison_exo', ['asOpen()', "asChooseSeance('sm')", 'asToReady()', 'asGoReal()', 'asWarmupGo()'], { scroll: '#asOverlay .as-scroll' }],
   ['a_maison_report', ['asOpen()', "asChooseSeance('sm')", 'asToReady()', 'asGoReal()', "AS.exos.forEach(function(x){x.sets=[{reps:x.reps,feel:'ok',w:x.weight}];x.status='done';});AS.end=AS.end||{};asPersistLog();var l=DB.logs.find(function(y){return String(y.id)===String(AS.savedLogId);});if(liveLogNote20(l)!==null||logWeight(l)!==0) throw new Error('ECHEC routine notée ou comptée');AS.step='report';AS.repIdx=0;asRender()"], { scroll: '#asOverlay .as-scroll' }],
   ['a_maison_count', [`(function(){
