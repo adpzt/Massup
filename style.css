@@ -2326,8 +2326,8 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 .mv-fill.over{background:linear-gradient(90deg,#FFC94D,#FF8452);}
 .mv-val.ok{color:var(--acc2);}
 .mv-val.gold{color:#E8B23A;}
-.mv-t10{left:48%;}
-.mv-t20{left:68%;right:auto;}
+.mv-t10{left:64%;} /* repère 16 séries (bleu) sur une échelle de 25 */
+.mv-t20{left:80%;right:auto;} /* repère 20 séries (gold) */
 
 /* ═══ 03/08 : OTHERS (catégories, rituel posture, tuile cardio) ═══ */
 .oth-cat{font-family:'Saira',system-ui,sans-serif;font-style:italic;font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:1rem 0 .45rem;padding-left:.15rem;}
@@ -2980,3 +2980,5 @@ span.bn-hero-bar i.n-gold,.bn-hero-bar i.n-blue{color:transparent;}
   /* consignes : fond quasi blanc en clair pour garder le texte coloré ≥ 4,5:1 */
   .g-ok,.g-dur,.g-echec{background:var(--x-glass-hi);}
 }
+/* Tuiles « Cette semaine » : le nom, puis l'objectif à la ligne (01/11, demande Adrien) */
+.wn-lbl .wn-obj{display:block;margin-top:.1rem;font-style:normal;font-weight:800;}

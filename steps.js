@@ -29,8 +29,13 @@ var STEPS=(function(){
     return n?sum:null;
   }
   function stepsOf(d){ if(!A) return null; var e=H()[d]; if(!e) return null; if(e.steps!=null) return e.steps; if(e.ms!=null) return e.ms; return hourlySteps(d); }
-  function tier(v){ return v==null?'none':v>=10000?'gold':v>=8000?'green':v>=6000?'gray':'red'; }
-  var TLBL={gold:'🥇 10 000+',green:'✅ 8 000+',gray:'6 000+',red:'sous 6 000',none:'—'};
+  // « blood » (01/11, MASSUP seulement via adapter.blood) : journée sous 1 000 pas = rouge sang
+  function tier(v){ return v==null?'none':v>=10000?'gold':v>=8000?'green':v>=6000?'gray':(A&&A.blood&&v<A.blood?'blood':'red'); }
+  var TLBL={gold:'🥇 10 000+',green:'✅ 8 000+',gray:'6 000+',red:'sous 6 000',blood:'sous 1 000',none:'—'};
+  // Moyenne visée par jour : objectif de la semaine / 7 si l'app en fixe un (MASSUP : 50 000 → ~7 143)
+  function avgGoal(){ return A&&A.weekGoal?A.weekGoal/7:GOAL; }
+  // Libellé de l'objectif : par semaine si l'app en fixe un (MASSUP), sinon par jour
+  function goalTxt(){ return A&&A.weekGoal?fmt(A.weekGoal)+' pas par semaine':fmt(GOAL)+' pas par jour'; }
   // Semaine : moyenne sur les jours RENSEIGNÉS (jusqu'à aujourd'hui)
   function week(mon){
     var t=today(), days=[], sum=0, n=0;
@@ -47,8 +52,16 @@ var STEPS=(function(){
     if(mon<monOf(today())) return null;
     var w=week(mon), cur=mon===monOf(today());
     if(w.n<(cur?1:4)||w.avg==null) return null;
-    var a=w.avg, f=a>=10000?1:a>=8000?0.75+0.25*(a-8000)/2000:a>=6000?0.3+0.45*(a-6000)/2000:Math.max(0,0.3*(a-3000)/3000);
+    // Paliers proportionnels à la moyenne visée g (8 000 par défaut : 6 000 / 8 000 / 10 000 = 0,75 g / g / 1,25 g)
+    var a=w.avg, g=avgGoal(), f=a>=1.25*g?1:a>=g?0.75+0.25*(a-g)/(0.25*g):a>=0.75*g?0.3+0.45*(a-0.75*g)/(0.25*g):Math.max(0,0.3*(a-0.375*g)/(0.375*g));
     return Math.round(f*max*10)/10;
+  }
+  // Jours PASSÉS de la semaine sous le seuil « rouge sang » (adapter.blood) — malus de la note (MASSUP)
+  function bloodDays(mon){
+    if(!A||!A.blood) return 0;
+    var t=today(), n=0;
+    for(var i=0;i<7;i++){ var d=addD(mon,i), v=stepsOf(d); if(d<t&&v!=null&&v<A.blood) n++; }
+    return n;
   }
 
   /* ── Synchro : lecture de SES jours dans health_days (RLS) ── */
@@ -129,7 +142,7 @@ var STEPS=(function(){
     return '<button class="st-card" type="button" onclick="STEPS.open()">'
       +'<div class="st-top"><span class="st-ttl">👟 Pas</span><span class="st-sync">'+sync+'</span></div>'
       +'<div class="st-main"><div class="st-now t-'+tier(v)+'"><b>'+(v!=null?fmt(v):'—')+'</b><small>aujourd’hui</small></div>'
-      +'<div class="st-avg"><span class="st-avgv t-'+avgT+'">'+(w.avg!=null?fmt(w.avg):'—')+'</span><small>moyenne de la semaine · obj. '+fmt(GOAL)+'</small>'
+      +'<div class="st-avg"><span class="st-avgv t-'+avgT+'">'+(w.avg!=null?fmt(w.avg):'—')+'</span><small>moyenne de la semaine · obj. '+fmt(avgGoal())+'</small>'
       +'<span class="st-bar"><i class="t-'+avgT+'" style="width:'+(w.avg!=null?Math.min(100,w.avg/10000*100):0)+'%"></i><b style="left:80%"></b></span></div></div>'
       +'<div class="st-week">'+bars+'</div>'
       +'</button>';
@@ -251,7 +264,7 @@ var STEPS=(function(){
       +'<div class="st-chart-detail"><strong class="t-'+tier(selected&&selected.v)+'">'+value+'</strong><span>'+valueLabel+'</span><small>'+detailLine+'</small></div>'
       +totalLine
       +chart
-      +'<div class="st-chart-foot">'+(A.app==='adrien'&&ST.mode==='day'?data.hasHourly?'Pas par heure · total de la journée affiché dans les statistiques':'Total journalier · objectif '+fmt(GOAL)+' par jour':'Pas quotidiens · objectif '+fmt(GOAL)+' par jour')+'</div>';
+      +'<div class="st-chart-foot">'+(A.app==='adrien'&&ST.mode==='day'?data.hasHourly?'Pas par heure · total de la journée affiché dans les statistiques':'Total journalier · objectif '+fmt(GOAL)+' par jour':(A&&A.weekGoal?'Pas quotidiens · objectif '+goalTxt():'Pas quotidiens · objectif '+fmt(GOAL)+' par jour'))+'</div>';
   }
   function bindChartSwipe(){
     var wrap=document.querySelector('.st-chart-wrap'); if(!wrap) return;
@@ -369,7 +382,7 @@ var STEPS=(function(){
     if(A.app==='adrien'){
       periodData();
       var h='<div class="as-hdr st-header"><div class="as-hdr-left"><button class="as-exit st-exit" onclick="STEPS.close()" title="Fermer" aria-label="Fermer">✕</button></div>'
-        +'<div class="as-hdr-mid"><div class="as-hdr-title">👟 Pas</div><div class="as-hdr-sub">'+(meta().syncAt?'synchro '+ago(meta().syncAt):'objectif : '+fmt(GOAL)+' pas par jour')+'</div></div>'
+        +'<div class="as-hdr-mid"><div class="as-hdr-title">👟 Pas</div><div class="as-hdr-sub">'+(meta().syncAt?'synchro '+ago(meta().syncAt):'objectif : '+goalTxt())+'</div></div>'
         +'<div class="as-hdr-right"><button class="as-hbtn" onclick="STEPS.refresh()" title="Actualiser avec Raccourcis" aria-label="Actualiser">↻</button></div></div>'
         +'<div class="as-scroll st-scroll st-scroll-modern"><div class="wn-card st-history">'+historyHtml()+'</div>';
       var mets=Object.keys(MET).filter(function(k){return Object.keys(H()).some(function(d){return H()[d][k]!=null;});});
@@ -394,7 +407,7 @@ var STEPS=(function(){
       return;
     }
     var h='<div class="as-hdr st-header"><div class="as-hdr-left"><button class="as-exit st-exit" onclick="STEPS.close()" title="Fermer" aria-label="Fermer">✕</button></div>'
-      +'<div class="as-hdr-mid"><div class="as-hdr-title">👟 Pas</div><div class="as-hdr-sub">'+(meta().syncAt?'synchro Santé '+ago(meta().syncAt):'objectif : '+fmt(GOAL)+' de moyenne par semaine')+'</div></div>'
+      +'<div class="as-hdr-mid"><div class="as-hdr-title">👟 Pas</div><div class="as-hdr-sub">'+(meta().syncAt?'synchro Santé '+ago(meta().syncAt):'objectif : '+(A&&A.weekGoal?goalTxt():fmt(GOAL)+' de moyenne par semaine'))+'</div></div>'
       +'<div class="as-hdr-right"><button class="as-hbtn" onclick="STEPS.refresh()" title="Actualiser">↻</button></div></div>';
     h+='<div class="as-scroll st-scroll">';
     // Aujourd'hui
@@ -403,7 +416,7 @@ var STEPS=(function(){
       +'<div class="st-hc"><b class="t-'+tier(v)+'">'+(v!=null?fmt(v):'—')+'</b><small>pas aujourd’hui</small><em class="t-'+tier(v)+'">'+(v==null?'pas encore de données':v>=10000?'🥇 journée gold':v>=8000?'✅ objectif du jour':'encore '+fmt(8000-v)+' pour 8 000')+'</em></div></div>';
     // Semaine
     h+='<div class="wn-card st-sec st-week-card"><div class="wn-title">Cette semaine</div>'+cardWeek(w)
-      +'<div class="st-wl"><span>Moyenne</span><b class="t-'+tier(w.avg)+'">'+(w.avg!=null?fmt(w.avg):'—')+'</b><em>'+(w.avg==null?'':w.avg>=GOAL?'objectif tenu ✅':'il manque '+fmt(GOAL-w.avg)+' / jour')+'</em></div>'
+      +'<div class="st-wl"><span>Moyenne</span><b class="t-'+tier(w.avg)+'">'+(w.avg!=null?fmt(w.avg):'—')+'</b><em>'+(w.avg==null?'':w.avg>=avgGoal()?'objectif tenu ✅':'il manque '+fmt(avgGoal()-w.avg)+' / jour')+'</em></div>'
       +'<div class="st-wl"><span>Semaine dernière</span><b class="t-'+tier(pw.avg)+'">'+(pw.avg!=null?fmt(pw.avg):'—')+'</b><em>'+(pw.n?pw.n+' jours renseignés':'')+'</em></div>'
       +'</div>';
     // Historique
@@ -464,7 +477,7 @@ var STEPS=(function(){
       });
     } else pull(false);
   });
-  function init(adapter){ A=adapter; }
+  function init(adapter){ A=adapter; if(A&&A.weekGoal) WEEK_GOAL=A.weekGoal; }
   function renderPreservingScroll(body,html,preserve){
     var oldScroll=body.querySelector('.as-scroll'), scrollTop=oldScroll?oldScroll.scrollTop:0;
     body.innerHTML=html;
@@ -472,6 +485,6 @@ var STEPS=(function(){
       var newScroll=body.querySelector('.as-scroll'); if(newScroll) newScroll.scrollTop=scrollTop;
     }
   }
-  return {init:init,renderCard:renderCard,open:open,close:close,refresh:refresh,pull:pull,week:week,weekPts:weekPts,stepsOf:stepsOf,tier:tier,
+  return {init:init,renderCard:renderCard,open:open,close:close,refresh:refresh,pull:pull,week:week,weekPts:weekPts,bloodDays:bloodDays,stepsOf:stepsOf,tier:tier,
     renderPreservingScroll:renderPreservingScroll,_mode:setMode,_select:selectPoint,_selectCard:selectCardDate,_page:page,_manual:manual,_copy:copy};
 })();

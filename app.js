@@ -139,7 +139,7 @@ function loadDB(){
 // thread principal à chaque action — on regroupe. Flush garanti sur pagehide/visibilitychange.
 // ── 👟 Pas & activité (29/09, demande Adrien) — module commun steps.js (chargé avant app.js) ──
 // Bloc « Pas » sous « Cette semaine » au Bilan, écran complet, données Santé via Raccourci iOS → /api/health.
-if(typeof STEPS!=='undefined') STEPS.init({app:'adrien',db:function(){ return DB; },save:function(){ saveDB(); },toast:function(m){ showToast(m); },
+if(typeof STEPS!=='undefined') STEPS.init({app:'adrien',weekGoal:50000,blood:1000,db:function(){ return DB; },save:function(){ saveDB(); },toast:function(m){ showToast(m); },
   sb:function(){ return (typeof sbClient!=='undefined'&&sbClient)?sbClient:null; },weekPtsMax:3,
   onChange:function(){ if(_currentView==='sante') try{ renderSante(); }catch(e){} }});
 if(typeof SLEEP!=='undefined') SLEEP.init({db:function(){ return DB; },save:function(){ saveDB(); },toast:function(m){ showToast(m); }});
@@ -2600,6 +2600,7 @@ function deleteWeightEntry(key, date){
   showToast('Entrée du '+formatDateFr(date)+' supprimée');
 }
 
+function dateKeyLocal(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function renderFreqChart(){
   var barsEl=document.getElementById('freqMiniBars');
   if(!barsEl) return;
@@ -2615,7 +2616,8 @@ function renderFreqChart(){
     var wend=new Date(wstart); wend.setDate(wend.getDate()+6); wend.setHours(23,59,59,999);
     var count=weekValue(DB.logs.filter(function(l){ var d=new Date(l.date); return d>=wstart&&d<=wend; }));
     var goal=getWeekGoal();
-    var cls=count>=goal+1?'freq-bar gold':count>=goal?'freq-bar valid':count>=goal-1?'freq-bar mid':'freq-bar low';
+    var strict=dateKeyLocal(wstart)>=FREQ_STRICT_START; // 01/11 : dès le 02/11, 3 séances (objectif 4) = rouge
+    var cls=count>=goal+1?'freq-bar gold':count>=goal?'freq-bar valid':(!strict&&count>=goal-1)?'freq-bar mid':'freq-bar low';
     var lbl=w===0?'★':('S-'+w);
     var bar=document.createElement('div');
     bar.className=cls;
@@ -2668,7 +2670,10 @@ function muscleVolume(startDate,endDate){
 }
 // Barres HTML réutilisables (Progression + simulation du setup LiveUp + bilan hebdo).
 // extra = séries PROJETÉES (sélection en cours) affichées en segment translucide.
-// Seuils (validés Adrien 02/08 soir) : <12 gris · 12-16 bleu · 17-25 gold · >25 orange (trop).
+// Seuils (01/11, demande Adrien ; avant : 12 bleu · 17 gold) : bleu dès 16 séries (Abdos : 12 jusqu'au
+// 31/01/2027, 16 ensuite) · gold dès 20 · >25 orange (trop). Gris en dessous.
+function volBlueMin(label){ return label==='Abdos'&&todayStr()<'2027-02-01'?12:16; }
+function volTier(label,tot){ return tot>25?'over':tot>=20?'gold':tot>=volBlueMin(label)?'ok':'low'; }
 function muscleVolumeBarsHtml(vol,extra,compact,extraCls){
   var h='';
   var SCALE=25; // la barre va jusqu'à 25 (au-delà = volume poubelle)
@@ -2676,7 +2681,7 @@ function muscleVolumeBarsHtml(vol,extra,compact,extraCls){
     var v=vol[g.label]||0, x=(extra&&extra[g.label])||0;
     var tot=v+x;
     var pW=Math.min(100,v/SCALE*100), xW=Math.min(100-pW,x/SCALE*100);
-    var cls=tot>25?'over':tot>=17?'gold':tot>=12?'ok':'low';
+    var cls=volTier(g.label,tot);
     // les demi-séries du crédit « assistant » s'affichent arrondies (11,5 → 12)
     var vd=Math.round(v), xd=Math.round(x);
     h+='<div class="mv-row'+(compact?' compact':'')+'">'
@@ -2756,7 +2761,7 @@ function renderMuscleVolume(){
       +muscleVolumeMonthBarsHtml(vol)
       +'<div class="mv-month-note">Comparaison des groupes musculaires travaill&#xE9;s sur la p&#xE9;riode : un volume diff&#xE9;rent ne signifie pas &#xE0; lui seul un d&#xE9;s&#xE9;quilibre physique.</div>';
   }else{
-    head+='<span class="mv-hint">12+ s&#xE9;ries = &#xE7;a construit &#xB7; 17-25 = gold &#xB7; &gt;25 = rendements d&#xE9;croissants (ok SI tout progresse)</span></span></div>'
+    head+='<span class="mv-hint">16+ s&#xE9;ries = bleu (abdos 12+ jusqu\'&#xE0; f&#xE9;vrier) &#xB7; 20+ = gold &#xB7; &gt;25 = rendements d&#xE9;croissants</span></span></div>'
       +muscleVolumeBarsHtml(vol,live,false,'holo');
   }
   el.innerHTML=head;
@@ -4279,7 +4284,7 @@ function exportCoachDossier(opts){
     ['Système de charge (28/10/2026)','Même charge sur toutes les séries, 1-2 séries d\'échauffement non comptées. Chaque exo a une fourchette (ex. 8-10). Consigne par série : série 1 = ok, séries intermédiaires = dur, dernière = echec (max de reps) ; à charge égale, la fatigue fait passer de ok à dur. La charge monte d\'un cran quand TOUTES les séries atteignent le haut de la fourchette (ex. 10-10-10-11 en 8-10) sans échec en série 1 ni 2 ; série 1 en échec sous le bas = charge trop lourde. « Cible » = bas de la fourchette. Indicateur clé : % de séries 1 en échec (cible < 10 %).'],
     ['Note /20','Note de séance calculée par l\'app sur l\'exécution des exos principaux (séries faites, reps vs cible, charge vs référence). Note /5 = même chose par exercice. Depuis le 28/10/2026 : seule la série 1 en échec coûte (exo plafonné à 4/5) ; la dernière série, menée au max, compte pleine. Les notes /20 déjà enregistrées ne changent jamais.'],
     ['Note de semaine','Note de l\'app : assiduité, exécution, objectifs hebdo de l\'app (dont des objectifs non sportifs) et pas. Pour le sport seul, lire « Exécution moyenne ».'],
-    ['Séries dures','Séries comptées par muscle (1 par série + 0,5 pour le muscle assistant des polyarticulaires). Repère : 10-20 par muscle et par semaine.'],
+    ['Séries dures','Séries comptées par muscle (1 par série + 0,5 pour le muscle assistant des polyarticulaires). Repère de l\'app : bleu dès 16 par muscle et par semaine (abdos 12 jusqu\'à février 2027), gold dès 20, plus de 25 = rendements décroissants.'],
     ['e1RM','Force estimée par série (Epley : charge × (1 + reps / 30)), seulement pour les exos chargés en kg (pas les assistances).'],
     ['Séances anciennes','Février → avril : séances RITM / escalade notées sans détail. Juin → juillet : séances reconstituées après une perte de données (dates approximatives, pas de détail). Détail série par série fiable à partir du 01/08/2026.'],
     ['Onglets','Synthèse · Semaines · Séances · Séries · Exercices · Historique charges · Poids · Course & sports · Pas · Sommeil · Douleurs · Mobilité.'],
@@ -4305,7 +4310,7 @@ function exportCoachDossier(opts){
   var dur30=logs.filter(function(l){return l.date>=d30&&l.live&&l.duration_min&&l.duration_min<200;}).map(function(l){return l.duration_min;});
   if(dur30.length) add('Durée moyenne de séance',Math.round(avg(dur30)),'min','30 jours');
   var vol4=muscleVolume(rankAddDays(curMon,-28),rankAddDays(curMon,-1));
-  GROUPS.forEach(function(g){ add('Séries dures / semaine — '+g,r1((vol4[g]||0)/4),'séries','moyenne des 4 dernières semaines closes','repère 10-20'); });
+  GROUPS.forEach(function(g){ add('Séries dures / semaine — '+g,r1((vol4[g]||0)/4),'séries','moyenne des 4 dernières semaines closes','repère : bleu dès 16 (abdos 12 jusqu\'à février), gold dès 20'); });
   var s30=setRows.filter(function(r){return r[0]>=d30;}), sp30=s30.filter(function(r){return r[6]==='principal';});
   if(sp30.length){
     add('Séries des exos principaux',sp30.length,'séries','30 jours');
@@ -6140,20 +6145,20 @@ function asRenderAsk(x){
     h+='<div class="as-lbl" style="margin-top:.9rem;">&#x1F448; C&#xF4;t&#xE9; GAUCHE &#x2014; c\'&#xE9;tait comment ?</div>';
     h+='<div class="as-feel-row">';
     AS_FEELS.forEach(function(f){
-      h+='<button class="as-feel'+(p.feelG===f.v?' on':'')+(f.v===_fsG?' goal':'')+'" onclick="asPendFeel(\''+f.v+'\',\'g\')"><span>'+f.ico+'</span>'+f.lbl+(f.v===_fsG?'<em>consigne</em>':'')+'</button>';
+      h+='<button class="as-feel'+(p.feelG===f.v?' on':'')+(f.v===_fsG?' goal':'')+'" onclick="asPendFeel(\''+f.v+'\',\'g\')"><span>'+f.ico+'</span>'+f.lbl+'</button>';
     });
     h+='</div>';
     h+='<div class="as-lbl" style="margin-top:.7rem;">C&#xF4;t&#xE9; DROIT &#x1F449; &#x2014; c\'&#xE9;tait comment ?</div>';
     h+='<div class="as-feel-row">';
     AS_FEELS.forEach(function(f){
-      h+='<button class="as-feel'+(p.feelD===f.v?' on':'')+(f.v===_fsG?' goal':'')+'" onclick="asPendFeel(\''+f.v+'\',\'d\')"><span>'+f.ico+'</span>'+f.lbl+(f.v===_fsG?'<em>consigne</em>':'')+'</button>';
+      h+='<button class="as-feel'+(p.feelD===f.v?' on':'')+(f.v===_fsG?' goal':'')+'" onclick="asPendFeel(\''+f.v+'\',\'d\')"><span>'+f.ico+'</span>'+f.lbl+'</button>';
     });
     h+='</div>';
   } else {
     h+='<div class="as-lbl" style="margin-top:.9rem;">C\'&#xE9;tait comment ?</div>';
     h+='<div class="as-feel-row">';
     AS_FEELS.forEach(function(f){
-      h+='<button class="as-feel'+(p.feel===f.v?' on':'')+(f.v===_fsG?' goal':'')+'" onclick="asPendFeel(\''+f.v+'\')"><span>'+f.ico+'</span>'+f.lbl+(f.v===_fsG?'<em>consigne</em>':'')+'</button>';
+      h+='<button class="as-feel'+(p.feel===f.v?' on':'')+(f.v===_fsG?' goal':'')+'" onclick="asPendFeel(\''+f.v+'\')"><span>'+f.ico+'</span>'+f.lbl+'</button>';
     });
     h+='</div>';
   }
@@ -10136,11 +10141,11 @@ function renderBilanWeekNut(){
     +'<div class="wn-title">Cette semaine <span class="wn-hint">tape pour ajouter &#xB7; confirm&#xE9; au bilan du dimanche</span></div>'
     +'<div class="wn-row">'
     +'<button class="wn-tile'+(mai>0?' on':'')+(mai>=o.maison?' full':'')+'" onclick="nutTapWeek(\'maison\')">'
-    +'<span class="wn-ico">&#x1F372;</span><span class="wn-count">'+mai+'<small>/'+o.maisonMax+'</small></span><span class="wn-lbl">plats maison &#xB7; obj. '+o.maison+'</span></button>'
+    +'<span class="wn-ico">&#x1F372;</span><span class="wn-count">'+mai+'<small>/'+o.maisonMax+'</small></span><span class="wn-lbl">plats maison<em class="wn-obj">obj. '+o.maison+'</em></span></button>'
     +'<button class="wn-tile'+(shk>0?' on':'')+(shk>=o.shk?' full':'')+'" onclick="nutTapWeek(\'shaker\')">'
-    +'<span class="wn-ico">'+o.shkIco+'</span><span class="wn-count">'+shk+'<small>/7</small></span><span class="wn-lbl">shaker &#xB7; obj. '+o.shk+'</span></button>'
+    +'<span class="wn-ico">'+o.shkIco+'</span><span class="wn-count">'+shk+'<small>/7</small></span><span class="wn-lbl">shaker<em class="wn-obj">obj. '+o.shk+'</em></span></button>'
     +'<button class="wn-tile'+(run>0?' on':'')+(run>=o.run?' full':'')+'" onclick="nutTapWeek(\'run\')">'
-    +'<span class="wn-ico">&#x1F3C3;</span><span class="wn-count">'+run+'<small>/'+o.run+'</small></span><span class="wn-lbl">courir &#xB7; obj. '+o.run+'</span></button>'
+    +'<span class="wn-ico">&#x1F3C3;</span><span class="wn-count">'+run+'<small>/'+o.run+'</small></span><span class="wn-lbl">courir<em class="wn-obj">'+(monday>=RUN_REQ_START?'obligatoire':'obj. '+o.run)+'</em></span></button>'
     +'</div></div>';
 }
 // ── NOTE /20 des bilans (15/08/2026, demande Adrien : « le bilan = juste une note /20 ») ──
@@ -10159,6 +10164,10 @@ var NUT_V2_START='2026-08-10';
 // 🏃 COURIR 1×/sem (champ `run`, ou séance « course » auto). Tout entre dans la note.
 // Les semaines d'avant gardent leur barème (une note ne change jamais par recalcul).
 var NUT_V3_START='2026-10-12';
+// 01/11/2026 (demandes Adrien) — règles datées, jamais rétroactives :
+// · dès la semaine du 02/11 : journée sous 1 000 pas = −0,5 pt sur la note de semaine ; 3 séances = rouge (4 = vert) ;
+// · dès la semaine du 07/12 (1er lundi de décembre) : courir 1×/semaine OBLIGATOIRE (sans sortie : −1 pt de plus).
+var STEP_BLOOD_START='2026-11-02', FREQ_STRICT_START='2026-11-02', RUN_REQ_START='2026-12-07';
 function nutObjectives(ws){
   if(!ws||ws>=NUT_V3_START) return {v:3,maison:10,maisonMax:14,shk:7,shkLbl:'shakers',shkIco:'&#x1F964;',run:1,pdj:0,cardio:0};
   var v2=ws>=NUT_V2_START;
@@ -10192,7 +10201,11 @@ function bilanNoteWeek(ws){
     var sS=Math.min(1,shk/o.shk)*3, sM=Math.min(1,mai/o.maison)*2, sR=Math.min(1,run/o.run)*1;
     var sw3=typeof STEPS!=='undefined'?STEPS.week(ws):null, p3=typeof STEPS!=='undefined'?STEPS.weekPts(ws,2):null;
     var raw3=a3+e3+sS+sM+sR+(p3!=null?p3:0);
-    return {v:3,note:Math.round((p3!=null?raw3:raw3*20/18)*2)/2,pA:r1(a3),pE:r1(e3),pS:r1(sS),pM:r1(sM),pR:r1(sR),pN:r1(sS+sM+sR),
+    var base3=p3!=null?raw3:raw3*20/18;
+    var blood=(ws>=STEP_BLOOD_START&&typeof STEPS!=='undefined'&&STEPS.bloodDays)?STEPS.bloodDays(ws):0;
+    var runReq=ws>=RUN_REQ_START, runMiss=runReq&&run<1?1:0;
+    var mal3=blood*0.5+runMiss;
+    return {v:3,note:Math.max(0,Math.round((base3-mal3)*2)/2),blood:blood,runReq:runReq,runMiss:runMiss,pA:r1(a3),pE:r1(e3),pS:r1(sS),pM:r1(sM),pR:r1(sR),pN:r1(sS+sM+sR),
       pP:p3,stepAvg:sw3?sw3.avg:null,salle:salle.length,goal:goal,avg:avg,maison:mai,shk:shk,run:run,pdj:0,declared:!!ans};
   }
   // 29/09 (demande Adrien) : les PAS entrent dans la note (/3, moyenne ≥ 8 000) et la créatine pèse moins
@@ -10399,7 +10412,7 @@ function wrAnalyze(ws){
   // Volume par muscle + délaissés (<6 = à peine touché) + sous la fenêtre (<12)
   var vol=muscleVolume(ws,we);
   var neglected=RADAR_GROUPS.map(function(g){return g.label;}).filter(function(lb){return (vol[lb]||0)<6;});
-  var underWin=RADAR_GROUPS.map(function(g){return g.label;}).filter(function(lb){var v0=vol[lb]||0;return v0>=6&&v0<12;});
+  var underWin=RADAR_GROUPS.map(function(g){return g.label;}).filter(function(lb){var v0=vol[lb]||0;return v0>=6&&v0<volBlueMin(lb);});
   // Semaine précédente (comparaison)
   var pws=rankAddDays(ws,-7);
   var prevLogs=(DB.logs||[]).filter(function(l){return l.date>=pws&&l.date<ws;});
@@ -10674,8 +10687,10 @@ function wrRender(){
         +'<div class="wr-b-row"><span>&#x1F4DD; Ex&#xE9;cution &#x2014; '+(B.avg!=null?'moy. '+String(Math.round(B.avg*10)/10).replace('.',',')+'/20':'pas de LiveUp')+'</span><span style="color:var(--acc2)">'+String(B.pE).replace('.',',')+' /6</span></div>'
         +'<div class="wr-b-row"><span>&#x1F964; Shaker &#x2014; '+B.shk+'/7 jours</span><span style="color:var(--yellow)">'+String(B.pS).replace('.',',')+' /3</span></div>'
         +'<div class="wr-b-row"><span>&#x1F372; Plats maison &#x2014; '+B.maison+'/14</span><span style="color:var(--yellow)">'+String(B.pM).replace('.',',')+' /2</span></div>'
-        +'<div class="wr-b-row"><span>&#x1F3C3; Courir &#x2014; '+B.run+' sortie'+(B.run>1?'s':'')+'</span><span style="color:var(--yellow)">'+String(B.pR).replace('.',',')+' /1</span></div>'
-        +'<div class="wr-b-row"><span>&#x1F45F; Pas &#x2014; '+(B.stepAvg!=null?'moy. '+Math.round(B.stepAvg).toLocaleString('fr-FR')+' / 8 000':'pas renseign&#xE9;s')+'</span><span style="color:#3FD68A">'+(B.pP!=null?String(B.pP).replace('.',',')+' /2':'&#x2014; (ramen&#xE9;e sur 20)')+'</span></div>'
+        +'<div class="wr-b-row"><span>&#x1F3C3; Courir &#x2014; '+B.run+' sortie'+(B.run>1?'s':'')+(B.runReq?' (obligatoire)':'')+'</span><span style="color:var(--yellow)">'+String(B.pR).replace('.',',')+' /1</span></div>'
+        +(B.runMiss?'<div class="wr-b-row"><span>&#x1F6A8; Course obligatoire non faite</span><span style="color:var(--red)">&#x2212;1</span></div>':'')
+        +'<div class="wr-b-row"><span>&#x1F45F; Pas &#x2014; '+(B.stepAvg!=null?'moy. '+Math.round(B.stepAvg).toLocaleString('fr-FR')+' / jour (obj. 50 000 / sem.)':'pas renseign&#xE9;s')+'</span><span style="color:#3FD68A">'+(B.pP!=null?String(B.pP).replace('.',',')+' /2':'&#x2014; (ramen&#xE9;e sur 20)')+'</span></div>'
+        +(B.blood?'<div class="wr-b-row"><span>&#x1FA78; '+B.blood+' journ&#xE9;e'+(B.blood>1?'s':'')+' sous 1 000 pas</span><span style="color:var(--red)">&#x2212;'+String(B.blood*0.5).replace('.',',')+'</span></div>':'')
         +'</div>';
       else h+='<div class="wr-breakdown">'
         +'<div class="wr-b-row"><span>&#x1F3CB; Assiduit&#xE9; &#x2014; '+fmtSeances(B.salle)+'/'+B.goal+' s&#xE9;ances</span><span style="color:var(--acc)">'+String(B.pA).replace('.',',')+' /7</span></div>'

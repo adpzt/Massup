@@ -7,7 +7,7 @@
 .slp-eyebrow{font-size:.75rem;font-weight:800;color:var(--txt);}
 .slp-main{display:flex;flex-wrap:wrap;align-items:baseline;gap:.35rem .55rem;margin:.3rem 0 .8rem;}
 .slp-main strong,.slp-selected strong{font:900 1.75rem/1 'Saira',system-ui,sans-serif;font-style:italic;font-variant-numeric:tabular-nums;color:var(--acc);}
-.slp-main>span,.slp-selected>span{font-size:.68rem;font-weight:700;color:var(--mut);text-transform:capitalize;}
+.slp-main>span,.slp-selected>span{font-size:.68rem;font-weight:700;color:var(--mut);}
 .slp-open,.slp-save,.slp-cancel{min-height:40px;padding:.6rem .85rem;border:1px solid var(--gb);border-radius:12px;font:800 .7rem 'Manrope',system-ui,sans-serif;cursor:pointer;}
 .slp-open{flex:0 0 auto;background:rgba(255,255,255,.055);color:var(--acc);}
 .slp-form{padding-top:.75rem;border-top:1px solid var(--gb);}
@@ -34,18 +34,9 @@
 .slp-range button{flex:1;min-height:40px;padding:.55rem;border:1px solid var(--gb);border-radius:999px;background:none;color:var(--mut);font:800 .7rem 'Manrope',system-ui,sans-serif;cursor:pointer;}
 .slp-range button.on{background:rgba(255,255,255,.1);color:var(--txt);}
 .slp-selected{display:flex;flex-wrap:wrap;align-items:baseline;gap:.4rem .65rem;padding:.25rem 0 .8rem;}
-.slp-chart{display:flex;align-items:stretch;gap:clamp(3px,.7vw,8px);width:100%;height:150px;padding:.25rem .1rem 0;border-bottom:1px solid var(--gb);overflow-x:auto;overflow-y:hidden;}
-.slp-point{display:flex;flex:1 1 0;min-width:0;flex-direction:column;align-items:center;justify-content:flex-end;gap:.3rem;padding:0 1px;border:0;background:none;color:var(--mut);font:700 .55rem 'Manrope',system-ui,sans-serif;white-space:nowrap;cursor:pointer;}
-.slp-chart-30{justify-content:flex-start;}
-.slp-chart-30 .slp-point{flex:0 0 24px;}
-.slp-track{display:flex;align-items:flex-end;justify-content:center;width:100%;height:calc(100% - 1.1rem);min-height:24px;border-radius:7px 7px 3px 3px;background:rgba(255,255,255,.04);overflow:hidden;}
-.slp-track i{display:block;width:min(70%,30px);min-height:2px;border-radius:8px 8px 3px 3px;background:linear-gradient(180deg,#D7C5FF,#8A70DA);}
-.slp-point.selected .slp-track{box-shadow:inset 0 0 0 1px var(--acc);}
-.slp-point.selected{color:var(--acc);}
-.slp-point.empty .slp-track i{display:none;}
 .slp-edit{min-width:0;margin-top:1rem;padding:clamp(.75rem,3vw,1rem);border:1px solid var(--gb);border-radius:16px;background:rgba(255,255,255,.025);}
 .slp-edit h2{margin:0;font:800 .9rem 'Manrope',system-ui,sans-serif;}
-.slp-edit-date{margin:.3rem 0 .85rem;font-size:.66rem;font-weight:700;line-height:1.45;color:var(--mut);text-transform:capitalize;}
+.slp-edit-date{margin:.3rem 0 .85rem;font-size:.66rem;font-weight:700;line-height:1.45;color:var(--mut);}
 .slp-edit-actions{display:flex;justify-content:flex-end;gap:.5rem;margin-top:.8rem;}
 .slp-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.55rem;margin-top:1rem;}
 .slp-stats>div{display:flex;min-width:0;flex-direction:column;gap:.15rem;padding:.65rem .75rem;border:1px solid var(--gb);border-radius:var(--x-r-md,14px);background:rgba(255,255,255,.035);}
@@ -63,7 +54,6 @@
 @media(max-width:340px){.slp-times{grid-template-columns:minmax(0,1fr);}.slp-times label{min-height:0;}}
 @media (prefers-color-scheme:light){
   .slp-times input{color-scheme:light;}
-  .slp-track{background:rgba(13,18,37,.055);}
 }
 
 
@@ -80,4 +70,34 @@
   .slp-range button.on{background:rgba(18,21,28,0.075);}
   .slp-edit{background:rgba(18,21,28,0.019);}
   .slp-stats>div{background:rgba(18,21,28,0.026);}
+}
+
+/* ═══ Historique sommeil v2 (01/11) : une colonne par nuit, du coucher au réveil sur un axe horaire ═══ */
+.slp-selected small{flex-basis:100%;font-size:.66rem;font-weight:700;color:var(--mut);font-variant-numeric:tabular-nums;}
+.slp-plot{position:relative;width:100%;height:220px;margin:.2rem 0 0;padding-left:2rem;}
+.slp-grid{position:absolute;inset:0 0 1.4rem 2rem;pointer-events:none;}
+.slp-gl{position:absolute;left:0;right:0;border-top:1px dashed var(--gb);}
+.slp-gl em{position:absolute;right:calc(100% + .35rem);top:-.45rem;font:700 .55rem 'Manrope',system-ui,sans-serif;font-style:normal;color:var(--mut);white-space:nowrap;}
+.slp-cols{position:relative;display:flex;gap:clamp(4px,1vw,10px);height:100%;}
+.slp-plot-30 .slp-cols{gap:2px;}
+.slp-col{display:flex;flex:1 1 0;min-width:0;flex-direction:column;gap:.3rem;padding:0;border:0;background:none;cursor:pointer;color:var(--mut);}
+.slp-lane{position:relative;flex:1;border-radius:8px;background:rgba(255,255,255,.025);}
+.slp-col.selected .slp-lane{box-shadow:inset 0 0 0 1.5px var(--txt);}
+.slp-day{height:1.1rem;font:700 .55rem 'Manrope',system-ui,sans-serif;text-align:center;white-space:nowrap;overflow:hidden;text-transform:capitalize;}
+.slp-col.selected .slp-day{color:var(--txt);}
+.slp-plot-30 .slp-day{overflow:visible;}
+.slp-bar{position:absolute;left:14%;right:14%;min-height:4px;border-radius:7px;border:1px solid;display:flex;align-items:flex-start;justify-content:center;}
+.slp-plot-30 .slp-bar{left:0;right:0;border-radius:4px;}
+.slp-bar b{margin-top:.25rem;font:800 .55rem 'Manrope',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:var(--txt);white-space:nowrap;}
+.slp-bar.none{top:40%;height:20%;border-style:dashed;border-color:var(--gb);}
+.slp-bar.short,.slp-legend i.short{color:var(--red);border-color:var(--x-red-50);background:var(--x-red-10);}
+.slp-bar.mid,.slp-legend i.mid{color:var(--yellow);border-color:var(--x-yellow-55);background:var(--x-yellow-10);}
+.slp-bar.good,.slp-legend i.good{color:var(--acc);border-color:var(--x-acc-45);background:var(--x-acc-15);}
+.slp-bar.long,.slp-legend i.long{color:var(--acc2);border-color:var(--x-acc2-45);background:var(--x-acc2-15);}
+.slp-selected strong.short{color:var(--red);} .slp-selected strong.mid{color:var(--yellow);} .slp-selected strong.long{color:var(--acc2);}
+.slp-legend{display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem .9rem;margin:.75rem 0 0;font-size:.6rem;font-weight:700;color:var(--mut);}
+.slp-legend span{display:inline-flex;align-items:center;gap:.3rem;}
+.slp-legend i{display:inline-block;width:.7rem;height:.7rem;border-radius:3px;border:1px solid;}
+@media (prefers-color-scheme:light){
+  .slp-lane{background:rgba(13,18,37,.04);}
 }

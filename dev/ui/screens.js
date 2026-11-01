@@ -17,6 +17,9 @@ const ADRIEN = [
   ['a_weekreport', ["(function(){var x=new Date();x.setDate(x.getDate()-((x.getDay()+6)%7)-7);wrOpen(x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'));})()"]],
   ['a_steps', ['STEPS.open()'], { scroll: '#stOverlay,.st-overlay' }],
   ['a_sleep', ['SLEEP.open()'], { scroll: '#sleepOverlay' }],
+  // (01/11) Historique sommeil v2 sur 30 nuits ; journée sous 1 000 pas = « rouge sang »
+  ['a_sleep_30', ['SLEEP.open()', 'SLEEP._range(30)'], { scroll: '#sleepOverlay' }],
+  ['a_steps_blood', ["(function(){var t=new Date();t.setDate(t.getDate()-1);DB.health[t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')]={steps:640};if(STEPS.tier(640)!=='blood')throw new Error('ECHEC tier rouge sang');STEPS.open();})()"], { scroll: '#stOverlay,.st-overlay' }],
   ['a_nutria_profil', ['nutriAOpen()'], { scroll: '#nutria' }],
   ...['recettes', 'journee', 'semaine', 'calcul'].map(t => ['a_nutria_' + t, ['nutriAOpen()', `document.querySelector('#nutria .tab[data-p="${t}"]').click()`], { scroll: '#nutria' }]),
   ['a_nutria_recipe', ['nutriAOpen()', "document.querySelector('#nutria .tab[data-p=recettes]').click()", "document.querySelector('#nutria .rc').click()"], { scroll: '#na-sheet' }],
