@@ -1511,12 +1511,48 @@ function getSessionsAtWeight(key){
   }).length;
 }
 
-// Message de progression basé sur le nombre de séances au même poids (remplace le compteur de jours)
+// ── Séries à la charge actuelle (01/11, demande Adrien — remplace « N séances à ce poids ») ──
+// Combien de séries il a déjà faites à sa charge de référence (ou plus lourd ; assistance : ou moins),
+// depuis qu'il y travaille : on remonte les séances LiveUp de la plus récente à la plus ancienne et
+// on s'arrête à la première où aucune série n'atteignait cette charge. Objectif ADAPTÉ À L'EXO (01/11,
+// Adrien : « élévation latérale, il en faut beaucoup plus ») : séances visées = 6 + 40 × (cran / charge),
+// bornées 8-20, × séries prévues — pec deck 54 kg, cran 5 → 10 séances (40 séries) ; élévation 6 kg,
+// cran 2 (+33 %) → 19 séances (76 séries). liveX = l'exo de la séance en cours (pas encore enregistrée).
+function loadCount(key,liveX){
+  var d=asExoDef(key); if(!d||exoIsCardio(key)) return null;
+  var W=getCurrentWeight(key); if(W==null) return null;
+  var n=asParseSerie(d.e).n||3, inv=asIsInverse(key);
+  var stepK=fsStep({key:key,inc:d.e.inc}), sess=Math.max(8,Math.min(20,Math.round(6+40*stepK/Math.max(1,W))));
+  var target=sess*n;
+  var at=function(w){ return w!=null&&(inv?w<=W:w>=W); };
+  var count=function(x){ return (x.sets||[]).filter(function(st){ return at(st.w!=null?st.w:x.w); }).length; };
+  var done=0;
+  if(liveX){ var c0=count(liveX); if(!c0) return {w:W,done:0,target:target,sess:sess,ratio:0,unite:d.e.unite||'kg'}; done+=c0; }
+  var logs=(DB.logs||[]).filter(function(l){ return l.live&&l.live.exos&&(!liveX||String(l.id)!==String(AS&&AS.savedLogId)); })
+    .sort(function(a,b){ return b.date.localeCompare(a.date)||(b.time||'').localeCompare(a.time||''); });
+  for(var i=0;i<logs.length;i++){
+    var lx=null; logs[i].live.exos.forEach(function(x){ if(x.key===key&&liveExoCounted(x)) lx=x; });
+    if(!lx) continue;
+    var c=count(lx); if(!c) break;
+    done+=c;
+  }
+  return {w:W,done:done,target:target,sess:sess,ratio:done/target,unite:d.e.unite||'kg'};
+}
+// Alerte de stagnation : 75 % de l'objectif = « bientôt », 100 % = « il est temps »
 function getProgressNudge(key){
-  var n=getSessionsAtWeight(key);
-  if(n>=10) return {lvl:'hot',chip:'&#x1F534; '+n+' séances à ce poids',msg:'<strong>'+n+' séances</strong> au même poids — il est temps de charger plus&#x202F;!'};
-  if(n>=6) return {lvl:'warn',chip:'&#x26A0; '+n+' séances à ce poids',msg:'<strong>'+n+' séances</strong> à ce poids — si tes séries passent proprement, tente bientôt un cran de plus.'};
+  var lc=loadCount(key); if(!lc) return null;
+  var lbl='<strong>'+lc.done+' / '+lc.target+' s&#xE9;ries</strong> &#xE0; '+lc.w+' '+lc.unite;
+  if(lc.ratio>=1) return {lvl:'hot',chip:'&#x1F534; '+lc.done+'/'+lc.target+' séries',msg:lbl+' &#x2014; l\'objectif de s&#xE9;ries est d&#xE9;pass&#xE9; sans monter&#x202F;: il est temps de charger plus (ou de changer d\'angle&#x202F;: tempo, +1 rep).'};
+  if(lc.ratio>=0.75) return {lvl:'warn',chip:'&#x26A0; '+lc.done+'/'+lc.target+' séries',msg:lbl+' &#x2014; si tes s&#xE9;ries passent proprement, la hausse arrive bient&#xF4;t.'};
   return null;
+}
+// Barre « séries à cette charge » de la fiche d'un exo (toujours visible dès qu'il y a des séries)
+function loadCountHtml(key){
+  var lc=loadCount(key); if(!lc||!lc.done) return '';
+  var cls=lc.ratio>=1?' hot':lc.ratio>=0.75?' warn':'';
+  return '<div class="lc-box'+cls+'"><div class="lc-top"><span>&#x1F4CA; S&#xE9;ries &#xE0; '+lc.w+' '+lc.unite+'</span><strong>'+lc.done+' / '+lc.target+'</strong></div>'
+    +'<div class="lc-bar"><i style="width:'+Math.min(100,Math.round(lc.ratio*100))+'%"></i></div>'
+    +'<div class="lc-sub">'+(lc.ratio>=1?'Objectif d&#xE9;pass&#xE9; sans monter&#x202F;: il est temps de changer quelque chose.':'Rep&#xE8;re pour cet exo&#x202F;: ~'+lc.target+' s&#xE9;ries ('+lc.sess+' s&#xE9;ances) &#xE0; une charge, puis elle doit monter.')+'</div></div>';
 }
 
 // Pour les exos Maison "repTarget" : la valeur saisie est l'objectif par série (3 séries)
@@ -1607,7 +1643,7 @@ function buildSeances(){
       var errs=e.errs.map(function(er){return '<div class="erritem"><span class="errx">✕</span>'+er+'</div>';}).join('');
       var days=getDaysSinceWeightChange(e.key);
       var nudge=getProgressNudge(e.key); // encadré jaune (≥6) / rouge (≥10) dans la section dépliée — seule trace du compteur (retour Adrien)
-      var staleHtml=nudge?'<div class="weight-nudge show'+(nudge.lvl==='hot'?' nudge-hot':'')+'" id="nudge-'+e.key+'">&#x1F4A1; '+nudge.msg+'</div>':'';
+      var staleHtml='<div class="lc-wrap" data-lc="'+e.key+'">'+loadCountHtml(e.key)+'</div>'; // séries à la charge actuelle (01/11)
       var prChip=days===0?'<span class="chip chip-up">&#x1F195; Mis à jour aujourd\'hui</span>':'';
       // Retour Adrien 01/08 : plus de compteur « N séances à ce poids » sur la ligne fermée (pas beau) —
       // le détail vit dans la section dépliée (staleHtml). Seul un point rouge discret signale un ≥10.
@@ -1701,6 +1737,7 @@ function toggleEx(sid,idx){
   if(!wasOpen){
     card.classList.add('open');
     var rt=card.querySelector('[data-rectop]'); if(rt) rt.innerHTML=recTopHtml(rt.getAttribute('data-rectop')); // perfs à jour (séance du jour comprise)
+    var lcw=card.querySelector('[data-lc]'); if(lcw) lcw.innerHTML=loadCountHtml(lcw.getAttribute('data-lc'));
   }
 }
 
@@ -2522,12 +2559,12 @@ function renderWeightChart(){
       +'<div class="wh-list" id="whList">';
     sorted.forEach(function(entry){
       listHtml+='<div class="wh-entry">'
-        +'<span class="wh-entry-date">'+formatDateFr(entry.date)+'</span>'
+        +'<span class="wh-entry-date"><input class="wh-entry-dinp" type="date" value="'+entry.date+'" max="'+todayStr()+'" onchange="editWeightDate(\''+key+'\',\''+entry.date+'\',this)" aria-label="Date de cette charge"/></span>'
         +'<span class="wh-entry-val"><input class="wh-entry-input" type="number" step="0.5" min="0" value="'+entry.val+'" onblur="editWeightEntry(\''+key+'\',\''+entry.date+'\',this)" onkeydown="if(event.key===\'Enter\')this.blur()"/> kg</span>'
         +'<button class="wh-entry-del" onclick="deleteWeightEntry(\''+key+'\',\''+entry.date+'\')" title="Supprimer cette entrée">&#x2715;</button>'
         +'</div>';
     });
-    listHtml+='</div><div class="wh-edit-hint">&#x270F;&#xFE0F; Touche une valeur pour corriger (ex. ton vrai poids de départ)</div></div>';
+    listHtml+='</div><div class="wh-edit-hint">&#x270F;&#xFE0F; Touche une date ou une valeur pour corriger (ex. une charge que tu fais depuis plus longtemps)</div></div>';
     histEl.innerHTML=listHtml;
   }
   // Alerte basée sur le nombre de séances au même poids
@@ -2571,6 +2608,46 @@ function editWeightEntry(key, date, input){
   showToast('&#x2705; '+formatDateFr(date)+' corrigé : '+nw+' kg');
 }
 
+// Corriger la DATE d'une entrée (01/11, demande Adrien : « pec deck 54 mis aujourd'hui, mais je le fais
+// depuis mi-septembre »). L'entrée change de jour ; l'ancien jour reçoit une tombstone et sa ligne cloud
+// est effacée (même chemin qu'une suppression), sinon la synchro le ressusciterait.
+function editWeightDate(key, oldDate, input){
+  var nd=input.value, arr=DB.weights[key]||[];
+  var entry=arr.find(function(x){return x.date===oldDate;});
+  if(!entry||!/^\d{4}-\d{2}-\d{2}$/.test(nd||'')||nd===oldDate){ input.value=oldDate; return; }
+  if(nd>todayStr()){ input.value=oldDate; showToast('&#x26A0; Pas de date dans le futur'); return; }
+  if(arr.some(function(x){return x.date===nd;})){ input.value=oldDate; showToast('&#x26A0; Il y a d&#xE9;j&#xE0; une entr&#xE9;e le '+formatDateFr(nd)+' &#x2014; corrige ou supprime-la d\'abord'); return; }
+  entry.date=nd;
+  arr.sort(function(a,b){return a.date.localeCompare(b.date);});
+  DB.weights[key]=arr; DB.weightSetDate[key]=arr[arr.length-1].date;
+  if(!DB.deletedWeights) DB.deletedWeights={};
+  var tomb=DB.deletedWeights[key]||(DB.deletedWeights[key]=[]);
+  if(tomb.indexOf(oldDate)<0) tomb.push(oldDate);
+  DB.deletedWeights[key]=tomb.filter(function(d){return d!==nd;}); // le nouveau jour ne doit pas rester « supprimé »
+  saveDB();
+  whCloudDelete(key,oldDate);
+  renderWeightChart();
+  try{ buildSeances(); }catch(e){}
+  showToast('&#x2705; '+entry.val+' kg d&#xE9;plac&#xE9; au '+formatDateFr(nd));
+}
+// Efface une ligne weight_history du cloud puis retire la tombstone une fois confirmé
+function whCloudDelete(key,date){
+  if(typeof sbClient==='undefined'||!sbClient) return;
+  sbClient.auth.getUser().then(function(res){
+    var userId=res.data&&res.data.user&&res.data.user.id;
+    if(!userId) return;
+    sbClient.from('weight_history').delete()
+      .eq('user_id',userId).eq('exercise_id',key).eq('recorded_at',date)
+      .then(function(r){
+        if(r&&r.error){ console.warn('[MASSUP] weight delete:',r.error.message); return; }
+        if(DB.deletedWeights&&DB.deletedWeights[key]){
+          DB.deletedWeights[key]=DB.deletedWeights[key].filter(function(d){return d!==date;});
+          saveDB();
+        }
+      })
+      .catch(function(e){console.warn('[MASSUP] weight delete:',e.message);});
+  });
+}
 function deleteWeightEntry(key, date){
   var arr=DB.weights[key]||[];
   if(arr.length<=1){showToast('&#x26A0; Impossible de supprimer la seule entrée');return;}
@@ -2729,17 +2806,20 @@ function mvSetRange(range){
   _mvRange=range==='month'?'month':'week';
   renderMuscleVolume();
 }
+// Vue 30 jours (01/11, demande Adrien : « que les couleurs veuillent dire la même chose ») : même barème
+// que la semaine, converti EXACTEMENT : 30 jours = 30/7 ≈ 4,29 semaines → on colore la moyenne par
+// semaine (total × 7/30). Seuils équivalents sur 30 jours : rouge < 51 · gris 51 · bleu 69 · gold 86 ·
+// trop > 107 (abdos jusqu'à fin janvier : 34 / 51 / 69). Traits aux seuils bleu et gold de la ligne.
 function muscleVolumeMonthBarsHtml(vol){
-  var max=1;
-  RADAR_GROUPS.forEach(function(g){ max=Math.max(max,vol[g.label]||0); });
-  var h='';
+  var K=30/7, SCALE=25*K, h='';
   RADAR_GROUPS.forEach(function(g){
-    var value=vol[g.label]||0;
+    var value=vol[g.label]||0, perWeek=value/K, cls=volTier(g.label,perWeek), sc=volScale(g.label);
     var valueLabel=Number.isInteger(value)?String(value):value.toFixed(1).replace('.',',');
     h+='<div class="mv-row mv-month">'
       +'<span class="mv-name">'+g.label+'</span>'
-      +'<div class="mv-bar"><div class="mv-fill" style="width:'+Math.round(value/max*100)+'%"></div></div>'
-      +'<span class="mv-val">'+valueLabel+'</span>'
+      +'<div class="mv-bar"><div class="mv-fill '+cls+'" style="width:'+Math.min(100,value/SCALE*100).toFixed(1)+'%"></div>'
+      +'<span class="mv-t10" style="left:'+(sc.blue/25*100)+'%"></span><span class="mv-t20" style="left:'+(sc.gold/25*100)+'%"></span></div>'
+      +'<span class="mv-val '+cls+'">'+valueLabel+'<em>'+String(Math.round(perWeek*10)/10).replace('.',',')+'/sem</em></span>'
       +'</div>';
   });
   return h;
@@ -2769,7 +2849,7 @@ function renderMuscleVolume(){
   if(isMonth){
     head+='<span class="mv-hint">S&#xE9;ries comptabilis&#xE9;es &#xB7; du '+formatDateShort(start)+' au '+formatDateShort(end)+'</span></span></div>'
       +muscleVolumeMonthBarsHtml(vol)
-      +'<div class="mv-month-note">Comparaison des groupes musculaires travaill&#xE9;s sur la p&#xE9;riode : un volume diff&#xE9;rent ne signifie pas &#xE0; lui seul un d&#xE9;s&#xE9;quilibre physique.</div>';
+      +'<div class="mv-month-note">M&#xEA;mes couleurs que la vue Semaine, calcul&#xE9;es sur la moyenne par semaine (total &#xF7; 4,3)&#x202F;: sous 51 s&#xE9;ries = rouge, 51 gris, 69 bleu, 86 gold (abdos jusqu\'&#xE0; f&#xE9;vrier&#x202F;: 34 / 51 / 69).</div>';
   }else{
     head+='<span class="mv-hint">sous 12 = rouge &#xB7; 12+ gris &#xB7; 16+ bleu &#xB7; 20+ gold &#xB7; &gt;25 = trop (abdos jusqu\'&#xE0; f&#xE9;vrier : 8 / 12 / 16)</span></span></div>'
       +muscleVolumeBarsHtml(vol,live,false,'holo');
@@ -4346,10 +4426,10 @@ function exportCoachDossier(opts){
     var a=DB.weights[k]; if(!a||!a.length||EXO[k].e.hidden) return;
     var cur=a[a.length-1], prev=null; a.forEach(function(e){ if(e.date<d30) prev=e; });
     if(prev&&cur.val!==prev.val&&(asIsInverse(k)?cur.val<prev.val:cur.val>prev.val)) ups.push(name(k)+' '+prev.val+' → '+cur.val);
-    var n=getSessionsAtWeight(k); if(n>=6&&exoStats[k]&&exoStats[k].n30) stag.push(name(k)+' ('+n+' séances)');
+    var lcS=loadCount(k); if(lcS&&lcS.ratio>=1&&exoStats[k]&&exoStats[k].n30) stag.push(name(k)+' ('+lcS.done+'/'+lcS.target+' séries à '+lcS.w+')');
   });
   add('Charges de référence en hausse',ups.length,'exercices','30 jours',ups.join(' · '));
-  add('Exercices stagnants (≥ 6 séances au même poids, encore pratiqués)',stag.length,'exercices','',stag.join(' · '));
+  add('Exercices stagnants (objectif de séries à la charge actuelle dépassé — 8 à 20 séances selon la taille du cran, encore pratiqués)',stag.length,'exercices','',stag.join(' · '));
   var ev=FEATURE_EVO?Object.keys(DB.evolution||{}).filter(function(k){return EXO[k];}):[];
   if(ev.length) add('Évolutions de charge en cours',ev.length,'exercices','',ev.map(function(k){var e=DB.evolution[k]; return name(k)+' '+e.from+' → '+e.to+' ('+e.hi+' série(s) au poids haut)';}).join(' · '));
   var st=[]; for(var j=1;j<=30;j++){ var h=DB.health&&DB.health[rankAddDays(today,-j)]; if(h&&h.steps) st.push(h.steps); }
@@ -4412,10 +4492,10 @@ function exportCoachDossier(opts){
     var rg=!d.e.repTarget&&REP_RANGE[k], presc=d.e.serie||'';
     if(rg){ var _pm=presc.match(/^(\d+)[×x]\d+(.*)$/); presc=(_pm?_pm[1]:'4')+'×'+rg.r[0]+'-'+rg.r[1]+(_pm?_pm[2]:''); }
     exoRows.push([name(k),k,txt(d.s.name),d.e.hidden?'retiré':d.e.bonus?'bonus':'principal',d.e.imp?'oui':'',group(k),presc,d.e.rest||null,unitOf(k),inv,
-      cur?cur.val:null,cur?cur.date:'',getSessionsAtWeight(k)||null,first?first.val:null,first?first.date:'',dl,(first&&first.val&&dl!=null)?Math.round(dl/first.val*100):null,d30v,
+      cur?cur.val:null,cur?cur.date:'',(function(){ var lcE=loadCount(k); return lcE&&lcE.done?lcE.done+' / '+lcE.target:null; })(),first?first.val:null,first?first.date:'',dl,(first&&first.val&&dl!=null)?Math.round(dl/first.val*100):null,d30v,
       es?es.n:0,es?es.n30:0,es&&es.last||'',es&&es.best?r1(es.best):null,es&&es.bestDate||'',es&&es.bestSet||'',evo?evo.from+' → '+evo.to+' ('+evo.hi+' série(s) au poids haut)':'',txt(d.e.bless||'')]);
   });
-  sheets.push({name:'Exercices',cols:[{h:'Exercice',w:30},{h:'Clé',w:16},{h:'Séance du programme',w:10},{h:'Rôle',w:9},{h:'Exo clé',w:6},{h:'Groupe musculaire',w:11},{h:'Prescription (séries × fourchette de reps)',w:12},{h:'Repos (s)',w:7},{h:'Unité',w:8},{h:'Assistance (moins = mieux)',w:9},{h:'Charge de référence actuelle',w:10},{h:'Depuis le',w:11},{h:'Séances au même poids',w:9},{h:'Charge de départ',w:9},{h:'Date de départ',w:11},{h:'Progression totale',w:9},{h:'Progression %',w:9},{h:'Variation sur 30 j',w:9},{h:'Exécutions LiveUp',w:9},{h:'Exécutions 30 j',w:9},{h:'Dernière exécution',w:11},{h:'Meilleure e1RM (kg)',w:9},{h:'Date meilleure e1RM',w:11},{h:'Meilleure série (charge × reps)',w:12},{h:'Évolution de charge en cours',w:22},{h:'Consigne blessure',w:50,wrap:true}],rows:exoRows});
+  sheets.push({name:'Exercices',cols:[{h:'Exercice',w:30},{h:'Clé',w:16},{h:'Séance du programme',w:10},{h:'Rôle',w:9},{h:'Exo clé',w:6},{h:'Groupe musculaire',w:11},{h:'Prescription (séries × fourchette de reps)',w:12},{h:'Repos (s)',w:7},{h:'Unité',w:8},{h:'Assistance (moins = mieux)',w:9},{h:'Charge de référence actuelle',w:10},{h:'Depuis le',w:11},{h:'Séries à la charge actuelle / objectif',w:11},{h:'Charge de départ',w:9},{h:'Date de départ',w:11},{h:'Progression totale',w:9},{h:'Progression %',w:9},{h:'Variation sur 30 j',w:9},{h:'Exécutions LiveUp',w:9},{h:'Exécutions 30 j',w:9},{h:'Dernière exécution',w:11},{h:'Meilleure e1RM (kg)',w:9},{h:'Date meilleure e1RM',w:11},{h:'Meilleure série (charge × reps)',w:12},{h:'Évolution de charge en cours',w:22},{h:'Consigne blessure',w:50,wrap:true}],rows:exoRows});
 
   // ── Historique des charges de référence ──
   var hist=[];
@@ -4851,7 +4931,7 @@ function asExoStats(key){
       execs++; series+=def.n; reps+=def.n*def.reps; estim=true;
     }
   });
-  return {start:start,cur:cur,delta:delta,execs:execs,series:series,reps:reps,estim:estim,measures:arr.length,atW:getSessionsAtWeight(key)};
+  return {start:start,cur:cur,delta:delta,execs:execs,series:series,reps:reps,estim:estim,measures:arr.length,atW:getSessionsAtWeight(key),lc:loadCount(key)};
 }
 // Carte stats réutilisable (bulle du repos en mode séance + vue Progression sous le graphe)
 function exoStatsHTML(key,title){
@@ -4871,7 +4951,7 @@ function exoStatsHTML(key,title){
     +'<div class="as-sb-item"><span>'+approx+st.series+'</span>s&#xE9;ries au total</div>'
     +'<div class="as-sb-item"><span>'+approx+st.reps+'</span>reps cumul&#xE9;es</div>'
     +'</div>'
-    +'<div class="as-sb-foot">'+st.atW+' s&#xE9;ance'+(st.atW>1?'s':'')+' au poids actuel &#xB7; '+st.measures+' mesures'
+    +'<div class="as-sb-foot">'+(st.lc?st.lc.done+' / '+st.lc.target+' s&#xE9;ries &#xE0; la charge actuelle':st.atW+' s&#xE9;ance'+(st.atW>1?'s':'')+' au poids actuel')+' &#xB7; '+st.measures+' mesures'
     +(st.estim?' &#xB7; &#x2248; estim&#xE9; sur l\'historique d\'avant le mode direct':'')+'</div>'
     +'</div>';
 }
@@ -6762,11 +6842,11 @@ function asRenderEnd(){
   // Exécutions au poids actuel (remplace « je me sens prêt à monter »)
   var doneEx=AS.exos.filter(function(x){return liveExoCounted(x);});
   if(doneEx.length){
-    h+='<div class="as-lbl">&#x1F4CA; Ex&#xE9;cutions au poids actuel <span class="as-lbl-hint">aujourd\'hui inclus</span></div>';
+    h+='<div class="as-lbl">&#x1F4CA; S&#xE9;ries &#xE0; ta charge actuelle <span class="as-lbl-hint">aujourd\'hui inclus &#xB7; objectif adapt&#xE9; &#xE0; chaque exo</span></div>';
     h+='<div class="as-execs">';
     doneEx.forEach(function(x){
-      var n=getSessionsAtWeight(x.key)+1;
-      h+='<div class="as-exec-row"><span class="as-exec-name">'+x.name+'</span><span class="as-exec-ct'+(n>=5?' hot':'')+'">'+n+' s&#xE9;ance'+(n>1?'s':'')+' &#xE0; '+x.weight+' '+x.unite+'</span></div>';
+      var lc=loadCount(x.key,x); if(!lc) return;
+      h+='<div class="as-exec-row"><span class="as-exec-name">'+x.name+'</span><span class="as-exec-ct'+(lc.ratio>=0.75?' hot':'')+'">'+lc.done+' / '+lc.target+' s&#xE9;ries &#xE0; '+lc.w+' '+lc.unite+'</span></div>';
     });
     h+='</div>';
   }
@@ -6876,12 +6956,35 @@ function asBackToExo(){
   AS.setIdx=x.sets.length+1; AS.phase=(x.status==='pending'&&!x.sets.length)?'intro':'work'; AS.introIdx=0;
   AS.step='exo'; asSave(); asRender();
 }
+// La RÉFÉRENCE suit la charge de travail vers le haut (01/11, bug signalé par Adrien depuis le 12/10 :
+// pec deck à 54 en séance pendant 3 semaines, référence restée à 49 — le mode ⚡ Évolution la gelait).
+// Exo en kg compté, toutes les séries prévues faites à au moins W (sa plus légère série), chacune au
+// bas de la fourchette ou plus, série 1 pas à l'échec, W plus lourd que la référence (assistance :
+// plus légère) → référence = W, sans clic. Une baisse reste une proposition du bilan.
+function asAutoRefFollow(){
+  var out={};
+  (AS.exos||[]).forEach(function(x){
+    if(x.repT||x.pain||exoIsCardio(x.key)||!/kg/.test(x.unite||'')) return;
+    if(!liveExoCounted(x)) return;
+    var n=x.n||3, sets=(x.sets||[]).slice(0,n); if(sets.length<n) return;
+    var inv=asIsInverse(x.key);
+    var ws=sets.map(function(s){ return s.w!=null?s.w:x.weight; });
+    var W=inv?Math.max.apply(null,ws):Math.min.apply(null,ws);
+    var ref=getCurrentWeight(x.key); if(ref==null||!(W>0)) return;
+    if(!(inv?W<ref:W>ref)) return;
+    if(sets.some(function(s){ return s.reps<x.reps; })) return;
+    if(n>1&&sets[0].feel==='echec') return;
+    asApplyWeight(x.key,W); out[x.key]={from:ref,to:W};
+  });
+  return out;
+}
 function asSaveAndReport(){
   var note=document.getElementById('asPainNote');
   if(note) AS.end.painNote=note.value;
   if(!AS.savedLogId){ asPersistLog(); }
   // Évolutions de charge : évaluées UNE fois, au moment où le log est figé (15/08)
   if(!AS.evoResults){ try{ AS.evoResults=asEvoEvaluate(); }catch(e){ AS.evoResults=[]; } }
+  if(!AS.autoRef){ try{ AS.autoRef=asAutoRefFollow(); }catch(e){ AS.autoRef={}; } }
   AS.step='report'; AS.repIdx=0; asSave(); asRender();
 }
 // Séance LEGS (16/08, demande Adrien — « le legday EST la séance principale ») : tous les exos
@@ -7291,7 +7394,8 @@ function asAnalyzeExo(x){
   var someUnder=isKg&&x.w0>0&&!allAtRef;
   var pyramidUp=isKg&&!inv&&sets.length>=2&&ws[0]<ws[ws.length-1];
   var dropSetW=isKg&&!inv&&sets.length>=2&&ws[0]>ws[ws.length-1];
-  var stag=0; try{ stag=getSessionsAtWeight(x.key); }catch(e){}
+  var _lc=null; try{ _lc=loadCount(x.key); }catch(e){}
+  var stag=_lc?_lc.ratio:0, stagTxt=_lc?_lc.done+' / '+_lc.target+' s&#xE9;ries &#xE0; '+_lc.w+' '+_lc.unite:'';
   var wUp=x.weight>x.w0, wDown=x.weight<x.w0;
   var unit=cntU(x)==='s'?'s':(cntU(x)==='min'?' min':' reps');
 
@@ -7458,13 +7562,12 @@ function asAnalyzeExo(x){
       break;
     }
   }
-  if(stag>=6&&out.suggest===1){
-    out.lines.push('&#x23F3; '+stag+' s&#xE9;ances &#xE0; ce poids &#x2014; le signal est clair, la hausse est due.');
-  } else if(stag>=8&&out.suggest===0&&out.tone!=='down'){
+  if(stag>=0.75&&out.suggest===1){
+    out.lines.push('&#x23F3; '+stagTxt+' &#x2014; le signal est clair, la hausse est due.');
+  } else if(stag>=1&&out.suggest===0&&out.tone!=='down'){
     out.lines.push(asPickFresh([
-      '&#x23F3; '+stag+' s&#xE9;ances au m&#xEA;me poids. Si &#xE7;a coince, change d\'angle&#x202F;: tempo plus lent, +1 rep par s&#xE9;rie, ou +0,5 kg.',
-      '&#x23F3; '+stag+' s&#xE9;ances &#xE0; cette charge &#x2014; pas grave si les s&#xE9;ries se remplissent, sinon micro-progression&#x202F;: +1 rep avant +1 kg.',
-      '&#x23F3; '+stag+' passages sans bouger le poids&#x202F;: prochaine cible = 1 rep de plus par s&#xE9;rie, la hausse suivra toute seule.']));
+      '&#x23F3; '+stagTxt+'&#x202F;: l\'objectif est d&#xE9;pass&#xE9;. Si &#xE7;a coince, change d\'angle&#x202F;: tempo plus lent, +1 rep par s&#xE9;rie.',
+      '&#x23F3; '+stagTxt+' &#x2014; micro-progression&#x202F;: +1 rep sur une s&#xE9;rie &#xE0; chaque s&#xE9;ance, la hausse suivra.']));
   }
   // ── Situations additionnelles (01/08 — enrichissement du moteur) ──
   // Cible littéralement explosée → proposer un saut de 2 crans
@@ -8512,6 +8615,12 @@ function asRenderReport(){
         +'<span class="as-rep-exo-w">&#x26A1; &#xE9;volution</span></div>'
         +'<div class="as-rep-line">'+msg+'</div></div>';
     });
+    Object.keys(AS.autoRef||{}).forEach(function(k){
+      var ar=AS.autoRef[k], xa=AS.exos.find(function(e){return e.key===k;}); if(!xa) return;
+      any=true;
+      h+='<div class="as-rep-exo tone-up"><div class="as-rep-exo-top"><span class="as-rep-exo-name">'+xa.name+'</span><span class="as-rep-exo-w">&#x1F4CC; r&#xE9;f&#xE9;rence mise &#xE0; jour</span></div>'
+        +'<div class="as-rep-line">Tu as travaill&#xE9; &#xE0; <strong>'+ar.to+' '+xa.unite+'</strong> sur toutes les s&#xE9;ries&#x202F;: ta r&#xE9;f&#xE9;rence passe de '+ar.from+' &#xE0; '+ar.to+' '+xa.unite+' (automatique).</div></div>';
+    });
     AS.reportExos.forEach(function(r){
       if(r.suggest!==1&&r.suggest!==-1&&r.suggestTo==null) return;
       var x=AS.exos.find(function(e){return e.key===r.key;})||AS.exos.find(function(e){return e.name===r.name;});
@@ -8537,7 +8646,8 @@ function asRenderReport(){
       // RÉFÉRENCE a déjà bougé depuis le début de cette séance (w0), la suggestion est
       // considérée déjà consommée — un bilan revu ne peut plus ré-augmenter le poids.
       var curRef=getCurrentWeight(x.key);
-      var refMoved=x.w0!=null&&curRef!=null&&Math.abs(curRef-x.w0)>0.01;
+      var base0=(AS.autoRef&&AS.autoRef[x.key])?AS.autoRef[x.key].to:x.w0; // la référence suivie automatiquement n'est pas une « suggestion déjà appliquée »
+      var refMoved=base0!=null&&curRef!=null&&Math.abs(curRef-base0)>0.01;
       var applied=AS.applied.indexOf(x.key)>=0||refMoved;
       h+='<div class="as-rep-exo tone-'+(up?'up':'down')+'"><div class="as-rep-exo-top"><span class="as-rep-exo-name">'+x.name+'</span>'
         +'<span class="as-rep-exo-w">'+hdr+' &#xB7; reco '+reco+' '+x.unite+'</span></div>';
@@ -8587,7 +8697,8 @@ function asApplySuggest(key,nw){
   // Garde-fou anti double-application : si la référence a déjà changé depuis le début de la
   // séance (suggestion déjà appliquée, ou poids édité au panneau Séances), on n'empile pas.
   var curRef=getCurrentWeight(key);
-  if(x.w0!=null&&curRef!=null&&Math.abs(curRef-x.w0)>0.01){
+  var base0=(AS.autoRef&&AS.autoRef[key])?AS.autoRef[key].to:x.w0;
+  if(base0!=null&&curRef!=null&&Math.abs(curRef-base0)>0.01){
     AS.applied.push(key); asSave(); asRender();
     showToast('&#x2705; D&#xE9;j&#xE0; pris en compte &#x2014; '+getExoName(key)+' est &#xE0; '+curRef+' '+x.unite);
     return;

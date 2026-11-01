@@ -27,6 +27,7 @@ function load() {
     score: (x) => { ctx.__x = x; return vm.runInContext("asScoreExoRaw(__x)", ctx); },
     analyze: (x) => { ctx.__x = x; return JSON.parse(vm.runInContext("(function(){var o=asAnalyzeExo(__x);return JSON.stringify({suggest:o.suggest,to:o.suggestTo==null?null:o.suggestTo});})()", ctx)); },
     note20: (list) => { ctx.__l = list; return vm.runInContext("asNote20From(__l)", ctx); },
+    eval: (logs, ref, code) => { ctx.__logs = logs; vm.runInContext("DB.logs=__logs;DB.weights.pecdeck=[{date:'2026-08-20',val:" + ref + "}];", ctx); return vm.runInContext(code, ctx); },
   };
 }
 const ex = (key, w0, lo, hi, sets) => ({
@@ -78,4 +79,22 @@ test("+1 rep ne baisse jamais la note (même ressenti)", () => {  const feels = 
     const more = sets.map((s, j) => (j === k ? [s[0], s[1] + 1, s[2]] : s));
     assert.ok(app.score(ex("tirage_vert", 56, 8, 10, more)) >= base - 1e-9, JSON.stringify(sets) + " +1 rep série " + (k + 1));
   }
+});
+
+test("séries à la charge actuelle (historique réel du pec deck) et référence qui suit la charge", () => {
+  const app2 = load();
+  const L = (id, d, sets) => ({ id, date: d, time: "07:00", sessions: ["s1"], live: { exos: [{ key: "pecdeck", w: 54, w0: 49, n: 4, reps: 10, rHi: 12, unite: "kg", status: "done", main: true, sets: sets.map(([w, r]) => ({ w, reps: r, feel: "dur" })) }] } });
+  const logs = [
+    L(1, "2026-10-10", [[49, 10], [49, 10], [49, 10], [49, 10]]),
+    L(2, "2026-10-13", [[49, 10], [49, 10], [54, 10], [54, 10]]),
+    L(3, "2026-10-18", [[49, 10], [54, 10], [54, 10], [54, 10]]),
+    L(4, "2026-10-23", [[54, 8], [54, 10], [54, 10], [54, 8]]),
+    L(5, "2026-10-27", [[54, 10], [54, 8], [54, 9], [54, 8]]),
+    L(6, "2026-10-31", [[54, 10], [54, 10], [54, 10], [54, 11]]),
+  ];
+  const r = app2.eval(logs, 54, "JSON.stringify(loadCount('pecdeck'))");
+  assert.deepEqual(JSON.parse(r).done, 17);
+  assert.deepEqual(JSON.parse(r).target, 40);
+  const ar = app2.eval([], 49, "AS={exos:[{key:'pecdeck',name:'Pec Deck',w0:49,weight:54,n:4,reps:10,rHi:12,unite:'kg',status:'done',main:true,sets:[{w:54,reps:10,feel:'ok'},{w:54,reps:10,feel:'dur'},{w:54,reps:10,feel:'dur'},{w:54,reps:11,feel:'echec'}]}]};JSON.stringify({a:asAutoRefFollow(),ref:getCurrentWeight('pecdeck')})");
+  assert.deepEqual(JSON.parse(ar), { a: { pecdeck: { from: 49, to: 54 } }, ref: 54 });
 });

@@ -2318,9 +2318,9 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 .mv-range-btn{padding:.32rem .55rem;border:1px solid var(--gb);border-radius:var(--x-r-pill);background:transparent;color:var(--mut);font:700 .62rem 'Manrope',system-ui,sans-serif;cursor:pointer;}
 .mv-range-btn.active{background:var(--x-acc2-15);border-color:var(--x-acc2-45);color:var(--acc2);}
 .mv-row.mv-month .mv-name{width:80px;}
+.mv-row.mv-month .mv-val{width:58px;line-height:1.05;}
+.mv-row.mv-month .mv-val em{display:block;margin-left:0;font-size:.52rem;font-style:normal;color:var(--mut);}
 .mv-row.mv-month .mv-bar{height:10px;}
-.mv-row.mv-month .mv-fill{background:linear-gradient(90deg,var(--acc2),#5B7CFF);}
-.mv-row.mv-month .mv-val{color:var(--acc2);}
 .mv-month-note{font-size:.62rem;color:var(--mut);line-height:1.45;margin-top:.65rem;}
 /* Seuils volume : bleu (12-16) · gold (17-25) · orange (>25) — repères à 12 et 17 */
 .mv-fill.ok{background:linear-gradient(90deg,#3FD9FF,#5B7CFF);}
@@ -3001,3 +3001,17 @@ span.bn-hero-bar i.n-gold,.bn-hero-bar i.n-blue{color:transparent;}
 /* Hypertrophie : sous le seuil gris = rouge sang (01/11) */
 .mv-fill.blood{background:var(--blood);}
 .mv-val.blood{color:var(--blood);}
+/* Séries à la charge actuelle (01/11) — fiche d'un exo */
+.lc-box{padding:.55rem .65rem;border:1px solid var(--gb);border-radius:var(--x-r-md);background:rgba(255,255,255,.03);margin-top:.5rem;}
+.lc-top{display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;font-size:.7rem;font-weight:700;color:var(--txt);}
+.lc-top strong{font:900 .9rem 'Saira',system-ui,sans-serif;font-style:italic;font-variant-numeric:tabular-nums;}
+.lc-bar{height:6px;margin:.4rem 0 .35rem;border-radius:var(--x-r-pill);background:var(--ghov);overflow:hidden;}
+.lc-bar i{display:block;height:100%;border-radius:inherit;background:var(--acc);}
+.lc-box.warn .lc-bar i{background:var(--yellow);} .lc-box.warn .lc-top strong{color:var(--yellow);}
+.lc-box.hot{border-color:var(--x-red-50);} .lc-box.hot .lc-bar i{background:var(--red);} .lc-box.hot .lc-top strong{color:var(--red);}
+.lc-sub{font-size:.6rem;font-weight:600;color:var(--mut);line-height:1.4;}
+@media (prefers-color-scheme: light){ .lc-box{background:rgba(18,21,28,.03);} }
+/* Historique des poids : date modifiable (01/11) */
+.wh-entry-dinp{min-width:0;max-width:9.5rem;padding:.25rem .35rem;border:1px solid var(--gb);border-radius:6px;background:rgba(255,255,255,.05);color:var(--txt);font:600 16px 'Manrope',system-ui,sans-serif;color-scheme:dark;-webkit-appearance:none;appearance:none;}
+.wh-entry-dinp:focus{outline:none;border-color:var(--acc);}
+@media (prefers-color-scheme: light){ .wh-entry-dinp{color-scheme:light;background:rgba(18,21,28,.038);} }
