@@ -50,6 +50,15 @@ test("8-8-8-11 ne suffit pas ; échec en S1 ou S2 = pas prêt de monter", () => 
   assert.notEqual(app.analyze(ex("tirage_vert", 56, 8, 10, [[56, 10, "ok"], [56, 10, "echec"], [56, 10, "dur"], [56, 11, "echec"]])).suggest, 1);
 });
 
+test("hausse jugée sur la charge réellement utilisée (cas réels du 31/10)", () => {
+  // chest press : 3 séries à 50, la dernière à 55 tient aussi le haut → 55
+  const chest = ex("chestpress_v", 50, 8, 10, [[50, 10, "ok"], [50, 10, "facile"], [50, 11, "ok"], [55, 10, "echec"]]);
+  assert.deepEqual(app.analyze(chest), { suggest: 1, to: 55 });
+  // incliné : référence 24, 4×10 propre à 22 → remonter à 24 = la référence (rien à appliquer)
+  const inc = ex("dev_incline", 24, 8, 10, [[22, 10, "ok"], [22, 10, "dur"], [22, 10, "ok"], [22, 10, "echec"]]);
+  assert.notEqual(app.analyze(inc).suggest, -1);
+});
+
 test("série 1 à l'échec : 4/5 max ; sous le bas → un cran en dessous, au bas → on garde", () => {
   const under = ex("dev_incline", 24, 8, 10, [[24, 7, "echec"], [24, 8, "dur"], [24, 8, "dur"], [24, 8, "echec"]]);
   assert.ok(app.score(under) <= 4);

@@ -112,6 +112,7 @@ var DB = {
   prepared: null,  // séance LiveUp préparée à l'avance : {sel, sname, count, date} (03/08)
   dz: {},          // espace Détente : 'YYYY-MM-DD' -> {chin:true, langue:true, ..., stretch:true} (04/08)
   pv: {msg:null,seen:null}, // « Nous deux » (26/08) : mon petit mot pour Melati {id,text,at} + id du dernier mot d'elle que j'ai vu
+  recHidden: {},   // perfs retirées des classements par Adrien (01/11) : key -> {logId: {h:1|0, at:ms}} — la plus récente gagne
   evolution: {},   // évolutions de charge en cours (15/08) : key -> {from, to, hi} — hi = nb de séries au poids haut (en fin d'exo)
   nutriA: {day:{},favs:[]} // mode NUTRITION prise de masse (23/08) : day['YYYY-MM-DD'] -> {pdj,dej,din,snacks[],shaker} · favs = ids recettes
 };
@@ -132,7 +133,7 @@ function loadDB(){
   if(_saveDBTimer) _flushSaveDB(); // une écriture débouncée est en attente → flush avant relecture
   try{
     var s = localStorage.getItem('massup_db');
-    if(s){ var d=JSON.parse(s); if(d.weights) DB.weights=d.weights; if(d.logs) DB.logs=d.logs; if(d.weightSetDate) DB.weightSetDate=d.weightSetDate; if(d.bodyWeight) DB.bodyWeight=d.bodyWeight; if(d.healthLogs) DB.healthLogs=d.healthLogs; if(d.health) DB.health=d.health; if(d.healthMeta) DB.healthMeta=d.healthMeta; if(d.sleepLog) DB.sleepLog=d.sleepLog; if(d.templates) DB.templates=d.templates; if(d.profile) DB.profile=d.profile; if(d.deletedWeights) DB.deletedWeights=d.deletedWeights; if(d.deletedBW) DB.deletedBW=d.deletedBW; if(d.deletedLogs) DB.deletedLogs=d.deletedLogs; if(d.nutrition) DB.nutrition=d.nutrition; if(d.reminders) DB.reminders=d.reminders; if(d.painLog) DB.painLog=d.painLog; if(d.rank) DB.rank=d.rank; if(d.prepared) DB.prepared=d.prepared; if(d.dz) DB.dz=d.dz; if(d.evolution) DB.evolution=d.evolution; if(d.nutriA) DB.nutriA=d.nutriA; if(d.pv) DB.pv=d.pv; }
+    if(s){ var d=JSON.parse(s); if(d.weights) DB.weights=d.weights; if(d.logs) DB.logs=d.logs; if(d.weightSetDate) DB.weightSetDate=d.weightSetDate; if(d.bodyWeight) DB.bodyWeight=d.bodyWeight; if(d.healthLogs) DB.healthLogs=d.healthLogs; if(d.health) DB.health=d.health; if(d.healthMeta) DB.healthMeta=d.healthMeta; if(d.sleepLog) DB.sleepLog=d.sleepLog; if(d.templates) DB.templates=d.templates; if(d.profile) DB.profile=d.profile; if(d.deletedWeights) DB.deletedWeights=d.deletedWeights; if(d.deletedBW) DB.deletedBW=d.deletedBW; if(d.deletedLogs) DB.deletedLogs=d.deletedLogs; if(d.nutrition) DB.nutrition=d.nutrition; if(d.reminders) DB.reminders=d.reminders; if(d.painLog) DB.painLog=d.painLog; if(d.rank) DB.rank=d.rank; if(d.prepared) DB.prepared=d.prepared; if(d.dz) DB.dz=d.dz; if(d.evolution) DB.evolution=d.evolution; if(d.recHidden) DB.recHidden=d.recHidden; if(d.nutriA) DB.nutriA=d.nutriA; if(d.pv) DB.pv=d.pv; }
   }catch(e){}
 }
 // Écriture localStorage débouncée (300ms) : localStorage.setItem est synchrone et bloque le
@@ -1625,6 +1626,7 @@ function buildSeances(){
         +'<div class="weight-row"><button class="wbtn minus" onclick="changeWeight(\''+e.key+'\',-'+inc+',\''+s.id+'\','+ei+',\''+e.unite+'\')">−</button><input class="weight-input" id="wval-'+e.key+'" type="number" step="'+inc+'" min="0" value="'+w+'" oninput="previewWeight(this,\''+e.key+'\',\''+e.unite+'\')" onblur="setWeightDirect(this,\''+e.key+'\',\''+s.id+'\','+ei+',\''+e.unite+'\')" onkeydown="if(event.key===\'Enter\')this.blur()"/><span class="weight-unit">'+e.unite+'</span><button class="wbtn plus" onclick="changeWeight(\''+e.key+'\','+inc+',\''+s.id+'\','+ei+',\''+e.unite+'\')">+</button></div>'
         +'<div class="weight-date" id="wdate-'+e.key+'">Dernière modif. : '+formatDateFr(DB.weightSetDate[e.key])+'</div>'
         +staleHtml+'</div>'
+        +'<div class="rec-top" data-rectop="'+e.key+'">'+recTopHtml(e.key)+'</div>'
         +'<div><div class="seclbl">Séries — clique pour cocher</div><div class="srow" id="srow-'+s.id+'-'+ei+'">'+sets+'</div></div>'
         +'<div class="rest-timer" id="timer-'+s.id+'-'+ei+'">'
         +'<div class="rt-circle" id="rtc-'+s.id+'-'+ei+'"><svg width="44" height="44" viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="3"/><circle class="fg" cx="22" cy="22" r="18" fill="none" stroke="#71FFB4" stroke-width="3" stroke-dasharray="113" stroke-dashoffset="0" stroke-linecap="round"/></svg></div>'
@@ -1695,7 +1697,10 @@ function toggleEx(sid,idx){
   var card=document.getElementById('ex-'+sid+'-'+idx);
   var wasOpen=card.classList.contains('open');
   document.querySelectorAll('[id^="ex-'+sid+'-"]').forEach(function(c){c.classList.remove('open');});
-  if(!wasOpen) card.classList.add('open');
+  if(!wasOpen){
+    card.classList.add('open');
+    var rt=card.querySelector('[data-rectop]'); if(rt) rt.innerHTML=recTopHtml(rt.getAttribute('data-rectop')); // perfs à jour (séance du jour comprise)
+  }
 }
 
 // ══════════════════════════════════════════════════
@@ -2475,15 +2480,17 @@ function renderWeightChart(){
     var cur=arr[arr.length-1].val;
     var gain=Math.round((cur-first)*10)/10;
     var gainStr=(gain>0?'+':'')+gain+' kg';
-    var gainColor=gain>0?'var(--acc)':gain<0?'var(--red)':'var(--mut)';
+    // Assistances (traction/dips assistée) : moins = mieux → une baisse est verte (01/11, demande Adrien)
+    var _inv=asIsInverse(key), good=function(d){ return _inv?d<0:d>0; }, bad=function(d){ return _inv?d>0:d<0; };
+    var gainColor=good(gain)?'var(--acc)':bad(gain)?'var(--red)':'var(--mut)';
     var oneMonthAgo=new Date(); oneMonthAgo.setMonth(oneMonthAgo.getMonth()-1);
     var monthEntry=null; var minDiff=Infinity;
     arr.forEach(function(x){var diff=Math.abs(new Date(x.date)-oneMonthAgo);if(diff<minDiff){minDiff=diff;monthEntry=x;}});
     var monthDiff=monthEntry&&monthEntry.date!==arr[arr.length-1].date?Math.round((cur-monthEntry.val)*10)/10:null;
     var monthStr=monthDiff!==null?(monthDiff>0?'+':'')+monthDiff+' kg':'—';
-    var monthColor=monthDiff!==null?(monthDiff>0?'var(--acc)':monthDiff<0?'var(--red)':'var(--mut)'):'var(--mut)';
+    var monthColor=monthDiff!==null?(good(monthDiff)?'var(--acc)':bad(monthDiff)?'var(--red)':'var(--mut)'):'var(--mut)';
     statsEl.style.display='grid';
-    statsEl.innerHTML='<div class="wsr-card"><div class="wsr-val">'+cur+' <span class="wsr-unit">kg</span></div><div class="wsr-lbl">actuel</div></div>'
+    statsEl.innerHTML='<div class="wsr-card"><div class="wsr-val">'+cur+' <span class="wsr-unit">kg</span></div><div class="wsr-lbl">'+(_inv?'assistance actuelle':'actuel')+'</div></div>'
       +'<div class="wsr-card"><div class="wsr-val" style="color:'+monthColor+'">'+monthStr+'</div><div class="wsr-lbl">ce mois</div></div>'
       +'<div class="wsr-card"><div class="wsr-val" style="color:'+gainColor+'">'+gainStr+'</div><div class="wsr-lbl">total</div></div>'
       +'<div class="wsr-card"><div class="wsr-val">'+arr.length+'</div><div class="wsr-lbl">mesure'+(arr.length>1?'s':'')+'</div></div>';
@@ -2670,10 +2677,12 @@ function muscleVolume(startDate,endDate){
 }
 // Barres HTML réutilisables (Progression + simulation du setup LiveUp + bilan hebdo).
 // extra = séries PROJETÉES (sélection en cours) affichées en segment translucide.
-// Seuils (01/11, demande Adrien ; avant : 12 bleu · 17 gold) : bleu dès 16 séries (Abdos : 12 jusqu'au
-// 31/01/2027, 16 ensuite) · gold dès 20 · >25 orange (trop). Gris en dessous.
-function volBlueMin(label){ return label==='Abdos'&&todayStr()<'2027-02-01'?12:16; }
-function volTier(label,tot){ return tot>25?'over':tot>=20?'gold':tot>=volBlueMin(label)?'ok':'low'; }
+// Seuils (01/11, demandes Adrien ; avant : 12 bleu · 17 gold) : sous 12 = ROUGE SANG (« vraiment pas
+// bien ») · 12-15 gris · 16-19 bleu · 20+ gold · >25 orange (trop). Abdos jusqu'au 31/01/2027 :
+// sous 8 rouge sang · 8-11 gris · 12-15 bleu · 16+ gold (le barème général ensuite).
+function volScale(label){ return label==='Abdos'&&todayStr()<'2027-02-01'?{grey:8,blue:12,gold:16}:{grey:12,blue:16,gold:20}; }
+function volBlueMin(label){ return volScale(label).blue; }
+function volTier(label,tot){ var c=volScale(label); return tot>25?'over':tot>=c.gold?'gold':tot>=c.blue?'ok':tot>=c.grey?'low':'blood'; }
 function muscleVolumeBarsHtml(vol,extra,compact,extraCls){
   var h='';
   var SCALE=25; // la barre va jusqu'à 25 (au-delà = volume poubelle)
@@ -2688,7 +2697,7 @@ function muscleVolumeBarsHtml(vol,extra,compact,extraCls){
       +'<span class="mv-name">'+g.label+'</span>'
       +'<div class="mv-bar"><div class="mv-fill '+cls+'" style="width:'+pW+'%"></div>'
       +(xW>0?'<div class="mv-fill '+(extraCls||'ghost')+'" style="width:'+xW+'%"></div>':'')
-      +'<span class="mv-t10"></span><span class="mv-t20"></span></div>'
+      +'<span class="mv-t10" style="left:'+(volScale(g.label).blue/SCALE*100)+'%"></span><span class="mv-t20" style="left:'+(volScale(g.label).gold/SCALE*100)+'%"></span></div>'
       +'<span class="mv-val '+cls+'">'+vd+(x?'<em>+'+xd+'</em>':'')+'</span>'
       +'</div>';
   });
@@ -2761,7 +2770,7 @@ function renderMuscleVolume(){
       +muscleVolumeMonthBarsHtml(vol)
       +'<div class="mv-month-note">Comparaison des groupes musculaires travaill&#xE9;s sur la p&#xE9;riode : un volume diff&#xE9;rent ne signifie pas &#xE0; lui seul un d&#xE9;s&#xE9;quilibre physique.</div>';
   }else{
-    head+='<span class="mv-hint">16+ s&#xE9;ries = bleu (abdos 12+ jusqu\'&#xE0; f&#xE9;vrier) &#xB7; 20+ = gold &#xB7; &gt;25 = rendements d&#xE9;croissants</span></span></div>'
+    head+='<span class="mv-hint">sous 12 = rouge &#xB7; 12+ gris &#xB7; 16+ bleu &#xB7; 20+ gold &#xB7; &gt;25 = trop (abdos jusqu\'&#xE0; f&#xE9;vrier : 8 / 12 / 16)</span></span></div>'
       +muscleVolumeBarsHtml(vol,live,false,'holo');
   }
   el.innerHTML=head;
@@ -3971,6 +3980,15 @@ function mergeBackupIntoDB(bk){
     if(bk.rank.ladderSnaps){ if(!DB.rank.ladderSnaps) DB.rank.ladderSnaps={};
       Object.keys(bk.rank.ladderSnaps).forEach(function(m){ if(DB.rank.ladderSnaps[m]==null) DB.rank.ladderSnaps[m]=bk.rank.ladderSnaps[m]; }); }
   }
+  // Perfs retirées des classements (01/11) : par exo et par séance, la décision la plus récente gagne
+  // (un « remettre » plus récent n'est jamais écrasé par un vieux « retirer », et inversement)
+  if(bk.recHidden){
+    if(!DB.recHidden) DB.recHidden={};
+    Object.keys(bk.recHidden).forEach(function(k){
+      var loc=DB.recHidden[k]||(DB.recHidden[k]={}), rem=bk.recHidden[k]||{};
+      Object.keys(rem).forEach(function(id){ if(!loc[id]||(rem[id]&&rem[id].at>(loc[id].at||0))) loc[id]=rem[id]; });
+    });
+  }
   if(bk.templates&&bk.templates.length&&(!DB.templates||!DB.templates.length)) DB.templates=bk.templates;
   if(bk.deletedWeights&&!Object.keys(DB.deletedWeights||{}).length) DB.deletedWeights=bk.deletedWeights;
   if(bk.prepared&&!DB.prepared) DB.prepared=bk.prepared;
@@ -4284,7 +4302,7 @@ function exportCoachDossier(opts){
     ['Système de charge (28/10/2026)','Même charge sur toutes les séries, 1-2 séries d\'échauffement non comptées. Chaque exo a une fourchette (ex. 8-10). Consigne par série : série 1 = ok, séries intermédiaires = dur, dernière = echec (max de reps) ; à charge égale, la fatigue fait passer de ok à dur. La charge monte d\'un cran quand TOUTES les séries atteignent le haut de la fourchette (ex. 10-10-10-11 en 8-10) sans échec en série 1 ni 2 ; série 1 en échec sous le bas = charge trop lourde. « Cible » = bas de la fourchette. Indicateur clé : % de séries 1 en échec (cible < 10 %).'],
     ['Note /20','Note de séance calculée par l\'app sur l\'exécution des exos principaux (séries faites, reps vs cible, charge vs référence). Note /5 = même chose par exercice. Depuis le 28/10/2026 : seule la série 1 en échec coûte (exo plafonné à 4/5) ; la dernière série, menée au max, compte pleine. Les notes /20 déjà enregistrées ne changent jamais.'],
     ['Note de semaine','Note de l\'app : assiduité, exécution, objectifs hebdo de l\'app (dont des objectifs non sportifs) et pas. Pour le sport seul, lire « Exécution moyenne ».'],
-    ['Séries dures','Séries comptées par muscle (1 par série + 0,5 pour le muscle assistant des polyarticulaires). Repère de l\'app : bleu dès 16 par muscle et par semaine (abdos 12 jusqu\'à février 2027), gold dès 20, plus de 25 = rendements décroissants.'],
+    ['Séries dures','Séries comptées par muscle (1 par série + 0,5 pour le muscle assistant des polyarticulaires). Repère de l\'app par muscle et par semaine : sous 12 rouge, 12-15 gris, 16-19 bleu, 20+ gold, plus de 25 = rendements décroissants (abdos jusqu\'à fin janvier 2027 : sous 8 rouge, 8 gris, 12 bleu, 16 gold).'],
     ['e1RM','Force estimée par série (Epley : charge × (1 + reps / 30)), seulement pour les exos chargés en kg (pas les assistances).'],
     ['Séances anciennes','Février → avril : séances RITM / escalade notées sans détail. Juin → juillet : séances reconstituées après une perte de données (dates approximatives, pas de détail). Détail série par série fiable à partir du 01/08/2026.'],
     ['Onglets','Synthèse · Semaines · Séances · Séries · Exercices · Historique charges · Poids · Course & sports · Pas · Sommeil · Douleurs · Mobilité.'],
@@ -4310,7 +4328,7 @@ function exportCoachDossier(opts){
   var dur30=logs.filter(function(l){return l.date>=d30&&l.live&&l.duration_min&&l.duration_min<200;}).map(function(l){return l.duration_min;});
   if(dur30.length) add('Durée moyenne de séance',Math.round(avg(dur30)),'min','30 jours');
   var vol4=muscleVolume(rankAddDays(curMon,-28),rankAddDays(curMon,-1));
-  GROUPS.forEach(function(g){ add('Séries dures / semaine — '+g,r1((vol4[g]||0)/4),'séries','moyenne des 4 dernières semaines closes','repère : bleu dès 16 (abdos 12 jusqu\'à février), gold dès 20'); });
+  GROUPS.forEach(function(g){ add('Séries dures / semaine — '+g,r1((vol4[g]||0)/4),'séries','moyenne des 4 dernières semaines closes','repère : sous 12 rouge, 12 gris, 16 bleu, 20 gold (abdos jusqu\'à février : 8 / 12 / 16)'); });
   var s30=setRows.filter(function(r){return r[0]>=d30;}), sp30=s30.filter(function(r){return r[6]==='principal';});
   if(sp30.length){
     add('Séries des exos principaux',sp30.length,'séries','30 jours');
@@ -7158,7 +7176,10 @@ function fsAnalyze(out,x,c){
   var under=sets.slice(0,n-1).filter(function(s){ return s.reps<lo; }).length;
   var belowTop=sets.filter(function(s){ return s.reps<hi; }).length;
   var sameW=ws.every(function(w){ return w===ws[0]; });
-  var atRefAll=!c.isKg||!(ref>0)||ws.every(c.atRef);
+  // Charge de travail = la plus légère des séries (la plus forte assistance) : une série PLUS lourde
+  // qui tient aussi le haut ne bloque pas la hausse (01/11, chest press 50·50·50·55×10) et une séance
+  // volontairement sous la référence qui tient tout remonte d'un cran (01/11, incliné 4×10 à 22 kg).
+  var base=(c.isKg&&ws.length)?(inv?Math.max.apply(null,ws):Math.min.apply(null,ws)):ref;
   if(s1Fail&&s1.reps<lo){
     out.tone='down';
     var msg='&#x1F4A5; S&#xE9;rie 1 &#xE0; l\'&#xE9;chec sous '+lo+' reps = charge trop lourde.';
@@ -7168,11 +7189,14 @@ function fsAnalyze(out,x,c){
       else { out.suggest=-1; out.suggestTo=inv?ref+step:Math.max(0,ref-step); msg+=' Prochaine fois&#x202F;: <strong>'+wTxt(out.suggestTo)+'</strong>.'; }
     }
     out.lines.push(msg+' Note plafonn&#xE9;e &#xE0; 4/5.');
-  } else if(c.fullSets&&!belowTop&&!block&&sameW&&atRefAll){
-    out.tone='up'; out.suggest=1;
-    if(c.isKg&&ref>0) out.suggestTo=inv?Math.max(0,ref-step):ref+step;
-    out.lines.push('&#x1F680; Toutes les s&#xE9;ries &#xE0; '+hi+'+ sans &#xE9;chec en S1'+(n>=3?'-S2':'')+'&#x202F;: la charge monte'
-      +(out.suggestTo!=null?' &#x2192; <strong>'+wTxt(out.suggestTo)+'</strong> la prochaine fois (on repart vers '+lo+' reps).':'.'));
+  } else if(c.fullSets&&!belowTop&&!block){
+    out.tone='up';
+    var nxt=(c.isKg&&base>0)?(inv?Math.max(0,base-step):base+step):null;
+    var beyondRef=nxt!=null&&ref>0&&(inv?nxt<ref:nxt>ref);
+    if(nxt==null||beyondRef){ out.suggest=1; if(nxt!=null) out.suggestTo=nxt; }
+    out.lines.push('&#x1F680; Toutes les s&#xE9;ries &#xE0; '+hi+'+ &#xE0; '+wTxt(base)+(sameW?'':' (ou plus)')+' sans &#xE9;chec en S1'+(n>=3?'-S2':'')+'&#x202F;: la charge monte'
+      +(nxt==null?'.':beyondRef?' &#x2192; <strong>'+wTxt(nxt)+'</strong> la prochaine fois (on repart vers '+lo+' reps).'
+        :' &#x2192; <strong>'+wTxt(nxt)+'</strong> la prochaine fois'+(nxt===ref?' (ta r&#xE9;f&#xE9;rence)':' (ta r&#xE9;f&#xE9;rence reste '+wTxt(ref)+')')+'.'));
   } else if(c.fullSets&&!belowTop&&block){
     out.tone='good';
     out.lines.push('&#x1F3AF; Haut de fourchette partout, mais &#xE9;chec en S1'+(n>=3?' ou S2':'')+' &#x2192; pas encore pr&#xEA;t&#x202F;: on garde '+wTxt(ref)+'. La hausse viendra quand S1 finira &#xE0; OK et S2 &#xE0; DUR.');
@@ -8234,10 +8258,12 @@ function recCompare(a,b,n,opts){ // <0 = a meilleur que b
   return recFeelSum(a.sets,n)-recFeelSum(b.sets,n);
 }
 // Toutes les exécutions COMPTÉES d'un exo, toutes charges (log du jour inclus s'il est persisté)
-function recSessions(key,n){
+function recIsHidden(key,id){ var m=DB.recHidden&&DB.recHidden[key]; return !!(m&&m[String(id)]&&m[String(id)].h); }
+function recSessions(key,n,withHidden){
   var out=[];
   (DB.logs||[]).forEach(function(l){
     if(!l.live||!l.live.exos) return;
+    if(!withHidden&&recIsHidden(key,l.id)) return; // perf retirée des classements par Adrien (01/11)
     l.live.exos.forEach(function(x){
       if(x.key!==key) return;
       if(!liveExoCounted(x)) return;
@@ -8245,6 +8271,46 @@ function recSessions(key,n){
     });
   });
   return out;
+}
+// ── Top 5 des perfs d'un exo (01/11, demande Adrien) — fiche dépliée de l'écran Séances ──
+// Même juge que « Record à battre » et la slide Classements (recCompare : e1RM, moins d'assistance,
+// ou total de reps). Une perf retirée sort de TOUS les classements ; la 6e remonte.
+function recTop(key,limit){
+  var d=asExoDef(key); if(!d) return [];
+  var n=asParseSerie(d.e).n, o={inv:asIsInverse(key),isKg:/kg/.test(d.e.unite||'')&&!d.e.repTarget};
+  var rs=recSessions(key,n).filter(function(x){ return (x.sets||[]).length; });
+  rs.sort(function(a,b){ var c=recCompare(a,b,n,o); return c!==0?c:a.date.localeCompare(b.date); });
+  return limit?rs.slice(0,limit):rs;
+}
+function recTopHtml(key){
+  var d=asExoDef(key); if(!d) return '';
+  var e=d.e, top=recTop(key,5);
+  var hidden=Object.keys((DB.recHidden&&DB.recHidden[key])||{}).filter(function(id){ return DB.recHidden[key][id].h; }).length;
+  var crit=asIsInverse(key)?'moins d\'assistance = mieux':(/kg/.test(e.unite||'')&&!e.repTarget?'class&#xE9;es par force estim&#xE9;e':'class&#xE9;es par total');
+  var h='<div class="seclbl">&#x1F3C6; Meilleures perfs <span class="rec-crit">'+crit+'</span></div>';
+  if(!top.length) h+='<div class="rec-empty">Pas encore de perf enregistr&#xE9;e en s&#xE9;ance LiveUp.</div>';
+  top.forEach(function(r,i){
+    h+='<div class="rec-row'+(i===0?' first':'')+'"><span class="rec-rank">'+(i+1)+'</span>'
+      +'<div class="rec-main"><span class="rec-sets">'+recSetsFmt(r,e.unite||'kg',e.cnt)+'</span><span class="rec-date">'+formatDateFr(r.date)+'</span></div>'
+      +'<button class="rec-del" type="button" onclick="recHide(\''+key+'\',\''+r.id+'\')" aria-label="Retirer la perf du '+formatDateFr(r.date)+' du classement">&#x2715;</button></div>';
+  });
+  if(hidden) h+='<button class="rec-restore" type="button" onclick="recRestoreAll(\''+key+'\')">&#x21BA; Remettre '+(hidden>1?'les '+hidden+' perfs retir&#xE9;es':'la perf retir&#xE9;e')+'</button>';
+  return h;
+}
+function recRefresh(key){ document.querySelectorAll('[data-rectop="'+key+'"]').forEach(function(el){ el.innerHTML=recTopHtml(key); }); }
+function recHide(key,id){
+  if(!confirm('Retirer cette perf du classement ? Elle reste dans l’historique, seulement plus comptée comme record.')) return;
+  if(!DB.recHidden) DB.recHidden={};
+  if(!DB.recHidden[key]) DB.recHidden[key]={};
+  DB.recHidden[key][String(id)]={h:1,at:Date.now()};
+  saveDB(); recRefresh(key);
+  showToast('Perf retir&#xE9;e du classement &#x2014; la suivante remonte');
+}
+function recRestoreAll(key){
+  var m=DB.recHidden&&DB.recHidden[key]; if(!m) return;
+  Object.keys(m).forEach(function(id){ if(m[id].h) m[id]={h:0,at:Date.now()}; });
+  saveDB(); recRefresh(key);
+  showToast('Perfs remises dans le classement');
 }
 function recSetsFmt(sess,unite,cnt){
   return fmtSetsW({w:sess.w,unite:unite,cnt:cnt||null},sess.sets);
