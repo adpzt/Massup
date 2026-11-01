@@ -3015,3 +3015,17 @@ span.bn-hero-bar i.n-gold,.bn-hero-bar i.n-blue{color:transparent;}
 .wh-entry-dinp{min-width:0;max-width:9.5rem;padding:.25rem .35rem;border:1px solid var(--gb);border-radius:6px;background:rgba(255,255,255,.05);color:var(--txt);font:600 16px 'Manrope',system-ui,sans-serif;color-scheme:dark;-webkit-appearance:none;appearance:none;}
 .wh-entry-dinp:focus{outline:none;border-color:var(--acc);}
 @media (prefers-color-scheme: light){ .wh-entry-dinp{color-scheme:light;background:rgba(18,21,28,.038);} }
+/* Bilan de séance allégé (01/11, retours Adrien) */
+.as-rep-stats3{grid-template-columns:repeat(3,minmax(0,1fr));}
+.as-rep-stat.gold span{color:var(--yellow);}
+.as-rep-stat.podium span{color:var(--acc2);}
+.as-rep-exo.compact{cursor:pointer;}
+.as-rep-exo.compact .as-rep-lines{display:none;margin-top:.45rem;}
+.as-rep-exo.compact.open .as-rep-lines{display:block;}
+.as-rep-more{float:right;margin-left:.4rem;color:var(--mut);transition:transform .2s;}
+.as-rep-exo.compact.open .as-rep-more{transform:rotate(180deg);}
+/* Classements : chaque ligne de séries reste sur UNE ligne (01/11) */
+.rec2-line{flex-wrap:nowrap;min-width:0;}
+.rec2-l-lbl{width:62px;}
+.rec2-sets{min-width:0;white-space:nowrap;font-size:clamp(.6rem,2.85vw,.78rem);}
+.rec2-sets .setw{letter-spacing:-.01em;}

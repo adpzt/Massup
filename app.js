@@ -8428,9 +8428,9 @@ function recWRange(sess,unite){
   return (mn===mx?mn:mn+'&#x2192;'+mx)+' '+unite;
 }
 // La slide Classements du bilan de séance
-function asRenderRecordsSlide(){
-  var h='<div class="as-rep-slide-title">&#x1F3C6; Classements &#x2014; toutes charges</div>';
-  var any=false;
+// Rang de la perf du jour pour chaque exo (même juge que « Record à battre »)
+function asTodayRanks(){
+  var out=[];
   asReportDisplayExos().forEach(function(x){
     if(!liveExoCounted(x)||exoIsCardio(x.key)||!x.sets.length) return;
     var n=x.n||3;
@@ -8438,9 +8438,17 @@ function asRenderRecordsSlide(){
     var sess=recSessions(x.key,n);
     var today=sess.find(function(s2){return String(s2.id)===String(AS.savedLogId);});
     if(!today) return;
-    any=true;
     sess.sort(function(a,b){ var c=recCompare(a,b,n,opts); return c!==0?c:a.date.localeCompare(b.date); });
-    var rank=sess.indexOf(today)+1;
+    out.push({x:x,n:n,sess:sess,today:today,rank:sess.indexOf(today)+1});
+  });
+  return out;
+}
+function asRenderRecordsSlide(){
+  var h='<div class="as-rep-slide-title">&#x1F3C6; Classements &#x2014; toutes charges</div>';
+  var any=false;
+  asTodayRanks().forEach(function(R){
+    var x=R.x, sess=R.sess, today=R.today, rank=R.rank;
+    any=true;
     var best=sess[0];
     var isBest=rank===1;
     // Podium (31/08, demande Adrien) : le top 2/3 all-time se voit aussi — argent/bronze,
@@ -8474,7 +8482,7 @@ function asRenderRecordsSlide(){
 function asReportDisplayExos(){
   return AS.exos.filter(function(x){ return !liveExoSide(x)||(x.sets||[]).length>0; });
 }
-function asRepGoto(i){ _asDir=i<AS.repIdx?'back':'fwd'; AS.repIdx=Math.max(0,Math.min(FEATURE_FULL_BILAN?4:1,i)); asSave(); asRender(); }
+function asRepGoto(i){ _asDir=i<AS.repIdx?'back':'fwd'; AS.repIdx=Math.max(0,Math.min(FEATURE_FULL_BILAN?3:1,i)); asSave(); asRender(); }
 function asRepNav(d){ asRepGoto(AS.repIdx+d); }
 function asRenderReport(){
   var _eng=liveNotedExos(AS.exos);
@@ -8491,8 +8499,10 @@ function asRenderReport(){
   var i=AS.repIdx;
   // Bilan épuré (15/08, demande Adrien) : juste la note /20 + les suggestions de charge.
   // Les slides analyse / note par exo / records restent dans le code (FEATURE_FULL_BILAN).
-  var nSlides=FEATURE_FULL_BILAN?5:2;
-  var view=FEATURE_FULL_BILAN?i:(i===0?0:4);
+  // 01/11 (Adrien : « l'analyse, rien ne m'intéresse ») : la slide Analyse sort du parcours —
+  // 0 note · 1 note par exo · 2 classements · 3 suggestions (son code reste, view 1).
+  var nSlides=FEATURE_FULL_BILAN?4:2;
+  var view=FEATURE_FULL_BILAN?[0,2,3,4][Math.min(3,i)]:(i===0?0:4);
   h+='<div class="as-scroll'+(i===0?' as-center':'')+'">';
   var _cdOnly=!_eng.length?AS.exos.find(function(x){ return x.cardio&&(x.sets||[]).length; }):null;
   if(view===0&&AS.sid==='sm'){
@@ -8517,12 +8527,17 @@ function asRenderReport(){
       +'<div class="as-grade-title t-'+gi.cls+'">'+gi.title+'</div>'
       +'<div class="as-grade-sum">'+asGradeSummary(g,doneCt,skipCt,_eng.length)+'</div>'
       +(function(){ try{ var r=asRepriseCtx(); return r?'<div style="margin:.55rem 0 .1rem;"><span class="rep-badge">&#x2744; reprise apr&#xE8;s '+r.days+' j d\'arr&#xEA;t &#x2014; souvent un peu plus l&#xE9;g&#xE8;re, note lue avec indulgence</span></div>':''; }catch(e){ return ''; } })()
-      +'<div class="as-rep-stats">'
-      +'<div class="as-rep-stat"><span>'+doneCt+'/'+_eng.length+'</span>exos</div>'
-      +'<div class="as-rep-stat"><span>'+allSets+'</span>s&#xE9;ries</div>'
-      +'<div class="as-rep-stat"><span>'+asElapsedMin()+'</span>min</div>'
-      +'<div class="as-rep-stat"><span>'+(skipCt||0)+'</span>pass&#xE9;s</div>'
-      +'</div>'
+      +(function(){
+        // 01/11 (Adrien) : exos faits + records + podiums du jour — séries / minutes / passés retirés
+        var rk=[]; try{ rk=asTodayRanks().filter(function(R){ return R.sess.length>1; }); }catch(e){}
+        var rec=rk.filter(function(R){ return R.rank===1; }).length;
+        var pod=rk.filter(function(R){ return R.rank<=3; }).length;
+        return '<div class="as-rep-stats as-rep-stats3">'
+          +'<div class="as-rep-stat"><span>'+doneCt+'/'+_eng.length+'</span>exos</div>'
+          +'<div class="as-rep-stat'+(rec?' gold':'')+'"><span>'+rec+'</span>record'+(rec>1?'s':'')+'</div>'
+          +'<div class="as-rep-stat'+(pod?' podium':'')+'"><span>'+pod+'</span>sur le podium</div>'
+          +'</div>';
+      })()
       +(_side.length?'<div style="font-size:.68rem;color:var(--mut);margin-top:.7rem;">&#x2B50; '+_side.length+' bonus tent&#xE9;'+(_side.length>1?'s':'')+' ('+_side.map(function(x){return x.name||getExoName(x.key);}).join(', ')+') &#x2014; hors note, z&#xE9;ro malus</div>':'')
       +(function(){
         // RANK : RP gagnés sur cette séance (log déjà persisté par asSaveAndReport)
@@ -8590,11 +8605,14 @@ function asRenderReport(){
       var badge=(side&&!counted)
         ?'<span class="as-rep-score '+(isAbdo?'s-abdo':'s-mid')+'" style="font-size:.62rem;">'+(isAbdo?'&#x1F525;':'&#x2B50;')+' tent&#xE9;</span>'
         :'<span class="as-rep-score s-'+(sc>=4?'good':sc>=2.5?'mid':'bad')+'">'+String(sc).replace('.',',')+'<small>/5</small></span>';
-      h+='<div class="as-rep-exo tone-'+r.tone+(isAbdo?' cat-abdo':'')+'">'
+      // 01/11 (Adrien : « je regarde le nom, ma perf et la note — tout le texte en dessous, c'est un enfer ») :
+      // carte compacte ; les retours du coach restent, repliés, et s'ouvrent au tap.
+      var _hasL=r.lines&&r.lines.length;
+      h+='<div class="as-rep-exo compact tone-'+r.tone+(isAbdo?' cat-abdo':'')+'"'+(_hasL?' role="button" tabindex="0" onclick="this.classList.toggle(\'open\')"':'')+'>'
         +'<div class="as-rep-exo-top"><span class="as-rep-exo-name">'+(side?(isAbdo?'<span class="abdo-mark">&#x1F525;</span> ':'&#x2B50; '):'')+r.name+'</span>'
         +badge+'</div>'
-        +'<div class="as-rep-exo-w">'+(setsTxt||(x.weight+' '+x.unite))+(side?' &#xB7; <em style="'+(isAbdo?'color:#9B8CFF':'color:var(--mut)')+';font-style:normal;">bonus'+(isAbdo?' abdo':'')+' &#x2014; hors note /20</em>':'')+'</div>'
-        +r.lines.map(function(l){return '<div class="as-rep-line">'+l+'</div>';}).join('')
+        +'<div class="as-rep-exo-w">'+(setsTxt||(x.weight+' '+x.unite))+(side?' &#xB7; <em style="'+(isAbdo?'color:#9B8CFF':'color:var(--mut)')+';font-style:normal;">bonus'+(isAbdo?' abdo':'')+'</em>':'')+(_hasL?'<span class="as-rep-more" aria-hidden="true">&#x25BE;</span>':'')+'</div>'
+        +(_hasL?'<div class="as-rep-lines">'+r.lines.map(function(l){return '<div class="as-rep-line">'+l+'</div>';}).join('')+'</div>':'')
         +'</div>';
     });
   } else if(view===3){
@@ -8680,7 +8698,7 @@ function asRenderReport(){
   h+=asSlideDots(nSlides,i,'asRepGoto');
   h+='<div class="as-foot">'
     +'<button class="as-ghost-btn" onclick="asRepNav(-1)" '+(i===0?'disabled':'')+'>&#x2039;</button>'
-    +(i<nSlides-1?'<button class="as-cta" onclick="asRepNav(1)">Suivant &#x203A;'+(FEATURE_FULL_BILAN?(i===2?'<span class="as-cta-sub">classements</span>':(i===3?'<span class="as-cta-sub">suggestions</span>':'')):'<span class="as-cta-sub">suggestions</span>')+'</button>'
+    +(i<nSlides-1?'<button class="as-cta" onclick="asRepNav(1)">Suivant &#x203A;'+(FEATURE_FULL_BILAN?(i===1?'<span class="as-cta-sub">classements</span>':(i===2?'<span class="as-cta-sub">suggestions</span>':(i===0?'<span class="as-cta-sub">note par exo</span>':''))):'<span class="as-cta-sub">suggestions</span>')+'</button>'
          :'<button class="as-cta" onclick="asDone()">Terminer &#x1F389;</button>')
     +'</div>';
   return h;
