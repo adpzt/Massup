@@ -98,3 +98,15 @@ test("séries à la charge actuelle (historique réel du pec deck) et référenc
   const ar = app2.eval([], 49, "AS={exos:[{key:'pecdeck',name:'Pec Deck',w0:49,weight:54,n:4,reps:10,rHi:12,unite:'kg',status:'done',main:true,sets:[{w:54,reps:10,feel:'ok'},{w:54,reps:10,feel:'dur'},{w:54,reps:10,feel:'dur'},{w:54,reps:11,feel:'echec'}]}]};JSON.stringify({a:asAutoRefFollow(),ref:getCurrentWeight('pecdeck')})");
   assert.deepEqual(JSON.parse(ar), { a: { pecdeck: { from: 49, to: 54 } }, ref: 54 });
 });
+
+test("une séance plus légère ne remet pas le compteur de séries à zéro (curl marteau croisé réel)", () => {
+  const app3 = load();
+  const C = (id, d, sets) => ({ id, date: d, time: "07:00", sessions: ["s2"], live: { exos: [{ key: "curl_marteau_croise", w: 10, w0: 10, n: 4, reps: 10, rHi: 12, unite: "kg", status: "done", main: true, sets: sets.map(([w, r]) => ({ w, reps: r, feel: "dur" })) }] } });
+  const logs = [
+    C(1, "2026-10-15", [[10, 10], [10, 9], [10, 9], [10, 10]]),
+    C(2, "2026-10-20", [[6, 15], [6, 15], [8, 10], [8, 15]]),
+    C(3, "2026-10-28", [[10, 10], [10, 10], [10, 10], [8, 12]]),
+  ];
+  const r = JSON.parse(app3.eval(logs, 54, "DB.weights.curl_marteau_croise=[{date:'2026-08-18',val:10}];JSON.stringify(loadCount('curl_marteau_croise'))"));
+  assert.equal(r.done, 7);
+});

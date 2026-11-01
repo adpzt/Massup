@@ -1513,8 +1513,9 @@ function getSessionsAtWeight(key){
 
 // ── Séries à la charge actuelle (01/11, demande Adrien — remplace « N séances à ce poids ») ──
 // Combien de séries il a déjà faites à sa charge de référence (ou plus lourd ; assistance : ou moins),
-// depuis qu'il y travaille : on remonte les séances LiveUp de la plus récente à la plus ancienne et
-// on s'arrête à la première où aucune série n'atteignait cette charge. Objectif ADAPTÉ À L'EXO (01/11,
+// sur TOUT l'historique LiveUp. (Corrigé le 01/11 : la 1re version s'arrêtait à la première séance
+// sans série à cette charge — une séance plus légère remettait le compteur à zéro : curl marteau
+// croisé 3/56 au lieu de 38.) Objectif ADAPTÉ À L'EXO (01/11,
 // Adrien : « élévation latérale, il en faut beaucoup plus ») : séances visées = 6 + 40 × (cran / charge),
 // bornées 8-20, × séries prévues — pec deck 54 kg, cran 5 → 10 séances (40 séries) ; élévation 6 kg,
 // cran 2 (+33 %) → 19 séances (76 séries). liveX = l'exo de la séance en cours (pas encore enregistrée).
@@ -1527,14 +1528,11 @@ function loadCount(key,liveX){
   var at=function(w){ return w!=null&&(inv?w<=W:w>=W); };
   var count=function(x){ return (x.sets||[]).filter(function(st){ return at(st.w!=null?st.w:x.w); }).length; };
   var done=0;
-  if(liveX){ var c0=count(liveX); if(!c0) return {w:W,done:0,target:target,sess:sess,ratio:0,unite:d.e.unite||'kg'}; done+=c0; }
+  if(liveX) done+=count(liveX);
   var logs=(DB.logs||[]).filter(function(l){ return l.live&&l.live.exos&&(!liveX||String(l.id)!==String(AS&&AS.savedLogId)); })
     .sort(function(a,b){ return b.date.localeCompare(a.date)||(b.time||'').localeCompare(a.time||''); });
   for(var i=0;i<logs.length;i++){
-    var lx=null; logs[i].live.exos.forEach(function(x){ if(x.key===key&&liveExoCounted(x)) lx=x; });
-    if(!lx) continue;
-    var c=count(lx); if(!c) break;
-    done+=c;
+    logs[i].live.exos.forEach(function(x){ if(x.key===key&&liveExoCounted(x)) done+=count(x); });
   }
   return {w:W,done:done,target:target,sess:sess,ratio:done/target,unite:d.e.unite||'kg'};
 }
