@@ -189,7 +189,7 @@ var DATA = [
     // 15/08/2026 (décision Adrien) : 6 kg · 4×15 — il redescend d'un cran pour remplir des
     // séries longues propres (11/14 séries sous la cible à 8 kg = charge trop haute, verdict du
     // 14/08 enfin acté). 15 reps = format métabolique → repos 75 s. Retour à 8 kg quand 4×15 passe.
-    {key:"elev_lat",imp:true,name:"Élévation Latérale",poids:6,unite:"kg/main",serie:"4×15",rest:75,cue:"Fais le T — mouvement lent.",tips:["6 kg · 4×15 : la brûlure sur les dernières reps = exactement le stimulus cherché.","Bras légèrement fléchi tout au long, contrôle la descente (3s).","Monter jusqu'à la hauteur des épaules."],errs:["Ne pas balancer le buste.","Ne pas hausser les épaules."],img:"lateralraise"},
+    {key:"elev_lat",imp:true,name:"Élévation Latérale",poids:8,unite:"kg/main",serie:"4×10",rest:90,cue:"Coudes qui mènent, stop à hauteur d'épaule, descente en 3 s.",tips:["8 kg · 8 à 12 reps (01/11) : +1 rep par séance, la hausse vient à 4×12 propres — garde 1 rep en réserve avant la dernière série.","Bras légèrement fléchi tout au long, contrôle la descente (3s).","Monter jusqu'à la hauteur des épaules."],errs:["Ne pas balancer le buste.","Ne pas hausser les épaules."],img:"lateralraise"},
     {key:"triceps_corde",imp:true,name:"Triceps Poulie Corde",poids:16,unite:"kg",serie:"4×10",rest:90,cue:"Écarte la corde en bas pour finir la contraction.",tips:["Coudes collés au corps, immobiles.","Sépare la corde en bas.","Contrôle lent à la remontée."],errs:["Ne pas laisser les coudes s'écarter.","Ne pas utiliser le dos."],img:"tricepscable"},
     // cable_fly ajouté le 01/08/2026 : tension continue = idéal pour la connexion pecs (Adrien ne « sent » pas l'incliné)
     {key:"cable_fly",bonus:true,name:"Écarté Poulie Vis-à-vis",poids:9,unite:"kg/côté",serie:"3×12",rest:90,bless:"Poignées simples, poignets dans l'axe du bras — RAS.",cue:"Bras semi-tendus, ramène les poignées devant toi comme pour applaudir, serre les pecs 1s.",tips:["Tension continue du câble : l'exo parfait pour ENFIN sentir tes pecs travailler.","Un pied devant, buste légèrement penché, gainé.","Ouvre grand en arrière (étirement), ferme en serrant fort."],errs:["Ne pas plier/déplier les coudes pendant le mouvement.","Ne pas prendre lourd au point de balancer le corps."],img:"cablefly"},
@@ -4722,7 +4722,7 @@ function asIsInverse(key){ return key==='traction_assist'||key==='dips_assist'; 
 // step = 1 cran (kg). Pas de séries d'échauffement affichées (Adrien n'a pas le temps).
 var REP_RANGE={
   dev_incline:{r:[8,10],step:2}, chestpress_v:{r:[8,10],step:5}, pecdeck:{r:[10,12],step:5},
-  elev_lat:{r:[15,20],step:2}, triceps_corde:{r:[10,12],step:2}, triceps_barre:{r:[10,12],step:2},
+  elev_lat:{r:[8,12],step:2}, // 01/11 (Adrien) : retour à 8 kg en 8-12 (6 kg × 15-20 bloquait depuis avril) triceps_corde:{r:[10,12],step:2}, triceps_barre:{r:[10,12],step:2},
   shoulder_press:{r:[8,10],step:5}, seated_dips:{r:[8,10],step:5}, dips_assist:{r:[8,10],step:4},
   cable_fly:{r:[10,12],step:1}, dev_militaire:{r:[8,10],step:2},
   tirage_vert:{r:[8,10],step:4}, rowing_pb:{r:[8,10],step:4}, rowing_uni:{r:[8,10],step:2},
