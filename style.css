@@ -3026,7 +3026,7 @@ span.bn-hero-bar i.n-gold,.bn-hero-bar i.n-blue{color:transparent;}
 .as-rep-exo.compact.open .as-rep-more{transform:rotate(180deg);}
 /* Classements : chaque ligne de séries reste sur UNE ligne (01/11) */
 .rec2-line{flex-wrap:nowrap;min-width:0;}
-.rec2-l-lbl{width:62px;}
+.rec2-l-lbl{width:3.3rem;}
 .rec2-sets{min-width:0;white-space:nowrap;font-size:clamp(.6rem,2.85vw,.78rem);}
 .rec2-sets .setw{letter-spacing:-.01em;}
 /* Note par exo : une seule couleur sur la page, celle de la note (01/11, Adrien : « trop de couleurs ») */

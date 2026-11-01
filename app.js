@@ -8444,7 +8444,7 @@ function asTodayRanks(){
   return out;
 }
 function asRenderRecordsSlide(){
-  var h='<div class="as-rep-slide-title">&#x1F3C6; Classements &#x2014; toutes charges</div>';
+  var h='<div class="as-rep-slide-title">&#x1F3C6; Classements</div>'; // 01/11 (Adrien) : titre court, charges, date du record et « aujourd'hui » allégés
   var any=false;
   asTodayRanks().forEach(function(R){
     var x=R.x, sess=R.sess, today=R.today, rank=R.rank;
@@ -8461,14 +8461,13 @@ function asRenderRecordsSlide(){
         :podium?'<span class="rec2-badge bronze">&#x1F949; 3<small>e</small> / '+sess.length+'</span>'
         :'<span class="rec2-badge">'+rank+'<small>e</small> / '+sess.length+'</span>');
     h+='<div class="rec2-card'+(isBest&&sess.length>1?' best':(podium?' podium':''))+'">'
-      +'<div class="rec2-top"><span class="rec2-name">'+x.name+'</span>'
-      +'<span class="rec2-w">'+recWRange(today,x.unite)+'</span>'+badge+'</div>'
-      +'<div class="rec2-line"><span class="rec2-l-lbl">aujourd\'hui</span><span class="rec2-sets">'+recSetsFmt(today,x.unite,x.cnt)+'</span></div>'
+      +'<div class="rec2-top"><span class="rec2-name">'+x.name+'</span>'+badge+'</div>'
+      +'<div class="rec2-line"><span class="rec2-l-lbl">AJD</span><span class="rec2-sets">'+recSetsFmt(today,x.unite,x.cnt)+'</span></div>'
       +(sess.length===1
         ?'<div class="rec2-note">La r&#xE9;f&#xE9;rence est pos&#xE9;e &#x2014; c\'est elle qu\'il faudra battre.</div>'
         :(isBest
           ?'<div class="rec2-note gold">Ta meilleure version de cet exo &#x2014; le sommet du classement est &#xE0; toi.</div>'
-          :'<div class="rec2-line"><span class="rec2-l-lbl">record</span><span class="rec2-sets dim">'+recSetsFmt(best,x.unite,x.cnt)+' <em>'+formatDateShort(best.date)+'</em></span></div>'))
+          :'<div class="rec2-line"><span class="rec2-l-lbl">record</span><span class="rec2-sets dim">'+recSetsFmt(best,x.unite,x.cnt)+'</span></div>'))
       +'</div>';
   });
   if(!any) h+='<div class="as-rep-note">Pas encore de classement &#x2014; les exos du jour n\'ont pas encore d\'historique comparable.</div>';
