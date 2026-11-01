@@ -88,51 +88,63 @@ var SLEEP=(function(){
   // Minutes depuis 18:00 : coucher et réveil sur un même axe continu (23:30 → 330, 07:30 → 810)
   function rel(t){ if(!validTime(t))return null; var m=Number(t.slice(0,2))*60+Number(t.slice(3)); return (m-1080+1440)%1440; }
   function hhmm(r){ var m=(Math.round(r)+1080)%1440; return pad(Math.floor(m/60))+':'+pad(m%60); }
-  // Couleur de la nuit selon la durée (01/11, refonte demandée par Adrien : « le violet, on comprend rien »)
+  // Couleur de la nuit selon la durée — toujours doublée d'un libellé (jamais la couleur seule)
   function durCls(m){ return m==null?'':m<360?'short':m<420?'mid':m<=540?'good':'long'; }
+  var DUR_LBL={short:'Trop court',mid:'Un peu court',good:'Dans la zone',long:'Long'};
+  function fmtShort(m){ return m==null?'':Math.floor(m/60)+'h'+(m%60?pad(m%60):''); }
+  // Historique v3 (01/11, refonte UX demandée par Adrien) : la question est « est-ce que je dors
+  // assez ? » → barres de DURÉE partant du bas, zone idéale 7-9 h en bandeau, valeur écrite sur
+  // chaque barre (7 nuits), tap = détail. Coucher / réveil / régularité vivent dans les cartes.
+  // Grille CSS (pas de flex dans les <button> : Safari iOS n'étire pas leurs enfants).
   function historyHtml(){
     var items=history(range),s=summary(items),idx=items.findIndex(function(x){return x.date===selectedDate;});
     if(idx<0){idx=items.length-1;selectedDate=items[idx].date;}
     var selected=items[idx], valid=items.filter(function(x){return x.minutes!=null;});
-    // Axe vertical : 22h → 9h par défaut, élargi à l'heure pleine si une nuit déborde
-    var ax0=240, ax1=900;
-    valid.forEach(function(x){ var b=rel(x.data.bed); if(b!=null){ ax0=Math.min(ax0,Math.floor(b/60)*60); ax1=Math.max(ax1,Math.ceil((b+x.minutes)/60)*60); } });
-    ax1=Math.min(ax1,ax0+1440); var span=ax1-ax0;
+    var maxH=Math.max(10,Math.ceil(Math.max.apply(null,[0].concat(valid.map(function(x){return x.minutes;})))/60));
+    var pct=function(min){ return (min/(maxH*60)*100).toFixed(2); };
     var grid='';
-    for(var g=Math.ceil(ax0/120)*120; g<=ax1; g+=120){
-      var top=(g-ax0)/span*100;
-      grid+='<span class="slp-gl" style="top:'+top+'%"><em>'+String((Math.floor(g/60)+18)%24)+'h</em></span>';
-    }
-    var cols=items.map(function(x,i){
-      var b=rel(x.data.bed), lab=range===7?fmtDate(x.date,{weekday:'short',day:'numeric'}):((items.length-1-i)%5===0?fmtDate(x.date,{day:'numeric'}):'');
-      var bar='';
-      if(x.minutes!=null&&b!=null){
-        var t=(b-ax0)/span*100, h=x.minutes/span*100;
-        bar='<i class="slp-bar '+durCls(x.minutes)+'" style="top:'+t.toFixed(2)+'%;height:'+h.toFixed(2)+'%">'+(range===7?'<b>'+fmtDuration(x.minutes).replace(' ','')+'</b>':'')+'</i>';
-      } else bar='<i class="slp-bar none"></i>';
-      return '<button class="slp-col'+(i===idx?' selected':'')+'" type="button" onclick="SLEEP._select(\''+x.date+'\')" aria-pressed="'+(i===idx)+'" aria-label="'+nightLabel(x.date,{weekday:'long',day:'numeric',month:'long'})+' : '+fmtDuration(x.minutes)+'">'
-        +'<span class="slp-lane">'+bar+'</span><span class="slp-day">'+lab+'</span></button>';
+    for(var g=2; g<=maxH; g+=2) grid+='<span class="slp-gl" style="bottom:'+pct(g*60)+'%"><em>'+g+'h</em></span>';
+    var cols='repeat('+items.length+',minmax(0,1fr))';
+    var bars=items.map(function(x,i){
+      var c=durCls(x.minutes), h=x.minutes==null?0:pct(x.minutes);
+      return '<button type="button" class="slp-b'+(i===idx?' sel':'')+(c?' '+c:' none')+'" onclick="SLEEP._select(\''+x.date+'\')" aria-pressed="'+(i===idx)+'" aria-label="'+nightLabel(x.date,{weekday:'long',day:'numeric',month:'long'})+' : '+(x.minutes==null?'non renseignée':fmtDuration(x.minutes)+', '+DUR_LBL[c])+'">'
+        +(x.minutes==null?'<span class="slp-fill" style="height:6%"></span>':'<span class="slp-fill" style="height:'+h+'%"></span>'+(range===7?'<span class="slp-val" style="bottom:calc('+h+'% + 4px)">'+fmtShort(x.minutes)+'</span>':''))
+        +'</button>';
     }).join('');
-    var bedAvg=valid.length?valid.reduce(function(a,x){return a+rel(x.data.bed);},0)/valid.length:null;
+    var labels=items.map(function(x,i){
+      var t=range===7?fmtDate(x.date,{weekday:'short'}).replace('.','')+'<b>'+fmtDate(x.date,{day:'numeric'})+'</b>':((items.length-1-i)%7===0?fmtDate(x.date,{day:'numeric'}):'');
+      return '<span class="'+(i===idx?'sel':'')+'">'+t+'</span>';
+    }).join('');
+    var beds=valid.map(function(x){return rel(x.data.bed);}).filter(function(v){return v!=null;});
+    var bedAvg=beds.length?beds.reduce(function(a,v){return a+v;},0)/beds.length:null;
     var wakeAvg=valid.length?valid.reduce(function(a,x){return a+rel(x.data.bed)+x.minutes;},0)/valid.length:null;
+    var spread=beds.length>1?Math.round(Math.sqrt(beds.reduce(function(a,v){return a+(v-bedAvg)*(v-bedAvg);},0)/beds.length)):null;
     var title=range===7?'7 dernières nuits':'30 dernières nuits';
-    var sb=rel(selected.data.bed);
+    var sb=rel(selected.data.bed), sc=durCls(selected.minutes);
     return '<div class="slp-range"><button class="'+(range===7?'on':'')+'" onclick="SLEEP._range(7)">7 nuits</button><button class="'+(range===30?'on':'')+'" onclick="SLEEP._range(30)">30 nuits</button></div>'
-      +'<div class="slp-selected"><strong class="'+durCls(selected.minutes)+'">'+fmtDuration(selected.minutes)+'</strong><span>'+nightLabel(selected.date,{weekday:'long',day:'numeric',month:'long'})+'</span>'
-      +(selected.minutes!=null&&sb!=null?'<small>couché '+hhmm(sb)+' &#x2192; levé '+hhmm(sb+selected.minutes)+'</small>':'')+'</div>'
-      +'<div class="slp-plot'+(range===30?' slp-plot-30':'')+'" aria-label="'+title+' : heure de coucher et de réveil">'
-      +'<div class="slp-grid" aria-hidden="true">'+grid+'</div><div class="slp-cols">'+cols+'</div></div>'
-      +'<div class="slp-legend"><span><i class="short"></i>&lt; 6 h</span><span><i class="mid"></i>6-7 h</span><span><i class="good"></i>7-9 h</span><span><i class="long"></i>&gt; 9 h</span></div>'
-      +'<div class="slp-stats"><div><strong>'+(s.avg==null?'—':fmtDuration(s.avg))+'</strong><small>Durée moyenne · '+title.toLowerCase()+'</small></div>'
-      +'<div><strong>'+(bedAvg==null?'—':hhmm(bedAvg))+'</strong><small>coucher moyen</small></div>'
-      +'<div><strong>'+(wakeAvg==null?'—':hhmm(wakeAvg))+'</strong><small>réveil moyen</small></div>'
-      +'<div><strong>'+s.count+'/'+items.length+'</strong><small>nuits renseignées</small></div></div>'
+      +'<div class="slp-selected">'
+      +'<div class="slp-sel-top"><strong class="'+sc+'">'+fmtDuration(selected.minutes)+'</strong>'+(sc?'<span class="slp-badge '+sc+'">'+DUR_LBL[sc]+'</span>':'')+'</div>'
+      +'<span>'+nightLabel(selected.date,{weekday:'long',day:'numeric',month:'long'})+'</span>'
+      +(selected.minutes!=null&&sb!=null?'<small>Couché '+hhmm(sb)+' &#x2192; levé '+hhmm(sb+selected.minutes)+'</small>':'<small>Nuit non renseignée</small>')
+      +'</div>'
+      +'<div class="slp-chart3'+(range===30?' r30':'')+'" role="group" aria-label="Durée de sommeil · '+title+'">'
+      +'<div class="slp-area">'
+      +'<span class="slp-zone" style="bottom:'+pct(420)+'%;height:'+(pct(540)-pct(420)).toFixed(2)+'%"></span>'
+      +grid
+      +'<div class="slp-bars" style="grid-template-columns:'+cols+'">'+bars+'</div></div>'
+      +'<div class="slp-x" style="grid-template-columns:'+cols+'">'+labels+'</div></div>'
+      +'<p class="slp-zone-cap"><i></i>Zone idéale : 7 à 9 h de sommeil</p>'
+      +'<div class="slp-stats">'
+      +'<div><strong class="'+durCls(s.avg)+'">'+(s.avg==null?'—':fmtDuration(s.avg))+'</strong><small>Durée moyenne · '+title.toLowerCase()+'</small></div>'
+      +'<div><strong>'+(spread==null?'—':'± '+spread+' min')+'</strong><small>Régularité du coucher</small></div>'
+      +'<div><strong>'+(bedAvg==null?'—':hhmm(bedAvg))+'</strong><small>Coucher moyen</small></div>'
+      +'<div><strong>'+(wakeAvg==null?'—':hhmm(wakeAvg))+'</strong><small>Réveil moyen</small></div></div>'
       +'<section class="slp-edit"><h2>Modifier cette nuit</h2>'
       +'<p class="slp-edit-date">'+nightLabel(selected.date,{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'</p>'
       +'<div class="slp-times"><div><label for="slp-edit-bed">Heure de dodo</label><input id="slp-edit-bed" type="time" value="'+validTime(selected.data.bed)+'"></div>'
       +'<div><label for="slp-edit-wake">Heure de réveil</label><input id="slp-edit-wake" type="time" value="'+validTime(selected.data.wake)+'"></div></div>'
       +'<div class="slp-edit-actions"><button type="button" class="slp-cancel" onclick="SLEEP._cancelEdit()">Annuler</button><button type="button" class="slp-save" onclick="SLEEP._saveSelected()">Enregistrer cette nuit</button></div></section>'
-      +'<p class="slp-note">Durée approximative, calculée à partir des heures déclarées. Ce suivi ne mesure ni les phases de sommeil ni les réveils nocturnes.</p>';
+      +'<p class="slp-note">'+s.count+'/'+items.length+' nuits renseignées. Durée approximative, calculée à partir des heures déclarées : ce suivi ne mesure ni les phases de sommeil ni les réveils nocturnes.</p>';
   }
   function renderOpen(){
     var ov=$('sleepOverlay'),body=$('sleepBody');if(!ov||!ov.classList.contains('open')||!body)return;
