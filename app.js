@@ -8611,7 +8611,7 @@ function asRenderReport(){
       h+='<div class="as-rep-exo compact tone-'+r.tone+(isAbdo?' cat-abdo':'')+'"'+(_hasL?' role="button" tabindex="0" onclick="this.classList.toggle(\'open\')"':'')+'>'
         +'<div class="as-rep-exo-top"><span class="as-rep-exo-name">'+(side?(isAbdo?'<span class="abdo-mark">&#x1F525;</span> ':'&#x2B50; '):'')+r.name+'</span>'
         +badge+'</div>'
-        +'<div class="as-rep-exo-w">'+(setsTxt||(x.weight+' '+x.unite))+(side?' &#xB7; <em style="'+(isAbdo?'color:#9B8CFF':'color:var(--mut)')+';font-style:normal;">bonus'+(isAbdo?' abdo':'')+'</em>':'')+(_hasL?'<span class="as-rep-more" aria-hidden="true">&#x25BE;</span>':'')+'</div>'
+        +'<div class="as-rep-exo-w">'+(setsTxt||(x.weight+' '+x.unite))+(side?' &#xB7; <em class="as-rep-bonus">bonus</em>':'')+(_hasL?'<span class="as-rep-more" aria-hidden="true">&#x25BE;</span>':'')+'</div>'
         +(_hasL?'<div class="as-rep-lines">'+r.lines.map(function(l){return '<div class="as-rep-line">'+l+'</div>';}).join('')+'</div>':'')
         +'</div>';
     });

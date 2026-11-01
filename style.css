@@ -3029,3 +3029,8 @@ span.bn-hero-bar i.n-gold,.bn-hero-bar i.n-blue{color:transparent;}
 .rec2-l-lbl{width:62px;}
 .rec2-sets{min-width:0;white-space:nowrap;font-size:clamp(.6rem,2.85vw,.78rem);}
 .rec2-sets .setw{letter-spacing:-.01em;}
+/* Note par exo : une seule couleur sur la page, celle de la note (01/11, Adrien : « trop de couleurs ») */
+.as-rep-exo.compact,.as-rep-exo.compact.cat-abdo{border-left:1px solid var(--gb);}
+.as-rep-exo.compact .setw,.as-rep-exo.compact .setw.up,.as-rep-exo.compact .setw.down{color:inherit;}
+.as-rep-exo.compact .as-rep-exo-name .abdo-mark{display:none;}
+.as-rep-bonus{font-style:normal;color:var(--mut);}
