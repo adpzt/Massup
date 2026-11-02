@@ -24,6 +24,12 @@ function adrienSeed(){
   var db={logs:logs,bodyWeight:bw,health:health,sleepLog:sleep,profile:{name:'Adrien',height:178,goal:'masse',rev:1,savedAt:Date.now()},
     nutriA:{day:{},favs:[]}};
   localStorage.setItem('massup_db',JSON.stringify(db));
+  // Nutrition Yazio (02/11) : copie locale d'intake.js — 1 jour sur 6 non noté, sodium parfois absent
+  var nu={};
+  for(var j=60;j>=0;j--){ if(j%6===3) continue; var kc=2200+((j*397)%1100);
+    nu[d(j)]={kcal:kc,glu:Math.round(kc*.5/4),prot:115+((j*13)%70),lip:55+((j*7)%45),fib:8+(j%15),sucre:35+((j*11)%40),sat:14+(j%20),potassium:900+((j*91)%900)};
+    if(j%5) nu[d(j)].sodium=1200+((j*137)%2000); }
+  localStorage.setItem('massup_intake',JSON.stringify({days:nu,syncAt:Date.now()-5*60000}));
 }
 function melatiSeed(){
   if(localStorage.getItem('melati_db')) return;

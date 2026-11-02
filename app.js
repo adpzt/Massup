@@ -145,6 +145,10 @@ if(typeof STEPS!=='undefined') STEPS.init({app:'adrien',weekGoal:50000,blood:100
   sb:function(){ return (typeof sbClient!=='undefined'&&sbClient)?sbClient:null; },weekPtsMax:3,
   onChange:function(){ if(_currentView==='sante') try{ renderSante(); }catch(e){} }});
 if(typeof SLEEP!=='undefined') SLEEP.init({db:function(){ return DB; },save:function(){ saveDB(); },toast:function(m){ showToast(m); }});
+// Nutrition du jour (02/11) : totaux Yazio via Santé — hors DB (copie locale), même raccourci que les pas
+if(typeof INTAKE!=='undefined') INTAKE.init({sb:function(){ return (typeof sbClient!=='undefined'&&sbClient)?sbClient:null; },toast:function(m){ showToast(m); },
+  runShortcut:function(){ if(typeof STEPS!=='undefined') STEPS.refresh(); },
+  onChange:function(){ if(_currentView==='sante') try{ renderSante(); }catch(e){} }});
 var _saveDBTimer=null;
 function saveDB(){
   // Version de sauvegarde (12/08, bug « rien ne persiste au reload ») : chaque save incrémente
@@ -2224,7 +2228,8 @@ function renderCal(){
     // Étirements du jour (espace Détente) : petite bulle 🧘 compacte — la couleur de la case ne change pas
     var stretched=dzDayDone(dateStr); // étirements de séance OU routine matin/soir (26/08)
     if(stretched){ var zk=document.createElement('span'); zk.className='cd-zen'; zk.innerHTML='&#x1F9D8;'; el.appendChild(zk); }
-    if(sessionMap[dateStr]||frozen||stretched){ // gelé/étiré cliquable même sans séance
+    // 02/11 : tout jour passé est cliquable (la nutrition du jour s'affiche même sans séance)
+    if(sessionMap[dateStr]||frozen||stretched||dateStr<=today){
       el.dataset.date=dateStr;
       el.addEventListener('click',function(){ showDayModal(this.dataset.date); });
     }
@@ -2427,9 +2432,11 @@ function showDayModal(date){
     frozenBanner='<div class="dm-frozen">&#x2744; Jour gel&#xE9;'+(_p?(_p.type==='blessure'?' &#xB7; &#x1FA79; blessure':' &#xB7; &#x1F3D6; vacances'):'')+' &#x2014; rank prot&#xE9;g&#xE9;, z&#xE9;ro malus'
       +'<button class="dm-unfreeze" onclick="delRankPauseByDate(\''+date+'\')">D&#xE9;geler</button></div>';
   }
-  if(!logs.length&&!frozen){
+  var nutHtml=(typeof INTAKE!=='undefined')?INTAKE.dayCardHtml(date):'';
+  if(!logs.length&&!frozen&&!nutHtml&&!dzDayDone(date)){
     html='<div class="dm-empty">Rien ce jour-l&#xE0;.</div>';
   }
+  html+=nutHtml;
   // Étirements du jour (espace Détente) — carte compacte sous les séances
   if(dzDayDone(date)){
     var _dz=DB.dz[date], _zl=[];
@@ -3050,6 +3057,7 @@ function renderSante(){
   try{ renderBilanProfile(); }catch(e){}
   try{ renderBilanWeekNut(); }catch(e){}
   try{ if(typeof STEPS!=='undefined') STEPS.renderCard(); }catch(e){ console.warn('[MASSUP] STEPS:',e); }
+  try{ if(typeof INTAKE!=='undefined') INTAKE.renderCard(); }catch(e){ console.warn('[MASSUP] INTAKE:',e); }
   try{ if(typeof SLEEP!=='undefined') SLEEP.renderCard(); }catch(e){ console.warn('[MASSUP] SLEEP:',e); }
   try{ renderBilanNotes(); }catch(e){ console.warn('[MASSUP] renderBilanNotes:',e); }
   try{ renderBilanRank(); }catch(e){ console.warn('[MASSUP] renderBilanRank:',e); }
@@ -4531,7 +4539,7 @@ function exportCoachDossier(opts){
     ['Poids','Départ '+(bw[0]?bw[0].weight_kg+' kg le '+bw[0].date:'?')+' · dernier '+(last?last.weight_kg+' kg le '+last.date:'?')+'. Composition (borne de salle, 31/08/2026, conditions non standardisées) : 21,3 % de gras affiché (fourchette réaliste 17-22 %), jambes à 97 % de la norme, bras au-dessus.'],
     ['Blessures','Poignet gauche : ancienne fracture de la styloïde ulnaire → prises neutres, pas de supination jusqu\'à ~novembre 2026. Genou : douleur en flexion chargée par épisodes. Coude gauche : douleur interne signalée fin septembre / début octobre. Détail daté : onglet Douleurs.'],
     ['Programme','Rotation PUSH / PULL / LEGS + exos « à la carte ». Règles de l\'app : depuis le 27/10/2026, 1 exo jambes (PUSH/PULL) et 1 exo abdo ne sont obligatoires que si la séance précédente n\'en avait pas (exo du jour alors principal) ; 5 exos minimum. Détail : onglet Exercices.'],
-    ['Nutrition','Volontairement absente de ce fichier.'],
+    ['Nutrition','Depuis le 02/11/2026 : totaux du jour notés dans Yazio (via l\'app Santé), onglet « Nutrition ». Un jour absent = rien noté dans Yazio ce jour-là (Adrien ne l\'a pas utilisé tous les jours avant fin octobre 2026). Objectifs : 2 900 kcal, 360 g glucides, 150 g protéines, lipides ~70 g (80 max). Les recettes du module nutrition de l\'app ne sont pas exportées.'],
     ['Charges','En kg. Haltères : kg par main (« kg/main », « kg/côté »). Exos au poids du corps ou en temps : la « charge » est l\'objectif (reps, s, min).'],
     ['Assistance','Traction assistée et Dips assistée : la charge est l\'ASSISTANCE de la machine → moins = plus fort (colonne « Assistance (moins = mieux) »).'],
     ['Ressenti','Par série : facile = 4 reps ou plus en réserve · ok = 2-3 en réserve · dur = 1 en réserve · echec = plus une seule possible. Un raté se lit dans « Écart cible » < 0.'],
@@ -4541,7 +4549,7 @@ function exportCoachDossier(opts){
     ['Séries dures','Séries comptées par muscle (1 par série + 0,5 pour le muscle assistant des polyarticulaires). Repère de l\'app par muscle et par semaine : sous 12 rouge, 12-15 gris, 16-19 bleu, 20+ gold, plus de 25 = rendements décroissants (abdos jusqu\'à fin janvier 2027 : sous 8 rouge, 8 gris, 12 bleu, 16 gold).'],
     ['e1RM','Force estimée par série (Epley : charge × (1 + reps / 30)), seulement pour les exos chargés en kg (pas les assistances).'],
     ['Séances anciennes','Février → avril : séances RITM / escalade notées sans détail. Juin → juillet : séances reconstituées après une perte de données (dates approximatives, pas de détail). Détail série par série fiable à partir du 01/08/2026.'],
-    ['Onglets','Synthèse · Semaines · Séances · Séries · Exercices · Historique charges · Poids · Course & sports · Pas · Sommeil · Douleurs · Mobilité.'],
+    ['Onglets','Synthèse · Semaines · Calendrier (1 ligne par jour : séance, note, pas, nutrition, sommeil, poids) · Séances · Séries · Exercices · Historique charges · Poids · Course & sports · Pas · Nutrition · Sommeil · Douleurs · Mobilité.'],
     ['Généré le',today+' depuis l\'app MASSUP (données saisies au jour le jour).']
   ];
   sheets.push({name:'Lisez-moi',noFilter:true,cols:[{h:'Rubrique',w:20},{h:'Contenu',w:120,wrap:true}],rows:readme});
@@ -4677,6 +4685,26 @@ function exportCoachDossier(opts){
   sheets.push({name:'Pas',cols:[{h:'Date',w:11},{h:'Jour',w:6},{h:'Pas',w:9},{h:'Distance (km)',w:9},{h:'Calories actives (kcal)',w:10},{h:'Étages',w:7},{h:'Saisie manuelle',w:9}],
     rows:Object.keys(DB.health||{}).sort().filter(function(d){ var h=DB.health[d]; return h&&(h.steps||h.km); }).map(function(d){ var h=DB.health[d];
       return [d,jour(d),h.steps||null,h.km?r2(h.km):null,h.kcal||null,h.floors||null,h.ms?'oui':'']; })});
+
+  // ── Nutrition (02/11/2026) : totaux Yazio du jour via Santé (INTAKE) ──
+  var NU=(typeof INTAKE!=='undefined')?INTAKE.days():{};
+  function nu(d,k){ var e=NU[d]; return e&&e.kcal>0&&e[k]>0?r1(e[k]):null; }
+  var nuDays=Object.keys(NU).filter(function(d){ return NU[d]&&NU[d].kcal>0; }).sort();
+  sheets.push({name:'Nutrition',cols:[{h:'Date',w:11},{h:'Jour',w:6},{h:'Calories (kcal)',w:10},{h:'Glucides (g)',w:9},{h:'Protéines (g)',w:9},{h:'Lipides (g)',w:9},{h:'Fibres (g)',w:8},{h:'Sucres (g)',w:8},{h:'Graisses saturées (g)',w:10},{h:'Sodium (mg)',w:9},{h:'Potassium (mg)',w:10},{h:'Objectif 2 900 kcal atteint',w:10},{h:'Protéines ≥ 135 g',w:9}],
+    rows:nuDays.map(function(d){ return [d,jour(d),nu(d,'kcal'),nu(d,'glu'),nu(d,'prot'),nu(d,'lip'),nu(d,'fib'),nu(d,'sucre'),nu(d,'sat'),nu(d,'sodium'),nu(d,'potassium'),nu(d,'kcal')>=2900?'oui':'non',nu(d,'prot')>=135?'oui':'non']; })});
+
+  // ── Calendrier (02/11/2026, demande Adrien) : 1 ligne par jour, même sans séance ──
+  var calStart=[logs[0]&&logs[0].date,nuDays[0],bw[0]&&bw[0].date].filter(Boolean).sort()[0]||today, CAL=[];
+  for(var cd=calStart;cd<=today;cd=rankAddDays(cd,1)){
+    var dl=logs.filter(function(l){ return l.date===cd; });
+    var n20=dl.map(function(l){ try{ return liveLogNote20(l); }catch(e){ return null; } }).filter(function(x){ return x!=null; });
+    var hh=(DB.health||{})[cd]||{}, stp=hh.steps!=null?hh.steps:(hh.ms!=null?hh.ms:null);
+    var sl=(DB.sleepLog||{})[rankAddDays(cd,-1)], slm=sl?sleepMinutes(sl):null;
+    var pw=bw.find(function(b){ return b.date===cd; });
+    CAL.push([cd,jour(cd),dl.length?'oui':'non',dl.map(sessionLabel).filter(Boolean).join(' + '),n20.length?n20.join(' / '):null,stp,
+      nu(cd,'kcal'),nu(cd,'glu'),nu(cd,'prot'),nu(cd,'lip'),slm?r2(slm/60):null,pw?parseFloat(pw.weight_kg):null]);
+  }
+  sheets.splice(sheets.findIndex(function(x){ return x.name==='Semaines'; })+1,0,{name:'Calendrier',cols:[{h:'Date',w:11},{h:'Jour',w:6},{h:'Séance',w:8},{h:'Type de séance',w:26},{h:'Note /20',w:8},{h:'Pas',w:9},{h:'Calories (kcal)',w:10},{h:'Glucides (g)',w:9},{h:'Protéines (g)',w:9},{h:'Lipides (g)',w:9},{h:'Sommeil de la nuit (h)',w:10},{h:'Poids (kg)',w:9}],rows:CAL});
 
   // ── Sommeil ──
   sheets.push({name:'Sommeil',cols:[{h:'Nuit du',w:11},{h:'Coucher',w:8},{h:'Réveil',w:8},{h:'Durée (h)',w:8}],

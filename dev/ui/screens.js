@@ -8,6 +8,11 @@ const EXPORT_GO = `(function(){var sh=exportCoachDossier({dryRun:true});var pre=
 const ADRIEN = [
   ['a_bilan', [], { full: true }],
   ['a_seances', ["switchView('seances',document.querySelectorAll('.bni')[1])"], { full: true }],
+  ['a_intake_card', ["window.scrollTo(0,(document.getElementById('inCard')||document.body).getBoundingClientRect().top+window.scrollY-90)"]],
+  ['a_intake_page', ['INTAKE.open()'], { scroll: '#inOverlay .as-scroll' }],
+  ['a_intake_month_prot', ['INTAKE.open()', "INTAKE._mode('month')", "INTAKE._metric('prot')"], { scroll: '#inOverlay .as-scroll' }],
+  ['a_intake_year_sodium', ['INTAKE.open()', "INTAKE._mode('year')", "INTAKE._metric('sodium')"], { scroll: '#inOverlay .as-scroll' }],
+  ['a_intake_daymodal', ["(function(){var x=new Date();x.setDate(x.getDate()-2);var ds=x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');DB.logs=DB.logs.filter(function(l){return l.date!==ds;});showDayModal(ds);})()"]],
   ['a_weight_trend', ["window.scrollTo(0,(document.getElementById('santeTrend')||document.body).getBoundingClientRect().top+window.scrollY-160)"]],
   ['a_meas_empty', ["DB.bodyMeas={};renderBodyMeas();(document.getElementById('bodyMeas')||document.body).scrollIntoView({block:'center'})"]],
   ['a_meas', ["DB.bodyMeas={'2026-10-03':{bras:34.5,poitrine:96,taille:79,cuisse:55.5,at:1},'2026-11-02':{bras:35.2,poitrine:97.5,taille:79.5,cuisse:55,at:2},'2026-11-01':{del:1,at:3}};_bmHistOpen=true;renderBodyMeas();if(bodyMeasList().length!==2)throw new Error('ECHEC tombstone mensuration');(document.getElementById('bodyMeas')||document.body).scrollIntoView({block:'start'})"]],

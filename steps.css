@@ -199,6 +199,9 @@
   .st-manual{background:rgba(18,21,28,0.013);}
 }
 
+/* Erreur de synchro Santé (02/11 : la classe n'avait pas de style) */
+.st-sync-error{margin:.3rem .2rem .6rem;font-size:.66rem;font-weight:700;line-height:1.45;color:var(--red);}
+
 /* Journée sous 1 000 pas = « rouge sang » (01/11, MASSUP) — même couverture que t-red */
 .t-blood{color:var(--st-blood);font-weight:900;}
 .st-bar i.t-blood,.st-bc i.t-blood,.st-wrow em.t-blood,.st-point-track i.t-blood{background:var(--st-blood);}

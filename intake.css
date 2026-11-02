@@ -1,0 +1,94 @@
+/* ═══ 🍽 NUTRITION DU JOUR (02/11/2026) — MASSUP Adrien (intake.js) ═══
+   S'appuie sur les classes de l'écran Pas (steps.css : st-card, st-header, st-chart-*, st-point*, st-grid).
+   Couleurs des macros validées (skill dataviz, validate_palette.js) : sombre = 3 PASS sur #1c1d22 ;
+   clair = WARN CVD 7,1 (vert/orange) → chaque couleur est TOUJOURS accompagnée de son nom (anneaux, légende).
+   Ordre fixe demandé par Adrien : Glucides · Protéines · Lipides. Le texte reste en jetons de texte. */
+:root{--in-glu:#3F8FE0;--in-prot:#25A56A;--in-lip:#D07E25;--in-mic:var(--acc2);--in-on:#0b0d12;}
+.in-c-glu{--c:var(--in-glu);} .in-c-prot{--c:var(--in-prot);} .in-c-lip{--c:var(--in-lip);} .in-c-mic{--c:var(--in-mic);} .in-c-kcal{--c:var(--acc);}
+
+.in-period{margin:-.15rem 0 .65rem;font-size:.62rem;font-weight:700;line-height:1.4;color:var(--mut);}
+.in-period b{color:var(--txt);}
+.in-empty{margin:.2rem 0 .1rem;font-size:.7rem;font-weight:600;line-height:1.5;color:var(--mut);}
+
+/* Calories : chiffre + jauge */
+.in-kcal-v{display:flex;align-items:baseline;flex-wrap:wrap;gap:.2rem .45rem;}
+.in-kcal-v strong{font:900 1.9rem/1 'Saira',system-ui,sans-serif;font-style:italic;color:var(--txt);}
+.in-kcal-v span{font-size:.68rem;font-weight:700;color:var(--mut);}
+.in-kcal-v em{margin-left:auto;font-style:normal;font-size:.62rem;font-weight:800;color:var(--mut);}
+.in-kcal-v em.ok,.in-ring-s.ok,.in-mrow-s.ok,.in-dcard-h em.ok{color:var(--txt);}
+.in-kcal-sub{font-size:.6rem;font-weight:700;color:var(--mut);}
+.in-meter{display:block;height:8px;margin:.45rem 0 .15rem;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;}
+.in-meter i{display:block;height:100%;border-radius:inherit;background:var(--x-grad);}
+.in-meter-mic i{background:var(--in-mic);}
+
+/* 3 anneaux G · P · L */
+.in-rings{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem;margin-top:.85rem;}
+.in-ring{display:flex;flex-direction:column;align-items:center;min-width:0;text-align:center;}
+.in-ring-box{position:relative;width:84px;max-width:100%;aspect-ratio:1;}
+.in-ring-svg{display:block;width:100%;height:100%;}
+.in-rbg{fill:none;stroke:color-mix(in srgb,var(--c) 22%,transparent);stroke-width:8;}
+.in-rfg{fill:none;stroke:var(--c);stroke-width:8;stroke-linecap:round;}
+.in-ring-c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.in-ring-c b{font:900 1.15rem/1 'Saira',system-ui,sans-serif;font-style:italic;color:var(--txt);}
+.in-ring-c small{margin-top:.1rem;font-size:.56rem;font-weight:700;color:var(--mut);}
+.in-ring-l{margin-top:.4rem;font-size:.72rem;font-weight:800;color:var(--txt);}
+.in-ring-q{font-size:.58rem;font-weight:700;color:var(--mut);overflow-wrap:anywhere;}
+.in-ring-s{margin-top:.15rem;font-size:.56rem;font-weight:800;line-height:1.3;color:var(--mut);overflow-wrap:anywhere;}
+
+/* Aujourd'hui (en cours) */
+.in-today{display:flex;justify-content:space-between;align-items:center;gap:.5rem;width:100%;margin-top:.85rem;padding:.6rem .75rem;
+  border:1px solid var(--gb);border-radius:var(--x-r-md,14px);background:rgba(255,255,255,.03);color:var(--mut);
+  font-family:inherit;font-size:.64rem;font-weight:700;line-height:1.4;text-align:left;cursor:pointer;min-width:0;overflow-wrap:anywhere;}
+.in-today b{color:var(--txt);}
+.in-today span{flex-shrink:0;font-size:1rem;color:var(--txt);}
+
+/* Répartition des calories (barre segmentée haute) + légende */
+.in-split{display:flex;gap:2px;height:28px;margin:.25rem 0 .45rem;}
+.in-split span{display:flex;align-items:center;min-width:0;padding:0 .45rem;overflow:hidden;border-radius:4px;background:var(--c);
+  color:var(--in-on);font-size:.62rem;font-weight:800;white-space:nowrap;}
+.in-legend{display:flex;flex-wrap:wrap;gap:.3rem .85rem;font-size:.64rem;font-weight:700;color:var(--mut);}
+.in-legend span{display:inline-flex;align-items:center;gap:.3rem;}
+.in-legend i{width:9px;height:9px;border-radius:2px;background:var(--c);}
+.in-legend b{color:var(--txt);}
+.in-day-kcal{margin:-.35rem 0 .35rem;font-size:.66rem;font-weight:800;color:var(--txt);}
+
+/* Page : choix de la mesure */
+.in-h{margin-bottom:.55rem;}
+.in-metrics{display:flex;flex-wrap:wrap;gap:.35rem;margin:0 0 .45rem;}
+.in-metrics button{display:inline-flex;align-items:center;gap:.35rem;padding:.4rem .7rem;border:1px solid var(--gb);border-radius:99px;background:none;
+  color:var(--mut);font-family:inherit;font-size:.64rem;font-weight:800;white-space:nowrap;cursor:pointer;}
+.in-metrics button.on{background:rgba(255,255,255,.1);color:var(--txt);}
+.in-metrics i{width:8px;height:8px;border-radius:50%;background:var(--c);}
+.in-metrics button:focus-visible,.in-today:focus-visible,.in-mrow:focus-visible,.in-dcard-more:focus-visible{outline:2px solid var(--acc);outline-offset:2px;}
+.st-point-track i.in-c-glu,.st-point-track i.in-c-prot,.st-point-track i.in-c-lip,.st-point-track i.in-c-mic{background:var(--c);}
+.st-point-track i.in-c-kcal{background:var(--x-grad);}
+.st-point:disabled{cursor:default;}
+.st-point:disabled .st-point-track{opacity:.45;}
+.in-stats{margin-top:1rem;}
+
+/* Le reste (micros) */
+.in-mrow{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:.15rem .6rem;width:100%;padding:.6rem 0;border:0;border-bottom:1px solid var(--gb);
+  background:none;color:var(--txt);font-family:inherit;text-align:left;cursor:pointer;}
+.in-mrow:last-child{border-bottom:0;}
+.in-mrow-l{font-size:.72rem;font-weight:800;min-width:0;}
+.in-mrow-v{font-size:.64rem;font-weight:700;color:var(--mut);text-align:right;}
+.in-mrow-v b{font:900 .92rem 'Saira',system-ui,sans-serif;font-style:italic;color:var(--txt);}
+.in-mrow .in-meter{grid-column:1/-1;height:6px;margin:.2rem 0 .1rem;}
+.in-mrow-s{grid-column:1/-1;font-size:.58rem;font-weight:700;color:var(--mut);}
+.in-foot{margin:.2rem .3rem 1rem;}
+
+/* Modal du calendrier */
+.in-dcard{margin-top:.6rem;padding:.8rem .9rem;border:1px solid var(--gb);border-radius:var(--x-r-lg,18px);background:var(--x-glass);box-shadow:var(--x-inset);}
+.in-dcard-h{display:flex;align-items:baseline;flex-wrap:wrap;gap:.2rem .5rem;margin-bottom:.45rem;}
+.in-dcard-h span{font-size:.74rem;font-weight:800;color:var(--txt);}
+.in-dcard-h b{font:900 1.1rem/1 'Saira',system-ui,sans-serif;font-style:italic;color:var(--txt);}
+.in-dcard-h em{margin-left:auto;font-style:normal;font-size:.6rem;font-weight:800;color:var(--mut);}
+.in-dcard-mic{margin-top:.45rem;font-size:.6rem;font-weight:700;line-height:1.5;color:var(--mut);}
+.in-dcard-more{display:block;margin-top:.5rem;padding:.35rem 0 0;border:0;background:none;color:var(--acc);font-family:inherit;font-size:.66rem;font-weight:800;cursor:pointer;}
+
+@media (prefers-color-scheme: light){
+  :root{--in-glu:#2F6FC4;--in-prot:#12804F;--in-lip:#A85D0A;--in-mic:#1F6F8E;--in-on:#fff;}
+  .in-meter{background:rgba(13,18,37,.07);}
+  .in-today{background:rgba(18,21,28,.026);}
+  .in-metrics button.on{background:rgba(18,21,28,.075);}
+}
