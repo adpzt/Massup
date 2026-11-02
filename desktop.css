@@ -11,8 +11,7 @@
   :root{--dk-w:1180px;}
   html{font-size:17px;}
   .app{max-width:var(--dk-w);padding:1.75rem 2.25rem 6.5rem;}
-  header{padding:1.1rem 1.75rem;}
-  .hdate{font-size:.85rem;}
+  header{padding:0 0 0 .5rem;}
 
   /* ── Nav : la pilule reste en bas, avec ses étiquettes ── */
   .bnav{bottom:1.25rem;padding:.55rem .7rem;gap:.35rem;}
@@ -22,14 +21,14 @@
   .bni-ico{font-size:1.25rem;}
   .bni-lbl{display:inline;font-family:'Saira',system-ui,sans-serif;font-style:italic;font-weight:800;font-size:.8rem;letter-spacing:.04em;text-transform:uppercase;}
 
-  /* ── Bilan : bento 2 colonnes ── */
-  #view-sante.active{display:grid;grid-template-columns:1fr 1fr;gap:0 1.5rem;align-items:start;}
-  #view-sante>*{min-width:0;}
-  #view-sante>div:empty{display:none;}
-  #view-sante>#weeklyRecapWidget,#view-sante>.slbl,#view-sante>.chart-section,#view-sante>.bubble-toggle,
-  #view-sante>#santeHistoSection,#view-sante>#bilanPartner,#view-sante>#bilanRecords,#view-sante>#bilanNotes,#view-sante>#bilanLastWeek,#view-sante>#bilanSaison{grid-column:1/-1;}
-  #view-sante .wn-card,#view-sante .bp-card,#view-sante .mel-season{height:100%;}
-  #view-sante .chart-wrap{height:280px;}
+  /* ── Bilan v6 (DA Graphite Énergie, 02/11) : une colonne lisible, centrée ── */
+  #view-sante.active{max-width:600px;margin:0 auto;}
+  .bl-overlay>.bl-page,.st-overlay-adrien .as-body{max-width:640px;margin:0 auto;}
+  .bl-sheet{max-width:600px;margin:0 auto;}
+  /* Barre d'onglets DA : on garde la pilule à étiquettes de l'ordinateur */
+  .bnav{width:auto;height:auto;display:flex;border-radius:100px;}
+  .bni{width:auto;height:auto;}
+  .bni.active::after{display:none;}
 
   /* ── Séances : choix à gauche, séance ouverte à droite ── */
   #view-seances.active{display:grid;grid-template-columns:400px minmax(0,1fr);grid-template-rows:auto auto auto auto 1fr;gap:0 1.75rem;align-items:start;}

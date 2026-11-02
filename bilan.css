@@ -1,0 +1,318 @@
+/* =====================================================================
+   MASSUP · Page Bilan + écrans ouverts depuis elle · bilan.css
+   DA « Graphite Énergie ». Préfixe bl- uniquement, aucune couleur en dur
+   (sauf texte posé sur dégradé vif = --x-on-grad). Prérequis : tokens.css (DA) + tokens_bl.css.
+   Mesures à 390 px. Gouttière 20 px. Cibles ≥ 44 px.
+   ===================================================================== */
+
+/* ---------- 0. Base ---------- */
+.bl-page{position:relative;min-height:100%;background:var(--bl-page);color:var(--txt);font-family:'Manrope',system-ui,sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:calc(6.5rem + env(safe-area-inset-bottom));box-sizing:border-box;overflow-x:hidden}
+.bl-page *,.bl-page *:before,.bl-page *:after{box-sizing:border-box}
+.bl-num{font-family:'Saira',sans-serif;font-style:italic;font-weight:900;letter-spacing:-0.01em;line-height:1;white-space:nowrap}
+.bl-unit{font-family:'Saira',sans-serif;font-style:italic;font-weight:900;font-size:.42em;color:var(--mut);margin-left:3px;letter-spacing:0}
+.bl-hero-txt{background-image:var(--x-grad-hero);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.bl-hero-txt .bl-unit{-webkit-text-fill-color:var(--mut)}
+.bl-gold-txt{background-image:var(--x-grad-gold);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.bl-gold-txt .bl-unit{-webkit-text-fill-color:var(--mut)}
+.bl-lbl{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);line-height:1.2}
+.bl-mut{color:var(--mut)}
+.bl-meta{font-size:13px;font-weight:800;color:var(--mut);white-space:nowrap}
+.bl-pos{color:var(--acc)}
+.bl-neg{color:var(--red)}
+.bl-warn{color:var(--yellow)}
+.bl-hr{height:1px;background:var(--bl-line);margin:0 20px;border:0}
+.bl-sec{padding:22px 20px}
+.bl-sheet,.bl-scrim,.bl-sheet *,.bl-sheet *:before,.bl-sheet *:after{box-sizing:border-box}
+.bl-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- 1. Boutons ---------- */
+.bl-btn{appearance:none;-webkit-appearance:none;border:0;margin:0;padding:0 18px;min-height:52px;border-radius:16px;display:inline-grid;place-items:center;font:800 15px 'Manrope',sans-serif;color:var(--txt);background:transparent;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s ease-out,background-color .12s ease-out}
+.bl-btn:active{transform:scale(.97)}
+.bl-btn:focus-visible{outline:2px solid var(--acc2);outline-offset:2px}
+.bl-btn[disabled]{opacity:.4;pointer-events:none}
+.bl-btn--primary{background:var(--x-grad);color:var(--x-on-grad);font:italic 900 17px 'Saira',sans-serif;box-shadow:var(--x-glow-cta)}
+.bl-btn--ghost{border:1px solid var(--gb);background:transparent}
+.bl-btn--danger{background:var(--red);color:var(--x-on-grad)}
+.bl-btn--block{display:grid;width:100%}
+.bl-btn--sm{min-height:44px;border-radius:12px;font-size:13px;padding:0 14px}
+.bl-ib{appearance:none;border:0;margin:0;padding:0;width:44px;height:44px;border-radius:22px;display:grid;place-items:center;flex:none;background:transparent;color:var(--mut);font:800 18px 'Manrope',sans-serif;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.bl-ib:active{background:var(--bl-press)}
+.bl-ib:focus-visible{outline:2px solid var(--acc2);outline-offset:2px}
+.bl-ib--fill{background:var(--x-track);color:var(--txt)}
+.bl-plus{appearance:none;border:0;width:44px;height:44px;border-radius:22px;flex:none;display:grid;place-items:center;background:var(--x-grad-fill);color:var(--x-on-grad);font:800 24px/1 'Manrope',sans-serif;box-shadow:var(--x-glow-fill);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.bl-plus:active{transform:scale(.92)}
+.bl-plus[disabled]{background:var(--x-track);color:var(--mut);box-shadow:none}
+.bl-plus.is-pop{animation:bl-pop .22s cubic-bezier(.2,.9,.3,1.4) 1 forwards}
+@keyframes bl-pop{0%{transform:scale(1)}45%{transform:scale(1.14)}100%{transform:scale(1)}}
+.bl-step{appearance:none;border:0;width:52px;height:52px;border-radius:26px;flex:none;display:grid;place-items:center;background:var(--x-metal);color:var(--x-on-metal);font:800 24px/1 'Manrope',sans-serif;cursor:pointer}
+.bl-step:active{transform:scale(.94)}
+.bl-step--ghost{background:var(--x-track);color:var(--txt)}
+
+/* ---------- 2. Jauges, segments, pastilles ---------- */
+.bl-trk{position:relative;height:6px;border-radius:3px;background:var(--bl-track);overflow:hidden}
+.bl-trk--lg{height:8px;border-radius:4px}
+.bl-trk--xl{height:10px;border-radius:5px}
+.bl-trk>i{position:absolute;left:0;top:0;bottom:0;border-radius:inherit;background:var(--x-grad-prog);transition:width .35s cubic-bezier(.2,.8,.2,1)}
+.bl-trk>i.is-done{background:var(--acc)}
+.bl-trk>i.is-kcal{background:var(--x-grad-kbar)}
+.bl-trk>i.is-warn{background:var(--yellow)}
+.bl-trk>i.is-neutral{background:var(--bl-bar)}
+.bl-seg{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:2px;padding:3px;border-radius:12px;background:var(--bl-track)}
+.bl-seg button{appearance:none;border:0;height:44px;border-radius:9px;background:transparent;color:var(--mut);font:700 13px 'Manrope',sans-serif;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 6px}
+.bl-seg button[aria-selected="true"]{background:var(--x-seg-on);color:var(--txt);box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.bl-pill{display:inline-flex;align-items:center;height:28px;padding:0 12px;border-radius:14px;background:var(--x-grad-fill);color:var(--x-on-grad);font:800 12px 'Manrope',sans-serif;white-space:nowrap;flex:none}
+.bl-pill--line{background:transparent;border:1px solid currentColor}
+.bl-dot{display:inline-block;width:9px;height:9px;border-radius:5px;flex:none}
+
+/* ---------- 3. En-tête et alertes ---------- */
+.bl-head{display:flex;align-items:center;justify-content:space-between;padding:calc(10px + env(safe-area-inset-top)) 12px 4px 20px}
+.bl-logo{font:italic 900 24px/1 'Saira',sans-serif;letter-spacing:-.01em;color:var(--txt)}
+.bl-logo b{background:var(--x-grad-hero);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.bl-alerts{margin:6px 20px 0;border-radius:16px;background:var(--x-alert-bg);border:1px solid var(--x-alert-b);overflow:hidden}
+.bl-alert{display:grid;grid-template-columns:28px minmax(0,1fr) auto 14px;align-items:center;gap:10px;min-height:54px;padding:0 14px;color:var(--txt);text-decoration:none;font-size:15px;font-weight:800}
+.bl-alert+.bl-alert{border-top:1px solid var(--bl-line)}
+.bl-alert__t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bl-alert:active{background:var(--bl-press)}
+
+/* ---------- 4. Situation ---------- */
+.bl-sit{padding:18px 20px 22px}
+.bl-sit__top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.bl-sit__name{margin:0;font:italic 900 38px/1.05 'Saira',sans-serif;letter-spacing:-.01em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bl-hero{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-top:20px}
+.bl-hero__it{display:block;min-width:0;padding:4px 0;color:var(--txt);text-decoration:none;-webkit-tap-highlight-color:transparent}
+.bl-hero__it+.bl-hero__it{padding-left:20px;border-left:1px solid var(--bl-line)}
+.bl-hero__it:active{opacity:.7}
+.bl-hero__v{font-size:52px;margin-top:8px}
+.bl-hero__s{font-size:13px;font-weight:800;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---------- 5. Objectifs ---------- */
+.bl-obj{padding:10px 20px}
+.bl-obj__row{display:grid;grid-template-columns:30px minmax(0,1fr) 66px 44px;align-items:center;gap:12px;min-height:62px}
+.bl-obj__e{font-size:22px;text-align:center}
+.bl-obj__n{font-size:15px;font-weight:800;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bl-obj__v{font-size:24px;text-align:right}
+.bl-obj__v.is-done{color:var(--acc)}
+.bl-obj__v.is-zero{color:var(--mut)}
+.bl-obj__auto{width:44px;text-align:center;color:var(--acc);font-weight:800}
+
+/* ---------- 6. Sections ---------- */
+.bl-sec__head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;color:var(--txt);text-decoration:none}
+.bl-sec__t{margin:0;display:flex;align-items:center;gap:10px;font:italic 900 21px/1.1 'Saira',sans-serif;min-width:0}
+.bl-sec__t:before{content:"";width:5px;height:17px;border-radius:1px;background:var(--x-slash);transform:skewX(-16deg);flex:none}
+.bl-sec__t--sm{font-size:18px}
+.bl-sec__t--sm:before{height:14px;width:4px}
+.bl-sec__side{display:flex;align-items:center;gap:2px}
+.bl-sec__link{display:inline-flex;align-items:center;min-height:44px;font-size:13px;font-weight:800;color:var(--mut);text-decoration:none;padding:0 8px;white-space:nowrap}
+
+/* ---------- 7. Nutrition (Bilan) ---------- */
+.bl-kcal{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:22px}
+.bl-kcal__v{font-size:40px}
+.bl-macros{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:22px}
+.bl-macro{min-width:0}
+.bl-macro__n{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:800}
+.bl-macro__v{font-size:26px;margin-top:8px}
+.bl-macro .bl-trk{margin-top:10px}
+.bl-macro__t{font-size:12px;font-weight:800;margin-top:7px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bl-empty{padding:18px 0 4px;display:flex;flex-direction:column;align-items:flex-start;gap:12px;font-size:15px;font-weight:700;color:var(--mut)}
+.bl-empty__t{color:var(--txt);font-weight:800}
+
+/* ---------- 8. Pas | Sommeil ---------- */
+.bl-duo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding:22px 20px}
+.bl-duo>div{min-width:0}
+.bl-duo>div:first-child{padding-right:16px}
+.bl-duo>div+div{padding-left:16px;border-left:1px solid var(--bl-line)}
+.bl-big{font-size:34px;margin-top:8px}
+.bl-kv{font-size:13px;font-weight:700;color:var(--mut);margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bl-kv b{color:var(--txt);font-weight:800}
+.bl-mini{display:flex;align-items:flex-end;gap:5px;height:52px;margin-top:14px}
+.bl-mini>span{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px}
+.bl-mini>span>i{display:block;width:100%;border-radius:4px 4px 2px 2px}
+.bl-mini>span>em{font-style:normal;font-size:10px;font-weight:800;color:var(--mut)}
+.bl-mini>span.is-today>em{color:var(--txt)}
+.bl-edit{display:flex;align-items:center;justify-content:space-between;min-height:44px;margin-top:8px;padding:0 4px 0 12px;border-radius:12px;background:var(--bl-track);color:var(--txt);text-decoration:none;font-size:13px;font-weight:800;border:0;width:100%;cursor:pointer;font-family:inherit}
+.bl-edit--cta{background:var(--x-grad-fill);color:var(--x-on-grad);justify-content:center}
+
+/* ---------- 9. Poids (Bilan + espace Poids) ---------- */
+.bl-read{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;font-size:14px;font-weight:700}
+.bl-read__d{display:flex;align-items:baseline;gap:10px;min-width:0;white-space:nowrap}
+.bl-chart{position:relative;height:150px;margin-top:6px;touch-action:pan-y}
+.bl-chart--lg{height:220px;margin-left:30px}
+.bl-chart svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.bl-chart__band{fill:var(--bl-band)}
+.bl-chart__area{fill:url(#bl-area)}
+.bl-chart__line{fill:none;stroke:var(--acc);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.bl-chart__target{stroke:var(--bl-target);stroke-width:1.5;stroke-dasharray:5 5;vector-effect:non-scaling-stroke}
+.bl-chart__dot{position:absolute;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:4px;background:var(--acc);pointer-events:none}
+.bl-chart__ring{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:8px;border:2px solid var(--txt);background:var(--bg);pointer-events:none}
+.bl-chart__v{position:absolute;top:0;bottom:0;width:1px;background:var(--mut);pointer-events:none}
+.bl-chart__hit{position:absolute;inset:-12px 0;width:100%;background:transparent;border:0;padding:0;cursor:crosshair;-webkit-tap-highlight-color:transparent}
+.bl-chart__tag{position:absolute;left:0;transform:translateY(-120%);font-size:10px;font-weight:800;color:var(--mut);pointer-events:none}
+.bl-chart__grid{position:absolute;left:0;right:0;height:1px;background:var(--bl-line);pointer-events:none}
+.bl-chart__yl{position:absolute;left:-30px;font-size:11px;font-weight:700;color:var(--mut);transform:translateY(-50%);pointer-events:none}
+.bl-ax{display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--mut);margin-top:8px}
+.bl-ax--lg{margin-left:30px;margin-top:10px}
+.bl-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px}
+.bl-leg{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:14px;font-size:12px;font-weight:700;color:var(--mut)}
+.bl-leg i{display:inline-block;width:14px;height:8px;border-radius:2px;margin-right:6px;vertical-align:middle}
+
+/* ---------- 10. Notes de la saison ---------- */
+.bl-nrow{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;min-height:58px;color:var(--txt);text-decoration:none;border-bottom:1px solid var(--bl-line)}
+.bl-nrow:active{background:var(--bl-press)}
+.bl-nrow__n{font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bl-nrow__s{font-size:12px;font-weight:700;color:var(--mut);margin-top:2px}
+.bl-nrow__v{font-size:24px;display:flex;align-items:center;gap:8px}
+.bl-more{appearance:none;border:0;background:transparent;padding:0;display:flex;align-items:center;width:100%;min-height:48px;font:800 13px 'Manrope',sans-serif;color:var(--mut);cursor:pointer}
+
+/* ---------- 11. Melati (repliable) ---------- */
+.bl-fold{appearance:none;border:0;background:transparent;width:100%;min-height:60px;padding:0 20px;display:grid;grid-template-columns:30px minmax(0,1fr) 24px;align-items:center;gap:10px;color:var(--txt);font:italic 900 19px 'Saira',sans-serif;text-align:left;cursor:pointer}
+.bl-fold__i{font:800 16px 'Manrope',sans-serif;font-style:normal;color:var(--mut);transition:transform .2s ease-out}
+.bl-fold[aria-expanded="true"] .bl-fold__i{transform:rotate(90deg)}
+.bl-mel{padding:0 20px 24px}
+.bl-mel__strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:12px}
+.bl-mel__strip span{height:40px;border-radius:10px;background:var(--bl-track);display:grid;place-items:center;font-size:11px;font-weight:800;color:var(--mut)}
+.bl-mel__strip span.is-legs{background:var(--x-legs-45);color:var(--txt)}
+.bl-mel__strip span.is-push{background:var(--x-push-45);color:var(--txt)}
+.bl-mel__form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.bl-input{width:100%;height:48px;border-radius:14px;border:1px solid var(--bl-line);background:var(--bl-track);color:var(--txt);font:600 16px 'Manrope',sans-serif;padding:0 14px}
+.bl-input:focus{outline:2px solid var(--acc2);outline-offset:1px}
+
+/* ---------- 12. Écrans plein écran (Poids, Nutrition, Pas, Sommeil, Note) ---------- */
+.bl-top{position:sticky;top:0;z-index:5;display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:8px;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;background:var(--bl-top);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-bottom:1px solid var(--bl-line)}
+.bl-top__t{margin:0;text-align:center;font:italic 900 20px/1 'Saira',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bl-top__s{display:block;text-align:center;font-size:12px;font-weight:700;color:var(--mut);margin-top:4px}
+.bl-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));row-gap:22px;margin-top:26px}
+.bl-stats>div{min-width:0;padding:0 12px;border-left:1px solid var(--bl-line)}
+.bl-stats>div:nth-child(3n+1){padding-left:0;border-left:0}
+.bl-stats--2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.bl-stats--2>div:nth-child(3n+1){padding-left:12px;border-left:1px solid var(--bl-line)}
+.bl-stats--2>div:nth-child(2n+1){padding-left:0;border-left:0}
+.bl-stats__v{font-size:24px;margin-top:8px}
+.bl-stats--2 .bl-stats__v{font-size:28px;margin-top:6px}
+.bl-stats__s{font-size:12px;font-weight:700;color:var(--mut);margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bl-tl{position:relative;display:grid;grid-template-columns:239fr 59fr 148fr;height:10px;border-radius:5px;overflow:hidden;margin-top:14px}
+.bl-tl span:nth-child(1){background:var(--x-grad-prog)}
+.bl-tl span:nth-child(2){background:var(--x-acc-30)}
+.bl-tl span:nth-child(3){background:var(--x-acc2-15)}
+.bl-tl__now{position:relative;height:0}
+.bl-tl__now i{position:absolute;top:-14px;width:3px;height:18px;margin-left:-1.5px;border-radius:2px;background:var(--txt)}
+.bl-tl__l{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px;font-size:12px;font-weight:700}
+.bl-prow{display:grid;grid-template-columns:minmax(0,1fr) auto 64px 44px;align-items:center;gap:10px;min-height:56px;border-bottom:1px solid var(--bl-line)}
+.bl-prow__d{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bl-prow__dl{text-align:right;font-size:13px;font-weight:800}
+.bl-confirm{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:8px;min-height:56px;border-bottom:1px solid var(--bl-line);font-size:14px;font-weight:800}
+.bl-mgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));row-gap:22px;margin-top:18px}
+.bl-mgrid>div{min-width:0}
+.bl-mgrid>div:nth-child(2n){padding-left:18px;border-left:1px solid var(--bl-line)}
+.bl-mtable{width:100%;border-collapse:collapse;font-size:13px;font-weight:700;margin-top:8px;font-variant-numeric:tabular-nums}
+.bl-mtable th{font-size:11px;font-weight:800;color:var(--mut);text-align:right;padding:8px 0;letter-spacing:.06em;text-transform:uppercase}
+.bl-mtable th:first-child,.bl-mtable td:first-child{text-align:left}
+.bl-mtable td{text-align:right;padding:6px 0;border-top:1px solid var(--bl-line)}
+.bl-sticky{position:sticky;bottom:calc(16px + env(safe-area-inset-bottom));padding:0 20px;margin-top:8px;z-index:4}
+
+/* Nutrition */
+.bl-mrow{padding:16px 0}
+.bl-mrow+.bl-mrow{border-top:1px solid var(--bl-line)}
+.bl-mrow__h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
+.bl-mrow__n{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800;min-width:0}
+.bl-mrow__v{font-size:24px}
+.bl-mrow__t{font-size:12px;font-weight:800;margin-top:8px;color:var(--mut)}
+.bl-chips{display:flex;gap:8px;overflow-x:auto;margin:16px -20px 0;padding:0 20px 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.bl-chips::-webkit-scrollbar{display:none}
+.bl-chip{appearance:none;flex:none;height:44px;padding:0 14px;border-radius:22px;border:1px solid var(--bl-line);background:transparent;color:var(--txt);font:700 13px 'Manrope',sans-serif;display:flex;align-items:center;gap:7px;cursor:pointer;white-space:nowrap}
+.bl-chip[aria-selected="true"]{background:var(--x-grad-fill);border-color:transparent;color:var(--x-on-grad)}
+.bl-nav{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;margin-top:12px;text-align:center;font-size:14px;font-weight:800}
+.bl-detail{padding:18px 0 4px}
+.bl-detail__row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:8px}
+.bl-detail__v{font-size:44px}
+.bl-rep{display:flex;gap:2px;height:30px;border-radius:9px;overflow:hidden;margin-top:14px}
+.bl-rep span{display:flex;align-items:center;padding-left:8px;min-width:0;font-size:12px;font-weight:800;color:var(--bl-rep-on);white-space:nowrap;overflow:hidden}
+.bl-rep__g{background:var(--bl-rep-glu)}
+.bl-rep__p{background:var(--bl-rep-prot)}
+.bl-rep__l{background:var(--bl-rep-lip)}
+.bl-repl{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:13px;font-weight:700}
+.bl-repl b{font-weight:900}
+.bl-bars{position:relative;display:flex;align-items:flex-end;gap:0;height:170px;margin-top:22px}
+.bl-bars__b{appearance:none;flex:1;min-width:0;height:100%;display:flex;align-items:flex-end;justify-content:center;background:transparent;border:0;padding:0;cursor:pointer;border-radius:7px;-webkit-tap-highlight-color:transparent}
+.bl-bars__b i{display:block;width:calc(100% - 4px);border-radius:6px 6px 2px 2px}
+.bl-bars__b.is-na i{height:30% !important;background:transparent !important;border:1.5px dashed var(--bl-line)}
+.bl-bars__b[aria-pressed="true"]{outline:2px solid var(--txt);outline-offset:2px}
+.bl-bars__goal{position:absolute;left:0;right:0;border-top:2px dashed var(--mut);pointer-events:none}
+.bl-bars__gl{position:absolute;right:0;transform:translateY(-130%);font-size:11px;font-weight:800;color:var(--mut);pointer-events:none}
+.bl-bars__x{display:flex;gap:0;margin-top:8px}
+.bl-bars__x span{flex:1;min-width:0;text-align:center;font-size:11px;font-weight:800;color:var(--mut)}
+.bl-bars__x span.is-on{color:var(--txt)}
+.bl-link{display:grid;grid-template-columns:28px minmax(0,1fr) 16px;align-items:center;gap:10px;min-height:60px;padding:0 20px;color:var(--txt);text-decoration:none;font-size:15px;font-weight:800}
+
+/* Pas / Sommeil (pleine page) */
+.bl-vbars{position:relative;display:flex;align-items:flex-end;gap:0;height:200px;margin-top:30px}
+.bl-vbars--y{height:210px}
+.bl-vbars__b{appearance:none;flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;background:transparent;border:0;padding:0;cursor:pointer;position:relative;z-index:1;color:var(--txt)}
+.bl-vbars__b i{display:block;width:calc(100% - 6px);border-radius:7px 7px 3px 3px}
+.bl-vbars__b em{font-style:normal;font-size:10px;font-weight:800;color:var(--mut);white-space:nowrap}
+.bl-vbars__b[aria-pressed="true"] i{outline:2px solid var(--txt);outline-offset:2px}
+.bl-vbars__b[aria-pressed="true"] em{color:var(--txt)}
+.bl-zone{position:absolute;left:0;right:0;background:var(--bl-zone);border-top:1.5px dashed var(--acc);border-bottom:1.5px dashed var(--acc);pointer-events:none}
+.bl-tiers{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:18px;font-size:12px;font-weight:700;color:var(--mut)}
+.bl-tiers i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+/* Note /20 */
+.bl-score{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:10px}
+.bl-score__v{font-size:96px}
+.bl-scale{display:grid;grid-template-columns:8fr 4fr 2fr 4fr 2fr;gap:3px;height:8px;margin-top:22px}
+.bl-scale i{border-radius:4px}
+.bl-scale__l{display:grid;grid-template-columns:8fr 4fr 2fr 4fr 2fr;gap:3px;margin-top:6px;font-size:11px;font-weight:800;color:var(--mut)}
+.bl-pil{padding:18px 0}
+.bl-pil+.bl-pil{border-top:1px solid var(--bl-line)}
+.bl-pil__h{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.bl-pil__n{font:italic 900 19px 'Saira',sans-serif}
+.bl-crit{display:grid;grid-template-columns:minmax(0,1fr) auto 56px;gap:10px;align-items:baseline;margin-top:10px;font-size:13px;font-weight:700}
+.bl-crit__p{text-align:right;font-weight:900;font-variant-numeric:tabular-nums}
+.bl-malus{margin-top:14px;border-radius:14px;background:var(--bl-malus-bg);border:1px solid var(--bl-line)}
+.bl-malus__r{display:grid;grid-template-columns:64px minmax(0,1fr);gap:10px;align-items:center;min-height:52px;padding:0 14px;font-size:14px;font-weight:800}
+.bl-malus__r+.bl-malus__r{border-top:1px solid var(--bl-line)}
+
+/* ---------- 13. Feuilles du bas (pesée, mensurations, nuit) ---------- */
+.bl-scrim{position:fixed;inset:0;z-index:50;background:var(--x-scrim);animation:bl-fade .2s ease-out 1 forwards}
+.bl-sheet{position:fixed;left:0;right:0;bottom:0;z-index:51;max-height:92vh;overflow-y:auto;background:var(--x-sheet);border-radius:28px 28px 0 0;padding:10px 20px calc(24px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(0,0,0,.35);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);animation:bl-up .32s cubic-bezier(.2,.8,.2,1) 1 forwards}
+.bl-sheet__grab{width:40px;height:5px;border-radius:3px;background:var(--bl-line);margin:0 auto 10px}
+.bl-sheet__h{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.bl-sheet__t{font:italic 900 24px/1.1 'Saira',sans-serif;margin:0}
+.bl-field{display:flex;align-items:center;justify-content:space-between;width:100%;height:52px;border-radius:14px;border:1px solid var(--bl-line);background:var(--bl-track);color:var(--txt);font:700 16px 'Manrope',sans-serif;padding:0 16px}
+.bl-wrow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:28px}
+.bl-time{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:28px}
+.bl-time__c{min-width:0;text-align:center;padding:16px 8px;border-radius:20px;background:var(--bl-track)}
+.bl-time__v{appearance:none;border:0;background:transparent;color:var(--txt);display:block;width:100%;font:italic 900 44px/1.1 'Saira',sans-serif;padding:6px 0;cursor:pointer}
+.bl-time__s{display:flex;justify-content:center;gap:12px;margin-top:6px}
+.bl-mens{display:grid;grid-template-columns:minmax(0,1fr) 44px 86px 44px;align-items:center;gap:8px;min-height:72px;border-bottom:1px solid var(--bl-line)}
+.bl-mens .bl-step{width:44px;height:44px;font-size:20px}
+
+/* ---------- 14. Fiche d'un jour (calendrier, page 3) ---------- */
+.bl-daycard{padding:16px;border-radius:var(--x-r-lg);background:var(--x-glass);border:1px solid var(--gb);box-shadow:var(--x-inset)}
+.bl-daycard__h{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+
+/* ---------- 15. Animations ponctuelles ---------- */
+@keyframes bl-up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes bl-fade{from{opacity:0}to{opacity:1}}
+@keyframes bl-in{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+.bl-screen-in{animation:bl-in .26s cubic-bezier(.2,.8,.2,1) 1 forwards}
+@media (prefers-reduced-motion: reduce){
+  .bl-page *,.bl-sheet,.bl-scrim,.bl-screen-in,.bl-plus.is-pop{animation:none !important;transition:none !important}
+}
+
+/* ---------- 16. Mode clair ----------
+   Tout passe par les jetons (tokens.css + tokens_bl.css). Seules les ombres changent ici. */
+@media (prefers-color-scheme: light){
+  .bl-sheet{box-shadow:0 -10px 40px rgba(16,40,70,.14)}
+  .bl-seg button[aria-selected="true"]{box-shadow:0 1px 4px rgba(16,40,70,.14)}
+}
+
+/* ---------- 17. Petits écrans (≤ 360 px) ---------- */
+@media (max-width: 370px){
+  .bl-hero__v{font-size:46px}
+  .bl-big{font-size:30px}
+  .bl-kcal__v{font-size:36px}
+  .bl-macros{gap:12px}
+  .bl-macro__v{font-size:23px}
+  .bl-stats__v{font-size:22px}
+  .bl-score__v{font-size:84px}
+}

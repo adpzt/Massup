@@ -48,8 +48,8 @@ module.exports = function audit() {
     if ((txt || el.tagName === 'BUTTON') && cs.position !== 'absolute' && cs.position !== 'fixed') {
       for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
         const ps = getComputedStyle(p); const boxed = (parse(ps.backgroundColor) || { a: 0 }).a > 0 || parseFloat(ps.borderLeftWidth) > 0 || ps.backgroundImage !== 'none';
+        if (ps.overflowX !== 'visible') break; // ancêtre qui défile ou coupe (puces, carrousel) : débordement voulu
         if (!boxed) continue;
-        if (ps.overflowX !== 'visible') break;
         const pr = p.getBoundingClientRect();
         if (r.right > pr.right + 2 || r.left < pr.left - 2) { const k = 'c' + sel(el); if (!seen.has(k)) { seen.add(k); overflow.push({ sel: sel(el), why: 'dépasse de son conteneur ' + sel(p).split(' > ').pop() + ' de ' + Math.round(Math.max(r.right - pr.right, pr.left - r.left)) + ' px', txt: txt.slice(0, 30) }); } }
         break;

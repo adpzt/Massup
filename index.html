@@ -18,10 +18,14 @@
 <link rel="stylesheet" href="intake.css">
 <link rel="stylesheet" href="sleep.css">
 <link rel="stylesheet" href="sport.css">
+<!-- DA « Graphite Énergie » (02/11/2026) : jetons (source unique) → page Bilan (bl-) → peau des écrans existants -->
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="bilan.css">
+<link rel="stylesheet" href="da.css">
 <!-- Version ORDINATEUR : appliquée uniquement ≥ 1000 px de large — jamais sur iPhone (desktop.css) -->
 <link rel="stylesheet" href="desktop.css" media="(min-width: 1000px)">
 </head>
-<body class="palette-sober">
+<body class="palette-sober" data-view="sante">
 <div class="bg-fx"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
 
 <!-- ═══ ÉCRAN DE CONNEXION ═══ -->
@@ -55,8 +59,10 @@
       <div class="logo">MASS<em>UP</em></div>
       <div class="hdate" id="hdate"></div>
     </div>
-    <div style="display:flex;align-items:center;gap:.4rem">
-      <button class="hdr-nutri" onclick="nutriAOpen()">&#x1F373; Nutrition</button>
+    <div class="hdr-acts">
+      <!-- Bilan : un seul ↻ (raccourci iOS : pas + nutrition + pesée) · Séances / Progression : Recettes -->
+      <button class="hdr-ib" id="hdrRefresh" onclick="BILAN.refresh()" aria-label="Actualiser pas, nutrition et pes&#xE9;e">&#x21BB;</button>
+      <button class="hdr-nutri" onclick="nutriAOpen()">&#x1F373; Recettes</button>
     </div>
   </header>
 
@@ -164,38 +170,9 @@
     <div id="nutritionContent"></div>
   </div>
 
-  <!-- ═══ VIEW: BILAN ═══ -->
+  <!-- ═══ VIEW: BILAN ═══ (DA Graphite Énergie, 02/11/2026 — rendu par bilan.js) -->
   <div class="view active" id="view-sante">
-    <!-- Bilan de la semaine : widget d'appel (lundi, tant que non déclaré) (JS) -->
-    <div id="weeklyRecapWidget"></div>
-    <!-- Carte profil (JS) -->
-    <div id="bilanProfile"></div>
-    <!-- Cette semaine : compteurs quotidiens petit-déj / shaker (JS) — confirmés au bilan du lundi -->
-    <div id="bilanWeekNut"></div>
-    <!-- Notes /20 des semaines et des mois (15/08 — remplace l'affichage rank des bilans) (JS) -->
-    <div id="bilanNotes"></div>
-    <!-- RANK APEX : saison en cours + groupes + historique (JS) -->
-    <div id="bilanRank"></div>
-    <!-- Hero pesée (JS) -->
-    <div id="bilanHero"></div>
-    <!-- Stats dérivées du poids : Δ7j / Δ30j / rythme / repère (JS) -->
-    <div class="bw-stats-row" id="bwStatsRow"></div>
-    <!-- Évolution -->
-    <div class="slbl" style="margin-bottom:.5rem;">Évolution du poids</div>
-    <div class="chart-section" style="margin-bottom:1.5rem;">
-      <div class="bw-trend" id="santeTrend"></div>
-      <div class="chart-wrap"><canvas id="santeChart"></canvas></div>
-    </div>
-    <!-- Historique pesées (bulle dépliable) -->
-    <div class="bubble-toggle" id="santeHistoToggle" onclick="toggleSanteHisto()"><span>&#x1F4CB; Historique pesées</span><span class="toggle-arr">&#x25B8;</span></div>
-    <div id="santeHistoSection" class="expand-anim" style="margin-bottom:2rem;">
-      <div class="chart-section" id="santeHisto" style="padding:.25rem 0;"></div>
-    </div>
-    <!-- Mensurations (02/11) : bras, poitrine, taille, cuisse — une fois par mois (JS) -->
-    <div class="slbl" style="margin-bottom:.5rem;">&#x1F4CF; Mensurations</div>
-    <div id="bodyMeas" style="margin-bottom:2rem;"></div>
-    <!-- NOUS DEUX 💞 (26/08) : progression de Melati en lecture seule + petit mot (partner.js) -->
-    <div id="bilanPartner" style="margin-bottom:2rem;"></div>
+    <div class="bl-page" id="bilanPage"></div>
   </div>
 
 
@@ -495,6 +472,7 @@ if('serviceWorker' in navigator){
 <script src="steps.js"></script>
 <script src="intake.js"></script>
 <script src="sleep.js"></script>
+<script src="bilan.js"></script>
 <script src="cardio.js"></script>
 <script src="app.js"></script>
 <script src="sport.js"></script>

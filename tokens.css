@@ -1,0 +1,264 @@
+/* ═══ MASSUP · DA « Graphite Énergie » (livraison Claude Design, intégrée le 02/11/2026) ═══
+   SOURCE UNIQUE des jetons de couleur de l app Adrien (index.html) : chargé APRÈS tous les autres CSS,
+   il remplace les anciens :root de style.css, steps.css et intake.css (mêmes noms, nouvelles valeurs).
+   Partie 1 = livraison_da/tokens.css · Partie 2 = livraison_bilan/tokens_bl.css (--bl-*). Melati n est pas concernée. */
+
+:root{
+  /* ---- 1. Variables historiques ---- */
+  --bg:#0B0D12;                      /* fond app — inchangé */
+  --glass:rgba(255,255,255,0.055);
+  --gb:rgba(255,255,255,0.12);       /* bordure carte : .14 → .12 (verre plus fin) */
+  --ghov:rgba(255,255,255,0.08);
+  --txt:#F2F5FA;                     /* 18.0:1 sur --bg */
+  --mut:rgba(242,245,250,0.62);      /* .55 → .62 : 7.1:1 (plus lisible en salle) */
+  --acc:#71FFB4;                     /* menthe 15.4:1 */
+  --acc2:#3FD9FF;                    /* cyan 11.6:1 */
+  --red:#FF6B7A;                     /* 7.1:1 */
+  --yellow:#FFC94D;
+  --push:#FF8452;
+  --pull:#4D9DFF;
+  --legs:#C97BFF;
+  --maison:#9B8CFF;
+  --run:#E8FF3A;
+  --blood:#FF2A47;                   /* 5.3:1 */
+
+  /* ---- 2. Dégradé signature ---- */
+  --x-grad-a:#71FFB4;
+  --x-grad-b:#3FD9FF;
+  --x-grad-c:#5B7CFF;
+  --x-grad:linear-gradient(100deg,var(--x-grad-a),var(--x-grad-b) 60%,var(--x-grad-c));
+  --x-grad-2:linear-gradient(100deg,var(--x-grad-a),var(--x-grad-b));
+  --x-on-grad:#0B0D12;               /* ≥5.3:1 sur chaque stop */
+
+  /* ---- 2b. Métal ---- */
+  --x-metal-hi:#F2F4F8;
+  --x-metal-lo:#A8AFBE;
+  --x-metal:linear-gradient(160deg,var(--x-metal-hi),var(--x-metal-lo));
+  --x-on-metal:#1A1D24;
+
+  /* ---- 2c. Verre (RÔLE RESTREINT : uniquement les éléments touchables / flottants) ---- */
+  --x-glass-hi:rgba(255,255,255,0.08);
+  --x-glass-lo:rgba(255,255,255,0.03);
+  --x-glass:linear-gradient(160deg,var(--x-glass-hi),var(--x-glass-lo));
+  --x-glass-quiet:linear-gradient(160deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02));
+  --x-inset:inset 0 1px 0 rgba(255,255,255,0.12);
+  --x-shadow-card:0 8px 24px rgba(0,0,0,0.35);
+  --x-glow-cta:0 10px 32px rgba(63,217,255,0.35);   /* RÔLE ÉLARGI : tout bouton principal en dégradé */
+  --x-hero-bg:linear-gradient(160deg,#10141D,#0B0D12);
+
+  /* ---- 3. Rayons (inchangés) ---- */
+  --x-r-sm:10px;
+  --x-r-md:14px;
+  --x-r-lg:20px;
+  --x-r-xl:28px;
+  --x-r-pill:100px;
+
+  /* ---- 4. Alphas des accents (inchangés) ---- */
+  --x-acc-08:rgba(113,255,180,0.08);
+  --x-acc-15:rgba(113,255,180,0.15);
+  --x-acc-30:rgba(113,255,180,0.30);
+  --x-acc-45:rgba(113,255,180,0.45);
+  --x-acc2-08:rgba(63,217,255,0.08);
+  --x-acc2-15:rgba(63,217,255,0.15);
+  --x-acc2-45:rgba(63,217,255,0.45);
+  --x-red-10:rgba(255,107,122,0.10);
+  --x-red-50:rgba(255,107,122,0.50);
+  --x-yellow-10:rgba(255,201,77,0.08);
+  --x-yellow-55:rgba(255,201,77,0.40);
+  --x-push-10:rgba(255,132,82,0.10);   --x-push-45:rgba(255,132,82,0.45);
+  --x-pull-10:rgba(77,157,255,0.10);   --x-pull-45:rgba(77,157,255,0.45);
+  --x-legs-10:rgba(201,123,255,0.10);  --x-legs-45:rgba(201,123,255,0.45);
+  --x-maison-10:rgba(155,140,255,0.10);--x-maison-45:rgba(155,140,255,0.45);
+
+  /* ---- 5. Échelle de note /20 — RÔLE CHANGÉ (notation v5, commune à toute l'app) ----
+     1 rouge sang < 8 · 2 rouge 8-11,5 · 3 gris 12-13,5 · 4 bleu 14-17,5 · 5 gold ≥ 18 */
+  --x-note-1:#FF2A47;   /* 5.3:1 */
+  --x-note-2:#FF6B7A;   /* 7.1:1 */
+  --x-note-3:#A3AAB8;   /* 8.3:1 */
+  --x-note-4:#4D9DFF;   /* 7.0:1 */
+  --x-note-5:#E8B23A;   /* 10.1:1 */
+  --x-note-5-hi:#FFE9A0;
+
+  /* ---- 6. RANK (inchangé) ---- */
+  --x-rank-brz-hi:#E8A87C; --x-rank-brz-lo:#8A4E2A; --x-rank-brz-txt:#3A2003;
+  --x-rank-arg-hi:#F0F3F8; --x-rank-arg-lo:#8A93A5; --x-rank-arg-txt:#1A1D24;
+  --x-rank-or-hi:#FFE9A0;  --x-rank-or-mid:#E8B23A; --x-rank-or-lo:#9C6B12; --x-rank-or-txt:#3A2803;
+  --x-rank-pla-hi:#C8F4FF; --x-rank-pla-lo:#3E8CA8; --x-rank-pla-txt:#062733;
+  --x-rank-dia-hi:#E4D9FF; --x-rank-dia-lo:#6C4DD8; --x-rank-dia-txt:#1D1146;
+  --x-rank-glow-or:0 0 16px rgba(232,178,58,0.5);
+  --x-rank-glow-dia:0 0 16px rgba(140,100,255,0.45);
+
+  /* ---- 7. États hebdo du calendrier (inchangés) ---- */
+  --x-week-low:var(--red);
+  --x-week-mid:rgba(242,245,250,0.78);
+  --x-week-goal:var(--acc);
+  --x-week-gold:var(--yellow);
+
+  /* ---- 8. Cadres Mode Séance (inchangés, statiques) ---- */
+  --x-frame-serie:conic-gradient(from 0deg,#71FFB4,#3FD9FF,#5B7CFF,#71FFB4);
+  --x-frame-repos:conic-gradient(from 0deg,#FFC94D,#FF8452,#FFC94D);
+  --x-frame-danger:conic-gradient(from 0deg,#FF6B7A,#FF8452,#FF6B7A);
+  --x-frame-gold:conic-gradient(from 0deg,#FFE9A0,#E8B23A,#FFC94D,#FFE9A0);
+
+  /* ---- 9. NOUVEAU · Énergie ---- */
+  --x-line:rgba(255,255,255,0.09);        /* filet de séparation (remplace les cartes sur les pages) */
+  --x-track:rgba(255,255,255,0.08);       /* fond de jauge */
+  --x-seg-on:rgba(255,255,255,0.14);      /* segment actif */
+  --x-grad-prog:linear-gradient(90deg,#71FFB4,#3FD9FF);           /* jauge en cours */
+  --x-grad-kbar:linear-gradient(90deg,#3FD9FF,#5B7CFF);           /* jauge kcal */
+  --x-grad-hero:linear-gradient(100deg,#71FFB4,#3FD9FF 70%,#7FA0FF); /* texte des chiffres-héros */
+  --x-grad-gold:linear-gradient(180deg,#FFE9A0,#E8B23A 70%);        /* texte note gold */
+  --x-grad-fill:linear-gradient(140deg,#71FFB4,#3FD9FF);           /* boutons « + », pastilles pleines */
+  --x-slash:linear-gradient(180deg,#71FFB4,#3FD9FF);               /* marque italique des titres */
+  --x-glow-fill:0 4px 14px rgba(63,217,255,0.30);
+  --x-halo:radial-gradient(90% 420px at 0% 0%,rgba(113,255,180,0.16),transparent 70%),radial-gradient(80% 360px at 100% 60px,rgba(63,217,255,0.12),transparent 70%);
+  --x-frame-w:3px;                         /* épaisseur du cadre Mode Séance */
+  --x-sheet:#151A23;                       /* fond des feuilles du bas */
+  --x-scrim:rgba(5,6,9,0.70);
+  --x-tab:rgba(22,26,34,0.86);
+  --x-alert-bg:rgba(255,201,77,0.08);
+  --x-alert-b:rgba(255,201,77,0.40);
+
+  /* Cartes de séance : verre teinté en sombre (aplats vifs en clair) */
+  --x-sess-push:linear-gradient(160deg,rgba(255,132,82,0.18),rgba(255,255,255,0.02) 75%);
+  --x-sess-pull:linear-gradient(160deg,rgba(77,157,255,0.18),rgba(255,255,255,0.02) 75%);
+  --x-sess-legs:linear-gradient(160deg,rgba(201,123,255,0.18),rgba(255,255,255,0.02) 75%);
+  --x-sess-maison:linear-gradient(160deg,rgba(155,140,255,0.18),rgba(255,255,255,0.02) 75%);
+  /* --x-sess-title : défini seulement en clair. En sombre, le titre prend la couleur de la séance. */
+
+  /* ---- 10. steps.css (paliers de pas) — mêmes noms ---- */
+  --st-red:#FF6B7A; --st-gray:#9AA3B5; --st-green:#3FD68A; --st-gold:#E8B23A; --st-blood:#FF2A47;
+
+  /* ---- 11. intake.css (macros, validées daltoniens) — mêmes noms ---- */
+  --in-glu:#3F8FE0; --in-prot:#25A56A; --in-lip:#D07E25; --in-mic:var(--acc2); --in-on:#0b0d12;
+}
+
+@media (prefers-color-scheme: light){
+  :root{
+    /* Blanc franc : plus de gris perle */
+    --bg:#FFFFFF;
+    --glass:#FFFFFF;
+    --gb:rgba(14,17,23,0.08);
+    --ghov:rgba(14,17,23,0.04);
+    --txt:#0E1117;                     /* 18.9:1 */
+    --mut:rgba(14,17,23,0.60);         /* 5.0:1 */
+    --acc:#087A50;                     /* 5.4:1 en texte */
+    --acc2:#0A6FB8;                    /* 5.3:1 */
+    --red:#C22B40;                     /* 5.7:1 */
+    --yellow:#8A6100;                  /* 5.5:1 */
+    --blood:#8B0A1E;                   /* 9.7:1 */
+    --push:#B34310;
+    --pull:#1E62C8;
+    --legs:#7B2DB8;
+    --maison:#4F41C9;
+    --run:#5A6400;
+
+    --x-on-grad:#0B0D12;               /* le dégradé signature reste vif (surfaces) */
+    --x-metal-hi:#FFFFFF;
+    --x-metal-lo:#C9CFDA;
+    --x-on-metal:#1A1D24;
+    --x-glass-hi:#FFFFFF;
+    --x-glass-lo:#FFFFFF;
+    --x-glass:#FFFFFF;
+    --x-glass-quiet:#FFFFFF;
+    --x-inset:inset 0 0 0 1px rgba(14,17,23,0.04);
+    --x-shadow-card:0 8px 24px rgba(16,40,70,0.08);
+    --x-glow-cta:0 10px 28px rgba(63,217,255,0.38);
+    --x-hero-bg:#FFFFFF;
+
+    --x-acc-08:rgba(8,122,80,0.08);
+    --x-acc-15:rgba(8,122,80,0.14);
+    --x-acc-30:rgba(8,122,80,0.30);
+    --x-acc-45:rgba(8,122,80,0.45);
+    --x-acc2-08:rgba(10,111,184,0.08);
+    --x-acc2-15:rgba(10,111,184,0.14);
+    --x-acc2-45:rgba(10,111,184,0.45);
+    --x-red-10:rgba(194,43,64,0.08);   --x-red-50:rgba(194,43,64,0.50);
+    --x-yellow-10:rgba(255,201,77,0.18); --x-yellow-55:rgba(138,97,0,0.40);
+    --x-push-10:rgba(179,67,16,0.08);   --x-push-45:rgba(179,67,16,0.45);
+    --x-pull-10:rgba(30,98,200,0.08);   --x-pull-45:rgba(30,98,200,0.45);
+    --x-legs-10:rgba(123,45,184,0.08);  --x-legs-45:rgba(123,45,184,0.45);
+    --x-maison-10:rgba(79,65,201,0.08); --x-maison-45:rgba(79,65,201,0.45);
+
+    --x-note-1:#8B0A1E;   /* 9.7:1 */
+    --x-note-2:#C22B40;   /* 5.7:1 */
+    --x-note-3:#5E6573;   /* 5.9:1 */
+    --x-note-4:#1E62C8;   /* 5.8:1 */
+    --x-note-5:#8A6100;   /* 5.5:1 */
+    --x-note-5-hi:#B8860B;
+
+    --x-week-mid:rgba(14,17,23,0.65);
+
+    --x-line:rgba(14,17,23,0.08);
+    --x-track:rgba(14,17,23,0.07);
+    --x-seg-on:#FFFFFF;
+    --x-grad-prog:linear-gradient(90deg,#0E9C60,#0B86C4);          /* ≥3.5:1 sur blanc */
+    --x-grad-kbar:linear-gradient(90deg,#0B86C4,#3B5BDB);
+    --x-grad-hero:linear-gradient(100deg,#087A50,#0A6FB8 70%,#3B4FD8); /* texte ≥5.3:1 */
+    --x-grad-gold:linear-gradient(180deg,#9A7000,#8A6100 70%);
+    --x-grad-fill:linear-gradient(140deg,#71FFB4,#3FD9FF);          /* surfaces vives, texte --x-on-grad */
+    --x-slash:linear-gradient(180deg,#0E9C60,#0B86C4);
+    --x-glow-fill:0 4px 14px rgba(11,134,196,0.28);
+    --x-halo:radial-gradient(90% 420px at 0% 0%,rgba(31,214,138,0.12),transparent 70%),radial-gradient(80% 360px at 100% 60px,rgba(34,181,240,0.10),transparent 70%);
+    --x-sheet:#FFFFFF;
+    --x-scrim:rgba(14,17,23,0.38);
+    --x-tab:rgba(255,255,255,0.94);
+    --x-alert-bg:rgba(255,201,77,0.18);
+    --x-alert-b:rgba(138,97,0,0.40);
+
+    /* Cartes de séance en aplats vifs, texte foncé (≥7:1) */
+    --x-sess-push:linear-gradient(150deg,#FF8452,#FFA27F);
+    --x-sess-pull:linear-gradient(150deg,#4D9DFF,#7DB7FF);
+    --x-sess-legs:linear-gradient(150deg,#C97BFF,#D99EFF);
+    --x-sess-maison:linear-gradient(150deg,#9B8CFF,#B6AAFF);
+    --x-sess-title:#0B0D12;
+    --x-sess-sub:rgba(11,13,18,0.74);
+
+    --st-red:#C22B40; --st-gray:#7D8596; --st-green:#1E9E5E; --st-gold:#9A7000; --st-blood:#8B0A1E;
+    --in-glu:#2F7BD0; --in-prot:#1E8A57; --in-lip:#B5651A;   /* marques ≥4.3:1 sur blanc */
+    /* (historique style.css) dégradé signature en version TEXTE, clair uniquement */
+    --x-grad-text:var(--x-grad-hero);
+    --x-grad-text-2:linear-gradient(100deg,#087A50,#0A6FB8);
+  }
+}
+
+:root{
+  /* Échelle de note v5, commune à toute l'app (alias des valeurs DA) */
+  --bl-note-1:var(--x-note-1);   /* rouge sang  < 8         · sombre 5.3:1 · clair 9.7:1 */
+  --bl-note-2:var(--x-note-2);   /* rouge       8 – 11,5    · 7.1 · 5.7 */
+  --bl-note-3:var(--x-note-3);   /* gris        12 – 13,5   · 8.3 · 5.9 */
+  --bl-note-4:var(--x-note-4);   /* bleu        14 – 17,5   · 7.0 · 5.8 */
+  --bl-note-5:var(--x-note-5);   /* gold        ≥ 18        · 10.1 · 5.5 */
+  --bl-malus-bg:rgba(255,42,71,0.10);
+
+  /* Surfaces et filets de la page */
+  --bl-page:var(--x-halo),var(--bg);
+  --bl-line:var(--x-line);
+  --bl-track:var(--x-track);
+  --bl-bar:rgba(242,245,250,0.55);      /* barre neutre (pas futur, valeur sans objectif) */
+  --bl-top:rgba(11,13,18,0.86);         /* en-tête plein écran (avec backdrop-filter déjà budgété) */
+  --bl-press:rgba(255,255,255,0.07);    /* retour visuel au toucher */
+
+  /* Graphiques */
+  --bl-band:rgba(255,255,255,0.07);     /* zone fin de masse 73-74 kg */
+  --bl-target:var(--acc2);              /* trait pointillé sèche 68 kg */
+  --bl-zone:rgba(113,255,180,0.10);     /* zone 7-9 h du sommeil */
+  --bl-sleep-ok:var(--st-green);
+  --bl-sleep-ko:var(--st-red);
+
+  /* Répartition G · P · L : toujours les teintes vives, texte foncé (≥5.7:1 dans les deux modes) */
+  --bl-rep-glu:#3F8FE0;
+  --bl-rep-prot:#25A56A;
+  --bl-rep-lip:#D07E25;
+  --bl-rep-on:#0B0D12;
+}
+@media (prefers-color-scheme: light){
+  :root{
+    --bl-malus-bg:rgba(139,10,30,0.07);
+    --bl-bar:rgba(14,17,23,0.52);
+    --bl-top:rgba(255,255,255,0.92);
+    --bl-press:rgba(14,17,23,0.05);
+    --bl-band:rgba(14,17,23,0.06);
+    --bl-zone:rgba(8,122,80,0.09);
+  }
+}

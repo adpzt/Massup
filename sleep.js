@@ -162,6 +162,6 @@ var SLEEP=(function(){
   function select(key){selectedDate=key;renderOpen();}
   function setRange(n){if(n!==7&&n!==30)return;range=n;selectedDate=currentNight();renderOpen();}
   return {init:function(adapter){A=adapter;},renderCard:renderCard,open:open,close:close,
-    _saveHome:saveHome,_saveSelected:saveSelected,_cancelEdit:cancelEdit,_select:select,_range:setRange,_duration:duration,
+    _saveHome:saveHome,_saveSelected:saveSelected,_save:saveNight,_cancelEdit:cancelEdit,_select:select,_range:setRange,_duration:duration,
     _night:currentNight,_summary:summary};
 })();

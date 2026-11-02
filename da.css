@@ -1,0 +1,204 @@
+/* ═══ MASSUP · DA « Graphite Énergie » — peau de l'app (02/11/2026) ═══
+   Chargé après tokens.css et bilan.css (index.html seulement : Melati n'est pas concernée).
+   Les 4 principes de la DA (livraison_da/components.md) :
+   1. les sections sont posées sur le fond ; 2. le verre est réservé à ce qui se touche ou flotte ;
+   3. le dégradé signale ce qui avance ; 4. la couleur ne sert qu'à dire un état.
+   Partie A = branchement de la page Bilan (bilan.js) dans l'app · Partie B = peau des écrans existants.
+   Aucune couleur en dur : tout passe par les jetons. */
+
+/* ══════════ A. Page Bilan dans l'app ══════════ */
+/* Fond de page : halos statiques de la DA (remplacent les halos de .bg-fx) */
+.bg-fx{background:var(--x-halo);}
+.bg-fx::before,.bg-fx::after{display:none;}
+
+/* En-tête global : logo + action (↻ sur le Bilan, Recettes ailleurs) — plus de carte, plus de sous-titre */
+header{background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;border-radius:0;
+  padding:0 0 0 calc(20px - .85rem);margin:-.6rem 0 .25rem;min-height:48px;}
+@media(min-width:480px){header{padding:0 0 0 calc(20px - 1.25rem);margin-bottom:.5rem;border-radius:0;}}
+.logo{font:italic 900 24px/1 'Saira',system-ui,sans-serif;letter-spacing:-.01em;}
+.logo em{background:var(--x-grad-hero);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;}
+.hdate{display:none;}
+.hdr-acts{display:flex;align-items:center;gap:.4rem;}
+.hdr-ib{appearance:none;-webkit-appearance:none;border:0;margin:0;padding:0;width:44px;height:44px;border-radius:22px;display:grid;place-items:center;
+  background:transparent;color:var(--mut);font:800 18px 'Manrope',system-ui,sans-serif;cursor:pointer;}
+.hdr-ib:active{background:var(--bl-press);transform:scale(.92);}
+.hdr-ib:focus-visible,.hdr-nutri:focus-visible{outline:2px solid var(--acc2);outline-offset:2px;}
+.hdr-nutri{min-height:40px;padding:0 14px;border-radius:var(--x-r-pill);background:var(--x-track);border:1px solid var(--x-line);box-shadow:none;
+  color:var(--txt);font:800 13px 'Manrope',system-ui,sans-serif;}
+body[data-view="sante"] .hdr-nutri{display:none;}
+body:not([data-view="sante"]) .hdr-ib{display:none;}
+
+/* La page Bilan occupe toute la largeur (gouttière 20 px propre au bl-) ; le fond vient de .bg-fx */
+#view-sante{margin:0 -.85rem;}
+@media(min-width:480px){#view-sante{margin:0 -1.25rem;}}
+#view-sante .bl-page{background:none;padding-bottom:0;min-height:0;}
+
+/* Les composants bl- rendus en <button> (et non en <a> comme la maquette) : remise à zéro */
+button.bl-hero__it,button.bl-sec__head,button.bl-nrow,button.bl-alert,button.bl-link{appearance:none;-webkit-appearance:none;margin:0;border-width:0;background:transparent;
+  font-family:inherit;color:inherit;text-align:left;width:100%;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+button.bl-hero__it{padding:4px 0;}
+button.bl-hero__it+button.bl-hero__it,.bl-hero__it+button.bl-hero__it,button.bl-hero__it+.bl-hero__it{padding-left:20px;border-left:1px solid var(--bl-line);}
+button.bl-sec__head{padding:0;}
+button.bl-nrow{padding:0;border-bottom:1px solid var(--bl-line);}
+button.bl-alert{padding:0 14px;font-size:15px;font-weight:800;}
+button.bl-alert+button.bl-alert{border-top:1px solid var(--bl-line);}
+button.bl-sec__link{appearance:none;border:0;background:transparent;font-family:inherit;cursor:pointer;}
+.bl-zone-ok{font-size:14px;color:var(--acc);margin-left:6px;}
+.bl-nrow__a{font:800 16px 'Manrope',sans-serif;font-style:normal;}
+.bl-ax--abs{position:relative;display:block;height:14px;}
+.bl-ax--abs span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap;}
+.bl-ax--abs span:first-child{transform:translateX(-30%);}
+.bl-ax--abs span:last-child{transform:translateX(-70%);}
+
+/* Écrans plein écran (espace Poids) et feuilles du bas, montés à la racine du <body> */
+.bl-overlay{position:fixed;inset:0;z-index:620;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;background:var(--bg);}
+.bl-overlay>.bl-page{min-height:100%;overflow:visible;} /* sinon .bl-page devient le conteneur de défilement et casse les sticky (en-tête, + Nouvelle pesée) */
+.bl-layer .bl-scrim{z-index:730;}
+.bl-layer .bl-sheet{z-index:731;}
+.bl-scrim.is-still,.bl-sheet.is-still{animation:none;}
+.bl-page-font{font-family:'Manrope',system-ui,sans-serif;color:var(--txt);}
+.bl-field{position:relative;}
+.bl-field__in{flex:1;min-width:0;height:100%;border:0;background:transparent;color:var(--txt);font:700 16px 'Manrope',system-ui,sans-serif;color-scheme:dark;}
+.bl-time__v{position:relative;}
+.bl-time__v input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px;}
+.bl-field:focus-within,.bl-time__v:focus-within{outline:2px solid var(--acc2);outline-offset:2px;}
+.bl-mel .slbl,.bl-mel .pv-refresh{display:none;}
+.bl-mel .pv-card{background:none;border:0;box-shadow:none;padding:0;margin:0;}
+@media (prefers-color-scheme: light){ .bl-field__in{color-scheme:light;} }
+.bl-btn--danger{color:var(--bg);}  /* sombre : texte foncé sur rouge clair · clair : texte blanc sur rouge foncé (≥ 5,6:1) */
+
+/* ══════════ B. Peau des écrans existants ══════════ */
+/* Barre d'onglets flottante (components.md) : composition inchangée, trait dégradé sous l'onglet actif */
+.bnav{width:228px;height:62px;padding:0;gap:0;display:grid;grid-template-columns:repeat(3,1fr);place-items:center;border-radius:31px;
+  background:var(--x-tab);border:1px solid var(--x-line);box-shadow:0 8px 24px rgba(0,0,0,.3);}
+.bni{width:100%;height:100%;justify-content:center;opacity:.5;}
+.bni-ico{font-size:24px;}
+.bni.active::after{content:"";position:absolute;bottom:9px;left:50%;width:18px;height:3px;margin-left:-9px;border-radius:2px;background:var(--x-grad);}
+@media (prefers-color-scheme: light){ .bnav{box-shadow:0 8px 24px rgba(16,40,70,.12);} }
+
+/* Pages Pas et Sommeil (steps.js / sleep.js, MASSUP seulement : .st-overlay-adrien) — grammaire Bilan (HANDOFF §2.3-2.4) :
+   en-tête plein écran, sections sans cartes séparées par des filets, chiffre choisi en dégradé, stats sans cartes. */
+.st-overlay-adrien{background:var(--bl-page);}
+.st-overlay-adrien .as-frame{display:none;}
+.st-overlay-adrien .as-body{padding:0;}
+.st-overlay-adrien .as-hdr.st-header{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;gap:8px;align-items:center;margin:0;
+  padding:calc(10px + env(safe-area-inset-top)) 12px 10px;background:var(--bl-top);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-bottom:1px solid var(--bl-line);}
+.st-overlay-adrien .st-exit,.st-overlay-adrien .st-header .as-hbtn{width:44px;height:44px;border:0;border-radius:22px;background:var(--x-track);box-shadow:none;color:var(--txt);font:800 18px 'Manrope',sans-serif;}
+.st-overlay-adrien .as-hdr-title{font:italic 900 20px/1 'Saira',sans-serif;}
+.st-overlay-adrien .as-hdr-sub{font-size:12px;font-weight:700;color:var(--mut);margin-top:4px;}
+.st-overlay-adrien .as-scroll{padding:0 0 calc(6.5rem + env(safe-area-inset-bottom));}
+.st-overlay-adrien .wn-card{background:none;border:0;border-radius:0;box-shadow:none;margin:0;padding:22px 20px;}
+.st-overlay-adrien .wn-card+.wn-card,.st-overlay-adrien .wn-card+details,.st-overlay-adrien details+details{border-top:1px solid var(--bl-line);}
+.st-overlay-adrien .wn-title{font:italic 900 18px/1.1 'Saira',sans-serif;color:var(--txt);text-transform:none;letter-spacing:0;display:flex;align-items:center;gap:10px;}
+.st-overlay-adrien .wn-title:before{content:"";width:4px;height:14px;border-radius:1px;background:var(--x-slash);transform:skewX(-16deg);flex:none;}
+/* Segment Jour | Semaine | Mois | An */
+.st-overlay-adrien .st-rng{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:0;padding:3px;border-radius:12px;background:var(--x-track);width:100%;}
+.st-overlay-adrien .st-rng button{min-height:44px;border:0;border-radius:9px;background:transparent;color:var(--mut);font:700 13px 'Manrope',sans-serif;}
+.st-overlay-adrien .st-rng button.on{background:var(--x-seg-on);color:var(--txt);box-shadow:0 1px 4px rgba(0,0,0,.25);}
+.st-overlay-adrien .st-chart-nav{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;text-align:center;margin:12px 0 0;}
+.st-overlay-adrien .st-chart-nav span{font-size:14px;font-weight:800;color:var(--txt);}
+.st-overlay-adrien .st-chart-nav button{width:44px;height:44px;border:0;background:transparent;color:var(--mut);font:800 18px 'Manrope',sans-serif;}
+.st-overlay-adrien .st-chart-nav button:disabled{visibility:hidden;}
+/* Chiffre du jour (ou de la nuit) choisi : héros en dégradé */
+.st-overlay-adrien .st-chart-detail{padding:18px 0 6px;}
+.st-overlay-adrien .st-chart-detail strong,.st-overlay-adrien .slp-hero .slp-v{font:italic 900 72px/1 'Saira',sans-serif;letter-spacing:-.01em;
+  background-image:var(--x-grad-hero);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;}
+.st-overlay-adrien .st-chart-detail>span{font:italic 900 22px 'Saira',sans-serif;color:var(--mut);}
+.st-overlay-adrien .st-chart-detail small,.st-overlay-adrien .slp-hero>span,.st-overlay-adrien .slp-hero>small{font-size:13px;font-weight:700;color:var(--mut);}
+/* Total de la période : ligne simple, sans boîte */
+.st-overlay-adrien .st-period-total{background:none;border:0;border-top:1px solid var(--bl-line);border-bottom:1px solid var(--bl-line);border-radius:0;padding:12px 0;margin:6px 0 10px;}
+.st-overlay-adrien .st-period-total span{font-size:13px;font-weight:700;color:var(--mut);}
+.st-overlay-adrien .st-period-total strong{font:italic 900 24px 'Saira',sans-serif;color:var(--txt);}
+/* Stats : 2 colonnes sans cartes, filet vertical ; le texte reste en jetons de texte (la couleur d'état vit dans les barres) */
+.st-overlay-adrien .st-grid{gap:22px 0;margin-top:22px;}
+.st-overlay-adrien .st-grid>div{background:none;border:0;border-radius:0;padding:0 0 0 18px;gap:6px;}
+.st-overlay-adrien .st-grid>div:nth-child(odd){padding-left:0;padding-right:18px;border-right:1px solid var(--bl-line);}
+.st-overlay-adrien .st-grid b{font-size:24px;color:var(--txt);}
+.st-overlay-adrien .st-grid b[class^="t-"]{color:var(--txt);}
+.st-overlay-adrien .st-grid small{font-size:12px;}
+/* Barres touchables : sélection = contour 2 px --txt */
+.st-overlay-adrien .st-point-track{background:var(--x-track);}
+.st-overlay-adrien .st-point-track i{box-shadow:none;border-radius:6px 6px 2px 2px;}
+.st-overlay-adrien .st-point.selected .st-point-track{box-shadow:none;outline:2px solid var(--txt);outline-offset:2px;}
+.st-overlay-adrien .st-point.selected .st-point-label,.st-overlay-adrien .st-point.selected .st-point-val{color:var(--txt);}
+.st-overlay-adrien .st-point-label{font-size:11px;color:var(--mut);}
+.st-overlay-adrien .st-chart-foot,.st-overlay-adrien .slp-zone-cap{font-size:12px;font-weight:700;color:var(--mut);}
+/* Sommeil : pastille d'état et moyenne */
+.st-overlay-adrien .slp-hero-top{display:flex;align-items:center;flex-wrap:wrap;gap:12px;}
+.st-overlay-adrien .slp-badge{display:inline-flex;align-items:center;height:28px;padding:0 12px;border-radius:14px;background:var(--x-grad-fill);color:var(--x-on-grad);font:800 12px 'Manrope',sans-serif;border:0;}
+.st-overlay-adrien .slp-badge:not(.good){background:transparent;border:1px solid currentColor;color:var(--red);}
+.st-overlay-adrien .slp-gl em{font-size:11px;font-weight:700;color:var(--mut);}
+/* Volets repliés (Activité Santé, Saisie à la main, Modifier une nuit) */
+.st-overlay-adrien details.wn-card{opacity:1;background:none;padding:0 20px;}
+.st-overlay-adrien details.wn-card>summary{min-height:60px;display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800;color:var(--txt);}
+.st-overlay-adrien details.wn-card>summary small{font-size:12px;color:var(--mut);}
+.st-overlay-adrien details.wn-card>summary::after{margin-left:auto;color:var(--mut);}
+.st-overlay-adrien details.wn-card[open]{padding-bottom:20px;}
+.st-overlay-adrien .st-sync-error{margin:16px 20px;padding:12px 14px;border-radius:14px;background:var(--x-red-10);border:1px solid var(--x-red-50);color:var(--red);font-size:13px;font-weight:800;}
+@media (prefers-color-scheme: light){ .st-overlay-adrien .st-rng button.on{box-shadow:0 1px 4px rgba(16,40,70,.14);} }
+
+/* Toast : feuille sombre / blanche, au-dessus des overlays */
+.toast{background:var(--x-sheet);border:1px solid var(--x-line);box-shadow:var(--x-shadow-card);border-radius:14px;font-size:14px;font-weight:700;z-index:760;}
+
+/* Titres de section en micro majuscules (« CHOISIR UNE SÉANCE », « CALENDRIER »…) : le trait incliné de la DA */
+.slbl{display:flex;align-items:center;gap:8px;font-family:'Manrope',system-ui,sans-serif;font-style:normal;font-size:11px;font-weight:800;letter-spacing:.1em;color:var(--mut);}
+.slbl:before{content:"";width:4px;height:13px;border-radius:1px;background:var(--x-slash);transform:skewX(-16deg);flex:none;}
+
+/* Compteur de la semaine x/5 (Séances) : chiffre-héros en dégradé */
+.ggc-num{background-image:var(--x-grad-hero);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;}
+
+/* Cartes « Choisir une séance » : verre teinté en sombre, aplat vif en clair (titre --x-sess-title) */
+.sc{min-height:96px;padding:14px;border-radius:var(--x-r-lg);}
+.palette-sober .sc[data-t=push]{background:var(--x-sess-push);border-color:var(--x-push-45);}
+.palette-sober .sc[data-t=pull],.palette-sober .sc[data-t=pull2]{background:var(--x-sess-pull);border-color:var(--x-pull-45);}
+.palette-sober .sc[data-t=legs]{background:var(--x-sess-legs);border-color:var(--x-legs-45);}
+.palette-sober .sc[data-t=others],.palette-sober .sc[data-t=bonus]{background:var(--x-sess-maison);border-color:var(--x-maison-45);}
+.palette-sober .sc[data-t=push] .sc-name{color:var(--x-sess-title,var(--push));}
+.palette-sober .sc[data-t=pull] .sc-name,.palette-sober .sc[data-t=pull2] .sc-name{color:var(--x-sess-title,var(--pull));}
+.palette-sober .sc[data-t=legs] .sc-name{color:var(--x-sess-title,var(--legs));}
+.palette-sober .sc[data-t=others] .sc-name,.palette-sober .sc[data-t=bonus] .sc-name{color:var(--x-sess-title,var(--maison));}
+.palette-sober .sc[data-t] .sc-sub{color:var(--x-sess-sub,var(--mut));}
+.sc .sc-name{font-size:1.15rem;font-weight:900;}
+@media (prefers-color-scheme: light){ .palette-sober .sc[data-t]{border-color:transparent;box-shadow:var(--x-shadow-card);} }
+
+/* Échelle de note v5 commune à toute l'app (note20Cls : n-red < 8 · n-orange 8-11,5 · n-green 12-13,5 · n-blue 14-17,5 · n-gold ≥ 18) */
+.n-red,.bn-hero-note.n-red .bn-hero-v,.wr-note20.n-red .wr-note20-v,.hc-pts-v.n-red,.wr-hero-num.n-red .wr-hero-v,.wr-se-note.n-red{color:var(--x-note-1);}
+.n-orange,.bn-hero-note.n-orange .bn-hero-v,.wr-note20.n-orange .wr-note20-v,.hc-pts-v.n-orange,.wr-hero-num.n-orange .wr-hero-v,.wr-se-note.n-orange{color:var(--x-note-2);}
+.n-green,.bn-hero-note.n-green .bn-hero-v,.wr-note20.n-green .wr-note20-v,.hc-pts-v.n-green,.wr-hero-num.n-green .wr-hero-v,.wr-se-note.n-green{color:var(--x-note-3);}
+.n-blue,.bn-hero-note.n-blue .bn-hero-v,.wr-note20.n-blue .wr-note20-v,.hc-pts-v.n-blue,.wr-hero-num.n-blue .wr-hero-v,.wr-se-note.n-blue{background:none;-webkit-text-fill-color:currentColor;color:var(--x-note-4);filter:none;}
+.n-gold,.bn-hero-note.n-gold .bn-hero-v,.wr-note20.n-gold .wr-note20-v,.hc-pts-v.n-gold,.wr-hero-num.n-gold .wr-hero-v,.wr-se-note.n-gold{background-image:var(--x-grad-gold);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;filter:none;}
+.bn-hero-bar i.n-red{background:var(--x-note-1);} .bn-hero-bar i.n-orange{background:var(--x-note-2);} .bn-hero-bar i.n-green{background:var(--x-note-3);}
+.bn-hero-bar i.n-blue{background:var(--x-note-4);} .bn-hero-bar i.n-gold{background:var(--x-grad-gold);}
+.as-grade-wrap.g-top .as-grade-num{background-image:var(--x-grad-gold);}
+
+/* ══ Mode Séance (peau seulement, composition inchangée) ══
+   Cadre STATIQUE à la couleur de la séance (plus de conic qui tourne : règle batterie) + halo radial en haut.
+   La couleur passe par --sess-c : séance (as-t-*), repos inter-exo (jaune), puis la note du bilan (as-mood-*). */
+.as-overlay{--sess-c:var(--acc);}
+.as-overlay.as-t-push{--sess-c:var(--push);} .as-overlay.as-t-pull{--sess-c:var(--pull);}
+.as-overlay.as-t-legs{--sess-c:var(--legs);} .as-overlay.as-t-maison{--sess-c:var(--maison);}
+.as-overlay.as-exorest{--sess-c:var(--yellow);}
+.as-overlay.as-mood-bad{--sess-c:var(--x-note-1);} .as-overlay.as-mood-mid{--sess-c:var(--x-note-2);} .as-overlay.as-mood-ok{--sess-c:var(--x-note-3);}
+.as-overlay.as-mood-good{--sess-c:var(--x-note-4);} .as-overlay.as-mood-top{--sess-c:var(--x-note-5);}
+.as-overlay .as-frame,.as-overlay.as-exorest .as-frame,.as-overlay[class*="as-mood-"] .as-frame{animation:none;opacity:1;
+  box-shadow:inset 0 0 0 var(--x-frame-w) var(--sess-c),inset 0 0 60px color-mix(in srgb,var(--sess-c) 26%,transparent);}
+.as-overlay .as-frame::before{display:none;animation:none;}
+#asOverlay{background:radial-gradient(110% 48% at 50% 0%,color-mix(in srgb,var(--sess-c) 20%,transparent),transparent 72%),var(--bg);}
+#asOverlay.as-exorest{background:radial-gradient(110% 48% at 50% 0%,color-mix(in srgb,var(--sess-c) 14%,transparent),transparent 72%),var(--bg);}
+/* Chiffre de série en dégradé · bouton principal avec halo · anneau de repos à la couleur de la séance */
+.as-serie-num{font-weight:900;}
+.as-serie-num b{font-weight:inherit;background-image:var(--x-grad-hero);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;}
+.as-bigdone{background:var(--x-grad);color:var(--x-on-grad);box-shadow:var(--x-glow-cta);font-weight:900;}
+.as-cta,.as-cta-go{background:var(--x-grad);color:var(--x-on-grad);box-shadow:var(--x-glow-cta);}
+#as-ring-fg{filter:drop-shadow(0 0 10px var(--sess-c));}
+.as-grade-num{font-weight:900;}
+@media (prefers-color-scheme: light){ .as-start-ico,.as-cta,.as-bigdone{color:var(--x-on-grad);} }
+
+/* Aucune animation infinie (règle batterie DA) : les anciennes pulsations s'arrêtent */
+.rt-circle.urgent circle.fg{animation:none;}
+@media (prefers-reduced-motion: reduce){ *{animation:none !important;transition:none !important;} }
+.slbl.slbl-toggle{justify-content:flex-start;}
+.slbl.slbl-toggle .toggle-arr{margin-left:auto;}
+/* Module Recettes (DA « Cuisine Bento », non redessiné) : il garde le gris secondaire d'avant en clair —
+   le --mut DA (.60) tombe à 4,3:1 sur ses fonds pêche. */
+@media (prefers-color-scheme: light){ #nutria{--mut:rgba(14,17,23,0.66);} }

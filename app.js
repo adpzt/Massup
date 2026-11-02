@@ -1158,6 +1158,7 @@ function setHeader(){
 }
 
 function updateHeaderCtx(view){
+  try{ document.body.setAttribute('data-view',view); }catch(e){} // en-tête DA : ↻ sur le Bilan, Recettes ailleurs
   var el=document.getElementById('hdate'); if(!el) return;
   var d=getNow();
   var days=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
@@ -1474,9 +1475,12 @@ function liveLogNote20(l){
 }
 // Échelle de couleurs des notes /20 (15/08, demande Adrien) :
 // ≥18 = GOLD · 14-17 = bleu dynamique MASSUP · 11-13 = vert · 8-10 = orange · <8 = rouge
+// Échelle de couleur v5 (DA Graphite Énergie, 02/11/2026 — décision Adrien « 5 couleurs ») : < 8 rouge sang ·
+// 8-11,5 rouge · 12-13,5 gris · 14-17,5 bleu · ≥ 18 gold. Les noms de classe historiques restent (n-red = rouge sang,
+// n-orange = rouge, n-green = gris) : les couleurs viennent de --x-note-1..5 (da.css). Affichage seulement : aucune note ne change.
 function note20Cls(n){
   if(n==null) return '';
-  return n>=18?'n-gold':n>=14?'n-blue':n>=11?'n-green':n>=8?'n-orange':'n-red';
+  return n>=18?'n-gold':n>=14?'n-blue':n>=12?'n-green':n>=8?'n-orange':'n-red';
 }
 // Exos qui NOTENT le /20 (règle Adrien 02/08) : les PRINCIPAUX uniquement — les bonus rapportent
 // des points mais n'entrent jamais dans la note de séance (ni en bien ni en mal).
@@ -3053,21 +3057,12 @@ function getWeekStreak(){
 }
 
 function renderSante(){
-  try{ renderWeeklyRecapWidget(); }catch(e){}
-  try{ renderBilanProfile(); }catch(e){}
-  try{ renderBilanWeekNut(); }catch(e){}
-  try{ if(typeof STEPS!=='undefined') STEPS.renderCard(); }catch(e){ console.warn('[MASSUP] STEPS:',e); }
-  try{ if(typeof INTAKE!=='undefined') INTAKE.renderCard(); }catch(e){ console.warn('[MASSUP] INTAKE:',e); }
-  try{ if(typeof SLEEP!=='undefined') SLEEP.renderCard(); }catch(e){ console.warn('[MASSUP] SLEEP:',e); }
-  try{ renderBilanNotes(); }catch(e){ console.warn('[MASSUP] renderBilanNotes:',e); }
-  try{ renderBilanRank(); }catch(e){ console.warn('[MASSUP] renderBilanRank:',e); }
-  renderBilanHero();
-  try{ renderBilanWeightStats(); }catch(e){ console.warn('[MASSUP] renderBilanWeightStats:',e); }
-  renderSanteChart();
-  renderSanteHisto();
-  try{ renderBodyMeas(); }catch(e){ console.warn('[MASSUP] renderBodyMeas:',e); }
-  // « Nous deux » (26/08) : progression de Melati en lecture seule + petit mot, tout en bas
-  try{ if(typeof PV!=='undefined'){ PV.render(); PV.pull(false); } }catch(e){ console.warn('[MASSUP] PV:',e); }
+  // DA Graphite Énergie (02/11/2026) : toute la page Bilan est rendue par bilan.js (BILAN.render),
+  // sans cartes. Les anciens blocs (carte profil, tuiles, courbe Chart.js, historique, mensurations) sont débranchés.
+  try{ BILAN.render(); }catch(e){ console.warn('[MASSUP] BILAN:',e); }
+  try{ if(typeof STEPS!=='undefined') STEPS.pull(false); }catch(e){}
+  try{ if(typeof INTAKE!=='undefined') INTAKE.pull(false); }catch(e){}
+  try{ if(typeof PV!=='undefined') PV.pull(false); }catch(e){}
 }
 
 // Graphique d'évolution du poids de corps (seule métrique de référence du Bilan)
@@ -5363,7 +5358,7 @@ function asShowOverlay(){
   }
 }
 function asHideOverlay(){
-  var ov=document.getElementById('asOverlay'); if(ov){ ov.classList.remove('open','as-exorest','as-mood-bad','as-mood-mid','as-mood-good','as-mood-top'); }
+  var ov=document.getElementById('asOverlay'); if(ov){ ov.classList.remove('open','as-exorest','as-mood-bad','as-mood-mid','as-mood-ok','as-mood-good','as-mood-top'); }
   document.body.style.overflow='';
 }
 function asMinimize(){ asHideOverlay(); asRenderBubble(); }
@@ -5390,7 +5385,7 @@ function asMoodClass(){
   if(AS.step!=='report') return '';
   if(!liveNotedExos(AS.exos).length||AS.sid==='sm') return ''; // cardio seul / routine maison (19/10) : pas de note
   var g=asGlobalScore();
-  return g<7?'as-mood-bad':g<11?'as-mood-mid':g<15?'':g<18?'as-mood-good':'as-mood-top';
+  return g<8?'as-mood-bad':g<12?'as-mood-mid':g<14?'as-mood-ok':g<18?'as-mood-good':'as-mood-top';
 }
 function asRender(){
   var body=document.getElementById('asBody'); if(!body||!AS) return;
@@ -5415,8 +5410,12 @@ function asRender(){
   if(AS.step==='report') animCountUpAll(body); // chiffres qui montent sur le bilan
   var ov=document.getElementById('asOverlay');
   if(ov){
-    ov.classList.remove('as-exorest','as-mood-bad','as-mood-mid','as-mood-good','as-mood-top');
+    ov.classList.remove('as-exorest','as-mood-bad','as-mood-mid','as-mood-ok','as-mood-good','as-mood-top','as-t-push','as-t-pull','as-t-legs','as-t-maison');
     if(AS.step==='exo'&&AS.phase==='exorest') ov.classList.add('as-exorest');
+    // DA (02/11) : le cadre et le halo prennent la couleur de la séance (da.css)
+    var _sd=null; try{ _sd=DATA.find(function(x){ return x.id===AS.sid; }); }catch(e){}
+    var _ty=_sd?_sd.t:(AS.sid==='sm'?'maison':''); _ty=_ty==='pull2'?'pull':(_ty==='others'||_ty==='bonus')?'maison':_ty;
+    if(['push','pull','legs','maison'].indexOf(_ty)>=0) ov.classList.add('as-t-'+_ty);
     var mc=asMoodClass(); if(mc) ov.classList.add(mc);
   }
   asRenderBubble();
@@ -6350,13 +6349,13 @@ function asRenderWork(x){
   if(x.evo&&!x.bonusMode) h+='<div class="as-evo-chip">&#x26A1; &#xC9;volution '+x.evo.from+'&#x2192;'+x.evo.to+' '+x.unite+' &#xB7; plan '+asEvoPlanStr(x)+'</div>';
   if(x.bonusMode){
     var bn=x.sets.length-(x.bonusFrom!=null?x.bonusFrom:x.n)+1;
-    h+='<div class="as-serie-big"><span class="as-serie-lbl" style="color:var(--yellow)">S&#xC9;RIE BONUS</span><span class="as-serie-num">'+Math.max(1,bn)+'</span>'
+    h+='<div class="as-serie-big"><span class="as-serie-lbl" style="color:var(--yellow)">S&#xC9;RIE BONUS</span><span class="as-serie-num"><b>'+Math.max(1,bn)+'</b></span>'
       +'<span class="as-serie-target">volume gratuit &#xB7; <span id="as-wchip">'+x.weight+' '+x.unite+'</span></span></div>';
   } else {
     // Exo « repTarget » compté dans son unité de charge (cardio en min) : objectif et chip diraient
     // deux fois la même chose (« objectif 20 min · 20 min ») → on n'en affiche qu'un.
     var _same=x.repT&&cntU(x)===x.unite;
-    h+='<div class="as-serie-big"><span class="as-serie-lbl">S&#xC9;RIE</span><span class="as-serie-num">'+AS.setIdx+'<em>/'+x.n+'</em></span>'
+    h+='<div class="as-serie-big"><span class="as-serie-lbl">S&#xC9;RIE</span><span class="as-serie-num"><b>'+AS.setIdx+'</b><em>/'+x.n+'</em></span>'
       +'<span class="as-serie-target">objectif <strong class="as-target-reps">'+(x.rHi?(AS.setIdx>=x.n?'max ('+x.rHi+'+)':fsRangeStr(x)+' reps'):cntFmt(x,x.reps))+'</strong>'+(x.uni?' par c&#xF4;t&#xE9;':'')
       +(_same?'<span id="as-wchip" hidden></span>':' &#xB7; <span id="as-wchip">'+x.weight+' '+x.unite+'</span>')+'</span></div>';
     h+=fsGoalHtml(x,AS.setIdx);
@@ -6586,8 +6585,8 @@ function asRenderRest(x,inter){
     var lastGood=x.sets.length&&x.sets.every(function(s){return !setHardFail(s,x.reps);});
     h+='<div class="as-between-msg">'+asPick(lastGood?AS_BETWEEN_GOOD:AS_BETWEEN_ROUGH)+'</div>';
   }
-  h+='<div class="as-ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="7"/>'
-    +'<circle id="as-ring-fg" cx="60" cy="60" r="54" fill="none" stroke="'+(inter?'var(--yellow)':'var(--acc)')+'" stroke-width="7" stroke-linecap="round" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+(AS.restTotal?(C*(1-rem/AS.restTotal)).toFixed(1):0)+'" transform="rotate(-90 60 60)"/></svg>'
+  h+='<div class="as-ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" fill="none" stroke="var(--x-track)" stroke-width="7"/>'
+    +'<circle id="as-ring-fg" cx="60" cy="60" r="54" fill="none" stroke="'+(inter?'var(--yellow)':'var(--sess-c,var(--acc))')+'" stroke-width="7" stroke-linecap="round" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+(AS.restTotal?(C*(1-rem/AS.restTotal)).toFixed(1):0)+'" transform="rotate(-90 60 60)"/></svg>'
     +'<div class="as-ring-center"><div class="as-ring-time" id="as-rest-time">'+formatTime(rem)+'</div><div class="as-ring-sub">'+(inter&&nxt?'ensuite&#x202F;:':'prochaine s&#xE9;rie')+'</div></div></div>';
   if(inter&&nxt) h+='<div class="as-next-exo">&#x1F449; '+nxt.name+'</div>';
   else if(!inter) h+='<div class="as-next-exo dim">'+(x.bonusMode?'S&#xE9;rie bonus':'S&#xE9;rie '+AS.setIdx+'/'+x.n)+' &#xB7; '+x.weight+' '+x.unite+'</div>';
@@ -7470,9 +7469,10 @@ function asGlobalScore(){
   return asNote20From(AS.exos);
 }
 function asGradeInfo(g){
-  if(g<7) return {cls:'bad',emoji:'&#x1F62B;',title:'Tr&#xE8;s mauvaise s&#xE9;ance',anim:'shake'};
-  if(g<11) return {cls:'mid',emoji:'&#x1F610;',title:'S&#xE9;ance en demi-teinte',anim:'none'};
-  if(g<15) return {cls:'ok',emoji:'&#x1F44D;',title:'S&#xE9;ance correcte',anim:'pop'};
+  // Paliers v5 (02/11) : < 8 · 8-11,5 · 12-13,5 · 14-17,5 · ≥ 18 — mêmes couleurs que toute l'app (--x-note-1..5)
+  if(g<8) return {cls:'bad',emoji:'&#x1F62B;',title:'Tr&#xE8;s mauvaise s&#xE9;ance',anim:'shake'};
+  if(g<12) return {cls:'mid',emoji:'&#x1F610;',title:'S&#xE9;ance en demi-teinte',anim:'none'};
+  if(g<14) return {cls:'ok',emoji:'&#x1F44D;',title:'S&#xE9;ance correcte',anim:'pop'};
   if(g<18) return {cls:'good',emoji:'&#x1F4AA;',title:'Tr&#xE8;s bonne s&#xE9;ance',anim:'bounce'};
   return {cls:'top',emoji:'&#x1F3C6;',title:'S&#xE9;ance de champion',anim:'bounce'};
 }
@@ -10466,6 +10466,7 @@ function wrPendingWeek(){
   return answered?null:target;
 }
 function renderWeeklyRecapWidget(){
+  if(!document.getElementById('weeklyRecapWidget')){ try{ BILAN.render(); }catch(e){} return; } // page Bilan v6 (bilan.js)
   var el=document.getElementById('weeklyRecapWidget'); if(!el) return;
   var h='';
   // (12/10) Abonnement push perdu, pas réparable sans un tap : on le dit en haut du Bilan
@@ -10551,6 +10552,7 @@ function runWeekAuto(monday){
   return (DB.logs||[]).filter(function(l){ return l.date>=monday&&l.date<=end&&cardioLogHasRun(l); }).length;
 }
 function renderBilanWeekNut(){
+  if(!document.getElementById('bilanWeekNut')){ try{ BILAN.render(); }catch(e){} return; } // page Bilan v6 (bilan.js)
   var el=document.getElementById('bilanWeekNut'); if(!el) return;
   var monday=rankMonday(todayStr());
   var o=nutObjectives(monday); // v3 (12/10) : plat maison obj 10/14 · shaker obj 7 · courir obj 1
@@ -10660,6 +10662,7 @@ function bilanNoteMonth(mk){
 var _bnMore=false;
 function bnToggleMore(){ _bnMore=!_bnMore; renderBilanNotes(); }
 function renderBilanNotes(){
+  if(!document.getElementById('bilanNotes')){ try{ BILAN.render(); }catch(e){} return; } // page Bilan v6 (bilan.js)
   var el=document.getElementById('bilanNotes'); if(!el) return;
   var today=todayStr();
   var curWs=rankMonday(today);
