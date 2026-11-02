@@ -113,7 +113,10 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ ok: false, error: 'méthode non autorisée' });
   }
   try {
-    const rows = parseRows(await readRaw(req)).slice(0, 20000);
+    // Une pesée à 0 = jour sans pesée rempli par « Fichier manquant » : jamais enregistrée (02/11)
+    const rows = parseRows(await readRaw(req)).filter(function (r) {
+      return !/^bw_/.test(r.k) || parseFloat(String(r.v).replace(/[^0-9,.]/g, '').replace(',', '.')) > 0;
+    }).slice(0, 20000);
     if (!rows.length) return res.status(400).json({ ok: false, saved: 0, error: 'aucune ligne lisible' });
     // Envoi par paquets de 2 000 lignes (import d'une année de nutrition)
     let saved = 0;

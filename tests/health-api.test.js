@@ -116,5 +116,9 @@ test("POST accepte la nutrition Yazio et la pesée Renpho (02/11), par paquets, 
   const res2 = response();
   await handler(request("POST", "2026-11-01;steps;7432\n2026-11-01;nu_kcal;7432"), res2);
   assert.match(res2.body.attention[0], /les pas du jour/);
+  batches.length = 0;
+  const res3 = response();
+  await handler(request("POST", "2026-11-01;bw_kg;0\n2026-10-31;bw_kg;74,1"), res3);
+  assert.deepEqual(res3.body.recu, ["bw_kg : 1 j · moy. 74,1"], "une pesée à 0 est ignorée");
   assert.deepEqual(res.body.attention, []);
 });
