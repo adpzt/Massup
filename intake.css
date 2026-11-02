@@ -24,4 +24,54 @@ button.bl-mrow--btn:active{background:var(--bl-press);}
 .bl-pick:focus-within{outline:2px solid var(--acc2);outline-offset:2px;}
 .bl-seg--sm button{min-height:38px;font-size:12px;}
 .bl-bars__b.is-gap i{height:0 !important;}
-.in-day{border-top:1px solid var(--bl-line);margin-top:18px;}
+
+/* v3 (02/11 soir) — détail du jour : la mesure choisie en gros (+ kcal à droite), puis 4 carrés compacts.
+   Le 1er carré = la mesure choisie, en dégradé de sa couleur qui brille. Journée « pas bien » = touche rouge. */
+.in-day{margin-top:16px;padding-top:14px;border-top:1px solid var(--bl-line);}
+.in-day__h{display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:10px;}
+.in-day__v{font-size:34px;margin-top:6px;}
+.in-day__k{display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-size:11px;font-weight:800;color:var(--mut);}
+.in-day__k b{font-size:20px;color:var(--txt);}
+.in-sqs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px;}
+.in-sq{position:relative;min-width:0;padding:10px 12px 12px;border-radius:14px;background:var(--x-track);border:1px solid var(--bl-line);}
+.in-sq__n{display:block;font-size:11px;font-weight:800;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.in-sq__n em{font-style:normal;color:var(--red);}
+.in-sq__n em.ok{color:var(--acc);}
+.in-sq b{display:block;margin-top:6px;font-size:22px;color:var(--txt);}
+.in-sq__t{display:block;position:relative;height:5px;margin-top:8px;border-radius:3px;background:var(--x-track);overflow:hidden;}
+.in-sq__t>i{position:absolute;inset:0 auto 0 0;border-radius:inherit;background:var(--c);}
+.in-sq__t>i.is-warn{background:var(--yellow);}
+.in-sq.is-main{background:linear-gradient(140deg,color-mix(in srgb,var(--c) 34%,transparent),color-mix(in srgb,var(--c) 8%,transparent));
+  border-color:color-mix(in srgb,var(--c) 60%,transparent);box-shadow:0 0 22px color-mix(in srgb,var(--c) 30%,transparent),inset 0 1px 0 rgba(255,255,255,.12);}
+.in-sq.is-main .in-sq__n{color:var(--txt);}
+.in-sq.is-main b{font-size:26px;}
+.in-sq--bad{border-color:var(--x-red-50);box-shadow:inset 3px 0 0 var(--red);}
+.in-sq--bad.is-main{box-shadow:0 0 22px color-mix(in srgb,var(--c) 30%,transparent),inset 3px 0 0 var(--red);}
+.in-day__mic{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 14px;margin-top:12px;font-size:12px;font-weight:700;color:var(--mut);}
+.in-day__mic b{color:var(--txt);}
+.in-day__mic .bl-warn b{color:inherit;}
+/* Bloc du bas : les 15 derniers jours en une carte compacte (autre design que le détail du jour) */
+.in-f{padding:14px 16px 6px;border-radius:var(--x-r-lg);background:var(--x-glass);border:1px solid var(--gb);box-shadow:var(--x-inset);}
+.in-f__h{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:32px;}
+.in-f__k{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:8px;}
+.in-f__k b{font-size:32px;}
+.in-f__k span{font-size:11px;font-weight:800;white-space:nowrap;}
+.in-f .bl-trk{margin-top:8px;}
+.in-f__ms{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px;}
+.in-f__m{min-width:0;}
+.in-f__m>span{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:var(--mut);white-space:nowrap;}
+.in-f__m b{display:block;margin-top:4px;font-size:20px;}
+.in-f__m .in-sq__t>i{background:var(--c,var(--acc));}
+.in-f__rest{margin-top:12px;border-top:1px solid var(--bl-line);}
+.in-f__rest button{appearance:none;display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:36px;padding:0;border:0;
+  border-bottom:1px solid var(--bl-line);background:none;color:var(--txt);font:700 12px 'Manrope',sans-serif;text-align:left;cursor:pointer;}
+.in-f__rest button:last-child{border-bottom:0;}
+.in-f__rest b{font:italic 900 14px 'Saira',sans-serif;white-space:nowrap;}
+.in-f__rest small{font:700 10px 'Manrope',sans-serif;color:var(--mut);}
+@media (prefers-color-scheme: light){
+  .in-sq.is-main{box-shadow:0 6px 18px color-mix(in srgb,var(--c) 24%,transparent);}
+  .in-sq--bad.is-main{box-shadow:0 6px 18px color-mix(in srgb,var(--c) 24%,transparent),inset 3px 0 0 var(--red);}
+  .in-f{box-shadow:var(--x-shadow-card);}
+}
+.in-sq.is-main .in-sq__n em.ok{color:var(--txt);} /* sur le dégradé, le ✓ vert tombait sous 4,5:1 en clair */
+@media (prefers-color-scheme: light){ .in-sq__n em.ok{color:var(--txt);} }

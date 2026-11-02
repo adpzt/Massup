@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>MASSUP</title>
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#0B0D12">
@@ -239,6 +239,9 @@
   <button class="bni" onclick="switchView('nutrition',this)"><span class="bni-ico">&#x1F957;</span><span class="bni-lbl">Nutrition</span></button> -->
 </nav>
 <script>
+// Pas de zoom (02/11, demande d'Adrien : « double-cliquer zoome, c'est chiant ») : Safari iOS ignore user-scalable=no,
+// donc on bloque aussi le pincement (gesturestart) ; le double toucher est coupé par touch-action (da.css).
+['gesturestart','gesturechange','gestureend'].forEach(function(t){ document.addEventListener(t,function(e){ e.preventDefault(); },{passive:false}); });
 if('serviceWorker' in navigator){
   window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js');});
 }

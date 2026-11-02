@@ -229,3 +229,5 @@ button.bl-sec__link{appearance:none;border:0;background:transparent;font-family:
 .bl-notes .bl-nrow{min-height:48px;}
 .bl-notes .bl-nrow__n{font-size:13px;}
 .bl-notes .bl-nrow__v{font-size:19px;}
+/* Pas de zoom au double toucher ni au pincement (02/11) : html et body n'autorisent que le défilement */
+*,html,body{touch-action:pan-x pan-y;} /* « manipulation » (style.css) laissait le pincement dans les zones qui défilent */

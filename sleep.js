@@ -155,14 +155,12 @@ var SLEEP=(function(){
     var beds=items.map(function(x){ return rel(x.data.bed); }), bedAvg=beds.reduce(function(a,v){ return a+v; },0)/beds.length;
     var wakeAvg=items.reduce(function(a,x){ return a+rel(x.data.bed)+x.minutes; },0)/items.length;
     var spread=Math.round(Math.sqrt(beds.reduce(function(a,v){ return a+(v-bedAvg)*(v-bedAvg); },0)/beds.length));
-    var avgMin=Math.round(items.reduce(function(a,x){ return a+x.minutes; },0)/items.length), short=items.filter(function(x){ return x.minutes<420; }).length;
-    var row=function(l,v,sub){ return '<div class="slp-adv-r"><span>'+l+(sub?'<small>'+sub+'</small>':'')+'</span><b>'+v+'</b></div>'; };
-    return '<div class="wn-card slp-advice"><div class="wn-title">Ton rythme</div><p class="slp-adv-sub">'+items.length+' dernières nuits · moyenne '+fmtDuration(avgMin)+(short?' · '+short+' sous 7 h':'')+'</p>'
-      +row('Pour te lever à '+hhmm(wakeAvg),hhmm(wakeAvg-465),'couche-toi vers · 5 cycles (7 h 30)')
-      +row('Pour une grosse récup',hhmm(wakeAvg-555),'couche-toi vers · 6 cycles (9 h)')
-      +row('Couché à '+hhmm(bedAvg)+', réveil idéal',hhmm(bedAvg+465),'fin du 5e cycle')
-      +row('Réveil au plus tard',hhmm(bedAvg+555),'fin du 6e cycle')
-      +row('Régularité du coucher','± '+spread+' min',spread<=30?'✓ régulier':'vise ± 30 min')
+    // v2 (02/11, Adrien : « plus simple, je suis un peu perdu ») : DEUX heures à retenir + une ligne, c'est tout.
+    // Debout = ton lever habituel ; au lit = 5 cycles (7 h 30) + 15 min pour t'endormir avant.
+    var up=wakeAvg, bed=wakeAvg-465;
+    return '<div class="wn-card slp-advice"><div class="wn-title">Ton rythme</div>'
+      +'<div class="slp-adv"><div><span>\uD83D\uDECF\uFE0F Au lit</span><b>'+hhmm(bed)+'</b></div><div><span>\u2600\uFE0F Debout</span><b>'+hhmm(up)+'</b></div></div>'
+      +'<p class="slp-adv-sub">5 cycles de 90 min = 7 h 30 de sommeil'+(spread>30?' \u00b7 couche-toi \u00e0 heure fixe (\u00b1 '+spread+' min en ce moment)':' \u00b7 coucher r\u00e9gulier \u2713')+'</p>'
       +'</div>';
   }
   function renderOpen(){

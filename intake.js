@@ -13,16 +13,17 @@ var INTAKE=(function(){
   var LS='massup_intake';
   // Objectifs : 2 900 kcal (24/08, confirmé 02/11) · 360 G · 150 P · lipides 75 visés (dès 60 c'est très bien), 85 = le gros
   // max acceptable un jour de fast-food — c'est la MOYENNE qui compte, pas un jour (Adrien, 02/11 soir)
+  // low = sous ce seuil, la journée est « pas bonne » (touche rouge) — ex. protéines : 150 c'est bien, ~140 ça va, < 130 non (Adrien, 02/11)
   var NUT=[
-    {k:'kcal',lbl:'Calories',short:'kcal',u:'kcal',goal:2900,kind:'min',col:'kcal'},
-    {k:'glu',lbl:'Glucides',short:'G',u:'g',goal:360,kind:'min',col:'glu'},
-    {k:'prot',lbl:'Protéines',short:'P',u:'g',goal:150,kind:'min',col:'prot'},
+    {k:'kcal',lbl:'Calories',pick:'G\u00e9n\u00e9ral',short:'kcal',u:'kcal',goal:2900,low:2600,kind:'min',col:'kcal'},
+    {k:'glu',lbl:'Glucides',short:'G',u:'g',goal:360,low:300,kind:'min',col:'glu'},
+    {k:'prot',lbl:'Protéines',short:'P',u:'g',goal:150,low:130,kind:'min',col:'prot'},
     {k:'lip',lbl:'Lipides',short:'L',u:'g',goal:75,max:85,kind:'target',col:'lip'},
-    {k:'fib',lbl:'Fibres',u:'g',goal:30,kind:'min',col:'mic'},
+    {k:'fib',lbl:'Fibres',u:'g',goal:30,low:20,kind:'min',col:'mic'},
     {k:'sucre',lbl:'Sucres',u:'g',goal:50,kind:'max',col:'mic'},
     {k:'sat',lbl:'Graisses saturées',u:'g',goal:30,kind:'max',col:'mic'},
     {k:'sodium',lbl:'Sodium',u:'mg',goal:2300,kind:'max',col:'mic'},
-    {k:'potassium',lbl:'Potassium',u:'mg',goal:3500,kind:'min',col:'mic'}
+    {k:'potassium',lbl:'Potassium',u:'mg',goal:3500,low:2500,kind:'min',col:'mic'}
   ];
   var BY={}; NUT.forEach(function(n){ BY[n.k]=n; });
   var MACROS=['glu','prot','lip'];
@@ -159,25 +160,63 @@ var INTAKE=(function(){
         pts.push({start:ms,end:me,v:a.v,n:a.n,fut:ms>t,l:'JFMAMJJASOND'.charAt(m),detail:new Date(ms+'T12:00:00').toLocaleDateString('fr-FR',{month:'long',year:'numeric'})});
       }
     }
-    if(IN.mode!=='week') IN.selected=null;
+    if(IN.mode==='year') IN.selected=null; // Semaine et Mois : un jour se touche (02/11 soir)
     else if(IN.pickDate){ pts.forEach(function(p,i){ if(p.start===IN.pickDate) IN.selected=i; }); IN.pickDate=null; }
     return {pts:pts,start:start,end:end};
   }
-  // Le jour touché : ses kcal, puis G · P · L en jauges (valeur / objectif), plus la mesure choisie si c'est un micro
+  // État d'une valeur du jour : ok (objectif tenu) · mid (un peu court) · bad (« pas bien » : sous le seuil low ou au-dessus du max)
+  function stateOf(n,v){
+    if(v==null) return 'na';
+    if(n.kind==='max') return v<=n.goal?'ok':'bad';
+    if(n.kind==='target') return v<=n.goal?'ok':v<=n.max?'mid':'bad';
+    return v>=n.goal?'ok':(n.low!=null&&v<n.low)?'bad':'mid';
+  }
+  // Un carré : nom, valeur / objectif, jauge ; « main » = la mesure choisie (dégradé de sa couleur qui brille)
+  function sqHtml(n,v,main){
+    var st=stateOf(n,v), ref=refOf(n);
+    return '<div class="in-sq in-sq--'+st+(main?' is-main':'')+'" style="--c:'+cvar(n)+'"><span class="in-sq__n">'+(n.k==='kcal'?'Calories':n.lbl)+(st==='bad'?' <em aria-label="pas bien">⚠</em>':st==='ok'?' <em class="ok" aria-label="objectif tenu">✓</em>':'')+'</span>'
+      +'<b class="bl-num">'+(v==null?'—':nb(v))+un('/'+nb(n.goal)+(n.u==='kcal'?'':' '+n.u))+'</b>'
+      +'<i class="in-sq__t"><i style="width:'+(v==null?0:Math.min(100,v/ref*100)).toFixed(0)+'%"></i></i></div>';
+  }
+  // Le jour touché (v3, 02/11 soir) : en haut la mesure choisie du jour (+ ses kcal à droite), puis 4 carrés —
+  // la mesure choisie en premier, mise en avant. « Général » = les kcal en avant + G · P · L, et le reste en une ligne.
   function dayHtml(d){
-    var e=day(d), n=BY[IN.metric];
-    var h='<div class="bl-detail in-day" aria-live="polite"><div class="bl-sec__head" style="min-height:36px"><div class="bl-lbl">'+new Date(d+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+'</div><button type="button" class="bl-ib" style="margin-right:-12px" onclick="INTAKE._select(-1)" aria-label="Fermer le détail du jour">✕</button></div>';
-    if(!e) return h+'<div class="bl-empty" style="padding-top:4px"><span>Rien de noté dans Yazio ce jour-là.</span></div></div>';
-    h+=rowHtml(BY.kcal,{v:e.kcal,n:1,total:1},false,false);
-    MACROS.forEach(function(k){ h+=rowHtml(BY[k],{v:e[k]>0?e[k]:null,n:1,total:1},false,false); });
-    if(n.col==='mic') h+=rowHtml(n,{v:e[n.k]>0?e[n.k]:null,n:1,total:1},false,false);
+    var e=day(d), n=BY[IN.metric], gen=n.k==='kcal';
+    var lbl=new Date(d+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'});
+    var h='<div class="in-day" aria-live="polite"><div class="in-day__h"><div style="min-width:0"><div class="bl-lbl">'+lbl+(gen?'':' · '+n.lbl)+'</div>';
+    if(!e) return h+'<div class="in-day__v bl-mut">Rien de noté</div></div><button type="button" class="bl-ib" onclick="INTAKE._select(-1)" aria-label="Fermer le détail du jour">✕</button></div></div>';
+    var v=e[n.k]>0?e[n.k]:null;
+    h+='<div class="in-day__v bl-num">'+(v==null?'—':nb(v))+un(n.u)+'</div></div>'
+      +(gen?'':'<div class="in-day__k"><span>Calories</span><b class="bl-num">'+nb(e.kcal)+un('kcal')+'</b></div>')
+      +'<button type="button" class="bl-ib" onclick="INTAKE._select(-1)" aria-label="Fermer le détail du jour">✕</button></div>';
+    var order=[n.k].concat(['kcal','glu','prot','lip'].filter(function(k){ return k!==n.k; })).slice(0,4);
+    h+='<div class="in-sqs">'+order.map(function(k,i){ return sqHtml(BY[k],e[k]>0?e[k]:null,i===0); }).join('')+'</div>';
+    if(gen){
+      var mic=NUT.filter(function(x){ return x.col==='mic'&&e[x.k]>0; }).map(function(x){ var b=stateOf(x,e[x.k])==='bad'; return '<span class="'+(b?'bl-warn':'')+'">'+(x.k==='sat'?'Gr. sat.':x.lbl)+' <b>'+nb(e[x.k])+' '+x.u+'</b>'+(b?' ⚠':'')+'</span>'; }).join('');
+      if(mic) h+='<div class="in-day__mic">'+mic+'</div>';
+    }
     return h+'</div>';
+  }
+  // Bloc du bas (v3) : les 15 derniers jours en UNE carte compacte — kcal + G · P · L en avant, le reste en petite liste
+  function fifteenHtml(){
+    var w=last15(), kc=avg(w.start,w.end,'kcal'), n=BY.kcal;
+    var cell=function(k){ var x=BY[k], a=avg(w.start,w.end,k), t=a.v!=null?tagOf(x,a.v):null;
+      return '<div class="in-f__m"><span><i class="bl-dot" style="background:'+cvar(x)+'"></i>'+x.lbl+'</span><b class="bl-num '+(t?t[2]:'bl-mut')+'">'+(a.v==null?'—':nb(a.v))+un('/'+x.goal+' g')+'</b>'
+        +'<i class="in-sq__t"><i class="'+(t?t[3]:'')+'" style="width:'+(a.v==null?0:Math.min(100,a.v/refOf(x)*100)).toFixed(0)+'%;'+(t&&t[3]?'':'background:'+cvar(x))+'"></i></i></div>'; };
+    var kt=kc.v!=null?tagOf(n,kc.v):null;
+    return '<section class="bl-sec"><div class="in-f"><div class="in-f__h"><h2 class="bl-sec__t bl-sec__t--sm">15 derniers jours</h2><span class="bl-meta">'+kc.n+'/15 notés</span></div>'
+      +'<div class="in-f__k"><b class="bl-num">'+(kc.v==null?'—':nb(kc.v))+un('/ '+nb(n.goal)+' kcal')+'</b>'+(kt?'<span class="'+kt[1]+'">'+kt[0]+'</span>':'')+'</div>'
+      +'<div class="bl-trk"><i class="is-kcal" style="width:'+(kc.v==null?0:Math.min(100,kc.v/n.goal*100)).toFixed(0)+'%"></i></div>'
+      +'<div class="in-f__ms">'+MACROS.map(cell).join('')+'</div>'
+      +'<div class="in-f__rest">'+NUT.filter(function(x){ return x.col==='mic'; }).map(function(x){ var a=avg(w.start,w.end,x.k), b=a.v!=null&&stateOf(x,a.v)==='bad';
+        return '<button type="button" onclick="INTAKE._metric(\''+x.k+'\',true)"><span>'+x.lbl+'</span><b class="'+(b?'bl-warn':'')+'">'+(a.v==null?'—':nb(a.v))+'<small> / '+nb(x.goal)+' '+x.u+(x.kind==='max'?' max':'')+'</small>'+(b?' ⚠':'')+'</b></button>'; }).join('')+'</div>'
+      +'</div></section>';
   }
   function historyHtml(){
     var n=BY[IN.metric], D=periodData(), pts=D.pts, wk=IN.mode==='week';
     var title=wk?dshort(D.start)+' → '+dshort(D.end):IN.mode==='month'?new Date(D.start+'T12:00:00').toLocaleDateString('fr-FR',{month:'long',year:'numeric'}).replace(/^./,function(c){ return c.toUpperCase(); }):D.start.slice(0,4);
-    var pick='<label class="bl-pick"><i class="bl-dot" style="background:'+cvar(n)+'"></i><span>'+n.lbl+'</span><span aria-hidden="true">▾</span>'
-      +'<select aria-label="Mesure affichée" onchange="INTAKE._metric(this.value)">'+NUT.map(function(x){ return '<option value="'+x.k+'"'+(x.k===IN.metric?' selected':'')+'>'+x.lbl+'</option>'; }).join('')+'</select></label>';
+    var pick='<label class="bl-pick"><span>'+(n.pick||n.lbl)+'</span><span aria-hidden="true">▾</span>'
+      +'<select aria-label="Mesure affichée" onchange="INTAKE._metric(this.value)">'+NUT.map(function(x){ return '<option value="'+x.k+'"'+(x.k===IN.metric?' selected':'')+'>'+(x.pick||x.lbl)+'</option>'; }).join('')+'</select></label>';
     var seg='<div class="bl-seg bl-seg--sm" role="tablist" style="margin-top:12px">'+[['week','Semaine'],['month','Mois'],['year','An']].map(function(x){ return '<button type="button" role="tab" aria-selected="'+(IN.mode===x[0])+'" onclick="INTAKE._mode(\''+x[0]+'\')">'+x[1]+'</button>'; }).join('')+'</div>';
     var nav='<div class="bl-nav"><button type="button" class="bl-ib" onclick="INTAKE._page(-1)" aria-label="Période précédente">‹</button><span>'+title+'</span><button type="button" class="bl-ib" onclick="INTAKE._page(1)" aria-label="Période suivante"'+(D.end>=today()?' disabled':'')+'>›</button></div>';
     // En haut : la MOYENNE de la période (jours notés seulement) ; un jour non noté = un trou dans les barres
@@ -192,10 +231,10 @@ var INTAKE=(function(){
         var na=!p.fut&&p.v==null, over=p.v!=null&&(n.kind==='max'?p.v>n.goal:n.kind==='target'?p.v>n.max:false);
         var bar='<i style="height:'+(p.fut||p.v==null?0:Math.max(2,p.v/topv*100)).toFixed(1)+'%;background:'+(over?'var(--yellow)':cvar(n))+'"></i>';
         var cls='bl-bars__b'+(na?' is-gap':'');
-        return wk?'<button type="button" class="'+cls+'" aria-pressed="'+(i===IN.selected)+'" onclick="INTAKE._select('+i+')" aria-label="'+p.detail+(p.v==null?' · non noté':' · '+fmt(p.v)+' '+n.u)+'"'+(p.fut?' disabled':'')+'>'+bar+'</button>':'<span class="'+cls+'" aria-hidden="true">'+bar+'</span>';
+        return IN.mode!=='year'?'<button type="button" class="'+cls+'" aria-pressed="'+(i===IN.selected)+'" onclick="INTAKE._select('+i+')" aria-label="'+p.detail+(p.v==null?' · non noté':' · '+fmt(p.v)+' '+n.u)+'"'+(p.fut?' disabled':'')+'>'+bar+'</button>':'<span class="'+cls+'" aria-hidden="true">'+bar+'</span>';
       }).join('')+'</div>'
-      +'<div class="bl-bars__x">'+pts.map(function(p,i){ return '<span class="'+(wk&&i===IN.selected?'is-on':'')+'">'+p.l+'</span>'; }).join('')+'</div>';
-    var sel=wk&&IN.selected!=null&&pts[IN.selected]?dayHtml(pts[IN.selected].start):'';
+      +'<div class="bl-bars__x">'+pts.map(function(p,i){ return '<span class="'+(IN.mode!=='year'&&i===IN.selected?'is-on':'')+'">'+(IN.mode==='month'&&i===IN.selected?String(Number(p.start.slice(8,10))):p.l)+'</span>'; }).join('')+'</div>';
+    var sel=IN.mode!=='year'&&IN.selected!=null&&pts[IN.selected]?dayHtml(pts[IN.selected].start):'';
     return '<div class="bl-sec__head"><h2 class="bl-sec__t">Historique</h2>'+pick+'</div>'+seg+nav+head+'<div class="in-swipe">'+bars+'</div>'+sel;
   }
   function dshort(s){ return new Date(s+'T12:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'short'}); }
@@ -204,15 +243,11 @@ var INTAKE=(function(){
   }
   function render(fresh){
     var body=$('inBody'); if(!body) return;
-    var w=last15(), kc=avg(w.start,w.end,'kcal'), h=topBar();
+    var h=topBar();
     if(!Object.keys(cache.days).length){
       h+='<section class="bl-sec"><div class="bl-empty"><span class="bl-empty__t">Rien reçu de Yazio</span><span>Touche ↻ en haut du Bilan.</span></div></section>';
     } else {
-      h+='<section class="bl-sec in-history">'+historyHtml()+'</section><hr class="bl-hr">'
-        +'<section class="bl-sec"><div class="bl-sec__head" style="min-height:32px"><h2 class="bl-sec__t">15 derniers jours</h2><span class="bl-meta">'+kc.n+'/15 notés</span></div>'
-        +'<div style="margin-top:6px">'+rowHtml(BY.kcal,kc,true,false)+MACROS.map(function(k){ return rowHtml(BY[k],avg(w.start,w.end,k),true,false); }).join('')+'</div></section><hr class="bl-hr">'
-        +'<section class="bl-sec"><div class="bl-sec__head" style="min-height:32px"><h2 class="bl-sec__t">Le reste</h2><span class="bl-meta">moy. 15 jours</span></div><div style="margin-top:6px">'
-        +NUT.filter(function(x){ return x.col==='mic'; }).map(function(x){ return rowHtml(x,avg(w.start,w.end,x.k),false,true); }).join('')+'</div></section>';
+      h+='<section class="bl-sec in-history">'+historyHtml()+'</section>'+fifteenHtml();
       if(_status==='err') h+='<div class="bl-sec" style="padding-top:0"><div class="bl-errbar">La synchro Yazio a échoué · réessaie avec ↻ sur le Bilan</div></div>';
       h+='<hr class="bl-hr"><button type="button" class="bl-link" onclick="INTAKE.close();nutriAOpen()"><span aria-hidden="true" style="font-size:18px">🍳</span><span>Idées de recettes</span><span class="bl-mut" aria-hidden="true">›</span></button>';
     }

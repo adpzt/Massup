@@ -255,7 +255,8 @@ var STEPS=(function(){
     } else detail=selected?(selected.n?selected.n+' jour'+(selected.n>1?'s':'')+' avec données'+(ST.mode==='week'||ST.mode==='month'?' · '+fmt(selected.sum)+' pas au total':''):'aucune donnée pour cette période'):'';
     var detailLine=A.app==='adrien'?detail:(selected?selected.detail:'')+(detail?' · '+detail:'');
     var totalLine=A.app==='adrien'&&ST.mode==='week'?'<div class="st-period-total"><span>Total cette semaine</span><strong>'+fmt(week(monOf(ST.anchor)).sum)+'</strong></div>':'';
-    var rangeButtons='<div class="st-rng">'+[['day','Jour'],['week','Semaine'],['month','Mois'],['year','An']].map(function(x){return '<button type="button" class="'+(ST.mode===x[0]?'on':'')+'" onclick="STEPS._mode(\''+x[0]+'\')">'+x[1]+'</button>';}).join('')+'</div>';
+    // MASSUP : plus de vue Jour (02/11, Adrien : « ça sert à rien ») — Melati la garde
+    var rangeButtons='<div class="st-rng">'+[['day','Jour'],['week','Semaine'],['month','Mois'],['year','An']].filter(function(x){ return A.app!=='adrien'||x[0]!=='day'; }).map(function(x){return '<button type="button" class="'+(ST.mode===x[0]?'on':'')+'" onclick="STEPS._mode(\''+x[0]+'\')">'+x[1]+'</button>';}).join('')+'</div>';
     var chartHead=A.app==='adrien'?'<div class="st-chart-head st-chart-head-modern">'+rangeButtons+'</div>':'<div class="st-chart-head"><div><div class="st-chart-title">Historique</div><div class="st-chart-date">'+title+'</div></div>'+rangeButtons+'</div>';
     var chart=ST.mode==='day'&&A.app==='adrien'&&!data.hasHourly
       ?'<div class="st-chart-wrap st-hourly-empty">Le détail heure par heure apparaîtra dès que le Raccourci iOS enverra une valeur par heure, de <code>steps_h00</code> à <code>steps_h23</code>. Le total journalier reste affiché ci-dessus.</div>'
