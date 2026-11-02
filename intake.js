@@ -72,6 +72,8 @@ var INTAKE=(function(){
   // Même raccourci que les pas : il envoie tout (pas + nutrition + pesée)
   function refresh(){
     _refreshUntil=Date.now()+60000;
+    // 03/11 : heure du dernier ↻ (raccourci Santé) — la note de la semaine ne se grave qu'après un ↻ fait après le dimanche 20 h
+    try{ localStorage.setItem('massup_refreshAt',String(Date.now())); }catch(e){}
     if(A&&A.runShortcut) A.runShortcut();
   }
   document.addEventListener('visibilitychange',function(){
@@ -311,7 +313,7 @@ var INTAKE=(function(){
 
   function init(adapter){ A=adapter; load(); }
   // ready() : la lecture serveur de CETTE session a réussi (la gravure de la note v5 l'attend — 03/11)
-  return {init:init,ready:function(){ return _status==='ok'; },renderCard:renderCard,open:open,close:close,refresh:refresh,pull:pull,day:day,val:val,avg:avg,last7:last7,last15:last15,NUT:NUT,
+  return {init:init,ready:function(){ return _status==='ok'; },syncAt:function(){ return cache.syncAt||0; },renderCard:renderCard,open:open,close:close,refresh:refresh,pull:pull,day:day,val:val,avg:avg,last7:last7,last15:last15,NUT:NUT,
     dayCardHtml:dayCardHtml,days:function(){ return cache.days; },
     _metric:setMetric,_mode:setMode,_select:select,_page:page};
 })();

@@ -11,7 +11,7 @@ function stub() {
 function load() {
   const store = {};
   const ctx = {
-    console, Date, JSON, Math, setTimeout: () => 0, clearTimeout() {}, setInterval: () => 0, clearInterval() {},
+    console, Date: class extends Date { static now() { return new Date("2026-11-23T10:00:00").getTime(); } }, JSON, Math, setTimeout: () => 0, clearTimeout() {}, setInterval: () => 0, clearInterval() {},
     localStorage: { getItem: (k) => store[k] || null, setItem: (k, v) => { store[k] = v; }, removeItem: (k) => { delete store[k]; } },
     document: stub(), navigator: { userAgent: "" }, location: { search: "", hash: "" },
     fetch: () => Promise.resolve(stub()), matchMedia: () => ({ matches: false, addEventListener() {} }),
@@ -26,7 +26,8 @@ function load() {
   ctx.__kcal = 2800;
   ctx.STEPS = { weekPts: () => 2, week: () => ({ sum: 55000, avg: 7857 }), stepsOf: (d) => (ctx.__low[d] != null ? ctx.__low[d] : 8000) };
   ctx.SLEEP = { _duration: () => 480 };
-  ctx.INTAKE = { val: (d, k) => (k === "kcal" ? ctx.__kcal : 140), ready: () => true };
+  ctx.INTAKE = { val: (d, k) => (k === "kcal" ? ctx.__kcal : 140), ready: () => true, syncAt: () => ctx.__sync };
+  ctx.__sync = 0;
   vm.runInContext(`
     todayStr=function(){ return '2026-11-22'; };
     noteWeekClosed=function(){ return true; };
@@ -41,12 +42,13 @@ function load() {
   return (code, vars) => { Object.assign(ctx, vars || {}); return JSON.parse(vm.runInContext("JSON.stringify(" + code + ")", ctx)); };
 }
 
-test("v5 : salle 5 + 4, nutrition 3 + 2 + 1, activité 2 + 1 + 1 = 19/20", () => {
+test("v5 avant le 07/12 : salle 9 + nutrition 6 + activité 3 = 18/19, ramené à 20 → 19 (la course ne compte pas)", () => {
   const run = load();
   const B = run("bilanNoteWeek('2026-11-09')");
   assert.equal(B.v, 5);
   assert.equal(B.note, 19);
-  assert.deepEqual(B.pil.map((p) => p.p), [9, 6, 4]);
+  assert.deepEqual(B.pil.map((p) => p.p), [9, 6, 3]);
+  assert.equal(B.pil[2].c.length, 2, "pas de ligne Course avant le 07/12");
   assert.equal(B.malus.length, 0);
   assert.equal(B.graved, undefined, "sans données cloud chargées, rien n'est gravé");
 });
@@ -62,9 +64,22 @@ test("v5 : malus −0,5 par jour sous 1 000 pas et −0,5 sans pesée ; donnée 
   assert.equal(C.pil[1].c[2][2], 0, "shaker non coché = 0");
 });
 
-test("gravure : une fois la semaine close et les données chargées, la note ne bouge plus", () => {
+test("dès le 07/12 : la course compte sur 1, sans malus en plus si elle manque", () => {
   const run = load();
-  const g = run("bilanNoteWeek('2026-11-09')", { _cloudPullOk: true });
+  run("(DB.logs.forEach(function(l,i){ l.date=rankAddDays('2026-12-07',i*2); }),DB.rank.weekly={'2026-12-07':{v:3,shaker:7,run:0}},DB.bodyWeight=[{date:'2026-12-08',weight_kg:75}],todayStr=function(){ return '2026-12-20'; },1)");
+  const B = run("bilanNoteWeek('2026-12-07')");
+  assert.equal(B.pil[2].m, 4);
+  assert.equal(B.malus.length, 0);
+  assert.equal(B.note, 17, "9 + 6 + pas 2 + nuits 0 + course 0/1 = 17, aucun malus en plus");
+});
+
+test("gravure : seulement le lundi après un ↻ fait après le dimanche 20 h, puis la note ne bouge plus", () => {
+  const run = load();
+  const sun20 = new Date("2026-11-15T20:00:00").getTime();
+  run("1", { _cloudPullOk: true });
+  assert.equal(run("bilanNoteWeek('2026-11-09').graved||0"), 0, "sans ↻ après dimanche 20 h : pas gravée");
+  run("(localStorage.setItem('massup_refreshAt',String(" + (sun20 + 3600e3) + ")),1)", { __sync: sun20 + 3700e3 });
+  const g = run("bilanNoteWeek('2026-11-09')");
   assert.equal(g.graved, 1);
   assert.equal(g.note, 19);
   const after = run("bilanNoteWeek('2026-11-09')", { __kcal: 0 });
@@ -73,11 +88,15 @@ test("gravure : une fois la semaine close et les données chargées, la note ne 
 
 test("fusion : à semaine égale, la 1re gravure gagne", () => {
   const run = load();
-  run("(DB.noteGrav={'2026-11-09':{note:12,at:9},'2026-11-16':{note:15,at:3}},mergeBackupIntoDB({noteGrav:{'2026-11-09':{note:10,at:5},'2026-11-16':{note:8,at:7},'2026-11-23':{note:14,at:1}}}),1)");
+  run("(DB.noteGrav={'2026-11-09':{v:5,note:12,at:9},'2026-11-16':{v:5,note:15,at:3}},mergeBackupIntoDB({noteGrav:{'2026-11-09':{v:5,note:10,at:5},'2026-11-16':{v:5,note:8,at:7},'2026-11-23':{v:5,note:14,at:1}}}),1)");
   assert.deepEqual(run("[DB.noteGrav['2026-11-09'].note,DB.noteGrav['2026-11-16'].note,DB.noteGrav['2026-11-23'].note]"), [10, 15, 14]);
 });
 
-test("avant le 09/11 : barème d'époque (v3), jamais la v5", () => {
+test("v5 dès la semaine du 26/10 (demande d'Adrien) : une ancienne gravure v3 de cette semaine est ignorée", () => {
   const run = load();
-  assert.equal(run("bilanNoteWeek('2026-11-02').v"), 3);
+  run("(DB.noteGrav={'2026-10-26':{v:3,note:13.5,at:1},'2026-10-19':{v:3,note:13.5,at:1}},1)");
+  assert.equal(run("bilanNoteWeek('2026-10-26').v"), 5);
+  assert.equal(run("bilanNoteWeek('2026-10-19').note"), 13.5, "avant le 26/10 : la gravure d'époque reste");
+  run("(mergeBackupIntoDB({noteGrav:{'2026-10-26':{v:3,note:9,at:0}}}),1)");
+  assert.equal(run("bilanNoteWeek('2026-10-26').v"), 5, "une gravure v3 venue du cloud ne revient pas");
 });

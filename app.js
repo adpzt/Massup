@@ -4226,7 +4226,9 @@ function mergeBackupIntoDB(bk){
     if(!DB.noteGrav) DB.noteGrav={};
     Object.keys(bk.noteGrav).forEach(function(w){
       var r=bk.noteGrav[w], l=DB.noteGrav[w];
-      if(r&&r.note!=null&&(!l||l.note==null||(r.at||0)<(l.at||0))) DB.noteGrav[w]=r;
+      if(!r||r.note==null) return;
+      var v5=w>=NOTE_V5_START, rOk=!v5||r.v===5, lOk=l&&l.note!=null&&(!v5||l.v===5);
+      if(rOk&&(!lOk||(r.at||0)<(l.at||0))) DB.noteGrav[w]=r;
     });
   }
   // Mensurations (02/11) : par date, l'entrée la plus récente gagne — une suppression ({del:1}) comprise
@@ -10654,24 +10656,37 @@ function bilanNoteWeekCalc(ws){
 // ══ NOTATION v5 + GRAVURE (03/11/2026, plan validé par Adrien le 02/11) ══
 // Semaine = Salle /10 (assiduité /5 sur weekValue : objectif → 5 · −1 → 2,5 · −2 → 1 ; qualité /5 = moyenne des /20 ÷ 4)
 //         + Nutrition /6 (jours ≥ 2 600 kcal /3 · jours ≥ 135 g de protéines /2 · shaker 7/7 /1 — vraies données Yazio)
-//         + Activité /4 (pas /2 · course /1 · nuits ≥ 7 h /1) ; donnée manquante = 0.
-// Malus : −0,5 par jour < 1 000 pas · −1 sans course (dès le 07/12) · −0,5 sans pesée dans la semaine
-//         · −0,5 par muscle en rouge sang sur les 30 jours qui finissent le dimanche.
-// Démarre le lundi qui suit la mise en ligne (jamais rétroactif). Avant : barèmes d'époque (v1-v3).
-// GRAVURE : dès le dimanche 20 h, la note est copiée dans DB.noteGrav[lundi] et ne bouge PLUS JAMAIS
-// (règle « une note gravée ne change jamais »). Jamais gravée avant que les données cloud (et Yazio pour la v5)
-// soient chargées, pour ne pas graver des zéros sur un appareil neuf.
-var NOTE_V5_START='2026-11-09';
+//         + Activité /4 (pas /2 · nuits ≥ 7 h /1 · course /1 SEULEMENT dès le 07/12 — avant : note sur 19 ramenée à 20 ;
+//           ensuite, pas de course = 0/1, sans malus en plus) ; donnée manquante = 0.
+// Malus : −0,5 par jour < 1 000 pas · −0,5 sans pesée dans la semaine (03/11 : plus de malus « muscle en rouge sang »).
+// 03/11 (Adrien) : la v5 s'applique dès la semaine du lundi 26/10 — cette semaine-là est recalculée (ses éventuelles
+// gravures d'un autre barème sont ignorées, voir noteGravOf). Avant le 26/10 : barèmes d'époque (v1-v3), gravés tels quels.
+// GRAVURE v5 : le LUNDI matin (≥ 5 h) qui suit la semaine, et seulement si un ↻ (raccourci Santé : Yazio + pas) a été
+// fait après le dimanche 20 h ET que Yazio a été relu après ce ↻ ; ensuite la note ne bouge PLUS JAMAIS.
+// Jamais gravée avant que les données cloud soient chargées (pas de zéros gravés sur un appareil neuf).
+var NOTE_V5_START='2026-10-26';
 var NOTE_V5={kcalDay:2600,protDay:135,sleepMin:420};
 function noteWeekClosed(ws){ return Date.now()>=new Date(rankAddDays(ws,6)+'T20:00:00').getTime(); }
+function noteRefreshAt(){ try{ return Number(localStorage.getItem('massup_refreshAt'))||0; }catch(e){ return 0; } }
 function noteCanGrave(ws){
   if(typeof _cloudPullOk==='undefined'||!_cloudPullOk) return false;
-  if(ws>=NOTE_V5_START&&!(typeof INTAKE!=='undefined'&&INTAKE.ready&&INTAKE.ready())) return false;
+  if(ws<NOTE_V5_START) return true; // anciennes semaines : stables, gravées dès que le cloud est chargé
+  if(Date.now()<new Date(rankAddDays(ws,7)+'T05:00:00').getTime()) return false; // à partir du lundi matin
+  var sun20=new Date(rankAddDays(ws,6)+'T20:00:00').getTime(), r=noteRefreshAt();
+  if(r<sun20) return false; // il faut un ↻ fait après le dimanche 20 h
+  if(!(typeof INTAKE!=='undefined'&&INTAKE.ready&&INTAKE.ready()&&INTAKE.syncAt&&INTAKE.syncAt()>=r)) return false; // Yazio relu après ce ↻
   return true;
 }
-function bilanNoteWeek(ws){
+// Gravure valable : pour une semaine v5, seule une gravure v5 compte (une gravure d'un autre barème est ignorée)
+function noteGravOf(ws){
   var g=DB.noteGrav&&DB.noteGrav[ws];
-  if(g&&g.note!=null) return g;
+  if(!g||g.note==null) return null;
+  if(ws>=NOTE_V5_START&&g.v!==5) return null;
+  return g;
+}
+function bilanNoteWeek(ws){
+  var g=noteGravOf(ws);
+  if(g) return g;
   var B=ws>=NOTE_V5_START?bilanNoteWeekV5(ws):bilanNoteWeekCalc(ws);
   if(noteWeekClosed(ws)&&noteCanGrave(ws)){
     if(!DB.noteGrav) DB.noteGrav={};
@@ -10709,25 +10724,19 @@ function bilanNoteWeekV5(ws){
   var malus=[];
   if(typeof STEPS!=='undefined'){ for(var s=0;s<7;s++){ var sd=rankAddDays(ws,s); if(sd>=t) break; var sv=STEPS.stepsOf(sd);
     if(sv!=null&&sv<1000) malus.push({l:new Date(sd+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'})+' · '+Math.round(sv).toLocaleString('fr-FR')+' pas',p:0.5}); } }
-  var runMiss=ws>=RUN_REQ_START&&run<1;
-  if(runMiss) malus.push({l:'Course obligatoire non faite',p:1});
-  var closed=noteWeekClosed(ws);
-  if(closed&&!(DB.bodyWeight||[]).some(function(b){ return b.date>=ws&&b.date<=we; })) malus.push({l:'Aucune pesée dans la semaine',p:0.5});
-  if(closed){
-    var vol=muscleVolume(rankAddDays(we,-29),we);
-    RADAR_GROUPS.forEach(function(g){ if(volTier(g.label,(vol[g.label]||0)*7/30)==='blood') malus.push({l:'Muscle en rouge sang sur 30 j · '+g.label.toLowerCase(),p:0.5}); });
-  }
+  var runOn=ws>=RUN_REQ_START, runMiss=runOn&&run<1;
+  if(noteWeekClosed(ws)&&!(DB.bodyWeight||[]).some(function(b){ return b.date>=ws&&b.date<=we; })) malus.push({l:'Aucune pesée dans la semaine',p:0.5});
   var mal=malus.reduce(function(a,m){ return a+m.p; },0);
-  var tot=pA+pQ+pK+pP+pS+(pSteps||0)+pR+pN;
+  var raw=pA+pQ+pK+pP+pS+(pSteps||0)+pN+(runOn?pR:0), tot=runOn?raw:raw*20/19;
   var pil=[
     {k:'salle',i:'🏋️',l:'Salle',m:10,c:[['Assiduité',fmtSeances(v)+'/'+goal+' séances',pA,5],['Qualité',avg!=null?'moy. '+String(r1(avg)).replace('.',',')+'/20':'pas de note',pQ,5]]},
     {k:'nut',i:'🍽️',l:'Nutrition',m:6,c:[['Jours ≥ 2 600 kcal',kd+'/7',pK,3],['Jours ≥ 135 g de protéines',pd+'/7',pP,2],['Shaker',shk+'/7',pS,1]]},
-    {k:'act',i:'👟',l:'Activité',m:4,c:[['Pas',sw&&sw.sum?Math.round(sw.sum).toLocaleString('fr-FR')+'/50 000':'non renseignés',pSteps||0,2],['Course',(run>=1?1:0)+'/1',pR,1],['Nuits ≥ 7 h',nights+'/7',pN,1]]}
+    {k:'act',i:'👟',l:'Activité',m:runOn?4:3,c:[['Pas',sw&&sw.sum?Math.round(sw.sum).toLocaleString('fr-FR')+'/50 000':'non renseignés',pSteps||0,2],['Nuits ≥ 7 h',nights+'/7',pN,1]].concat(runOn?[['Course',(run>=1?1:0)+'/1',pR,1]]:[])}
   ];
   pil.forEach(function(P){ P.c=P.c.map(function(c){ return [c[0],c[1],r1(c[2]),c[3]]; }); P.p=r1(P.c.reduce(function(a,c){ return a+c[2]; },0)); });
-  return {v:5,note:Math.max(0,Math.min(20,Math.round((tot-mal)*2)/2)),pil:pil,malus:malus,
+  return {v:5,note:Math.max(0,Math.min(20,Math.round((tot-mal)*2)/2)),pil:pil,malus:malus,scaled:runOn?0:1,
     salle:v,goal:goal,avg:avg,stepAvg:sw?sw.avg:null,shk:shk,run:run,maison:ans?(ans.maison||0):nutWeekCount('maison',ws),
-    kcalDays:kd,protDays:pd,nights:nights,blood:malus.filter(function(m){ return /pas$/.test(m.l); }).length,runReq:ws>=RUN_REQ_START,runMiss:runMiss,declared:!!ans};
+    kcalDays:kd,protDays:pd,nights:nights,blood:malus.filter(function(m){ return /pas$/.test(m.l); }).length,runReq:runOn,runMiss:runMiss,declared:!!ans};
 }
 // Détail commun à toutes les versions (écran « pourquoi j'ai X ») : 3 piliers + malus
 function noteWeekDetail(B){

@@ -329,7 +329,7 @@ var BILAN=(function(){
   /* ══════════ DÉTAIL DE LA NOTE (« pourquoi j'ai X », notation v5 — 03/11) ══════════ */
   function noteHtml(ws){
     var B=bilanNoteWeek(ws), D=noteWeekDetail(B), tot=B.note, n=noteN(tot), cur=ws===rankMonday(today());
-    var sun=rankAddDays(ws,6), foot=B.graved?'Gravée le dimanche '+dshort(sun)+' à 20 h · elle ne changera plus.':noteWeekClosed(ws)?'Semaine finie · elle sera gravée à la prochaine synchro.':'Sera gravée dimanche '+dshort(sun)+' à 20 h.';
+    var sun=rankAddDays(ws,6), mon=rankAddDays(ws,7), foot=(B.graved?'Gravée le '+(B.at?new Date(B.at).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'short'}):dlab(mon))+' · elle ne changera plus.':B.v===5?(Date.now()>=new Date(mon+'T05:00:00').getTime()?'Sera gravée dès ton prochain \u21bb (Yazio + pas).':'Sera gravée lundi '+dshort(mon)+' au matin, après ton \u21bb (Yazio + pas) fait après dimanche 20 h.'):'Gravée avec le barème de l\u2019époque.')+(B.scaled?' Note sur 19 ramenée à 20 : la course compte dès le 7 décembre.':'');
     var mt=D.malus.reduce(function(a,m){ return a+m.p; },0);
     var h=top('\uD83C\uDFC6 Ta note',(cur?'Cette semaine':'Semaine du '+dshort(ws))+(B.v===5?'':' · barème d\u2019époque'))
       +'<section class="bl-sec"><div class="bl-lbl">'+(cur?'En cours':'Semaine du '+dshort(ws)+' \u2192 '+dshort(sun))+'</div>'
