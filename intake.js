@@ -13,17 +13,19 @@ var INTAKE=(function(){
   var LS='massup_intake';
   // Objectifs : 2 900 kcal (24/08, confirmé 02/11) · 360 G · 150 P · lipides 75 visés (dès 60 c'est très bien), 85 = le gros
   // max acceptable un jour de fast-food — c'est la MOYENNE qui compte, pas un jour (Adrien, 02/11 soir)
-  // low = sous ce seuil, la journée est « pas bonne » (touche rouge) — ex. protéines : 150 c'est bien, ~140 ça va, < 130 non (Adrien, 02/11)
+  // Sucres = sucres TOTAUX de Yazio (fruits, lait, céréales, sauces) : repère UE 90 g pour 2 000 kcal → ~130 g max à 2 900 kcal (03/11).
+  // Potassium : simple repère (info) — Yazio ne le renseigne pas pour beaucoup d'aliments, le total est sous-estimé.
+  // low = sous ce seuil, la journée est « pas bonne » (chiffre en orange) — ex. protéines : 150 c'est bien, ~140 ça va, < 130 non (Adrien, 02/11)
   var NUT=[
     {k:'kcal',lbl:'Calories',pick:'G\u00e9n\u00e9ral',short:'kcal',u:'kcal',goal:2900,low:2600,kind:'min',col:'kcal'},
     {k:'glu',lbl:'Glucides',short:'G',u:'g',goal:360,low:300,kind:'min',col:'glu'},
     {k:'prot',lbl:'Protéines',short:'P',u:'g',goal:150,low:130,kind:'min',col:'prot'},
     {k:'lip',lbl:'Lipides',short:'L',u:'g',goal:75,max:85,kind:'target',col:'lip'},
     {k:'fib',lbl:'Fibres',u:'g',goal:30,low:20,kind:'min',col:'mic'},
-    {k:'sucre',lbl:'Sucres',u:'g',goal:50,kind:'max',col:'mic'},
+    {k:'sucre',lbl:'Sucres',u:'g',goal:130,kind:'max',col:'mic'},
     {k:'sat',lbl:'Graisses saturées',u:'g',goal:30,kind:'max',col:'mic'},
     {k:'sodium',lbl:'Sodium',u:'mg',goal:2300,kind:'max',col:'mic'},
-    {k:'potassium',lbl:'Potassium',u:'mg',goal:3500,low:2500,kind:'min',col:'mic'}
+    {k:'potassium',lbl:'Potassium',u:'mg',goal:3500,kind:'min',col:'mic',info:1}
   ];
   var BY={}; NUT.forEach(function(n){ BY[n.k]=n; });
   var MACROS=['glu','prot','lip'];
@@ -110,8 +112,8 @@ var INTAKE=(function(){
   // [texte, classe du texte, classe de la valeur, classe de la jauge]
   // Étiquettes COURTES (02/11 soir, Adrien : « pas de phrases trop longues ») — [texte, classe texte, classe valeur, classe jauge]
   function tagOf(n,v){
-    if(n.kind==='max') return v>n.goal?['\u26a0 au-dessus','bl-warn','bl-warn','is-warn']:['\u2713 sous le max','bl-pos','',''];
-    if(n.kind==='target') return v>n.max?['\u26a0 au-dessus','bl-warn','bl-warn','is-warn']:v>n.goal?['\u2713 acceptable','bl-pos','','']:['\u2713 dans la cible','bl-pos','',''];
+    if(n.kind==='max') return v>n.goal?['au-dessus','bl-warn','bl-warn','is-warn']:['\u2713 sous le max','bl-pos','',''];
+    if(n.kind==='target') return v>n.max?['au-dessus','bl-warn','bl-warn','is-warn']:v>n.goal?['\u2713 acceptable','bl-pos','','']:['\u2713 dans la cible','bl-pos','',''];
     return v>=n.goal?['\u2713 objectif','bl-pos','','']:[Math.round(v/n.goal*100)+NB+'%','bl-mut','',''];
   }
   function goalTxt(n){ return '/ '+nb(n.goal)+' '+n.u+(n.kind==='max'?' max':n.kind==='target'?' visés':''); }
@@ -174,8 +176,8 @@ var INTAKE=(function(){
   // Un carré : nom, valeur / objectif, jauge ; « main » = la mesure choisie (dégradé de sa couleur qui brille)
   function sqHtml(n,v,main){
     var st=stateOf(n,v), ref=refOf(n);
-    return '<div class="in-sq in-sq--'+st+(main?' is-main':'')+'" style="--c:'+cvar(n)+'"><span class="in-sq__n">'+(n.k==='kcal'?'Calories':n.lbl)+(st==='bad'?' <em aria-label="pas bien">⚠</em>':st==='ok'?' <em class="ok" aria-label="objectif tenu">✓</em>':'')+'</span>'
-      +'<b class="bl-num">'+(v==null?'—':nb(v))+un('/'+nb(n.goal)+(n.u==='kcal'?'':' '+n.u))+'</b>'
+    return '<div class="in-sq in-sq--'+st+(main?' is-main':'')+'" style="--c:'+cvar(n)+'"><span class="in-sq__n">'+(n.k==='kcal'?'Calories':n.lbl)+(st==='ok'?' <em class="ok" aria-label="objectif tenu">✓</em>':'')+'</span>'
+      +'<b class="bl-num'+(st==='bad'?' bl-warn':'')+'">'+(v==null?'—':nb(v))+un('/'+nb(n.goal)+(n.u==='kcal'?'':' '+n.u))+'</b>'
       +'<i class="in-sq__t"><i style="width:'+(v==null?0:Math.min(100,v/ref*100)).toFixed(0)+'%"></i></i></div>';
   }
   // Le jour touché (v3, 02/11 soir) : en haut la mesure choisie du jour (+ ses kcal à droite), puis 4 carrés —
@@ -192,7 +194,7 @@ var INTAKE=(function(){
     var order=[n.k].concat(['kcal','glu','prot','lip'].filter(function(k){ return k!==n.k; })).slice(0,4);
     h+='<div class="in-sqs">'+order.map(function(k,i){ return sqHtml(BY[k],e[k]>0?e[k]:null,i===0); }).join('')+'</div>';
     if(gen){
-      var mic=NUT.filter(function(x){ return x.col==='mic'&&e[x.k]>0; }).map(function(x){ var b=stateOf(x,e[x.k])==='bad'; return '<span class="'+(b?'bl-warn':'')+'">'+(x.k==='sat'?'Gr. sat.':x.lbl)+' <b>'+nb(e[x.k])+' '+x.u+'</b>'+(b?' ⚠':'')+'</span>'; }).join('');
+      var mic=NUT.filter(function(x){ return x.col==='mic'&&e[x.k]>0; }).map(function(x){ var b=stateOf(x,e[x.k])==='bad'; return '<span class="'+(b?'bl-warn':'')+'">'+(x.k==='sat'?'Gr. sat.':x.lbl)+' <b>'+nb(e[x.k])+' '+x.u+'</b>'+'</span>'; }).join('');
       if(mic) h+='<div class="in-day__mic">'+mic+'</div>';
     }
     return h+'</div>';
@@ -209,7 +211,7 @@ var INTAKE=(function(){
       +'<div class="bl-trk"><i class="is-kcal" style="width:'+(kc.v==null?0:Math.min(100,kc.v/n.goal*100)).toFixed(0)+'%"></i></div>'
       +'<div class="in-f__ms">'+MACROS.map(cell).join('')+'</div>'
       +'<div class="in-f__rest">'+NUT.filter(function(x){ return x.col==='mic'; }).map(function(x){ var a=avg(w.start,w.end,x.k), b=a.v!=null&&stateOf(x,a.v)==='bad';
-        return '<button type="button" onclick="INTAKE._metric(\''+x.k+'\',true)"><span>'+x.lbl+'</span><b class="'+(b?'bl-warn':'')+'">'+(a.v==null?'—':nb(a.v))+'<small> / '+nb(x.goal)+' '+x.u+(x.kind==='max'?' max':'')+'</small>'+(b?' ⚠':'')+'</b></button>'; }).join('')+'</div>'
+        return '<button type="button" onclick="INTAKE._metric(\''+x.k+'\',true)"><span>'+x.lbl+'</span><b class="'+(b?'bl-warn':'')+'">'+(a.v==null?'—':nb(a.v))+'<small> / '+nb(x.goal)+' '+x.u+(x.kind==='max'?' max':'')+'</small>'+'</b></button>'; }).join('')+'</div>'
       +'</div></section>';
   }
   function historyHtml(){
@@ -229,7 +231,7 @@ var INTAKE=(function(){
     var bars='<div class="bl-bars"><i class="bl-bars__goal" style="bottom:'+gp+'%"></i><span class="bl-bars__gl" style="bottom:'+gp+'%">'+(n.kind==='min'?'objectif ':'max ')+nb(refOf(n))+'</span>'
       +pts.map(function(p,i){
         var na=!p.fut&&p.v==null, over=p.v!=null&&(n.kind==='max'?p.v>n.goal:n.kind==='target'?p.v>n.max:false);
-        var bar='<i style="height:'+(p.fut||p.v==null?0:Math.max(2,p.v/topv*100)).toFixed(1)+'%;background:'+(over?'var(--yellow)':cvar(n))+'"></i>';
+        var bar='<i style="height:'+(p.fut||p.v==null?0:Math.max(2,p.v/topv*100)).toFixed(1)+'%;background:'+(over?'var(--x-orange)':cvar(n))+'"></i>';
         var cls='bl-bars__b'+(na?' is-gap':'');
         return IN.mode!=='year'?'<button type="button" class="'+cls+'" aria-pressed="'+(i===IN.selected)+'" onclick="INTAKE._select('+i+')" aria-label="'+p.detail+(p.v==null?' · non noté':' · '+fmt(p.v)+' '+n.u)+'"'+(p.fut?' disabled':'')+'>'+bar+'</button>':'<span class="'+cls+'" aria-hidden="true">'+bar+'</span>';
       }).join('')+'</div>'
@@ -297,8 +299,8 @@ var INTAKE=(function(){
     var e=day(d); if(!e) return '';
     var n=BY.kcal, pct=Math.round(e.kcal/n.goal*100);
     var mic=NUT.filter(function(x){ return x.col==='mic'&&e[x.k]>0; }).map(function(x){
-      var over=x.kind==='max'&&e[x.k]>x.goal;
-      return '<span class="'+(over?'bl-warn':'bl-mut')+'">'+(x.k==='sat'?'Gr. saturées':x.lbl)+' <b'+(over?'':' style="color:var(--txt)"')+'>'+nb(e[x.k])+' '+x.u+'</b>'+(over?' ⚠':'')+'</span>';
+      var over=stateOf(x,e[x.k])==='bad';
+      return '<span class="'+(over?'bl-warn':'bl-mut')+'">'+(x.k==='sat'?'Gr. saturées':x.lbl)+' <b'+(over?'':' style="color:var(--txt)"')+'>'+nb(e[x.k])+' '+x.u+'</b>'+'</span>';
     }).join('');
     return '<div class="bl-daycard"><div class="bl-daycard__h"><span style="font-weight:800;font-size:14px">🍽️ Nutrition</span><span class="'+(pct>=100?'bl-pos':'bl-mut')+'" style="font-size:12px;font-weight:800">'+pct+NB+'%</span></div>'
       +'<div class="bl-num" style="font-size:29px;margin-top:10px">'+nb(e.kcal)+un('/ '+nb(n.goal)+' kcal')+'</div>'

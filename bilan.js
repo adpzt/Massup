@@ -90,8 +90,8 @@ var BILAN=(function(){
 
   // Étiquette d'une macro (règles d'INTAKE : min, cible 70 g / 80 g max pour les lipides, max)
   function macroTag(n,v){
-    if(n.kind==='max') return v>n.goal?['⚠ au-dessus','bl-warn','is-warn']:['✓ sous le max','bl-pos',''];
-    if(n.kind==='target') return v>n.max?['⚠ au-dessus','bl-warn','is-warn']:v>n.goal?['✓ acceptable','bl-pos','']:['✓ cible','bl-pos',''];
+    if(n.kind==='max') return v>n.goal?['au-dessus','bl-warn','is-warn']:['✓ sous le max','bl-pos',''];
+    if(n.kind==='target') return v>n.max?['au-dessus','bl-warn','is-warn']:v>n.goal?['✓ acceptable','bl-pos','']:['✓ cible','bl-pos',''];
     return v>=n.goal?['✓ objectif','bl-pos','']:[Math.round(v/n.goal*100)+NB+'%','',''];
   }
   function macroCell(n,v){

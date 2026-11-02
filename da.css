@@ -231,3 +231,6 @@ button.bl-sec__link{appearance:none;border:0;background:transparent;font-family:
 .bl-notes .bl-nrow__v{font-size:19px;}
 /* Pas de zoom au double toucher ni au pincement (02/11) : html et body n'autorisent que le défilement */
 *,html,body{touch-action:pan-x pan-y;} /* « manipulation » (style.css) laissait le pincement dans les zones qui défilent */
+/* « À surveiller » = orange, sans icône (03/11, Adrien : « arrête avec l'icône attention partout ») */
+.bl-warn{color:var(--x-orange);}
+.bl-trk>i.is-warn,.in-sq__t>i.is-warn{background:var(--x-orange);}

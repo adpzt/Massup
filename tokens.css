@@ -118,6 +118,7 @@
   --x-tab:rgba(22,26,34,0.86);
   --x-alert-bg:rgba(255,201,77,0.08);
   --x-alert-b:rgba(255,201,77,0.40);
+  --x-orange:#FFA94D;                      /* « à surveiller » (nutrition, 03/11 : orange plutôt qu'une icône ⚠) · 10:1 */
 
   /* Cartes de séance : verre teinté en sombre (aplats vifs en clair) */
   --x-sess-push:linear-gradient(160deg,rgba(255,132,82,0.18),rgba(255,255,255,0.02) 75%);
@@ -205,6 +206,7 @@
     --x-tab:rgba(255,255,255,0.94);
     --x-alert-bg:rgba(255,201,77,0.18);
     --x-alert-b:rgba(138,97,0,0.40);
+    --x-orange:#B34310;                    /* 5,6:1 sur blanc */
 
     /* Cartes de séance en aplats vifs, texte foncé (≥7:1) */
     --x-sess-push:linear-gradient(150deg,#FF8452,#FFA27F);
