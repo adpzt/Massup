@@ -146,21 +146,19 @@ var SLEEP=(function(){
       +'<div><b>'+(bedAvg==null?'&#x2014;':hhmm(bedAvg))+'</b><small>coucher moyen</small></div>'
       +'<div><b>'+(wakeAvg==null?'&#x2014;':hhmm(wakeAvg))+'</b><small>r&#xE9;veil moyen</small></div></div>';
   }
-  // ── « Ton rythme » (02/11 soir, demande d'Adrien : des conseils d'horaires selon les cycles) ──
-  // Sur les 14 dernières nuits notées : coucher et lever moyens, puis horaires en FIN de cycle (cycle ≈ 90 min,
-  // ~15 min pour s'endormir) : 5 cycles = 7 h 30 de sommeil, 6 cycles = 9 h. Repère, pas une mesure.
+  // ── « Ton rythme » v3 (03/11, validé par Adrien) : SA règle « au lit avant minuit » → réveil n'importe quand entre
+  // 07:00 et 09:00 (= 7 à 9 h de sommeil, la zone) ; plus de calcul de cycles (impossible à prévoir à la minute).
+  // Le seul repère en plus : la régularité du LEVER sur les 7 dernières nuits (± 30 min = régulier).
   function adviceHtml(){
-    var items=history(14).filter(function(x){ return x.minutes!=null&&rel(x.data.bed)!=null; });
-    if(items.length<3) return '';
-    var beds=items.map(function(x){ return rel(x.data.bed); }), bedAvg=beds.reduce(function(a,v){ return a+v; },0)/beds.length;
-    var wakeAvg=items.reduce(function(a,x){ return a+rel(x.data.bed)+x.minutes; },0)/items.length;
-    var spread=Math.round(Math.sqrt(beds.reduce(function(a,v){ return a+(v-bedAvg)*(v-bedAvg); },0)/beds.length));
-    // v2 (02/11, Adrien : « plus simple, je suis un peu perdu ») : DEUX heures à retenir + une ligne, c'est tout.
-    // Debout = ton lever habituel ; au lit = 5 cycles (7 h 30) + 15 min pour t'endormir avant.
-    var up=wakeAvg, bed=wakeAvg-465;
+    var items=history(7).filter(function(x){ return x.minutes!=null&&rel(x.data.bed)!=null; });
+    var wakes=items.map(function(x){ return rel(x.data.bed)+x.minutes; });
+    var wAvg=wakes.length?wakes.reduce(function(a,v){ return a+v; },0)/wakes.length:null;
+    var spread=wakes.length>1?Math.round(Math.sqrt(wakes.reduce(function(a,v){ return a+(v-wAvg)*(v-wAvg); },0)/wakes.length)):null;
+    var lateBeds=items.filter(function(x){ return rel(x.data.bed)>rel('00:00'); }).length;
     return '<div class="wn-card slp-advice"><div class="wn-title">Ton rythme</div>'
-      +'<div class="slp-adv"><div><span>\uD83D\uDECF\uFE0F Au lit</span><b>'+hhmm(bed)+'</b></div><div><span>\u2600\uFE0F Debout</span><b>'+hhmm(up)+'</b></div></div>'
-      +'<p class="slp-adv-sub">5 cycles de 90 min = 7 h 30 de sommeil'+(spread>30?' \u00b7 couche-toi \u00e0 heure fixe (\u00b1 '+spread+' min en ce moment)':' \u00b7 coucher r\u00e9gulier \u2713')+'</p>'
+      +'<div class="slp-adv"><div><span>\uD83D\uDECF\uFE0F Au lit avant</span><b>00:00</b></div><div><span>\u2600\uFE0F R\u00e9veil entre</span><b>07:00 <small>\u2192</small> 09:00</b></div></div>'
+      +'<p class="slp-adv-sub">'+(spread==null?'Note quelques nuits pour voir ta r\u00e9gularit\u00e9.'
+        :(spread<=30?'\u2713 Lever r\u00e9gulier (\u00b1 '+spread+' min)':'Ton lever varie de \u00b1 '+spread+' min \u00b7 vise \u00b1 30 min')+(lateBeds?' \u00b7 '+lateBeds+' coucher'+(lateBeds>1?'s':'')+' apr\u00e8s minuit sur 7':''))+'</p>'
       +'</div>';
   }
   function renderOpen(){

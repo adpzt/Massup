@@ -80,3 +80,5 @@
 .slp-adv span{font-size:12px;font-weight:800;color:var(--mut);}
 .slp-adv b{font:italic 900 34px/1 'Saira',system-ui,sans-serif;color:var(--txt);}
 .slp-adv-sub{margin:12px 0 0;font-size:12px;font-weight:700;line-height:1.4;color:var(--mut);}
+.slp-adv b small{font-size:.55em;color:var(--mut);}
+.slp-adv b{white-space:nowrap;} .slp-adv>div+div b{font-size:26px;}

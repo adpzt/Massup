@@ -112,6 +112,7 @@ var DB = {
   prepared: null,  // séance LiveUp préparée à l'avance : {sel, sname, count, date} (03/08)
   dz: {},          // espace Détente : 'YYYY-MM-DD' -> {chin:true, langue:true, ..., stretch:true} (04/08)
   pv: {msg:null,seen:null}, // « Nous deux » (26/08) : mon petit mot pour Melati {id,text,at} + id du dernier mot d'elle que j'ai vu
+  noteGrav: {},    // notes /20 GRAVÉES (03/11) : lundi -> copie figée de la note (dimanche 20 h) — ne change plus jamais ; à la fusion, la 1re gravure gagne
   bodyMeas: {},    // mensurations (02/11) : date -> {bras, poitrine, taille, cuisse (cm), at:ms} ou {del:1, at} — la plus récente gagne
   recHidden: {},   // perfs retirées des classements par Adrien (01/11) : key -> {logId: {h:1|0, at:ms}} — la plus récente gagne
   evolution: {},   // évolutions de charge en cours (15/08) : key -> {from, to, hi} — hi = nb de séries au poids haut (en fin d'exo)
@@ -134,7 +135,7 @@ function loadDB(){
   if(_saveDBTimer) _flushSaveDB(); // une écriture débouncée est en attente → flush avant relecture
   try{
     var s = localStorage.getItem('massup_db');
-    if(s){ var d=JSON.parse(s); if(d.weights) DB.weights=d.weights; if(d.logs) DB.logs=d.logs; if(d.weightSetDate) DB.weightSetDate=d.weightSetDate; if(d.bodyWeight) DB.bodyWeight=d.bodyWeight; if(d.healthLogs) DB.healthLogs=d.healthLogs; if(d.health) DB.health=d.health; if(d.healthMeta) DB.healthMeta=d.healthMeta; if(d.sleepLog) DB.sleepLog=d.sleepLog; if(d.templates) DB.templates=d.templates; if(d.profile) DB.profile=d.profile; if(d.deletedWeights) DB.deletedWeights=d.deletedWeights; if(d.deletedBW) DB.deletedBW=d.deletedBW; if(d.deletedLogs) DB.deletedLogs=d.deletedLogs; if(d.nutrition) DB.nutrition=d.nutrition; if(d.reminders) DB.reminders=d.reminders; if(d.painLog) DB.painLog=d.painLog; if(d.rank) DB.rank=d.rank; if(d.prepared) DB.prepared=d.prepared; if(d.dz) DB.dz=d.dz; if(d.evolution) DB.evolution=d.evolution; if(d.recHidden) DB.recHidden=d.recHidden; if(d.bodyMeas) DB.bodyMeas=d.bodyMeas; if(d.nutriA) DB.nutriA=d.nutriA; if(d.pv) DB.pv=d.pv; }
+    if(s){ var d=JSON.parse(s); if(d.weights) DB.weights=d.weights; if(d.logs) DB.logs=d.logs; if(d.weightSetDate) DB.weightSetDate=d.weightSetDate; if(d.bodyWeight) DB.bodyWeight=d.bodyWeight; if(d.healthLogs) DB.healthLogs=d.healthLogs; if(d.health) DB.health=d.health; if(d.healthMeta) DB.healthMeta=d.healthMeta; if(d.sleepLog) DB.sleepLog=d.sleepLog; if(d.templates) DB.templates=d.templates; if(d.profile) DB.profile=d.profile; if(d.deletedWeights) DB.deletedWeights=d.deletedWeights; if(d.deletedBW) DB.deletedBW=d.deletedBW; if(d.deletedLogs) DB.deletedLogs=d.deletedLogs; if(d.nutrition) DB.nutrition=d.nutrition; if(d.reminders) DB.reminders=d.reminders; if(d.painLog) DB.painLog=d.painLog; if(d.rank) DB.rank=d.rank; if(d.prepared) DB.prepared=d.prepared; if(d.dz) DB.dz=d.dz; if(d.evolution) DB.evolution=d.evolution; if(d.recHidden) DB.recHidden=d.recHidden; if(d.bodyMeas) DB.bodyMeas=d.bodyMeas; if(d.noteGrav) DB.noteGrav=d.noteGrav; if(d.nutriA) DB.nutriA=d.nutriA; if(d.pv) DB.pv=d.pv; }
   }catch(e){}
 }
 // Écriture localStorage débouncée (300ms) : localStorage.setItem est synchrone et bloque le
@@ -4218,6 +4219,14 @@ function mergeBackupIntoDB(bk){
     Object.keys(bk.recHidden).forEach(function(k){
       var loc=DB.recHidden[k]||(DB.recHidden[k]={}), rem=bk.recHidden[k]||{};
       Object.keys(rem).forEach(function(id){ if(!loc[id]||(rem[id]&&rem[id].at>(loc[id].at||0))) loc[id]=rem[id]; });
+    });
+  }
+  // Notes gravées (03/11) : union par semaine ; à semaine égale, la PREMIÈRE gravure gagne (une note gravée ne change jamais)
+  if(bk.noteGrav){
+    if(!DB.noteGrav) DB.noteGrav={};
+    Object.keys(bk.noteGrav).forEach(function(w){
+      var r=bk.noteGrav[w], l=DB.noteGrav[w];
+      if(r&&r.note!=null&&(!l||l.note==null||(r.at||0)<(l.at||0))) DB.noteGrav[w]=r;
     });
   }
   // Mensurations (02/11) : par date, l'entrée la plus récente gagne — une suppression ({del:1}) comprise
@@ -10595,7 +10604,8 @@ function nutObjectives(ws){
   return v2?{v:2,pdj:5,shk:5,shkLbl:'cr&#xE9;atine',shkIco:'&#x1F9EA;',cardio:3}
            :{v:1,pdj:4,shk:2,shkLbl:'shakers',shkIco:'&#x1F964;',cardio:2};
 }
-function bilanNoteWeek(ws){
+// Barèmes d'époque v1-v3 (calcul) — l'affichage passe par bilanNoteWeek (gravure + v5) ci-dessous
+function bilanNoteWeekCalc(ws){
   var we=rankAddDays(ws,6);
   var logs=(DB.logs||[]).filter(function(l){return l.date>=ws&&l.date<=we;});
   var salle=logs.filter(rankLogIsSalle);
@@ -10640,6 +10650,98 @@ function bilanNoteWeek(ws){
   var note=Math.round((pP!=null?raw:raw*20/17)*2)/2;
   return {note:note,pA:Math.round(pA*10)/10,pE:Math.round(pE*10)/10,pN:Math.round(pN*10)/10,pP:pP,stepAvg:sw?sw.avg:null,
     salle:salle.length,goal:goal,avg:avg,pdj:pdj,shk:shk,declared:!!ans};
+}
+// ══ NOTATION v5 + GRAVURE (03/11/2026, plan validé par Adrien le 02/11) ══
+// Semaine = Salle /10 (assiduité /5 sur weekValue : objectif → 5 · −1 → 2,5 · −2 → 1 ; qualité /5 = moyenne des /20 ÷ 4)
+//         + Nutrition /6 (jours ≥ 2 600 kcal /3 · jours ≥ 135 g de protéines /2 · shaker 7/7 /1 — vraies données Yazio)
+//         + Activité /4 (pas /2 · course /1 · nuits ≥ 7 h /1) ; donnée manquante = 0.
+// Malus : −0,5 par jour < 1 000 pas · −1 sans course (dès le 07/12) · −0,5 sans pesée dans la semaine
+//         · −0,5 par muscle en rouge sang sur les 30 jours qui finissent le dimanche.
+// Démarre le lundi qui suit la mise en ligne (jamais rétroactif). Avant : barèmes d'époque (v1-v3).
+// GRAVURE : dès le dimanche 20 h, la note est copiée dans DB.noteGrav[lundi] et ne bouge PLUS JAMAIS
+// (règle « une note gravée ne change jamais »). Jamais gravée avant que les données cloud (et Yazio pour la v5)
+// soient chargées, pour ne pas graver des zéros sur un appareil neuf.
+var NOTE_V5_START='2026-11-09';
+var NOTE_V5={kcalDay:2600,protDay:135,sleepMin:420};
+function noteWeekClosed(ws){ return Date.now()>=new Date(rankAddDays(ws,6)+'T20:00:00').getTime(); }
+function noteCanGrave(ws){
+  if(typeof _cloudPullOk==='undefined'||!_cloudPullOk) return false;
+  if(ws>=NOTE_V5_START&&!(typeof INTAKE!=='undefined'&&INTAKE.ready&&INTAKE.ready())) return false;
+  return true;
+}
+function bilanNoteWeek(ws){
+  var g=DB.noteGrav&&DB.noteGrav[ws];
+  if(g&&g.note!=null) return g;
+  var B=ws>=NOTE_V5_START?bilanNoteWeekV5(ws):bilanNoteWeekCalc(ws);
+  if(noteWeekClosed(ws)&&noteCanGrave(ws)){
+    if(!DB.noteGrav) DB.noteGrav={};
+    var copy=JSON.parse(JSON.stringify(B)); copy.graved=1; copy.at=Date.now();
+    DB.noteGrav[ws]=copy; saveDB();
+    return copy;
+  }
+  return B;
+}
+function bilanNoteWeekV5(ws){
+  var we=rankAddDays(ws,6), t=todayStr(), r1=function(x){ return Math.round(x*10)/10; };
+  var logs=(DB.logs||[]).filter(function(l){ return l.date>=ws&&l.date<=we; });
+  var ans=DB.rank&&DB.rank.weekly&&DB.rank.weekly[ws];
+  // Salle /10
+  var v=weekValue(logs), goal=gelWeekGoal(ws);
+  var pts=[[0,0],[goal-2,1],[goal-1,2.5],[goal,5]], pA=0;
+  if(v>=goal) pA=5; else for(var i=1;i<pts.length;i++){ if(v<=pts[i][0]){ var a=pts[i-1],b=pts[i]; pA=v<=a[0]?a[1]:a[1]+(b[1]-a[1])*(v-a[0])/(b[0]-a[0]); break; } }
+  pA=Math.max(0,pA);
+  var notes=logs.map(liveLogNote20).filter(function(n){ return n!=null; });
+  var avg=notes.length?notes.reduce(function(s,n){ return s+n; },0)/notes.length:null;
+  var pQ=avg!=null?Math.min(5,avg/4):0;
+  // Nutrition /6 (Yazio)
+  var kd=0, pd=0;
+  for(var d=0;d<7;d++){ var day=rankAddDays(ws,d); if(day>t) break;
+    var k=typeof INTAKE!=='undefined'?INTAKE.val(day,'kcal'):null, p=typeof INTAKE!=='undefined'?INTAKE.val(day,'prot'):null;
+    if(k!=null&&k>=NOTE_V5.kcalDay) kd++; if(p!=null&&p>=NOTE_V5.protDay) pd++; }
+  var shk=ans?(ans.shaker||0):nutWeekCount('shaker',ws);
+  var pK=kd/7*3, pP=pd/7*2, pS=Math.min(1,shk/7);
+  // Activité /4
+  var pSteps=typeof STEPS!=='undefined'?STEPS.weekPts(ws,2):null, sw=typeof STEPS!=='undefined'?STEPS.week(ws):null;
+  var run=ans?(ans.run||0):Math.max(nutWeekCount('run',ws),runWeekAuto(ws));
+  var nights=0; for(var n=0;n<7;n++){ var nk=rankAddDays(ws,n-1), e=(DB.sleepLog||{})[nk], m=e&&typeof SLEEP!=='undefined'?SLEEP._duration(e.bed,e.wake):null; if(m!=null&&m>=NOTE_V5.sleepMin) nights++; }
+  var pR=run>=1?1:0, pN=nights/7;
+  // Malus
+  var malus=[];
+  if(typeof STEPS!=='undefined'){ for(var s=0;s<7;s++){ var sd=rankAddDays(ws,s); if(sd>=t) break; var sv=STEPS.stepsOf(sd);
+    if(sv!=null&&sv<1000) malus.push({l:new Date(sd+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'})+' · '+Math.round(sv).toLocaleString('fr-FR')+' pas',p:0.5}); } }
+  var runMiss=ws>=RUN_REQ_START&&run<1;
+  if(runMiss) malus.push({l:'Course obligatoire non faite',p:1});
+  var closed=noteWeekClosed(ws);
+  if(closed&&!(DB.bodyWeight||[]).some(function(b){ return b.date>=ws&&b.date<=we; })) malus.push({l:'Aucune pesée dans la semaine',p:0.5});
+  if(closed){
+    var vol=muscleVolume(rankAddDays(we,-29),we);
+    RADAR_GROUPS.forEach(function(g){ if(volTier(g.label,(vol[g.label]||0)*7/30)==='blood') malus.push({l:'Muscle en rouge sang sur 30 j · '+g.label.toLowerCase(),p:0.5}); });
+  }
+  var mal=malus.reduce(function(a,m){ return a+m.p; },0);
+  var tot=pA+pQ+pK+pP+pS+(pSteps||0)+pR+pN;
+  var pil=[
+    {k:'salle',i:'🏋️',l:'Salle',m:10,c:[['Assiduité',fmtSeances(v)+'/'+goal+' séances',pA,5],['Qualité',avg!=null?'moy. '+String(r1(avg)).replace('.',',')+'/20':'pas de note',pQ,5]]},
+    {k:'nut',i:'🍽️',l:'Nutrition',m:6,c:[['Jours ≥ 2 600 kcal',kd+'/7',pK,3],['Jours ≥ 135 g de protéines',pd+'/7',pP,2],['Shaker',shk+'/7',pS,1]]},
+    {k:'act',i:'👟',l:'Activité',m:4,c:[['Pas',sw&&sw.sum?Math.round(sw.sum).toLocaleString('fr-FR')+'/50 000':'non renseignés',pSteps||0,2],['Course',(run>=1?1:0)+'/1',pR,1],['Nuits ≥ 7 h',nights+'/7',pN,1]]}
+  ];
+  pil.forEach(function(P){ P.c=P.c.map(function(c){ return [c[0],c[1],r1(c[2]),c[3]]; }); P.p=r1(P.c.reduce(function(a,c){ return a+c[2]; },0)); });
+  return {v:5,note:Math.max(0,Math.min(20,Math.round((tot-mal)*2)/2)),pil:pil,malus:malus,
+    salle:v,goal:goal,avg:avg,stepAvg:sw?sw.avg:null,shk:shk,run:run,maison:ans?(ans.maison||0):nutWeekCount('maison',ws),
+    kcalDays:kd,protDays:pd,nights:nights,blood:malus.filter(function(m){ return /pas$/.test(m.l); }).length,runReq:ws>=RUN_REQ_START,runMiss:runMiss,declared:!!ans};
+}
+// Détail commun à toutes les versions (écran « pourquoi j'ai X ») : 3 piliers + malus
+function noteWeekDetail(B){
+  if(B.v===5) return {pil:B.pil,malus:B.malus};
+  var r=function(x){ return x==null?0:x; };
+  if(B.v===3) return {pil:[
+      {i:'🏋️',l:'Salle',m:12,p:r(B.pA)+r(B.pE),c:[['Assiduité',fmtSeances(B.salle)+'/'+B.goal+' séances',r(B.pA),6],['Exécution',B.avg!=null?'moy. '+String(Math.round(B.avg*10)/10).replace('.',',')+'/20':'pas de LiveUp',r(B.pE),6]]},
+      {i:'🍽️',l:'Nutrition',m:6,p:r(B.pS)+r(B.pM)+r(B.pR),c:[['Shaker',B.shk+'/7',r(B.pS),3],['Plats maison',B.maison+'/14',r(B.pM),2],['Courir',B.run+'/1',r(B.pR),1]]},
+      {i:'👟',l:'Pas',m:2,p:r(B.pP),c:[['Pas',B.stepAvg!=null?'moy. '+Math.round(B.stepAvg).toLocaleString('fr-FR')+' / j':'non renseignés',r(B.pP),2]]}],
+    malus:(B.blood?[{l:B.blood+' journée'+(B.blood>1?'s':'')+' sous 1 000 pas',p:B.blood*0.5}]:[]).concat(B.runMiss?[{l:'Course obligatoire non faite',p:1}]:[])};
+  return {pil:[
+      {i:'🏋️',l:'Salle',m:14,p:r(B.pA)+r(B.pE),c:[['Assiduité',fmtSeances(B.salle)+'/'+B.goal+' séances',r(B.pA),7],['Exécution',B.avg!=null?'moy. '+String(Math.round(B.avg*10)/10).replace('.',',')+'/20':'pas de LiveUp',r(B.pE),7]]},
+      {i:'🍽️',l:'Nutrition',m:3,p:r(B.pN),c:[['Petit-déj + shaker',B.pdj+' · '+B.shk,r(B.pN),3]]},
+      {i:'👟',l:'Pas',m:3,p:r(B.pP),c:[['Pas',B.stepAvg!=null?'moy. '+Math.round(B.stepAvg).toLocaleString('fr-FR')+' / j':'non renseignés',r(B.pP),3]]}],malus:[]};
 }
 // Note du mois = moyenne des notes des semaines qui DÉMARRENT dans le mois (arrondi 0,5)
 function bilanNoteMonth(mk){
@@ -11104,7 +11206,11 @@ function wrRender(){
       if(B.note>=18) h+='<div class="wr-badge gold">&#x1F451; Semaine en or</div>';
       else if(B.note>=14) h+='<div class="wr-badge blue">&#x1F4AA; Le standard MASSUP</div>';
       h+='<div class="wr-hook">'+(B.note>=18?'C\'est exactement &#xE7;a, une semaine de prise de masse r&#xE9;ussie.':B.note>=14?'Grosse semaine. On encha&#xEE;ne.':B.note>=11?'Semaine solide. La marche au-dessus se joue sur les d&#xE9;tails ci-dessous.':B.note>=8?'Semaine en retrait &#x2014; identifie LE maillon faible et corrige-le d&#xE8;s lundi.':'Semaine rat&#xE9;e. Pas de discours&#x202F;: une s&#xE9;ance programm&#xE9;e MAINTENANT et on repart.')+'</div>';
-      if(B.v===3) h+='<div class="wr-breakdown">'
+      // v5 (03/11) : les 3 piliers et les malus, dans le même détail que l'écran « pourquoi j'ai X » du Bilan
+      if(B.v===5){ var _D=noteWeekDetail(B), _f=function(x){ return String(Math.round(x*10)/10).replace('.',','); };
+        h+='<div class="wr-breakdown">'+_D.pil.map(function(P){ return '<div class="wr-b-row"><span>'+P.i+' '+P.l+' &#x2014; '+P.c.map(function(c){ return c[1]; }).join(' &#xB7; ')+'</span><span>'+_f(P.p)+' /'+P.m+'</span></div>'; }).join('')
+          +_D.malus.map(function(m){ return '<div class="wr-b-row"><span>&#x1FA78; '+m.l+'</span><span style="color:var(--x-note-1)">&#x2212;'+_f(m.p)+'</span></div>'; }).join('')+'</div>'; }
+      else if(B.v===3) h+='<div class="wr-breakdown">'
         +'<div class="wr-b-row"><span>&#x1F3CB; Assiduit&#xE9; &#x2014; '+fmtSeances(B.salle)+'/'+B.goal+' s&#xE9;ances</span><span style="color:var(--acc)">'+String(B.pA).replace('.',',')+' /6</span></div>'
         +'<div class="wr-b-row"><span>&#x1F4DD; Ex&#xE9;cution &#x2014; '+(B.avg!=null?'moy. '+String(Math.round(B.avg*10)/10).replace('.',',')+'/20':'pas de LiveUp')+'</span><span style="color:var(--acc2)">'+String(B.pE).replace('.',',')+' /6</span></div>'
         +'<div class="wr-b-row"><span>&#x1F964; Shaker &#x2014; '+B.shk+'/7 jours</span><span style="color:var(--yellow)">'+String(B.pS).replace('.',',')+' /3</span></div>'

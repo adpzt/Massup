@@ -219,13 +219,13 @@ var BILAN=(function(){
   function notesHtml(B0,curWs){
     var sa=saison(), rows=[];
     function det(B){ return fmtSeances(B.salle)+'/'+B.goal+' séance'+(B.goal>1?'s':''); }
-    rows.push(['Cette semaine','en cours · '+det(B0),B0.note,"wrOpen('"+curWs+"',true)"]);
-    var ws=rankAddDays(curWs,-7), B=bilanNoteWeek(ws); if(B.salle) rows.push(['Sem. du '+dshort(ws),det(B)+' · gravée',B.note,"wrOpen('"+ws+"',true)"]);
+    rows.push(['Cette semaine','en cours · '+det(B0),B0.note,"BILAN.note('"+curWs+"')"]);
+    var ws=rankAddDays(curWs,-7), B=bilanNoteWeek(ws); if(B.salle) rows.push(['Sem. du '+dshort(ws),det(B)+(B.graved?' · gravée':''),B.note,"BILAN.note('"+ws+"')"]);
     var t=today(), pm=new Date(parseInt(t.slice(0,4),10),parseInt(t.slice(5,7),10)-2,1), pmk=pm.getFullYear()+'-'+String(pm.getMonth()+1).padStart(2,'0');
     var M=null; try{ M=bilanNoteMonth(pmk); }catch(e){}
     if(M&&M.salle) rows.push([mrMonthLabel(pmk),'mois · '+M.salle+' séances',M.note,"mrOpen('"+pmk+"',true)"]);
     var older=[], season=rankCurrentSeason();
-    for(var j=2;j<=30;j++){ var w2=rankAddDays(curWs,-7*j); if(season&&w2<season.start) break; var B2=bilanNoteWeek(w2); if(B2.salle) older.push(['Sem. du '+dshort(w2),det(B2)+' · gravée',B2.note,"wrOpen('"+w2+"',true)"]); }
+    for(var j=2;j<=30;j++){ var w2=rankAddDays(curWs,-7*j); if(season&&w2<season.start) break; var B2=bilanNoteWeek(w2); if(B2.salle) older.push(['Sem. du '+dshort(w2),det(B2)+(B2.graved?' · gravée':''),B2.note,"BILAN.note('"+w2+"')"]); }
     if(S.allw) rows=rows.concat(older);
     var row=function(r){ return '<button type="button" class="bl-nrow" onclick="'+r[3]+'"><div style="min-width:0"><div class="bl-nrow__n">'+r[0]+'</div><div class="bl-nrow__s">'+r[1]+'</div></div><div class="bl-num bl-nrow__v" style="color:var(--bl-note-'+noteN(r[2])+')">'+fr(r[2],1)+u('/20')+'<span class="bl-mut bl-nrow__a" aria-hidden="true">›</span></div></button>'; };
     return '<button type="button" class="bl-fold" aria-expanded="'+S.notes+'" aria-controls="blNotes" onclick="BILAN.toggle(\'notes\')"><span aria-hidden="true" style="font-size:18px">🏆</span><span>Notes</span><span class="bl-fold__i" aria-hidden="true">›</span></button>'
@@ -244,7 +244,7 @@ var BILAN=(function(){
     host.innerHTML=alertsHtml()+'<div class="bl-topcard">'+situationHtml()+'<hr class="bl-hr">'+objectivesHtml(B0)+'</div>'+nutritionHtml()+'<hr class="bl-hr">'+duoHtml()+'<hr class="bl-hr">'+weightHtml()+'<hr class="bl-hr">'+notesHtml(B0,curWs)+'<hr class="bl-hr">'+melatiHtml();
     S.pop=null;
     try{ if(typeof PV!=='undefined'&&S.mel) PV.render(); }catch(e){ console.warn('[MASSUP] PV:',e); }
-    if(S.screen==='poids') renderScreen();
+    if(S.screen) renderScreen();
     if(S.sheet) renderSheet();
     autoNight();
   }
@@ -322,8 +322,32 @@ var BILAN=(function(){
     var fresh=!ov;
     if(fresh){ ov=document.createElement('div'); ov.id='blScreen'; ov.className='bl-overlay'; document.body.appendChild(ov); }
     var sc=ov.scrollTop;
-    ov.innerHTML='<div class="bl-page'+(fresh?' bl-screen-in':'')+'">'+poidsHtml()+'</div>';
+    ov.innerHTML='<div class="bl-page'+(fresh?' bl-screen-in':'')+'">'+(S.screen==='note'?noteHtml(S.noteWs):poidsHtml())+'</div>';
     ov.scrollTop=sc;
+  }
+
+  /* ══════════ DÉTAIL DE LA NOTE (« pourquoi j'ai X », notation v5 — 03/11) ══════════ */
+  function noteHtml(ws){
+    var B=bilanNoteWeek(ws), D=noteWeekDetail(B), tot=B.note, n=noteN(tot), cur=ws===rankMonday(today());
+    var sun=rankAddDays(ws,6), foot=B.graved?'Gravée le dimanche '+dshort(sun)+' à 20 h · elle ne changera plus.':noteWeekClosed(ws)?'Semaine finie · elle sera gravée à la prochaine synchro.':'Sera gravée dimanche '+dshort(sun)+' à 20 h.';
+    var mt=D.malus.reduce(function(a,m){ return a+m.p; },0);
+    var h=top('\uD83C\uDFC6 Ta note',(cur?'Cette semaine':'Semaine du '+dshort(ws))+(B.v===5?'':' · barème d\u2019époque'))
+      +'<section class="bl-sec"><div class="bl-lbl">'+(cur?'En cours':'Semaine du '+dshort(ws)+' \u2192 '+dshort(sun))+'</div>'
+      +'<div class="bl-score"><span class="bl-num bl-score__v"><span class="'+(n===5?'bl-gold-txt':'')+'" style="'+(n===5?'':'color:var(--bl-note-'+n+')')+'">'+fr(tot,1)+'</span>'+u('/20')+'</span><span style="font-size:12px;font-weight:800;color:var(--bl-note-'+n+')">'+NOTE_PAL[n]+'</span></div>'
+      +'<div class="bl-scale" aria-hidden="true"><i style="background:var(--bl-note-1)"></i><i style="background:var(--bl-note-2)"></i><i style="background:var(--bl-note-3)"></i><i style="background:var(--bl-note-4)"></i><i style="background:var(--bl-note-5)"></i></div>'
+      +'<div style="position:relative;height:0"><i style="position:absolute;left:'+Math.min(100,tot/20*100).toFixed(1)+'%;top:-14px;width:4px;height:20px;margin-left:-2px;border-radius:2px;background:var(--txt)"></i></div>'
+      +'<div class="bl-scale__l"><span>0</span><span>8</span><span>12</span><span>14</span><span>18</span></div></section><hr class="bl-hr">'
+      +'<section class="bl-sec" style="padding-top:6px">'+D.pil.map(function(P){
+        return '<div class="bl-pil"><div class="bl-pil__h"><span class="bl-pil__n">'+P.i+' '+P.l+'</span><span class="bl-num" style="font-size:23px">'+fr(P.p,1)+u('/'+P.m)+'</span></div>'
+          +'<div class="bl-trk bl-trk--lg" style="margin-top:10px"><i class="'+(P.p>=P.m?'is-done':'')+'" style="width:'+Math.min(100,P.p/P.m*100).toFixed(0)+'%"></i></div>'
+          +P.c.map(function(c){ return '<div class="bl-crit"><span>'+c[0]+'</span><span class="bl-mut">'+c[1]+'</span><span class="bl-crit__p">'+fr(c[2],1)+'/'+c[3]+'</span></div>'; }).join('')+'</div>';
+      }).join('')+'</section><hr class="bl-hr">'
+      +'<section class="bl-sec"><div style="display:flex;align-items:baseline;justify-content:space-between"><span class="bl-pil__n">\uD83E\uDE78 Malus</span><span class="bl-num" style="font-size:20px;color:'+(mt?'var(--bl-note-1)':'var(--acc)')+'">'+(mt?'\u2212'+fr(mt,1):'0')+'</span></div>'
+      +(D.malus.length?'<div class="bl-malus">'+D.malus.map(function(m){ return '<div class="bl-malus__r"><span class="bl-num" style="font-size:16px;color:var(--bl-note-1)">\u2212'+fr(m.p,1)+'</span><span>'+esc(m.l)+'</span></div>'; }).join('')+'</div>':'<div class="bl-pos" style="margin-top:10px;font-size:13px;font-weight:800">\u2713 Aucun malus'+(cur?' pour l\u2019instant':'')+'</div>')
+      +'<div class="bl-meta" style="font-weight:700;margin-top:20px;white-space:normal">'+foot+'</div>'
+      +(noteWeekClosed(ws)?'<button type="button" class="bl-btn bl-btn--ghost bl-btn--block" style="margin-top:18px" onclick="BILAN.back();wrOpen(\''+ws+'\',true)">\uD83D\uDCCA Revoir le bilan de la semaine</button>':'')
+      +'</section>';
+    return h;
   }
 
   /* ══════════ FEUILLES DU BAS ══════════ */
@@ -450,6 +474,7 @@ var BILAN=(function(){
     render:render,
     refresh:function(){ try{ INTAKE.refresh(); }catch(e){ try{ STEPS.refresh(); }catch(e2){} } try{ PV.pull(true); }catch(e){} },
     go:function(s){ S.screen=s; S.psel=null; renderScreen(); document.body.style.overflow='hidden'; },
+    note:function(ws){ S.screen='note'; S.noteWs=ws; var ov=$('blScreen'); if(ov) ov.remove(); renderScreen(); document.body.style.overflow='hidden'; },
     back:function(){ S.screen=null; S.conf=null; S.mconf=null; renderScreen(); document.body.style.overflow=''; },
     sheet:openSheet, close:close, step:step, save:save,
     set:function(k,v){ F[k]=v; renderSheet(); },

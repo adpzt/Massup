@@ -49,7 +49,8 @@ var STEPS=(function(){
   // Points dans la note de semaine (max = poids fixé par l'app) — null si < 4 jours renseignés (pas de pénalité à l'aveugle)
   function weekPts(mon,max){
     if(!A) return null;
-    if(mon<monOf(today())) return null;
+    // 03/11 (incohérence ① du 28/10) : une semaine PASSÉE se note aussi avec ses pas — sinon, dès le lundi, la note de la
+    // semaine écoulée était recalculée sans eux (×20/18). Il faut toujours ≥ 4 jours renseignés (pas de pénalité à l'aveugle).
     var w=week(mon), cur=mon===monOf(today());
     if(w.n<(cur?1:4)||w.avg==null) return null;
     // Paliers proportionnels à la moyenne visée g (8 000 par défaut : 6 000 / 8 000 / 10 000 = 0,75 g / g / 1,25 g)

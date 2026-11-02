@@ -310,7 +310,8 @@ var INTAKE=(function(){
   }
 
   function init(adapter){ A=adapter; load(); }
-  return {init:init,renderCard:renderCard,open:open,close:close,refresh:refresh,pull:pull,day:day,val:val,avg:avg,last7:last7,last15:last15,NUT:NUT,
+  // ready() : la lecture serveur de CETTE session a réussi (la gravure de la note v5 l'attend — 03/11)
+  return {init:init,ready:function(){ return _status==='ok'; },renderCard:renderCard,open:open,close:close,refresh:refresh,pull:pull,day:day,val:val,avg:avg,last7:last7,last15:last15,NUT:NUT,
     dayCardHtml:dayCardHtml,days:function(){ return cache.days; },
     _metric:setMetric,_mode:setMode,_select:select,_page:page};
 })();
