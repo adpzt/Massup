@@ -5,6 +5,7 @@
 //   --only a_nutria,m_nutri    seulement les écrans dont le nom contient un de ces mots
 //   --app adrien|melati   une seule app (plusieurs : séparées par des virgules)
 //   --scheme dark|light|both   (défaut both)
+//   --engine webkit|chromium|both   moteur (défaut both : WebKit = Safari iOS, Chromium = référence historique)
 //   --go "nutOpen();…" --app melati --name mon_ecran   écran à la volée (actions séparées par ;;)
 //   --width 390 --height 844   (défaut iPhone 390 × 844)
 //   --baseline                 enregistre les problèmes actuels comme « déjà connus » (baseline.json)
@@ -14,13 +15,14 @@
 // Code de sortie 1 s'il y a un débordement, un texte coupé, un contraste < AA ou une erreur JS.
 // ═══════════════════════════════════════════════════════════════════════════
 const fs = require('fs'), path = require('path');
-const { chromium, serve, newPage, wait, ROOT } = require('./lib');
+const { chromium, webkit, serve, newPage, wait, ROOT } = require('./lib');
 const seeds = require('./seeds'), audit = require('./audit'), SCREENS = require('./screens');
 
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d; };
 const apps = arg('app', 'adrien,melati').split(',');
 const only = (arg('only', '') || '').split(',').filter(Boolean);
 const schemes = { both: ['dark', 'light'], dark: ['dark'], light: ['light'] }[arg('scheme', 'both')];
+const engines = { both: ['webkit', 'chromium'], webkit: ['webkit'], chromium: ['chromium'] }[arg('engine', 'both')];
 const width = +arg('width', 390), height = +arg('height', 844);
 const OUT = path.join(ROOT, '..', '.verif-ui');
 const BASE_F = path.join(__dirname, 'baseline.json'), SAVE_BASE = process.argv.includes('--baseline');
@@ -39,17 +41,25 @@ if (!jobs.length) { console.log('Aucun écran ne correspond.'); process.exit(2);
 
 (async () => {
   const { srv, base } = await serve();
-  const browser = await chromium.launch();
   const report = [], allKeys = []; let issues = 0, old = 0;
-  for (const scheme of schemes) for (const { app, screen: [name, actions, opt = {}] } of jobs) {
-    const errors = [];
+  for (const engine of engines) {
+  const launch = () => (engine === 'webkit' ? webkit : chromium).launch();
+  let browser = await launch();
+  const wk = engine === 'webkit' ? '_wk' : '', tag = engine === 'webkit' ? ' · Safari' : '';
+  for (const schemeName of schemes) for (const { app, screen: [name, actions, opt = {}] } of jobs) {
+    const scheme = schemeName, kscheme = scheme + (wk ? '@wk' : '');
+    let errors = [], shots = [], res = { contrast: [], overflow: [], clipped: [] };
+    // WebKit s'essouffle après des dizaines d'écrans dans le même navigateur : 2e essai avec un navigateur neuf
+    for (let attempt = 0; attempt < 2; attempt++) {
+    errors = [];
+    try {
     const { ctx, page } = await newPage(browser, base, { scheme, width, height, seed: app.seed ? seeds[app.seed] : null, errors });
     await page.goto(base + app.page); await wait(1800);
     for (const a of actions) { try { await page.evaluate(a); } catch (e) { errors.push('action « ' + a.slice(0, 50) + ' » : ' + e.message.split('\n')[0].slice(0, 120)); } await wait(700); }
     await wait(900); // les panneaux s'animent : une capture trop tôt paraît délavée
-    const shots = [], res = { contrast: [], overflow: [], clipped: [] };
+    shots = []; res = { contrast: [], overflow: [], clipped: [] };
     const take = async suffix => {
-      const f = `${name}_${scheme}${suffix}.png`; await page.screenshot({ path: path.join(OUT, f) }); shots.push(f);
+      const f = `${name}_${scheme}${wk}${suffix}.png`; await page.screenshot({ path: path.join(OUT, f) }); shots.push(f);
       const r = await page.evaluate(`(${audit.toString()})()`);
       for (const k of Object.keys(res)) for (const x of r[k]) if (!res[k].some(y => y.sel === x.sel && y.txt === x.txt)) res[k].push(x);
     };
@@ -67,21 +77,30 @@ if (!jobs.length) { console.log('Aucun écran ne correspond.'); process.exit(2);
       }
     }
     await ctx.close();
+    break;
+    } catch (e) {
+      if (attempt) { errors.push('capture impossible : ' + String(e.message || e).split('\n')[0].slice(0, 120)); break; }
+      try { await browser.close(); } catch (_) {}
+      browser = await launch();
+    }
+    }
     // séparer nouveaux / déjà connus
     const fresh = { contrast: [], overflow: [], clipped: [] }; let nOld = 0;
-    for (const k of Object.keys(res)) for (const x of res[k]) { const key = keyOf(name, scheme, k, x); allKeys.push(key); if (known.has(key)) nOld++; else fresh[k].push(x); }
+    for (const k of Object.keys(res)) for (const x of res[k]) { const key = keyOf(name, kscheme, k, x); allKeys.push(key); if (known.has(key)) nOld++; else fresh[k].push(x); }
     const n = fresh.contrast.length + fresh.overflow.length + fresh.clipped.length + errors.length; issues += n; old += nOld;
-    report.push({ name, scheme, shots, errors, nouveaux: fresh, connus: nOld, tout: { ...res } });
-    console.log((n ? '❌ ' : '✅ ') + name + ' [' + scheme + '] — ' + shots.length + ' capture(s)' + (n ? ` · NOUVEAU : ${fresh.overflow.length} débordement(s) · ${fresh.clipped.length} texte(s) coupé(s) · ${fresh.contrast.length} contraste(s) < AA · ${errors.length} erreur(s) JS` : '') + (nOld ? ` · (${nOld} déjà connu(s))` : ''));
+    report.push({ name, scheme, engine, shots, errors, nouveaux: fresh, connus: nOld, tout: { ...res } });
+    console.log((n ? '❌ ' : '✅ ') + name + ' [' + scheme + tag + '] — ' + shots.length + ' capture(s)' + (n ? ` · NOUVEAU : ${fresh.overflow.length} débordement(s) · ${fresh.clipped.length} texte(s) coupé(s) · ${fresh.contrast.length} contraste(s) < AA · ${errors.length} erreur(s) JS` : '') + (nOld ? ` · (${nOld} déjà connu(s))` : ''));
     Object.assign(res, fresh);
     for (const e of errors) console.log('     ⚠️  ' + e);
     for (const o of res.overflow.slice(0, 6)) console.log('     ↔️  ' + o.sel + ' : ' + o.why + (o.txt ? ' « ' + o.txt + ' »' : ''));
     for (const c of res.clipped.slice(0, 4)) console.log('     ✂️  ' + c.sel + ' « ' + c.txt + ' »');
     for (const c of res.contrast.slice(0, 6)) console.log('     🎨 ' + c.ratio + ':1 (min ' + c.need + ') ' + c.sel + ' « ' + c.txt + ' » ' + c.color + ' sur ' + c.bg);
   }
+  await browser.close();
+  }
   fs.writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(report, null, 1));
   if (SAVE_BASE) { const merged = [...new Set([...known, ...allKeys])].sort(); fs.writeFileSync(BASE_F, JSON.stringify(merged, null, 0).replace(/","/g, '",\n"')); console.log('\n📌 baseline.json : ' + merged.length + ' problème(s) connus enregistrés'); }
-  await browser.close(); srv.close();
+  srv.close();
   console.log('\nCaptures : ' + OUT + (old ? '\n(' + old + ' problème(s) déjà connus, listés dans report.json → « connus » / « tout »)' : '') + (issues ? '\n❌ ' + issues + ' NOUVEAU(X) problème(s) — à corriger avant de dire « terminé »' : '\n✅ Aucun nouveau problème. Regarder quand même les captures des écrans modifiés.'));
   process.exit(issues && !SAVE_BASE ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(2); });

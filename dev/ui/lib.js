@@ -1,9 +1,12 @@
 // Navigateur de test SANS RÉSEAU : seul 127.0.0.1 répond, donc le CDN Supabase ne charge pas,
 // les apps démarrent en mode local et un test ne peut JAMAIS écrire dans le cloud réel.
 const fs = require('fs'), path = require('path'), http = require('http');
-// PW_CORE = autre copie de playwright-core quand le SSD n'est pas branché
-const PW = process.env.PW_CORE || '/Volumes/Adrien SSD/x_ia/IA Creative Space/node_modules/playwright-core';
-const { chromium } = require(PW);
+// PW_CORE = autre copie de playwright-core ; sinon la copie du SSD, puis celle du Mac
+const PW = process.env.PW_CORE || ['/Volumes/Adrien SSD/x_ia/IA Creative Space/node_modules/playwright-core',
+  '/Users/Adrien/01_ia/IA Creative Space/node_modules/playwright-core'].find(p => fs.existsSync(p));
+// WebKit (02/11) = le moteur de Safari iOS : il voit les bugs propres à l'iPhone que Chromium rate
+// (ex. sommeil v2 : enfants d'un <button> en flex non étirés). Installé par `node <PW>/cli.js install webkit`.
+const { chromium, webkit } = require(PW);
 const ROOT = path.join(__dirname, '..', '..');
 const UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1';
 const TYPES = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.json': 'application/json', '.webmanifest': 'application/manifest+json',
@@ -34,4 +37,4 @@ async function newPage(browser, base, { scheme = 'dark', width = 390, height = 8
 }
 
 const wait = ms => new Promise(r => setTimeout(r, ms));
-module.exports = { chromium, serve, newPage, wait, ROOT };
+module.exports = { chromium, webkit, serve, newPage, wait, ROOT };

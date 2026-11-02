@@ -33,8 +33,8 @@ const ADRIEN = [
   ...['recettes', 'journee', 'semaine', 'calcul'].map(t => ['a_nutria_' + t, ['nutriAOpen()', `document.querySelector('#nutria .tab[data-p="${t}"]').click()`], { scroll: '#nutria' }]),
   ['a_nutria_recipe', ['nutriAOpen()', "document.querySelector('#nutria .tab[data-p=recettes]').click()", "document.querySelector('#nutria .rc').click()"], { scroll: '#na-sheet' }],
   // (12/10) Abonnement push perdu : bandeau « Réactiver » + état honnête dans les réglages
-  ['a_push_lost', ["Object.defineProperty(Notification,'permission',{get:()=>'granted'});Object.defineProperty(navigator,'standalone',{get:()=>true});initReminders();DB.reminders.enabled=true;_pushState={state:'lost',reason:'subscribe'};renderWeeklyRecapWidget()"]],
-  ['a_push_lost_settings', ["Object.defineProperty(Notification,'permission',{get:()=>'granted'});Object.defineProperty(navigator,'standalone',{get:()=>true});initReminders();DB.reminders.enabled=true;_pushState={state:'lost',reason:'subscribe'}", 'openSettings()', "(document.getElementById('reminderSettings')||document.body).scrollIntoView()"]],
+  ['a_push_lost', ["(typeof Notification==='undefined'&&(window.Notification=function(){}));Object.defineProperty(Notification,'permission',{get:()=>'granted'});Object.defineProperty(navigator,'standalone',{get:()=>true});initReminders();DB.reminders.enabled=true;_pushState={state:'lost',reason:'subscribe'};renderWeeklyRecapWidget()"]],
+  ['a_push_lost_settings', ["(typeof Notification==='undefined'&&(window.Notification=function(){}));Object.defineProperty(Notification,'permission',{get:()=>'granted'});Object.defineProperty(navigator,'standalone',{get:()=>true});initReminders();DB.reminders.enabled=true;_pushState={state:'lost',reason:'subscribe'}", 'openSettings()', "(document.getElementById('reminderSettings')||document.body).scrollIntoView()"]],
   // (12/10) « Un autre sport ? » : course guidée, autres sports, carte du jour, calendrier jaune électrique
   ['a_sport_pick', ['asOpen()', 'asOtherSport()'], { scroll: '#spOverlay .as-scroll' }],
   ['a_sport_warm', ['SPORT.open()', 'SPORT.startRun()']],
