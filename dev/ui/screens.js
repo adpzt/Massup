@@ -8,6 +8,10 @@ const EXPORT_GO = `(function(){var sh=exportCoachDossier({dryRun:true});var pre=
 const ADRIEN = [
   ['a_bilan', [], { full: true }],
   ['a_seances', ["switchView('seances',document.querySelectorAll('.bni')[1])"], { full: true }],
+  ['a_weight_trend', ["window.scrollTo(0,(document.getElementById('santeTrend')||document.body).getBoundingClientRect().top+window.scrollY-160)"]],
+  ['a_meas_empty', ["DB.bodyMeas={};renderBodyMeas();(document.getElementById('bodyMeas')||document.body).scrollIntoView({block:'center'})"]],
+  ['a_meas', ["DB.bodyMeas={'2026-10-03':{bras:34.5,poitrine:96,taille:79,cuisse:55.5,at:1},'2026-11-02':{bras:35.2,poitrine:97.5,taille:79.5,cuisse:55,at:2},'2026-11-01':{del:1,at:3}};_bmHistOpen=true;renderBodyMeas();if(bodyMeasList().length!==2)throw new Error('ECHEC tombstone mensuration');(document.getElementById('bodyMeas')||document.body).scrollIntoView({block:'start'})"]],
+  ['a_meas_modal', ["DB.bodyMeas={'2026-10-03':{bras:34.5,poitrine:96,taille:79,cuisse:55.5,at:1}};openMeasModal()"]],
   ['a_progression', ["switchView('progression',document.querySelectorAll('.bni')[2])"], { full: true }],
   ['a_settings', ['openSettings()']],
   ['a_pesee', ['openPeseeModal()']],
@@ -144,22 +148,7 @@ const MELATI = [
   ['m_push_lost', ["DB.reminders.enabled=true;_mlPushState={state:'lost',reason:'subscribe'};mlRenderPushSettings();document.getElementById('mlPushStatus').scrollIntoView()"]],
   ['m_liveflow', ['asOpen()', "document.querySelector('#asOverlay .as-bigcard').click()"], { scroll: '#asOverlay' }],
 ];
-const POLITIQUE = [
-  ['p_accueil', [], { full: true }],
-  ['p_express', ['POLQ.startExpress()']],
-  ['p_resultats', ['POLQ.showResultsFromAnswers()'], { full: true }],
-  ['p_candidats', ['POLQ.goCandidats()'], { full: true }],
-  ['p_actu', ['POLQ.openActu()'], { full: true }],
-  ['p_comparer', ['POLQ.goCompare()'], { full: true }],
-  ['p_methodo', ['POLQ.goMethodo()'], { full: true }],
-  ['p_profil', ['POLQ.goProfile()'], { full: true }],
-  ['p_fiche', ['POLQ.goCandidats()', 'POLQ.toggleCandDir(0)', "(document.getElementById('polCandDir0')||document.body).scrollIntoView()"]],
-  ['p_revue', ['POLQ.goReview()'], { full: true }],
-];
-const POLITIQUE_OWNER = POLITIQUE.map(([n, a, o]) => [n.replace('p_', 'po_'), a, o]);
 module.exports = {
   adrien: { page: 'index.html', seed: 'adrienSeed', list: ADRIEN },
   melati: { page: 'melati.html', seed: 'melatiSeed', list: MELATI },
-  politique: { page: 'politique/index.html', seed: 'politiqueSeed', list: POLITIQUE },
-  politique_owner: { page: 'politique/index.html', seed: 'politiqueOwnerSeed', list: POLITIQUE_OWNER },
 };

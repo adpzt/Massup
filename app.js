@@ -112,6 +112,7 @@ var DB = {
   prepared: null,  // séance LiveUp préparée à l'avance : {sel, sname, count, date} (03/08)
   dz: {},          // espace Détente : 'YYYY-MM-DD' -> {chin:true, langue:true, ..., stretch:true} (04/08)
   pv: {msg:null,seen:null}, // « Nous deux » (26/08) : mon petit mot pour Melati {id,text,at} + id du dernier mot d'elle que j'ai vu
+  bodyMeas: {},    // mensurations (02/11) : date -> {bras, poitrine, taille, cuisse (cm), at:ms} ou {del:1, at} — la plus récente gagne
   recHidden: {},   // perfs retirées des classements par Adrien (01/11) : key -> {logId: {h:1|0, at:ms}} — la plus récente gagne
   evolution: {},   // évolutions de charge en cours (15/08) : key -> {from, to, hi} — hi = nb de séries au poids haut (en fin d'exo)
   nutriA: {day:{},favs:[]} // mode NUTRITION prise de masse (23/08) : day['YYYY-MM-DD'] -> {pdj,dej,din,snacks[],shaker} · favs = ids recettes
@@ -133,7 +134,7 @@ function loadDB(){
   if(_saveDBTimer) _flushSaveDB(); // une écriture débouncée est en attente → flush avant relecture
   try{
     var s = localStorage.getItem('massup_db');
-    if(s){ var d=JSON.parse(s); if(d.weights) DB.weights=d.weights; if(d.logs) DB.logs=d.logs; if(d.weightSetDate) DB.weightSetDate=d.weightSetDate; if(d.bodyWeight) DB.bodyWeight=d.bodyWeight; if(d.healthLogs) DB.healthLogs=d.healthLogs; if(d.health) DB.health=d.health; if(d.healthMeta) DB.healthMeta=d.healthMeta; if(d.sleepLog) DB.sleepLog=d.sleepLog; if(d.templates) DB.templates=d.templates; if(d.profile) DB.profile=d.profile; if(d.deletedWeights) DB.deletedWeights=d.deletedWeights; if(d.deletedBW) DB.deletedBW=d.deletedBW; if(d.deletedLogs) DB.deletedLogs=d.deletedLogs; if(d.nutrition) DB.nutrition=d.nutrition; if(d.reminders) DB.reminders=d.reminders; if(d.painLog) DB.painLog=d.painLog; if(d.rank) DB.rank=d.rank; if(d.prepared) DB.prepared=d.prepared; if(d.dz) DB.dz=d.dz; if(d.evolution) DB.evolution=d.evolution; if(d.recHidden) DB.recHidden=d.recHidden; if(d.nutriA) DB.nutriA=d.nutriA; if(d.pv) DB.pv=d.pv; }
+    if(s){ var d=JSON.parse(s); if(d.weights) DB.weights=d.weights; if(d.logs) DB.logs=d.logs; if(d.weightSetDate) DB.weightSetDate=d.weightSetDate; if(d.bodyWeight) DB.bodyWeight=d.bodyWeight; if(d.healthLogs) DB.healthLogs=d.healthLogs; if(d.health) DB.health=d.health; if(d.healthMeta) DB.healthMeta=d.healthMeta; if(d.sleepLog) DB.sleepLog=d.sleepLog; if(d.templates) DB.templates=d.templates; if(d.profile) DB.profile=d.profile; if(d.deletedWeights) DB.deletedWeights=d.deletedWeights; if(d.deletedBW) DB.deletedBW=d.deletedBW; if(d.deletedLogs) DB.deletedLogs=d.deletedLogs; if(d.nutrition) DB.nutrition=d.nutrition; if(d.reminders) DB.reminders=d.reminders; if(d.painLog) DB.painLog=d.painLog; if(d.rank) DB.rank=d.rank; if(d.prepared) DB.prepared=d.prepared; if(d.dz) DB.dz=d.dz; if(d.evolution) DB.evolution=d.evolution; if(d.recHidden) DB.recHidden=d.recHidden; if(d.bodyMeas) DB.bodyMeas=d.bodyMeas; if(d.nutriA) DB.nutriA=d.nutriA; if(d.pv) DB.pv=d.pv; }
   }catch(e){}
 }
 // Écriture localStorage débouncée (300ms) : localStorage.setItem est synchrone et bloque le
@@ -3056,29 +3057,73 @@ function renderSante(){
   try{ renderBilanWeightStats(); }catch(e){ console.warn('[MASSUP] renderBilanWeightStats:',e); }
   renderSanteChart();
   renderSanteHisto();
+  try{ renderBodyMeas(); }catch(e){ console.warn('[MASSUP] renderBodyMeas:',e); }
   // « Nous deux » (26/08) : progression de Melati en lecture seule + petit mot, tout en bas
   try{ if(typeof PV!=='undefined'){ PV.render(); PV.pull(false); } }catch(e){ console.warn('[MASSUP] PV:',e); }
 }
 
 // Graphique d'évolution du poids de corps (seule métrique de référence du Bilan)
+// 02/11 (demande Adrien) : les pesées en points discrets + la TENDANCE en trait plein (bwTrend) —
+// le poids du jour bouge de ±1 kg (eau, sel, créatine), la tendance montre le vrai mouvement.
 function renderSanteChart(){
+  try{ renderSanteTrendLine(); }catch(e){ console.warn('[MASSUP] renderSanteTrendLine:',e); }
   if(typeof Chart==='undefined') return;
   if(!document.getElementById('santeChart')) return;
   var data=DB.bodyWeight||[]; if(!data.length) return;
   // Axe X proportionnel au temps réel : chaque point positionné selon sa date (timestamp)
   var pts=data.map(function(b){return {x:new Date(b.date).getTime(),y:parseFloat(b.weight_kg)};});
+  var trend=bwTrend(data);
   _santeChartLogs = data;
   var ctx=document.getElementById('santeChart').getContext('2d');
   if(santeChart){
     santeChart.data.datasets[0].data = pts;
+    santeChart.data.datasets[1].data = trend;
     santeChart.update('none');
   } else {
     santeChart=new Chart(ctx,{
       type:'line',
-      data:{datasets:[{label:'Poids (kg)',data:pts,borderColor:'#71FFB4',backgroundColor:'rgba(113,255,180,0.14)',borderWidth:2,pointBackgroundColor:'#0B0D12',pointBorderColor:'#71FFB4',pointBorderWidth:2,pointRadius:4,tension:.35,fill:true}]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:function(items){return formatDateFr(_santeChartLogs[items[0].dataIndex].date);},label:function(c){return c.parsed.y+' kg';},afterLabel:function(c){var d=_santeChartLogs;var i=c.dataIndex;if(!i)return'';var delta=Math.round((c.parsed.y-parseFloat(d[i-1].weight_kg))*10)/10;var days=Math.round((new Date(d[i].date)-new Date(d[i-1].date))/86400000);var t=days>=14?Math.round(days/7)+' sem.':days+'j';return(delta>=0?'+':'')+delta+' kg en '+t;}}}},scales:{x:{type:'linear',bounds:'data',ticks:{color:'rgba(242,245,250,.4)',font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:7,callback:function(v){return tsToShort(v);}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'rgba(242,245,250,.4)',font:{size:10}},grid:{color:'rgba(255,255,255,.06)'}}}}
+      data:{datasets:[
+        {label:'Pes\u00e9e',data:pts,showLine:false,pointBackgroundColor:'#0B0D12',pointBorderColor:'rgba(113,255,180,.55)',pointBorderWidth:2,pointRadius:3.5,pointHoverRadius:5,order:2},
+        {label:'Tendance',data:trend,borderColor:'#71FFB4',backgroundColor:'rgba(113,255,180,0.12)',borderWidth:2.5,pointRadius:0,pointHitRadius:0,pointHoverRadius:0,tension:.35,fill:true,order:1}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'nearest',intersect:false,axis:'x'},plugins:{legend:{display:false},tooltip:{filter:function(c){return c.datasetIndex===0;},callbacks:{title:function(items){return formatDateFr(_santeChartLogs[items[0].dataIndex].date);},label:function(c){return c.parsed.y+' kg';},afterLabel:function(c){var i=c.dataIndex;var t=santeChart&&santeChart.data.datasets[1].data[i];return t?'Tendance : '+String(t.y.toFixed(1)).replace('.',',')+' kg':'';}}}},scales:{x:{type:'linear',bounds:'data',ticks:{color:'rgba(242,245,250,.4)',font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:7,callback:function(v){return tsToShort(v);}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'rgba(242,245,250,.4)',font:{size:10}},grid:{color:'rgba(255,255,255,.06)'}}}}
     });
   }
+}
+// Tendance (02/11) : à chaque pesée, moyenne des pesées des 7 derniers jours (elle comprise).
+// Avec une pesée par semaine, la tendance = la pesée ; avec 3-7 pesées par semaine, le bruit disparaît.
+function bwTrend(data){
+  return data.map(function(b){
+    var t=new Date(b.date).getTime(), s=0, n=0;
+    data.forEach(function(o){ var u=new Date(o.date).getTime(); if(u<=t&&u>t-7*86400000){ s+=parseFloat(o.weight_kg); n++; } });
+    return {x:t,y:Math.round(s/n*100)/100};
+  });
+}
+// Rythme (02/11) : pente (moindres carrés) des pesées des 28 jours qui finissent à la dernière pesée,
+// en kg/semaine — robuste à une pesée « gonflée ». null sans 3 pesées étalées sur 10 jours ou plus.
+function bwRate(data,days){
+  data=data||[]; days=days||28;
+  if(data.length<3) return null;
+  var lastT=new Date(data[data.length-1].date).getTime();
+  var pts=data.filter(function(b){ return new Date(b.date).getTime()>lastT-days*86400000; })
+    .map(function(b){ return {x:(new Date(b.date).getTime()-lastT)/604800000,y:parseFloat(b.weight_kg)}; });
+  if(pts.length<3||(pts[pts.length-1].x-pts[0].x)*7<10) return null;
+  var mx=0,my=0; pts.forEach(function(p){ mx+=p.x; my+=p.y; }); mx/=pts.length; my/=pts.length;
+  var num=0,den=0; pts.forEach(function(p){ num+=(p.x-mx)*(p.y-my); den+=(p.x-mx)*(p.x-mx); });
+  if(!den) return null;
+  return {rate:num/den,n:pts.length};
+}
+// Ligne sous le titre du graphique : tendance actuelle + rythme sur 4 semaines + nb de pesées / 7 j
+function renderSanteTrendLine(){
+  var el=document.getElementById('santeTrend'); if(!el) return;
+  var data=DB.bodyWeight||[]; if(!data.length){ el.innerHTML=''; return; }
+  var tr=bwTrend(data), cur=tr[tr.length-1].y, R=bwRate(data);
+  var n7=data.filter(function(b){ return new Date(b.date).getTime()>new Date(todayStr()).getTime()-7*86400000; }).length;
+  function f(v,d){ return String(v.toFixed(d)).replace('.',','); }
+  var h='<span class="bw-tr-item"><span class="bw-tr-dash"></span>Tendance <b>'+f(cur,1)+' kg</b></span>';
+  if(R) h+='<span class="bw-tr-item">'+(R.rate>=0?'+':'&#x2212;')+f(Math.abs(R.rate),2)+' kg/sem <span class="bw-tr-sub">sur 4 sem.</span></span>';
+  h+='<span class="bw-tr-item bw-tr-sub">'+n7+' pes&#xE9;e'+(n7>1?'s':'')+' / 7 j'+(n7<3?' &#xB7; vise 3+':'')+'</span>';
+  el.innerHTML=h;
 }
 
 function renderSanteHisto(){
@@ -3164,6 +3209,90 @@ function toggleProgTable(){
   var open=!sec.classList.contains('open');
   sec.classList.toggle('open',open);
   if(lbl) lbl.classList.toggle('open',open);
+}
+
+// ─── MENSURATIONS (02/11, demande Adrien) ───
+// Une fois par mois, sous l'historique des pesées. La 1re mesure sert de point de départ (avant la
+// sèche du 04/01/2027). Le tour de taille est neutre (ni vert ni rouge) : il monte un peu en prise de masse.
+var BODY_MEAS=[
+  {k:'bras',l:'Bras',h:'contract&#xE9;, au plus gros',up:1},
+  {k:'poitrine',l:'Poitrine',h:'sous les aisselles, poumons vides',up:1},
+  {k:'taille',l:'Taille',h:'au nombril, ventre rel&#xE2;ch&#xE9;',up:0},
+  {k:'cuisse',l:'Cuisse',h:'au plus gros, debout',up:1}
+];
+var _bmHistOpen=false;
+function bodyMeasList(){
+  var m=DB.bodyMeas||{};
+  return Object.keys(m).filter(function(d){ return m[d]&&!m[d].del; }).sort().map(function(d){ return {date:d,v:m[d]}; });
+}
+function renderBodyMeas(){
+  var el=document.getElementById('bodyMeas'); if(!el) return;
+  var L=bodyMeasList();
+  function f(v){ return String(Math.round(v*10)/10).replace('.',','); }
+  if(!L.length){
+    el.innerHTML='<div class="chart-section bm-card"><div class="bm-empty">Bras, poitrine, taille, cuisse : une fois par mois. La 1re mesure sert de point de d&#xE9;part avant la s&#xE8;che du 4 janvier.</div>'
+      +'<button class="bilan-pesee-btn bm-add" onclick="openMeasModal()">+ Mesurer</button></div>';
+    return;
+  }
+  var last=L[L.length-1], h='<div class="chart-section bm-card"><div class="bm-head"><span class="bm-date">'+formatDateFr(last.date)+'</span>'
+    +'<button class="bilan-pesee-btn" onclick="openMeasModal()">+ Mesurer</button></div><div class="bm-grid">';
+  BODY_MEAS.forEach(function(M){
+    var cur=last.v[M.k];
+    var first=null; for(var i=0;i<L.length;i++){ if(L[i].v[M.k]!=null){ first=L[i]; break; } }
+    var d=(cur!=null&&first&&first.date!==last.date)?Math.round((cur-first.v[M.k])*10)/10:null;
+    var col=d==null||d===0||!M.up?'var(--mut)':d>0?'var(--acc)':'var(--red)';
+    h+='<div class="bp-stat bm-stat"><span class="bp-stat-l">'+M.l+'</span>'
+      +'<span class="bp-stat-v">'+(cur!=null?f(cur)+'<small> cm</small>':'--')+'</span>'
+      +(d!=null?'<span class="bm-delta" style="color:'+col+'">'+(d>0?'+':d<0?'&#x2212;':'')+f(Math.abs(d))+' depuis le '+formatDateShort(first.date)+'</span>':'<span class="bm-delta">point de d&#xE9;part</span>')
+      +'</div>';
+  });
+  h+='</div>';
+  h+='<button class="bm-hist-btn" onclick="_bmHistOpen=!_bmHistOpen;renderBodyMeas()">'+(_bmHistOpen?'&#x25BE; Masquer l\u2019historique':'&#x25B8; Historique ('+L.length+')')+'</button>';
+  if(_bmHistOpen){
+    h+='<div class="bm-hist">'+L.slice().reverse().map(function(e){
+      return '<div class="pesee-entry"><div class="pe-left"><div class="pe-date">'+formatDateShort(e.date)+'</div></div><div class="pe-right">'
+        +BODY_MEAS.filter(function(M){ return e.v[M.k]!=null; }).map(function(M){ return '<span class="chip">'+M.l+' '+f(e.v[M.k])+'</span>'; }).join('')
+        +'</div><button class="le-del" onclick="deleteMeas(\''+e.date+'\')" aria-label="Supprimer">&#x1F5D1;</button></div>';
+    }).join('')+'</div>';
+  }
+  el.innerHTML=h+'</div>';
+}
+function openMeasModal(){
+  var L=bodyMeasList(), last=L.length?L[L.length-1].v:{};
+  document.getElementById('measDate').value=todayStr();
+  document.getElementById('measFields').innerHTML=BODY_MEAS.map(function(M){
+    return '<div class="form-row"><label class="form-lbl" for="meas_'+M.k+'">'+M.l+' (cm) <span class="bm-hint">'+M.h+'</span></label>'
+      +'<input class="form-input" type="number" inputmode="decimal" step="0.1" min="10" max="200" id="meas_'+M.k+'" placeholder="'+(last[M.k]!=null?String(last[M.k]).replace('.',','):'')+'"/></div>';
+  }).join('');
+  document.getElementById('measModal').classList.add('open');
+}
+function closeMeasModal(){ document.getElementById('measModal').classList.remove('open'); }
+function saveMeas(){
+  var date=document.getElementById('measDate').value;
+  if(!date){ showToast('Choisis une date.'); return; }
+  var e={}, n=0, bad=false;
+  BODY_MEAS.forEach(function(M){
+    var raw=(document.getElementById('meas_'+M.k).value||'').replace(',','.');
+    if(raw==='') return;
+    var v=parseFloat(raw);
+    if(isNaN(v)||v<10||v>200){ bad=true; return; }
+    e[M.k]=Math.round(v*10)/10; n++;
+  });
+  if(bad){ showToast('Mesure invalide (10-200 cm).'); return; }
+  if(!n){ showToast('Entre au moins une mesure.'); return; }
+  if(!DB.bodyMeas) DB.bodyMeas={};
+  var prev=DB.bodyMeas[date];
+  if(prev&&!prev.del) BODY_MEAS.forEach(function(M){ if(e[M.k]==null&&prev[M.k]!=null) e[M.k]=prev[M.k]; });
+  e.at=Date.now();
+  DB.bodyMeas[date]=e;
+  saveDB(); closeMeasModal(); renderBodyMeas();
+  showToast('Mensurations enregistr&#xE9;es');
+}
+function deleteMeas(date){
+  if(!confirm('Supprimer les mensurations du '+formatDateShort(date)+' ?')) return;
+  if(!DB.bodyMeas) DB.bodyMeas={};
+  DB.bodyMeas[date]={del:1,at:Date.now()};
+  saveDB(); renderBodyMeas();
 }
 
 function toggleSanteHisto(){
@@ -4086,6 +4215,14 @@ function mergeBackupIntoDB(bk){
     Object.keys(bk.recHidden).forEach(function(k){
       var loc=DB.recHidden[k]||(DB.recHidden[k]={}), rem=bk.recHidden[k]||{};
       Object.keys(rem).forEach(function(id){ if(!loc[id]||(rem[id]&&rem[id].at>(loc[id].at||0))) loc[id]=rem[id]; });
+    });
+  }
+  // Mensurations (02/11) : par date, l'entrée la plus récente gagne — une suppression ({del:1}) comprise
+  if(bk.bodyMeas){
+    if(!DB.bodyMeas) DB.bodyMeas={};
+    Object.keys(bk.bodyMeas).forEach(function(d){
+      var r=bk.bodyMeas[d], l=DB.bodyMeas[d];
+      if(r&&(!l||(r.at||0)>(l.at||0))) DB.bodyMeas[d]=r;
     });
   }
   if(bk.templates&&bk.templates.length&&(!DB.templates||!DB.templates.length)) DB.templates=bk.templates;
@@ -9225,6 +9362,10 @@ function renderBilanProfile(){
       rate=Math.round(perDay*7*100)/100;
     }
   }
+  // 02/11 : avec 3 pesées ou plus sur 4 semaines, le rythme vient de la pente de toutes les pesées
+  // (bwRate) — une pesée gonflée par l'eau ne fausse plus le kg/semaine. Sinon, calcul ci-dessus.
+  var R=bwRate(data);
+  if(R){ rate=Math.round(R.rate*100)/100; d30=Math.round(R.rate/7*30*10)/10; }
   function fmtD(v,dec){ return v==null?'--':(v>0?'+':'')+String(dec?v.toFixed(dec):v).replace('.',','); }
   var h='<div class="bp-card bp-v2">'
     +'<div class="bp-head">'

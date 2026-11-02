@@ -182,6 +182,7 @@
     <!-- Évolution -->
     <div class="slbl" style="margin-bottom:.5rem;">Évolution du poids</div>
     <div class="chart-section" style="margin-bottom:1.5rem;">
+      <div class="bw-trend" id="santeTrend"></div>
       <div class="chart-wrap"><canvas id="santeChart"></canvas></div>
     </div>
     <!-- Historique pesées (bulle dépliable) -->
@@ -189,6 +190,9 @@
     <div id="santeHistoSection" class="expand-anim" style="margin-bottom:2rem;">
       <div class="chart-section" id="santeHisto" style="padding:.25rem 0;"></div>
     </div>
+    <!-- Mensurations (02/11) : bras, poitrine, taille, cuisse — une fois par mois (JS) -->
+    <div class="slbl" style="margin-bottom:.5rem;">&#x1F4CF; Mensurations</div>
+    <div id="bodyMeas" style="margin-bottom:2rem;"></div>
     <!-- NOUS DEUX 💞 (26/08) : progression de Melati en lecture seule + petit mot (partner.js) -->
     <div id="bilanPartner" style="margin-bottom:2rem;"></div>
   </div>
@@ -360,6 +364,20 @@ if('serviceWorker' in navigator){
       </div>
     </div>
     <button class="btn-primary" onclick="savePesee()" style="margin-top:.5rem;">Enregistrer &#x2713;</button>
+  </div>
+</div>
+
+<!-- MENSURATIONS MODAL (02/11) -->
+<div class="modal-overlay" id="measModal">
+  <div class="modal">
+    <div class="modal-title">Mensurations <button class="modal-close" onclick="closeMeasModal()">&#x2715;</button></div>
+    <div class="form-row">
+      <label class="form-lbl">Date</label>
+      <input class="form-input" type="date" id="measDate"/>
+    </div>
+    <div id="measFields"></div>
+    <div class="bm-tip">Le matin, avant de manger, ruban à plat sans serrer. Même endroit à chaque fois.</div>
+    <button class="btn-primary" onclick="saveMeas()" style="margin-top:.5rem;">Enregistrer &#x2713;</button>
   </div>
 </div>
 
