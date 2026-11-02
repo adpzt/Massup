@@ -3,7 +3,7 @@
 // Vérification visuelle mobile (08/10/2026) — `npm run ui -- [options]` depuis MUSCU/
 //   (rien)                     tous les écrans du catalogue (screens.js), mode sombre + clair
 //   --only a_nutria,m_nutri    seulement les écrans dont le nom contient un de ces mots
-//   --app adrien|melati|politique   une seule app (plusieurs : séparées par des virgules)
+//   --app adrien|melati   une seule app (plusieurs : séparées par des virgules)
 //   --scheme dark|light|both   (défaut both)
 //   --go "nutOpen();…" --app melati --name mon_ecran   écran à la volée (actions séparées par ;;)
 //   --width 390 --height 844   (défaut iPhone 390 × 844)
@@ -18,7 +18,7 @@ const { chromium, serve, newPage, wait, ROOT } = require('./lib');
 const seeds = require('./seeds'), audit = require('./audit'), SCREENS = require('./screens');
 
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d; };
-const apps = arg('app', 'adrien,melati,politique,politique_owner').split(',');
+const apps = arg('app', 'adrien,melati').split(',');
 const only = (arg('only', '') || '').split(',').filter(Boolean);
 const schemes = { both: ['dark', 'light'], dark: ['dark'], light: ['light'] }[arg('scheme', 'both')];
 const width = +arg('width', 390), height = +arg('height', 844);

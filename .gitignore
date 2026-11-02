@@ -13,6 +13,6 @@ node_modules/
 # données réelles (poids d'Adrien)
 reset_weight_history.sql
 seed_weight_history.sql
-# docs : jamais publiées (un README décrit l accès privé du quiz politique) — elles restent sur le disque
+# docs : jamais publiées — elles restent sur le disque
 *.md
 **/*.md
