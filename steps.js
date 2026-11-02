@@ -268,7 +268,7 @@ var STEPS=(function(){
       +'<div class="st-chart-foot">'+(A.app==='adrien'&&ST.mode==='day'?data.hasHourly?'Pas par heure · total de la journée affiché dans les statistiques':'Total journalier · objectif '+fmt(GOAL)+' par jour':(A&&A.weekGoal?'Pas quotidiens · objectif '+goalTxt():'Pas quotidiens · objectif '+fmt(GOAL)+' par jour'))+'</div>';
   }
   function bindChartSwipe(){
-    var wrap=document.querySelector('.st-chart-wrap'); if(!wrap) return;
+    var body=$('stBody'), wrap=body&&body.querySelector('.st-chart-wrap'); if(!wrap) return;
     wrap.addEventListener('pointerdown',function(e){ ST.touchX=e.clientX; ST.touchY=e.clientY; });
     wrap.addEventListener('pointerup',function(e){
       if(ST.touchX==null) return;
@@ -306,7 +306,9 @@ var STEPS=(function(){
     updateHistory();
   }
   function updateHistory(){
-    var el=document.querySelector('.st-history'); if(!el) return;
+    // 02/11 : cherché DANS la page Pas — la page Sommeil a aussi un .st-history ; ouverte avant, c'est elle qui était
+    // mise à jour et la page Pas paraissait figée (bug signalé par Adrien : « je ne peux pas changer la vue »)
+    var body=$('stBody'), el=body&&body.querySelector('.st-history'); if(!el) return;
     var scroll=el.closest('.as-scroll'), top=scroll?scroll.scrollTop:0;
     el.innerHTML=historyHtml();
     if(scroll) scroll.scrollTop=top;
@@ -384,7 +386,7 @@ var STEPS=(function(){
       periodData();
       var h='<div class="as-hdr st-header"><div class="as-hdr-left"><button class="as-exit st-exit" onclick="STEPS.close()" title="Fermer" aria-label="Fermer">✕</button></div>'
         +'<div class="as-hdr-mid"><div class="as-hdr-title">👟 Pas</div><div class="as-hdr-sub">'+(meta().syncAt?'synchro '+ago(meta().syncAt):'objectif : '+goalTxt())+'</div></div>'
-        +'<div class="as-hdr-right"><button class="as-hbtn" onclick="STEPS.refresh()" title="Actualiser avec Raccourcis" aria-label="Actualiser">↻</button></div></div>'
+        +'<div class="as-hdr-right"></div></div>' // ↻ unique : en-tête du Bilan (02/11, Adrien)
         +'<div class="as-scroll st-scroll st-scroll-modern"><div class="wn-card st-history">'+historyHtml()+'</div>';
       var mets=Object.keys(MET).filter(function(k){return Object.keys(H()).some(function(d){return H()[d][k]!=null;});});
       if(mets.length){

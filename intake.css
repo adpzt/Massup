@@ -17,3 +17,11 @@ button.bl-mrow--btn:active{background:var(--bl-press);}
 .bl-daymic{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 16px;margin-top:14px;font-size:13px;font-weight:700;}
 .bl-daymic span{min-width:0;overflow-wrap:anywhere;}
 .bl-daycard__more{padding:0;margin-top:6px;color:var(--acc);}
+/* v2 (02/11 soir) : mesure choisie dans une petite liste (sélecteur natif iOS), segment compact, jour non noté = un trou */
+.bl-pick{position:relative;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border-radius:18px;border:1px solid var(--bl-line);
+  background:var(--x-track);color:var(--txt);font:700 12px 'Manrope',sans-serif;white-space:nowrap;flex:none;}
+.bl-pick select{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;cursor:pointer;}
+.bl-pick:focus-within{outline:2px solid var(--acc2);outline-offset:2px;}
+.bl-seg--sm button{min-height:38px;font-size:12px;}
+.bl-bars__b.is-gap i{height:0 !important;}
+.in-day{border-top:1px solid var(--bl-line);margin-top:18px;}

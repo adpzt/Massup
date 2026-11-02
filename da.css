@@ -83,58 +83,58 @@ button.bl-sec__link{appearance:none;border:0;background:transparent;font-family:
 .st-overlay-adrien .as-body{padding:0;}
 .st-overlay-adrien .as-hdr.st-header{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;gap:8px;align-items:center;margin:0;
   padding:calc(10px + env(safe-area-inset-top)) 12px 10px;background:var(--bl-top);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-bottom:1px solid var(--bl-line);}
-.st-overlay-adrien .st-exit,.st-overlay-adrien .st-header .as-hbtn{width:44px;height:44px;border:0;border-radius:22px;background:var(--x-track);box-shadow:none;color:var(--txt);font:800 18px 'Manrope',sans-serif;}
-.st-overlay-adrien .as-hdr-title{font:italic 900 20px/1 'Saira',sans-serif;}
-.st-overlay-adrien .as-hdr-sub{font-size:12px;font-weight:700;color:var(--mut);margin-top:4px;}
+.st-overlay-adrien .st-exit,.st-overlay-adrien .st-header .as-hbtn{width:44px;height:44px;border:0;border-radius:22px;background:var(--x-track);box-shadow:none;color:var(--txt);font:800 16px 'Manrope',sans-serif;}
+.st-overlay-adrien .as-hdr-title{font:italic 900 18px/1 'Saira',sans-serif;}
+.st-overlay-adrien .as-hdr-sub{font-size:11px;font-weight:700;color:var(--mut);margin-top:4px;}
 .st-overlay-adrien .as-scroll{padding:0 0 calc(6.5rem + env(safe-area-inset-bottom));}
-.st-overlay-adrien .wn-card{background:none;border:0;border-radius:0;box-shadow:none;margin:0;padding:22px 20px;}
+.st-overlay-adrien .wn-card{background:none;border:0;border-radius:0;box-shadow:none;margin:0;padding:20px var(--bl-g);}
 .st-overlay-adrien .wn-card+.wn-card,.st-overlay-adrien .wn-card+details,.st-overlay-adrien details+details{border-top:1px solid var(--bl-line);}
-.st-overlay-adrien .wn-title{font:italic 900 18px/1.1 'Saira',sans-serif;color:var(--txt);text-transform:none;letter-spacing:0;display:flex;align-items:center;gap:10px;}
+.st-overlay-adrien .wn-title{font:italic 900 16px/1.1 'Saira',sans-serif;color:var(--txt);text-transform:none;letter-spacing:0;display:flex;align-items:center;gap:10px;}
 .st-overlay-adrien .wn-title:before{content:"";width:4px;height:14px;border-radius:1px;background:var(--x-slash);transform:skewX(-16deg);flex:none;}
 /* Segment Jour | Semaine | Mois | An */
 .st-overlay-adrien .st-rng{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:0;padding:3px;border-radius:12px;background:var(--x-track);width:100%;}
-.st-overlay-adrien .st-rng button{min-height:44px;border:0;border-radius:9px;background:transparent;color:var(--mut);font:700 13px 'Manrope',sans-serif;}
+.st-overlay-adrien .st-rng button{min-height:44px;border:0;border-radius:9px;background:transparent;color:var(--mut);font:700 12px 'Manrope',sans-serif;}
 .st-overlay-adrien .st-rng button.on{background:var(--x-seg-on);color:var(--txt);box-shadow:0 1px 4px rgba(0,0,0,.25);}
 .st-overlay-adrien .st-chart-nav{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;text-align:center;margin:12px 0 0;}
-.st-overlay-adrien .st-chart-nav span{font-size:14px;font-weight:800;color:var(--txt);}
-.st-overlay-adrien .st-chart-nav button{width:44px;height:44px;border:0;background:transparent;color:var(--mut);font:800 18px 'Manrope',sans-serif;}
+.st-overlay-adrien .st-chart-nav span{font-size:13px;font-weight:800;color:var(--txt);}
+.st-overlay-adrien .st-chart-nav button{width:44px;height:44px;border:0;background:transparent;color:var(--mut);font:800 16px 'Manrope',sans-serif;}
 .st-overlay-adrien .st-chart-nav button:disabled{visibility:hidden;}
 /* Chiffre du jour (ou de la nuit) choisi : héros en dégradé */
 .st-overlay-adrien .st-chart-detail{padding:18px 0 6px;}
-.st-overlay-adrien .st-chart-detail strong,.st-overlay-adrien .slp-hero .slp-v{font:italic 900 72px/1 'Saira',sans-serif;letter-spacing:-.01em;
+.st-overlay-adrien .st-chart-detail strong,.st-overlay-adrien .slp-hero .slp-v{font:italic 900 65px/1 'Saira',sans-serif;letter-spacing:-.01em;
   background-image:var(--x-grad-hero);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;}
-.st-overlay-adrien .st-chart-detail>span{font:italic 900 22px 'Saira',sans-serif;color:var(--mut);}
-.st-overlay-adrien .st-chart-detail small,.st-overlay-adrien .slp-hero>span,.st-overlay-adrien .slp-hero>small{font-size:13px;font-weight:700;color:var(--mut);}
+.st-overlay-adrien .st-chart-detail>span{font:italic 900 20px 'Saira',sans-serif;color:var(--mut);}
+.st-overlay-adrien .st-chart-detail small,.st-overlay-adrien .slp-hero>span,.st-overlay-adrien .slp-hero>small{font-size:12px;font-weight:700;color:var(--mut);}
 /* Total de la période : ligne simple, sans boîte */
 .st-overlay-adrien .st-period-total{background:none;border:0;border-top:1px solid var(--bl-line);border-bottom:1px solid var(--bl-line);border-radius:0;padding:12px 0;margin:6px 0 10px;}
-.st-overlay-adrien .st-period-total span{font-size:13px;font-weight:700;color:var(--mut);}
-.st-overlay-adrien .st-period-total strong{font:italic 900 24px 'Saira',sans-serif;color:var(--txt);}
+.st-overlay-adrien .st-period-total span{font-size:12px;font-weight:700;color:var(--mut);}
+.st-overlay-adrien .st-period-total strong{font:italic 900 22px 'Saira',sans-serif;color:var(--txt);}
 /* Stats : 2 colonnes sans cartes, filet vertical ; le texte reste en jetons de texte (la couleur d'état vit dans les barres) */
 .st-overlay-adrien .st-grid{gap:22px 0;margin-top:22px;}
 .st-overlay-adrien .st-grid>div{background:none;border:0;border-radius:0;padding:0 0 0 18px;gap:6px;}
 .st-overlay-adrien .st-grid>div:nth-child(odd){padding-left:0;padding-right:18px;border-right:1px solid var(--bl-line);}
-.st-overlay-adrien .st-grid b{font-size:24px;color:var(--txt);}
+.st-overlay-adrien .st-grid b{font-size:22px;color:var(--txt);}
 .st-overlay-adrien .st-grid b[class^="t-"]{color:var(--txt);}
-.st-overlay-adrien .st-grid small{font-size:12px;}
+.st-overlay-adrien .st-grid small{font-size:11px;}
 /* Barres touchables : sélection = contour 2 px --txt */
 .st-overlay-adrien .st-point-track{background:var(--x-track);}
 .st-overlay-adrien .st-point-track i{box-shadow:none;border-radius:6px 6px 2px 2px;}
 .st-overlay-adrien .st-point.selected .st-point-track{box-shadow:none;outline:2px solid var(--txt);outline-offset:2px;}
 .st-overlay-adrien .st-point.selected .st-point-label,.st-overlay-adrien .st-point.selected .st-point-val{color:var(--txt);}
-.st-overlay-adrien .st-point-label{font-size:11px;color:var(--mut);}
-.st-overlay-adrien .st-chart-foot,.st-overlay-adrien .slp-zone-cap{font-size:12px;font-weight:700;color:var(--mut);}
+.st-overlay-adrien .st-point-label{font-size:10px;color:var(--mut);}
+.st-overlay-adrien .st-chart-foot,.st-overlay-adrien .slp-zone-cap{font-size:11px;font-weight:700;color:var(--mut);}
 /* Sommeil : pastille d'état et moyenne */
 .st-overlay-adrien .slp-hero-top{display:flex;align-items:center;flex-wrap:wrap;gap:12px;}
-.st-overlay-adrien .slp-badge{display:inline-flex;align-items:center;height:28px;padding:0 12px;border-radius:14px;background:var(--x-grad-fill);color:var(--x-on-grad);font:800 12px 'Manrope',sans-serif;border:0;}
+.st-overlay-adrien .slp-badge{display:inline-flex;align-items:center;height:28px;padding:0 12px;border-radius:14px;background:var(--x-grad-fill);color:var(--x-on-grad);font:800 11px 'Manrope',sans-serif;border:0;}
 .st-overlay-adrien .slp-badge:not(.good){background:transparent;border:1px solid currentColor;color:var(--red);}
-.st-overlay-adrien .slp-gl em{font-size:11px;font-weight:700;color:var(--mut);}
+.st-overlay-adrien .slp-gl em{font-size:10px;font-weight:700;color:var(--mut);}
 /* Volets repliés (Activité Santé, Saisie à la main, Modifier une nuit) */
-.st-overlay-adrien details.wn-card{opacity:1;background:none;padding:0 20px;}
-.st-overlay-adrien details.wn-card>summary{min-height:60px;display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800;color:var(--txt);}
-.st-overlay-adrien details.wn-card>summary small{font-size:12px;color:var(--mut);}
+.st-overlay-adrien details.wn-card{opacity:1;background:none;padding:0 var(--bl-g);}
+.st-overlay-adrien details.wn-card>summary{min-height:60px;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800;color:var(--txt);}
+.st-overlay-adrien details.wn-card>summary small{font-size:11px;color:var(--mut);}
 .st-overlay-adrien details.wn-card>summary::after{margin-left:auto;color:var(--mut);}
 .st-overlay-adrien details.wn-card[open]{padding-bottom:20px;}
-.st-overlay-adrien .st-sync-error{margin:16px 20px;padding:12px 14px;border-radius:14px;background:var(--x-red-10);border:1px solid var(--x-red-50);color:var(--red);font-size:13px;font-weight:800;}
+.st-overlay-adrien .st-sync-error{margin:16px var(--bl-g);padding:12px 14px;border-radius:14px;background:var(--x-red-10);border:1px solid var(--x-red-50);color:var(--red);font-size:12px;font-weight:800;}
 @media (prefers-color-scheme: light){ .st-overlay-adrien .st-rng button.on{box-shadow:0 1px 4px rgba(16,40,70,.14);} }
 
 /* Toast : feuille sombre / blanche, au-dessus des overlays */
@@ -202,3 +202,30 @@ button.bl-sec__link{appearance:none;border:0;background:transparent;font-family:
 /* Module Recettes (DA « Cuisine Bento », non redessiné) : il garde le gris secondaire d'avant en clair —
    le --mut DA (.60) tombe à 4,3:1 sur ses fonds pêche. */
 @media (prefers-color-scheme: light){ #nutria{--mut:rgba(14,17,23,0.66);} }
+/* Champs de saisie : 16 px minimum, sinon iOS zoome au toucher (la réduction de 10 % ne s'applique pas ici) */
+.bl-field,.bl-field__in,.bl-input,.bl-pick select{font-size:16px;}
+
+/* ══ Retours d'Adrien du 02/11 (soir) ══ */
+/* Texte en dégradé italique : marge à droite, sinon la dernière lettre est coupée (le « P » de MASSUP) */
+.logo em{padding-right:.12em;margin-right:-.06em;}
+.bl-hero-txt,.bl-gold-txt,.bl-logo b,.ggc-num,.as-serie-num b,.n-gold{padding-right:.1em;}
+.st-overlay-adrien .st-chart-detail strong,.st-overlay-adrien .slp-hero .slp-v{padding-right:.1em;}
+/* Hiérarchie : le haut de page (prénom, poids, kcal, objectifs) dans un bloc à part, sous l'en-tête */
+.bl-topcard{--bl-g:18px;margin:8px 16px 6px;border-radius:var(--x-r-xl);background:var(--x-glass);border:1px solid var(--gb);box-shadow:var(--x-inset);overflow:hidden;}
+.bl-topcard .bl-sit{padding-top:18px;}
+.bl-topcard .bl-obj{padding-bottom:10px;}
+@media (prefers-color-scheme: light){ .bl-topcard{box-shadow:var(--x-shadow-card);} }
+/* Courir : « + » discret (optionnel, et il se coche surtout tout seul avec une séance de course) */
+.bl-plus--soft{background:var(--x-track);color:var(--txt);box-shadow:none;border:1px solid var(--gb);}
+/* Pas | Sommeil : saisie de la nuit compacte AU-DESSUS des barres ; barres plus hautes, alignées en bas des deux colonnes */
+.bl-duo>div{display:flex;flex-direction:column;}
+.bl-edit--sm{min-height:40px;margin-top:10px;padding:0 12px;font-size:12px;gap:8px;justify-content:space-between;}
+.bl-edit--sm.bl-edit--cta{justify-content:center;}
+.bl-mini--tall{height:92px;margin-top:auto;padding-top:16px;}
+/* Courbe : trait de l'objectif de masse (76 kg) */
+.bl-chart__goal{stroke:var(--acc);stroke-width:1.5;stroke-dasharray:4 4;vector-effect:non-scaling-stroke;opacity:.8;}
+/* Notes : repliées comme Melati, lignes plus petites */
+.bl-notes{padding:0 var(--bl-g) 10px;}
+.bl-notes .bl-nrow{min-height:48px;}
+.bl-notes .bl-nrow__n{font-size:13px;}
+.bl-notes .bl-nrow__v{font-size:19px;}

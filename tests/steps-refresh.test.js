@@ -144,7 +144,8 @@ test("history offers day, week, month, and year views with point selection and r
         : selector === ".st-history" ? history : null;
     }
   };
-  body.querySelector = (selector) => selector === ".as-scroll" ? scroll : null;
+  // 02/11 : la page Pas cherche son historique DANS #stBody (plus dans tout le document)
+  body.querySelector = (selector) => selector === ".as-scroll" ? scroll : selector === ".st-history" ? history : selector === ".st-chart-wrap" ? chartWrap : null;
   const health = {};
   const d = new Date();
   for (let i = 364; i >= 0; i--) {
@@ -265,7 +266,8 @@ test("day view renders actual hourly steps and period-specific statistics", asyn
         : selector === ".st-history" ? history : null;
     }
   };
-  body.querySelector = (selector) => selector === ".as-scroll" ? scroll : null;
+  // 02/11 : la page Pas cherche son historique DANS #stBody (plus dans tout le document)
+  body.querySelector = (selector) => selector === ".as-scroll" ? scroll : selector === ".st-history" ? history : selector === ".st-chart-wrap" ? chartWrap : null;
   const sandbox = {
     Date, Math, Promise, Uint8Array, document,
     window: { location: { href: "" } }, setTimeout() {},

@@ -146,12 +146,31 @@ var SLEEP=(function(){
       +'<div><b>'+(bedAvg==null?'&#x2014;':hhmm(bedAvg))+'</b><small>coucher moyen</small></div>'
       +'<div><b>'+(wakeAvg==null?'&#x2014;':hhmm(wakeAvg))+'</b><small>r&#xE9;veil moyen</small></div></div>';
   }
+  // ── « Ton rythme » (02/11 soir, demande d'Adrien : des conseils d'horaires selon les cycles) ──
+  // Sur les 14 dernières nuits notées : coucher et lever moyens, puis horaires en FIN de cycle (cycle ≈ 90 min,
+  // ~15 min pour s'endormir) : 5 cycles = 7 h 30 de sommeil, 6 cycles = 9 h. Repère, pas une mesure.
+  function adviceHtml(){
+    var items=history(14).filter(function(x){ return x.minutes!=null&&rel(x.data.bed)!=null; });
+    if(items.length<3) return '';
+    var beds=items.map(function(x){ return rel(x.data.bed); }), bedAvg=beds.reduce(function(a,v){ return a+v; },0)/beds.length;
+    var wakeAvg=items.reduce(function(a,x){ return a+rel(x.data.bed)+x.minutes; },0)/items.length;
+    var spread=Math.round(Math.sqrt(beds.reduce(function(a,v){ return a+(v-bedAvg)*(v-bedAvg); },0)/beds.length));
+    var avgMin=Math.round(items.reduce(function(a,x){ return a+x.minutes; },0)/items.length), short=items.filter(function(x){ return x.minutes<420; }).length;
+    var row=function(l,v,sub){ return '<div class="slp-adv-r"><span>'+l+(sub?'<small>'+sub+'</small>':'')+'</span><b>'+v+'</b></div>'; };
+    return '<div class="wn-card slp-advice"><div class="wn-title">Ton rythme</div><p class="slp-adv-sub">'+items.length+' dernières nuits · moyenne '+fmtDuration(avgMin)+(short?' · '+short+' sous 7 h':'')+'</p>'
+      +row('Pour te lever à '+hhmm(wakeAvg),hhmm(wakeAvg-465),'couche-toi vers · 5 cycles (7 h 30)')
+      +row('Pour une grosse récup',hhmm(wakeAvg-555),'couche-toi vers · 6 cycles (9 h)')
+      +row('Couché à '+hhmm(bedAvg)+', réveil idéal',hhmm(bedAvg+465),'fin du 5e cycle')
+      +row('Réveil au plus tard',hhmm(bedAvg+555),'fin du 6e cycle')
+      +row('Régularité du coucher','± '+spread+' min',spread<=30?'✓ régulier':'vise ± 30 min')
+      +'</div>';
+  }
   function renderOpen(){
     var ov=$('sleepOverlay'),body=$('sleepBody');if(!ov||!ov.classList.contains('open')||!body)return;
     var sel=record(selectedDate||currentNight());
     body.innerHTML='<div class="as-hdr st-header"><div class="as-hdr-left"><button class="as-exit st-exit" onclick="SLEEP.close()" title="Fermer" aria-label="Fermer">&#x2715;</button></div>'
       +'<div class="as-hdr-mid"><div class="as-hdr-title">&#x1F319; Sommeil</div><div class="as-hdr-sub">objectif : 7 &#xE0; 9 h par nuit</div></div><div class="as-hdr-right"></div></div>'
-      +'<div class="as-scroll st-scroll st-scroll-modern"><div class="wn-card st-history slp-history">'+historyHtml()+'</div>'
+      +'<div class="as-scroll st-scroll st-scroll-modern"><div class="wn-card st-history slp-history">'+historyHtml()+'</div>'+adviceHtml()
       +'<details class="wn-card st-sec st-manual slp-manual"><summary>Modifier une nuit <small>('+fmtDate(sel.date,{weekday:'short',day:'numeric',month:'short'})+')</small></summary>'
       +'<p class="st-sub">Touche une barre pour choisir la nuit. Heures saisies &#xE0; la main : une estimation, pas une mesure.</p>'
       +'<div class="slp-times"><label>Couch&#xE9;<input id="slp-edit-bed" type="time" value="'+validTime(sel.data.bed)+'"></label>'

@@ -9,12 +9,13 @@
 var BILAN=(function(){
   var NB=' ';
   var $=function(id){ return document.getElementById(id); };
-  // Saisons (décisions Adrien 12/10 et 19/10) : prise de masse jusqu'au 3 janvier, sèche du 4 janvier au 1er juin
+  // Saisons (décisions Adrien 12/10, 19/10, 02/11) : prise de masse jusqu'au 3 janvier, objectif 76 kg (pas encore atteint) ;
+  // sèche du 4 janvier au 1er juin : ~68 kg et surtout ~12 % de masse grasse (le % prime sur le kilo)
   var SAISONS=[
-    {id:'masse',lbl:'Prise de masse',start:'2026-03-01',end:'2027-01-03',repere:[73,74]},
-    {id:'seche',lbl:'Sèche',start:'2027-01-04',end:'2027-06-01',cible:68}
+    {id:'masse',lbl:'Prise de masse',start:'2026-03-01',end:'2027-01-03',cible:76},
+    {id:'seche',lbl:'Sèche',start:'2027-01-04',end:'2027-06-01',cible:68,gras:12}
   ];
-  var S={tab:'7j',sel:null,psel:null,per:'all',pall:false,conf:null,mconf:null,mOpen:false,allw:false,mel:false,pop:null,screen:null,sheet:null};
+  var S={tab:'today',notes:false,sel:null,psel:null,per:'all',pall:false,conf:null,mconf:null,mOpen:false,allw:false,mel:false,pop:null,screen:null,sheet:null};
 
   /* ── Format français ── */
   function fr(v,d){ return Number(v).toFixed(d).replace('.',','); }
@@ -62,10 +63,10 @@ var BILAN=(function(){
         +(prev?'<span class="'+(last.weight_kg-prev.weight_kg>=0?'bl-pos':'bl-neg')+'">'+sgn(last.weight_kg-prev.weight_kg,1)+' kg</span> ':'')+'<span class="bl-mut">· '+dshort(last.date)+'</span></div></button>'
       : '<div class="bl-hero__it"><div class="bl-lbl">⚖️ Poids</div><button type="button" class="bl-btn bl-btn--primary bl-btn--sm" style="margin-top:12px" onclick="BILAN.sheet(\'pesee\')">+ 1re pesée</button></div>';
     var kc=null, goal=2900;
-    if(typeof INTAKE!=='undefined'){ var w=INTAKE.last7(); kc=INTAKE.avg(w.start,w.end,'kcal').v; goal=INTAKE.NUT[0].goal; }
+    if(typeof INTAKE!=='undefined'){ var w=INTAKE.last15(); kc=INTAKE.avg(w.start,w.end,'kcal').v; goal=INTAKE.NUT[0].goal; }
     var kcal=kc!=null
-      ? '<button type="button" class="bl-hero__it" onclick="INTAKE.open()"><div class="bl-lbl">🍽️ kcal · 7 jours</div><div class="bl-num bl-hero__v"><span class="bl-hero-txt">'+nf(kc)+'</span></div><div class="bl-hero__s bl-mut">sur '+nf(goal)+' · '+Math.round(kc/goal*100)+NB+'%</div></button>'
-      : '<div class="bl-hero__it"><div class="bl-lbl">🍽️ kcal · 7 jours</div><div class="bl-num bl-hero__v bl-mut">—</div><div class="bl-hero__s bl-mut">rien de Yazio</div></div>';
+      ? '<button type="button" class="bl-hero__it" onclick="INTAKE.open()"><div class="bl-lbl">🍽️ kcal · 15 jours</div><div class="bl-num bl-hero__v"><span class="bl-hero-txt">'+nf(kc)+'</span></div><div class="bl-hero__s bl-mut">sur '+nf(goal)+' · '+Math.round(kc/goal*100)+NB+'%</div></button>'
+      : '<div class="bl-hero__it"><div class="bl-lbl">🍽️ kcal · 15 jours</div><div class="bl-num bl-hero__v bl-mut">—</div><div class="bl-hero__s bl-mut">rien de Yazio</div></div>';
     return '<section class="bl-sit"><div class="bl-sit__top"><h1 class="bl-sit__name">'+esc(name)+'</h1><span class="bl-pill">'+sa.lbl+' · J-'+j+'</span></div><div class="bl-hero">'+poids+kcal+'</div></section>';
   }
 
@@ -75,15 +76,14 @@ var BILAN=(function(){
     var rows=[
       ['maison','🍲','Plats maison',nutWeekCount('maison',mon),o.maison||10,true],
       ['shaker','🥤','Shaker',nutWeekCount('shaker',mon),o.shk||7,true],
-      ['run','🏃','Courir',run,o.run||1,true],
-      ['seances','🏋️','Séances',B0.salle,B0.goal,false]
+      ['run','🏃','Courir',run,o.run||1,true]
     ];
     return '<section class="bl-obj" aria-label="Objectifs de la semaine">'+rows.map(function(r){
       var k=r[0],v=r[3],g=r[4],done=v>=g, cls=done?'is-done':v===0?'is-zero':'';
       var cap=r[5]?nutTapMax(k):g;
       return '<div class="bl-obj__row"><span class="bl-obj__e" aria-hidden="true">'+r[1]+'</span><div style="min-width:0"><div class="bl-obj__n">'+r[2]+'</div><div class="bl-trk"><i class="'+(done?'is-done':'')+'" style="width:'+Math.min(100,v/g*100).toFixed(0)+'%"></i></div></div>'
         +'<span class="bl-num bl-obj__v '+cls+'">'+String(v).replace('.',',')+u('/'+g)+'</span>'
-        +(r[5]?'<button type="button" class="bl-plus'+(S.pop===k?' is-pop':'')+'" onclick="BILAN.inc(\''+k+'\')" aria-label="Ajouter 1 · '+r[2]+' ('+v+' sur '+g+')"'+(v>=cap?' disabled':'')+'>+</button>'
+        +(r[5]?'<button type="button" class="bl-plus'+(k==='run'?' bl-plus--soft':'')+(S.pop===k?' is-pop':'')+'" onclick="BILAN.inc(\''+k+'\')" aria-label="Ajouter 1 · '+r[2]+' ('+v+' sur '+g+')"'+(v>=cap?' disabled':'')+'>+</button>'
           :'<span class="bl-obj__auto" aria-label="automatique">'+(done?'✓':'')+'</span>')+'</div>';
     }).join('')+'</section>';
   }
@@ -91,7 +91,7 @@ var BILAN=(function(){
   // Étiquette d'une macro (règles d'INTAKE : min, cible 70 g / 80 g max pour les lipides, max)
   function macroTag(n,v){
     if(n.kind==='max') return v>n.goal?['⚠ au-dessus','bl-warn','is-warn']:['✓ sous le max','bl-pos',''];
-    if(n.kind==='target') return v>n.max?['⚠ au-dessus de '+n.max,'bl-warn','is-warn']:v>n.goal?['✓ sous les '+n.max+' g','bl-pos','']:['✓ dans la cible','bl-pos',''];
+    if(n.kind==='target') return v>n.max?['⚠ au-dessus','bl-warn','is-warn']:v>n.goal?['✓ acceptable','bl-pos','']:['✓ cible','bl-pos',''];
     return v>=n.goal?['✓ objectif','bl-pos','']:[Math.round(v/n.goal*100)+NB+'%','',''];
   }
   function macroCell(n,v){
@@ -102,16 +102,16 @@ var BILAN=(function(){
       +'<div class="bl-trk"><i class="'+t[2]+'" style="width:'+Math.min(100,v/ref*100).toFixed(0)+'%;'+(t[2]?'':'background:var(--in-'+n.col+')')+'"></i></div><div class="bl-macro__t '+t[1]+'">'+t[0]+'</div></div>';
   }
   function nutritionHtml(){
-    var head='<div class="bl-sec__head"><h2 class="bl-sec__t"><span aria-hidden="true">🍽️</span>Nutrition</h2><span class="bl-sec__side"><button type="button" class="bl-sec__link" onclick="nutriAOpen()">🍳 Recettes</button><button type="button" class="bl-ib" onclick="INTAKE.open()" aria-label="Ouvrir la page Nutrition">›</button></span></div>';
-    var seg='<div class="bl-seg" role="tablist" style="margin-top:10px"><button type="button" role="tab" aria-selected="'+(S.tab==='7j')+'" onclick="BILAN.tab(\'7j\')">7 derniers jours</button><button type="button" role="tab" aria-selected="'+(S.tab==='today')+'" onclick="BILAN.tab(\'today\')">Aujourd’hui</button></div>';
+    var head='<div class="bl-sec__head"><h2 class="bl-sec__t"><span aria-hidden="true">🍽️</span>Nutrition</h2><button type="button" class="bl-ib" onclick="INTAKE.open()" aria-label="Ouvrir la page Nutrition">›</button></div>';
+    var seg='<div class="bl-seg" role="tablist" style="margin-top:10px"><button type="button" role="tab" aria-selected="'+(S.tab==='today')+'" onclick="BILAN.tab(\'today\')">Aujourd’hui</button><button type="button" role="tab" aria-selected="'+(S.tab==='15j')+'" onclick="BILAN.tab(\'15j\')">15 derniers jours</button></div>';
     if(typeof INTAKE==='undefined') return '';
     var N=INTAKE.NUT, BY={}; N.forEach(function(x){ BY[x.k]=x; });
     var body, any=Object.keys(INTAKE.days()).length>0;
     var vals={}, meta='';
-    if(S.tab==='7j'){ var w=INTAKE.last7(); ['kcal','glu','prot','lip'].forEach(function(k){ var a=INTAKE.avg(w.start,w.end,k); vals[k]=a.v; if(k==='kcal') meta=a.n+'/7 jours'; }); }
+    if(S.tab==='15j'){ var w=INTAKE.last15(); ['kcal','glu','prot','lip'].forEach(function(k){ var a=INTAKE.avg(w.start,w.end,k); vals[k]=a.v; if(k==='kcal') meta=a.n+'/15 jours'; }); }
     else { var d=INTAKE.day(today()); ['kcal','glu','prot','lip'].forEach(function(k){ vals[k]=d&&d[k]>0?d[k]:null; }); meta='en cours'; }
     if(!any) body='<div class="bl-empty"><span class="bl-empty__t">Rien reçu de Yazio</span><button type="button" class="bl-btn bl-btn--ghost bl-btn--sm" onclick="BILAN.refresh()">↻ Faire venir mes totaux</button></div>';
-    else if(vals.kcal==null) body='<div class="bl-empty"><span class="bl-empty__t">'+(S.tab==='today'?'Aucun repas noté aujourd’hui':'Aucun jour noté sur les 7 derniers jours')+'</span><button type="button" class="bl-btn bl-btn--ghost bl-btn--sm" onclick="BILAN.refresh()">↻ Actualiser</button></div>';
+    else if(vals.kcal==null) body='<div class="bl-empty"><span class="bl-empty__t">'+(S.tab==='today'?'Aucun repas noté aujourd’hui':'Aucun jour noté sur les 15 derniers jours')+'</span><button type="button" class="bl-btn bl-btn--ghost bl-btn--sm" onclick="BILAN.refresh()">↻ Actualiser</button></div>';
     else body='<div class="bl-kcal"><span class="bl-num bl-kcal__v">'+nf(vals.kcal)+u('/ '+nf(BY.kcal.goal)+' kcal')+'</span><span class="bl-meta">'+meta+'</span></div>'
       +'<div class="bl-trk bl-trk--lg" style="margin-top:12px"><i class="is-kcal" style="width:'+Math.min(100,vals.kcal/BY.kcal.goal*100).toFixed(0)+'%"></i></div>'
       +'<div class="bl-macros">'+macroCell(BY.glu,vals.glu)+macroCell(BY.prot,vals.prot)+macroCell(BY.lip,vals.lip)+'</div>';
@@ -135,7 +135,7 @@ var BILAN=(function(){
         +'<div class="bl-kv">moy. <b>'+(W.avg==null?'—':nf(W.avg))+'</b> / j</div>'
         +'<div class="bl-kv"><b>'+nf(W.sum)+'</b> / 50'+NB+'000</div>'
         +'<div class="bl-trk" style="margin-top:8px"><i class="'+(W.sum>=goal?'is-done':'')+'" style="width:'+Math.min(100,W.sum/goal*100).toFixed(0)+'%"></i></div>'
-        +'<div class="bl-mini">'+bars+'</div></div>';
+        +'<div class="bl-mini bl-mini--tall">'+bars+'</div></div>';
     }
     var som='';
     if(typeof SLEEP!=='undefined'){
@@ -143,7 +143,6 @@ var BILAN=(function(){
       for(var i=6;i>=0;i--){ var k=addD(key,-i), e=log[k]||{}; nights.push({k:k,m:SLEEP._duration(e.bed,e.wake),e:e}); }
       var cur=nights[6], valid=nights.filter(function(n){ return n.m!=null; });
       var avgm=valid.length?Math.round(valid.reduce(function(a,n){ return a+n.m; },0)/valid.length):null;
-      var inz=nights.filter(function(n){ return sleepZone(n.m); }).length;
       var sb=nights.map(function(n,i){
         return '<span class="'+(i===6?'is-today':'')+'"><i style="height:'+(n.m==null?100:Math.min(100,n.m/600*100)).toFixed(0)+'%;background:'+(n.m==null?'var(--bl-track)':sleepZone(n.m)?'var(--bl-sleep-ok)':'var(--bl-sleep-ko)')+'"></i><em>'+new Date(addD(n.k,1)+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'narrow'})+'</em></span>';
       }).join('');
@@ -151,9 +150,10 @@ var BILAN=(function(){
         ? '<div class="bl-num bl-big bl-mut">—</div>'
         : '<div class="bl-num bl-big">'+hm(cur.m)+(sleepZone(cur.m)?'<span class="bl-zone-ok" aria-label="dans la zone">✓</span>':'')+'</div>';
       som='<div><button type="button" class="bl-sec__head" onclick="SLEEP.open()"><h2 class="bl-sec__t bl-sec__t--sm"><span aria-hidden="true">🌙</span>Sommeil</h2><span class="bl-mut" aria-hidden="true">›</span></button>'+top
-        +'<div class="bl-kv">moy. <b>'+(avgm==null?'—':hm(avgm))+'</b></div><div class="bl-kv"><b>'+inz+'/7</b> dans 7-9 h</div><div style="height:14px"></div><div class="bl-mini">'+sb+'</div>'
-        +(cur.m==null?'<button type="button" class="bl-edit bl-edit--cta" onclick="BILAN.sheet(\'nuit\')">🌙 Noter ma nuit</button>'
-          :'<button type="button" class="bl-edit" onclick="BILAN.sheet(\'nuit\')" aria-label="Modifier la nuit"><span>'+esc(cur.e.bed)+' → '+esc(cur.e.wake)+'</span><span class="bl-ib" style="width:36px;height:36px" aria-hidden="true">✎</span></button>')+'</div>';
+        +'<div class="bl-kv">moy. <b>'+(avgm==null?'—':hm(avgm))+'</b></div>'
+        +(cur.m==null?'<button type="button" class="bl-edit bl-edit--sm bl-edit--cta" onclick="BILAN.sheet(\'nuit\')">🌙 Noter ma nuit</button>'
+          :'<button type="button" class="bl-edit bl-edit--sm" onclick="BILAN.sheet(\'nuit\')" aria-label="Modifier la nuit"><span>'+esc(cur.e.bed)+' → '+esc(cur.e.wake)+'</span><span aria-hidden="true">✎</span></button>')
+        +'<div class="bl-mini bl-mini--tall">'+sb+'</div></div>';
     }
     return '<section class="bl-duo">'+pas+som+'</section>';
   }
@@ -166,8 +166,7 @@ var BILAN=(function(){
     if(!data.length) return null;
     var vals=data.map(function(p){ return p.v; }), sa=SAISONS[0];
     var lo=Math.min.apply(null,vals), hi=Math.max.apply(null,vals);
-    var y0=Math.floor(lo-1), y1=Math.ceil(Math.max(hi,sa.repere[1])+1);
-    if(per!=='all') y0=Math.min(y0,67); else y0=Math.min(y0,67);
+    var y0=Math.min(Math.floor(lo-1),67), y1=Math.ceil(Math.max(hi,sa.cible)+1);
     var t0=new Date(from+'T12:00:00').getTime(), T=Math.max(86400000,new Date(end+'T12:00:00').getTime()-t0);
     var Y=function(v){ return h-(v-y0)/(y1-y0)*h; };
     var pts=data.map(function(p,k){
@@ -185,7 +184,7 @@ var BILAN=(function(){
     var every=Math.max(1,Math.ceil(months.length/5));
     months.forEach(function(ms,i){ if((months.length-1-i)%every===0){ var x=4+(new Date(ms+'T12:00:00').getTime()-t0)/T*(w-8); ax.push([(x/w*100).toFixed(1),mshort(ms)]); } });
     var bw=bwTrend(ws);
-    return {pts:pts,line:line,area:line+' L'+(tr[tr.length-1][0]).toFixed(1)+' '+h+' L'+tr[0][0].toFixed(1)+' '+h+' Z',b1:Y(sa.repere[1]),bh:Y(sa.repere[0])-Y(sa.repere[1]),y68:Y(SAISONS[1].cible),grid:grid,ax:ax,h:h,w:w,
+    return {pts:pts,line:line,area:line+' L'+(tr[tr.length-1][0]).toFixed(1)+' '+h+' L'+tr[0][0].toFixed(1)+' '+h+' Z',y76:Y(sa.cible),y68:Y(SAISONS[1].cible),grid:grid,ax:ax,h:h,w:w,
       trend:bw.length?bw[bw.length-1].y:null};
   }
   function chartHtml(md,selIdx,lg){
@@ -193,10 +192,10 @@ var BILAN=(function(){
     return '<div class="bl-chart'+(lg?' bl-chart--lg':'')+'">'
       +(lg?md.grid.map(function(g){ return '<i class="bl-chart__grid" style="top:'+g[0]+'%"></i><span class="bl-chart__yl" style="top:'+g[0]+'%">'+g[1]+'</span>'; }).join(''):'')
       +'<svg viewBox="0 0 '+md.w+' '+md.h+'" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="bl-area-'+c+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--acc);stop-opacity:.24"/><stop offset="1" style="stop-color:var(--acc);stop-opacity:0"/></linearGradient></defs>'
-      +'<rect class="bl-chart__band" x="0" y="'+md.b1.toFixed(1)+'" width="'+md.w+'" height="'+md.bh.toFixed(1)+'"/>'
+      +'<line class="bl-chart__goal" x1="0" x2="'+md.w+'" y1="'+md.y76.toFixed(1)+'" y2="'+md.y76.toFixed(1)+'"/>'
       +(lg?'<line class="bl-chart__target" x1="0" x2="'+md.w+'" y1="'+md.y68.toFixed(1)+'" y2="'+md.y68.toFixed(1)+'"/>':'')
       +'<path class="bl-chart__area" style="fill:url(#bl-area-'+c+')" d="'+md.area+'"/><path class="bl-chart__line" d="'+md.line+'"/></svg>'
-      +(lg?'':'<span class="bl-chart__tag" style="top:'+(md.b1/md.h*100).toFixed(1)+'%">fin de masse 73-74</span>')
+      +'<span class="bl-chart__tag" style="top:'+(md.y76/md.h*100).toFixed(1)+'%">objectif masse '+SAISONS[0].cible+' kg</span>'
       +md.pts.map(function(p){ return '<i class="bl-chart__dot" style="left:'+p.lx+'%;top:'+p.ty+'%"></i>'; }).join('')
       +(sel?'<i class="bl-chart__v" style="left:'+sel.lx+'%"></i><i class="bl-chart__ring" style="left:'+sel.lx+'%;top:'+sel.ty+'%"></i>':'')
       +'<button type="button" class="bl-chart__hit" data-c="'+c+'" onclick="BILAN.pick(event,this)" aria-label="Lire une pesée sur la courbe"></button></div>';
@@ -205,15 +204,15 @@ var BILAN=(function(){
   function rateTxt(){ var R=bwRate(weights()); return R?'<span class="'+(R.rate>=0?'bl-pos':'bl-neg')+'" style="font-weight:800">'+sgn(R.rate,2)+' kg/sem</span>':''; }
   function readHtml(md,selIdx,withDelta){
     var sel=selIdx!=null?md.pts[selIdx]:null;
-    if(!sel) return '<div class="bl-read"><span>Tendance <span class="bl-num" style="font-size:20px">'+(md.trend==null?'—':fr(md.trend,1)+' kg')+'</span></span>'+rateTxt()+'</div>';
-    return '<div class="bl-read" aria-live="polite"><span class="bl-read__d"><span class="bl-mut">'+dlab(sel.d)+'</span><span class="bl-num" style="font-size:20px">'+fr(sel.v,1)+' kg</span>'+(withDelta&&sel.dl?'<span class="bl-mut" style="font-size:13px">'+sel.dl+'</span>':'')+'</span>'
+    if(!sel) return '<div class="bl-read"><span>Tendance <span class="bl-num" style="font-size:18px">'+(md.trend==null?'—':fr(md.trend,1)+' kg')+'</span></span>'+rateTxt()+'</div>';
+    return '<div class="bl-read" aria-live="polite"><span class="bl-read__d"><span class="bl-mut">'+dlab(sel.d)+'</span><span class="bl-num" style="font-size:18px">'+fr(sel.v,1)+' kg</span>'+(withDelta&&sel.dl?'<span class="bl-mut" style="font-size:12px">'+sel.dl+'</span>':'')+'</span>'
       +'<button type="button" class="bl-ib" style="margin-right:-10px" onclick="BILAN.unpick(\''+(withDelta?'psel':'sel')+'\')" aria-label="Fermer la lecture">✕</button></div>';
   }
   function weightHtml(){
     var ws=weights(), inner;
     if(ws.length<2) inner='<div class="bl-empty"><span class="bl-empty__t">'+(ws.length?'Encore une pesée pour tracer la courbe':'Aucune pesée pour l’instant')+'</span></div>';
     else { var md=weightModel('all',350,150); inner=readHtml(md,S.sel,false)+chartHtml(md,S.sel,false)+axHtml(md,false); }
-    return '<section class="bl-sec"><button type="button" class="bl-sec__head" onclick="BILAN.go(\'poids\')"><h2 class="bl-sec__t"><span aria-hidden="true">⚖️</span>Poids &amp; corps</h2><span class="bl-mut" style="font-weight:800;font-size:18px;padding-right:12px" aria-hidden="true">›</span></button>'+inner
+    return '<section class="bl-sec"><button type="button" class="bl-sec__head" onclick="BILAN.go(\'poids\')"><h2 class="bl-sec__t"><span aria-hidden="true">⚖️</span>Poids &amp; corps</h2><span class="bl-mut" style="font-weight:800;font-size:16px;padding-right:12px" aria-hidden="true">›</span></button>'+inner
       +'<div class="bl-actions"><button type="button" class="bl-btn bl-btn--primary" onclick="BILAN.sheet(\'pesee\')">+ Pesée</button><button type="button" class="bl-btn bl-btn--ghost" onclick="BILAN.sheet(\'mensu\')">📏 Mensurations</button></div></section>';
   }
 
@@ -221,28 +220,28 @@ var BILAN=(function(){
     var sa=saison(), rows=[];
     function det(B){ return fmtSeances(B.salle)+'/'+B.goal+' séance'+(B.goal>1?'s':''); }
     rows.push(['Cette semaine','en cours · '+det(B0),B0.note,"wrOpen('"+curWs+"',true)"]);
-    for(var i=1;i<=2;i++){ var ws=rankAddDays(curWs,-7*i), B=bilanNoteWeek(ws); if(B.salle) rows.push(['Sem. du '+dshort(ws),det(B)+' · gravée',B.note,"wrOpen('"+ws+"',true)"]); }
+    var ws=rankAddDays(curWs,-7), B=bilanNoteWeek(ws); if(B.salle) rows.push(['Sem. du '+dshort(ws),det(B)+' · gravée',B.note,"wrOpen('"+ws+"',true)"]);
     var t=today(), pm=new Date(parseInt(t.slice(0,4),10),parseInt(t.slice(5,7),10)-2,1), pmk=pm.getFullYear()+'-'+String(pm.getMonth()+1).padStart(2,'0');
     var M=null; try{ M=bilanNoteMonth(pmk); }catch(e){}
     if(M&&M.salle) rows.push([mrMonthLabel(pmk),'mois · '+M.salle+' séances',M.note,"mrOpen('"+pmk+"',true)"]);
     var older=[], season=rankCurrentSeason();
-    for(var j=3;j<=30;j++){ var w2=rankAddDays(curWs,-7*j); if(season&&w2<season.start) break; var B2=bilanNoteWeek(w2); if(B2.salle) older.push(['Sem. du '+dshort(w2),det(B2)+' · gravée',B2.note,"wrOpen('"+w2+"',true)"]); }
+    for(var j=2;j<=30;j++){ var w2=rankAddDays(curWs,-7*j); if(season&&w2<season.start) break; var B2=bilanNoteWeek(w2); if(B2.salle) older.push(['Sem. du '+dshort(w2),det(B2)+' · gravée',B2.note,"wrOpen('"+w2+"',true)"]); }
     if(S.allw) rows=rows.concat(older);
     var row=function(r){ return '<button type="button" class="bl-nrow" onclick="'+r[3]+'"><div style="min-width:0"><div class="bl-nrow__n">'+r[0]+'</div><div class="bl-nrow__s">'+r[1]+'</div></div><div class="bl-num bl-nrow__v" style="color:var(--bl-note-'+noteN(r[2])+')">'+fr(r[2],1)+u('/20')+'<span class="bl-mut bl-nrow__a" aria-hidden="true">›</span></div></button>'; };
-    return '<section class="bl-sec"><div class="bl-sec__head"><h2 class="bl-sec__t"><span aria-hidden="true">🏆</span>Notes</h2><span class="bl-meta">'+sa.lbl+'</span></div>'
-      +rows.map(row).join('')+(older.length?'<button type="button" class="bl-more" onclick="BILAN.toggle(\'allw\')">'+(S.allw?'Moins ▴':'Toutes les semaines ▾')+'</button>':'')+'</section>';
+    return '<button type="button" class="bl-fold" aria-expanded="'+S.notes+'" aria-controls="blNotes" onclick="BILAN.toggle(\'notes\')"><span aria-hidden="true" style="font-size:18px">🏆</span><span>Notes</span><span class="bl-fold__i" aria-hidden="true">›</span></button>'
+      +(S.notes?'<div class="bl-notes" id="blNotes">'+rows.map(row).join('')+(older.length?'<button type="button" class="bl-more" onclick="BILAN.toggle(\'allw\')">'+(S.allw?'Moins ▴':'Toutes les semaines ▾')+'</button>':'')+'</div>':'');
   }
 
   function melatiHtml(){
     if(typeof PV==='undefined') return '';
-    return '<button type="button" class="bl-fold" aria-expanded="'+S.mel+'" aria-controls="bilanPartner" onclick="BILAN.toggle(\'mel\')"><span aria-hidden="true" style="font-size:22px">🌸</span><span>Progression de Melati</span><span class="bl-fold__i" aria-hidden="true">›</span></button>'
+    return '<button type="button" class="bl-fold" aria-expanded="'+S.mel+'" aria-controls="bilanPartner" onclick="BILAN.toggle(\'mel\')"><span aria-hidden="true" style="font-size:20px">🌸</span><span>Progression de Melati</span><span class="bl-fold__i" aria-hidden="true">›</span></button>'
       +'<div class="bl-mel" id="bilanPartner"'+(S.mel?'':' hidden')+'></div>';
   }
 
   function render(){
     var host=$('bilanPage'); if(!host) return;
     var curWs=rankMonday(today()), B0=bilanNoteWeek(curWs);
-    host.innerHTML=alertsHtml()+situationHtml()+'<hr class="bl-hr">'+objectivesHtml(B0)+'<hr class="bl-hr">'+nutritionHtml()+'<hr class="bl-hr">'+duoHtml()+'<hr class="bl-hr">'+weightHtml()+'<hr class="bl-hr">'+notesHtml(B0,curWs)+'<hr class="bl-hr">'+melatiHtml();
+    host.innerHTML=alertsHtml()+'<div class="bl-topcard">'+situationHtml()+'<hr class="bl-hr">'+objectivesHtml(B0)+'</div>'+nutritionHtml()+'<hr class="bl-hr">'+duoHtml()+'<hr class="bl-hr">'+weightHtml()+'<hr class="bl-hr">'+notesHtml(B0,curWs)+'<hr class="bl-hr">'+melatiHtml();
     S.pop=null;
     try{ if(typeof PV!=='undefined'&&S.mel) PV.render(); }catch(e){ console.warn('[MASSUP] PV:',e); }
     if(S.screen==='poids') renderScreen();
@@ -262,40 +261,40 @@ var BILAN=(function(){
     var stat=function(l,v,s,cls){ return '<div><div class="bl-lbl">'+l+'</div><div class="bl-num bl-stats__v '+(cls||'')+'">'+v+'</div><div class="bl-stats__s">'+s+'</div></div>'; };
     var h=top('⚖️ Poids &amp; corps')
       +'<section class="bl-sec" style="padding-top:26px"><div class="bl-lbl">Dernière pesée · '+dlab(last.date)+'</div>'
-      +'<div class="bl-num" style="font-size:76px;margin-top:10px"><span class="bl-hero-txt">'+fr(cur,1)+'</span>'+u('kg')+'</div>'
-      +(prev?'<div style="font-size:14px;font-weight:800;margin-top:10px"><span class="'+(cur-prev.weight_kg>=0?'bl-pos':'bl-neg')+'">'+sgn(cur-prev.weight_kg,1)+' kg</span> <span class="bl-mut">vs '+dlab(prev.date)+'</span></div>':'')
+      +'<div class="bl-num" style="font-size:68px;margin-top:10px"><span class="bl-hero-txt">'+fr(cur,1)+'</span>'+u('kg')+'</div>'
+      +(prev?'<div style="font-size:13px;font-weight:800;margin-top:10px"><span class="'+(cur-prev.weight_kg>=0?'bl-pos':'bl-neg')+'">'+sgn(cur-prev.weight_kg,1)+' kg</span> <span class="bl-mut">vs '+dlab(prev.date)+'</span></div>':'')
       +'<div class="bl-stats">'
       +stat('Tendance',fr(tr[tr.length-1].y,1)+u('kg'),'moy. 7 jours')
       +stat('Rythme',R?sgn(R.rate,2):'—','kg/sem · 4 sem.',R?(R.rate>=0?'bl-pos':'bl-neg'):'')
       +stat('Pesées',n7+u('/7 j'),'objectif 3+'+(n7>=3?' ✓':''))
       +stat('30 jours',d30==null?'—':sgn(d30,1)+u('kg'),d30==null?'pas assez de pesées':'au rythme actuel',d30==null?'':d30>=0?'bl-pos':'bl-neg')
       +stat('Saison',sgn(tot,1)+u('kg'),'depuis '+dshort(first.date),tot>=0?'bl-pos':'bl-neg')
-      +stat('Sèche',SAISONS[1].cible+u('kg'),'visés · 1 juin')
+      +stat('Sèche',SAISONS[1].gras+u('% gras'),SAISONS[1].cible+' kg · 1 juin')
       +'</div></section><hr class="bl-hr">';
     // Frise masse → sèche (dates des saisons)
     var a=SAISONS[0], b=SAISONS[1], span=days(a.start,b.end), done=Math.max(0,Math.min(days(a.start,a.end),days(a.start,t)));
     var rest=Math.max(0,days(a.start,a.end)-done), sec=days(b.start,b.end), now=Math.max(0,Math.min(100,days(a.start,t)/span*100));
-    var trv=tr[tr.length-1].y, reached=trv>=a.repere[0];
-    h+='<section class="bl-sec"><div class="bl-sec__head" style="min-height:0"><h2 class="bl-sec__t bl-sec__t--sm">Prise de masse → sèche</h2><span class="bl-pos" style="font-size:13px;font-weight:800">J-'+Math.max(0,days(t,b.start))+'</span></div>'
+    var trv=tr[tr.length-1].y, reached=trv>=a.cible;
+    h+='<section class="bl-sec"><div class="bl-sec__head" style="min-height:0"><h2 class="bl-sec__t bl-sec__t--sm">Prise de masse → sèche</h2><span class="bl-pos" style="font-size:12px;font-weight:800">J-'+Math.max(0,days(t,b.start))+'</span></div>'
       +'<div class="bl-tl" aria-hidden="true" style="grid-template-columns:'+done+'fr '+(rest||0.001)+'fr '+sec+'fr"><span></span><span></span><span></span></div><div class="bl-tl__now"><i style="left:'+now.toFixed(1)+'%"></i></div>'
-      +'<div class="bl-tl__l"><div><div>Masse · fin '+dshort(a.end)+'</div><div class="bl-mut" style="margin-top:3px">'+a.repere.join('-')+' kg '+(reached?'✓ atteint':'visés')+'</div></div><div style="text-align:right"><div>Sèche · '+dshort(b.start)+' → '+dshort(b.end)+'</div><div class="bl-mut" style="margin-top:3px">'+b.cible+' kg visés</div></div></div></section><hr class="bl-hr">';
+      +'<div class="bl-tl__l"><div><div>Masse · fin '+dshort(a.end)+'</div><div class="bl-mut" style="margin-top:3px">'+a.cible+' kg '+(reached?'✓ atteint':'visés · encore '+fr(a.cible-trv,1))+'</div></div><div style="text-align:right"><div>Sèche · '+dshort(b.start)+' → '+dshort(b.end)+'</div><div class="bl-mut" style="margin-top:3px">'+b.cible+' kg · '+b.gras+' % de gras</div></div></div></section><hr class="bl-hr">';
     if(ws.length>=2){
       var md=weightModel(S.per,320,220);
       h+='<section class="bl-sec"><div class="bl-sec__head"><h2 class="bl-sec__t"><span aria-hidden="true">📈</span>Courbe</h2></div>'
         +'<div class="bl-seg" role="tablist" style="margin-top:8px">'+[['3m','3 mois'],['6m','6 mois'],['all','Saison']].map(function(x){ return '<button type="button" role="tab" aria-selected="'+(S.per===x[0])+'" onclick="BILAN.per(\''+x[0]+'\')">'+x[1]+'</button>'; }).join('')+'</div>'
         +'<div style="margin-top:10px">'+readHtml(md,S.psel,true)+'</div>'+chartHtml(md,S.psel,true)+axHtml(md,true)
-        +'<div class="bl-leg"><span><i style="background:var(--acc);height:3px"></i>tendance</span><span><i style="background:var(--acc);width:7px;height:7px;border-radius:4px"></i>pesée</span><span><i style="background:var(--bl-band);outline:1px solid var(--bl-line)"></i>fin de masse 73-74</span><span><i style="background:var(--bl-target);height:2px"></i>sèche 68</span></div></section><hr class="bl-hr">';
+        +'<div class="bl-leg"><span><i style="background:var(--acc);height:3px"></i>tendance</span><span><i style="background:var(--acc);width:7px;height:7px;border-radius:4px"></i>pesée</span><span><i style="background:var(--acc);height:2px"></i>masse '+SAISONS[0].cible+' kg</span><span><i style="background:var(--bl-target);height:2px"></i>sèche '+SAISONS[1].cible+' kg</span></div></section><hr class="bl-hr">';
     }
     var all=ws.slice().reverse(), list=all.slice(0,S.pall?all.length:6);
     h+='<section class="bl-sec"><div class="bl-sec__head"><h2 class="bl-sec__t"><span aria-hidden="true">📋</span>Pesées</h2><span class="bl-meta">'+ws.length+' au total</span></div>'
       +list.map(function(b,k){
         var p=all[k+1], dv=p?Math.round((b.weight_kg-p.weight_kg)*10)/10:0;
         if(S.conf===b.date) return '<div class="bl-confirm"><span>Supprimer '+fr(parseFloat(b.weight_kg),1)+' kg ?</span><button type="button" class="bl-btn bl-btn--ghost bl-btn--sm" onclick="BILAN.conf(null)">Annuler</button><button type="button" class="bl-btn bl-btn--danger bl-btn--sm" onclick="BILAN.delW(\''+b.date+'\')">Supprimer</button></div>';
-        return '<div class="bl-prow"><span class="bl-prow__d">'+dlab(b.date)+'</span><span class="bl-num" style="font-size:20px">'+fr(parseFloat(b.weight_kg),1)+u('kg')+'</span><span class="bl-prow__dl '+(dv>0?'bl-pos':dv<0?'bl-neg':'bl-mut')+'">'+(p?(dv===0?'=':sgn(dv,1)):'')+'</span><button type="button" class="bl-ib" onclick="BILAN.conf(\''+b.date+'\')" aria-label="Supprimer la pesée du '+dlab(b.date)+'">🗑</button></div>';
+        return '<div class="bl-prow"><span class="bl-prow__d">'+dlab(b.date)+'</span><span class="bl-num" style="font-size:18px">'+fr(parseFloat(b.weight_kg),1)+u('kg')+'</span><span class="bl-prow__dl '+(dv>0?'bl-pos':dv<0?'bl-neg':'bl-mut')+'">'+(p?(dv===0?'=':sgn(dv,1)):'')+'</span><button type="button" class="bl-ib" onclick="BILAN.conf(\''+b.date+'\')" aria-label="Supprimer la pesée du '+dlab(b.date)+'">🗑</button></div>';
       }).join('')
       +(all.length>6?'<button type="button" class="bl-more" onclick="BILAN.toggle(\'pall\')">'+(S.pall?'Moins ▴':'Tout l’historique ▾')+'</button>':'')+'</section><hr class="bl-hr">';
     h+=(L.length?measHtml(L):measEmpty);
-    h+='<div class="bl-sticky"><button type="button" class="bl-btn bl-btn--primary bl-btn--block" style="min-height:54px;font-size:18px" onclick="BILAN.sheet(\'pesee\')">+ Nouvelle pesée</button></div>';
+    h+='<div class="bl-sticky"><button type="button" class="bl-btn bl-btn--primary bl-btn--block" style="min-height:54px;font-size:16px" onclick="BILAN.sheet(\'pesee\')">+ Nouvelle pesée</button></div>';
     return h;
   }
   function measHtml(L){
@@ -304,7 +303,7 @@ var BILAN=(function(){
       +BODY_MEAS.map(function(M){
         var cur=last.v[M.k], first=null; for(var i=0;i<L.length;i++){ if(L[i].v[M.k]!=null){ first=L[i]; break; } }
         var d=(cur!=null&&first&&first.date!==last.date)?Math.round((cur-first.v[M.k])*10)/10:null;
-        return '<div><div class="bl-lbl">'+M.l+'</div><div class="bl-num" style="font-size:28px;margin-top:6px">'+(cur!=null?fr(cur,1)+u('cm'):'—')+'</div><div style="font-size:13px;font-weight:800;margin-top:4px" class="'+(d==null||d===0||!M.up?'bl-mut':d>0?'bl-pos':'bl-neg')+'">'+(d==null?'point de départ':sgn(d,1)+' <span class="bl-mut">depuis le '+dshort(first.date)+'</span>')+'</div></div>';
+        return '<div><div class="bl-lbl">'+M.l+'</div><div class="bl-num" style="font-size:25px;margin-top:6px">'+(cur!=null?fr(cur,1)+u('cm'):'—')+'</div><div style="font-size:12px;font-weight:800;margin-top:4px" class="'+(d==null||d===0||!M.up?'bl-mut':d>0?'bl-pos':'bl-neg')+'">'+(d==null?'point de départ':sgn(d,1)+' <span class="bl-mut">depuis le '+dshort(first.date)+'</span>')+'</div></div>';
       }).join('')+'</div>'
       +'<button type="button" class="bl-btn bl-btn--ghost bl-btn--block" style="margin-top:22px;min-height:48px" onclick="BILAN.sheet(\'mensu\')">+ Mesurer</button>'
       +'<button type="button" class="bl-more" onclick="BILAN.toggle(\'mOpen\')">'+(S.mOpen?'Masquer les mesures ▴':'Historique des mesures ▾')+'</button>';
@@ -336,29 +335,29 @@ var BILAN=(function(){
     if(S.sheet==='pesee'){
       var dv=last?Math.round((F.kg-parseFloat(last.weight_kg))*10)/10:null;
       return head('⚖️ Nouvelle pesée')+dateField()
-        +'<div class="bl-wrow"><button type="button" class="bl-step" onclick="BILAN.step(\'kg\',-0.1)" aria-label="Moins 0,1 kg">−</button><div class="bl-num" style="font-size:68px" aria-live="polite">'+fr(F.kg,1)+'<span class="bl-unit">kg</span></div><button type="button" class="bl-step" onclick="BILAN.step(\'kg\',0.1)" aria-label="Plus 0,1 kg">+</button></div>'
-        +'<div style="text-align:center;font-size:15px;font-weight:800;margin-top:14px">'+(dv==null?'<span class="bl-mut">Première pesée</span>':'<span class="'+(dv>0?'bl-pos':dv<0?'bl-neg':'bl-mut')+'">'+(dv===0?'= 0,0':sgn(dv,1))+' kg</span> <span class="bl-mut">vs '+dlab(last.date)+'</span>')+'</div>'
-        +'<button type="button" class="bl-btn bl-btn--primary bl-btn--block" style="margin-top:28px;min-height:56px;font-size:18px" onclick="BILAN.save()">Enregistrer ✓</button>';
+        +'<div class="bl-wrow"><button type="button" class="bl-step" onclick="BILAN.step(\'kg\',-0.1)" aria-label="Moins 0,1 kg">−</button><div class="bl-num" style="font-size:61px" aria-live="polite">'+fr(F.kg,1)+'<span class="bl-unit">kg</span></div><button type="button" class="bl-step" onclick="BILAN.step(\'kg\',0.1)" aria-label="Plus 0,1 kg">+</button></div>'
+        +'<div style="text-align:center;font-size:14px;font-weight:800;margin-top:14px">'+(dv==null?'<span class="bl-mut">Première pesée</span>':'<span class="'+(dv>0?'bl-pos':dv<0?'bl-neg':'bl-mut')+'">'+(dv===0?'= 0,0':sgn(dv,1))+' kg</span> <span class="bl-mut">vs '+dlab(last.date)+'</span>')+'</div>'
+        +'<button type="button" class="bl-btn bl-btn--primary bl-btn--block" style="margin-top:28px;min-height:56px;font-size:16px" onclick="BILAN.save()">Enregistrer ✓</button>';
     }
     if(S.sheet==='mensu'){
       return head('📏 Mensurations')+dateField()+'<div style="margin-top:8px">'+BODY_MEAS.map(function(M){
         var v=F.m[M.k], p=F.prev[M.k], dv=(v!=null&&p!=null)?Math.round((v-p)*10)/10:null;
-        return '<div class="bl-mens"><div style="min-width:0"><div style="font-size:15px;font-weight:800">'+M.l+'</div><div class="bl-meta" style="font-size:12px;font-weight:700;margin-top:3px;white-space:normal;line-height:1.3">'+M.h+'</div></div>'
-          +'<button type="button" class="bl-step" onclick="BILAN.step(\''+M.k+'\',-0.5)" aria-label="'+M.l+' moins 0,5 cm">−</button><div style="text-align:center"><div class="bl-num" style="font-size:28px">'+(v==null?'—':fr(v,1))+'</div>'
-          +'<div style="font-size:11px;font-weight:800;margin-top:4px" class="'+(dv==null||dv===0||!M.up?'bl-mut':dv>0?'bl-pos':'bl-neg')+'">'+(p==null?'cm':dv===0||dv==null?'préc. '+fr(p,1):sgn(dv,1)+' cm')+'</div></div>'
+        return '<div class="bl-mens"><div style="min-width:0"><div style="font-size:14px;font-weight:800">'+M.l+'</div><div class="bl-meta" style="font-size:11px;font-weight:700;margin-top:3px;white-space:normal;line-height:1.3">'+M.h+'</div></div>'
+          +'<button type="button" class="bl-step" onclick="BILAN.step(\''+M.k+'\',-0.5)" aria-label="'+M.l+' moins 0,5 cm">−</button><div style="text-align:center"><div class="bl-num" style="font-size:25px">'+(v==null?'—':fr(v,1))+'</div>'
+          +'<div style="font-size:10px;font-weight:800;margin-top:4px" class="'+(dv==null||dv===0||!M.up?'bl-mut':dv>0?'bl-pos':'bl-neg')+'">'+(p==null?'cm':dv===0||dv==null?'préc. '+fr(p,1):sgn(dv,1)+' cm')+'</div></div>'
           +'<button type="button" class="bl-step" onclick="BILAN.step(\''+M.k+'\',0.5)" aria-label="'+M.l+' plus 0,5 cm">+</button></div>';
-      }).join('')+'</div><button type="button" class="bl-btn bl-btn--primary bl-btn--block" style="margin-top:26px;min-height:56px;font-size:18px" onclick="BILAN.save()">Enregistrer ✓</button>';
+      }).join('')+'</div><button type="button" class="bl-btn bl-btn--primary bl-btn--block" style="margin-top:26px;min-height:56px;font-size:16px" onclick="BILAN.save()">Enregistrer ✓</button>';
     }
     if(S.sheet==='nuit'){
       var d=((F.wake-F.bed)%1440+1440)%1440, inz=sleepZone(d), nk=F.night;
       var lbl=dlab(nk).replace(/\.$/,'')+' → '+dlab(addD(nk,1));
       var hh=function(m){ m=((m%1440)+1440)%1440; return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'); };
-      return '<div class="bl-sheet__grab"></div><div style="display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:8px"><button type="button" class="bl-ib" onclick="BILAN.nightNav(-1)" aria-label="Nuit précédente">‹</button><div style="text-align:center;min-width:0"><h2 class="bl-sheet__t" style="font-size:22px">Ta nuit</h2><div class="bl-meta" style="margin-top:2px">'+lbl+'</div></div><button type="button" class="bl-ib bl-ib--fill" onclick="BILAN.close()" aria-label="Fermer">✕</button></div>'
-        +'<div style="text-align:center;margin-top:26px"><div class="bl-num bl-hero-txt" style="font-size:72px" aria-live="polite">'+hm(d)+'</div><div style="margin-top:12px"><span class="bl-pill '+(inz?'':'bl-pill--line bl-neg')+'">'+(inz?'✓ dans la zone 7-9 h':d<420?'sous 7 h':'au-dessus de 9 h')+'</span></div></div>'
+      return '<div class="bl-sheet__grab"></div><div style="display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:8px"><button type="button" class="bl-ib" onclick="BILAN.nightNav(-1)" aria-label="Nuit précédente">‹</button><div style="text-align:center;min-width:0"><h2 class="bl-sheet__t" style="font-size:20px">Ta nuit</h2><div class="bl-meta" style="margin-top:2px">'+lbl+'</div></div><button type="button" class="bl-ib bl-ib--fill" onclick="BILAN.close()" aria-label="Fermer">✕</button></div>'
+        +'<div style="text-align:center;margin-top:26px"><div class="bl-num bl-hero-txt" style="font-size:65px" aria-live="polite">'+hm(d)+'</div><div style="margin-top:12px"><span class="bl-pill '+(inz?'':'bl-pill--line bl-neg')+'">'+(inz?'✓ dans la zone 7-9 h':d<420?'sous 7 h':'au-dessus de 9 h')+'</span></div></div>'
         +'<div class="bl-time">'+[['bed','🛏️ Couché'],['wake','☀️ Levé']].map(function(x){
           return '<div class="bl-time__c"><div class="bl-lbl">'+x[1]+'</div><label class="bl-time__v"><span class="bl-sr">'+x[1]+'</span><input type="time" value="'+hh(F[x[0]])+'" onchange="BILAN.time(\''+x[0]+'\',this.value)">'+hh(F[x[0]])+'</label>'
             +'<div class="bl-time__s"><button type="button" class="bl-step" style="width:48px;height:48px" onclick="BILAN.step(\''+x[0]+'\',-5)" aria-label="5 minutes plus tôt">−</button><button type="button" class="bl-step" style="width:48px;height:48px" onclick="BILAN.step(\''+x[0]+'\',5)" aria-label="5 minutes plus tard">+</button></div></div>';
-        }).join('')+'</div><button type="button" class="bl-btn bl-btn--primary bl-btn--block" style="margin-top:26px;min-height:56px;font-size:18px" onclick="BILAN.save()">Enregistrer ✓</button>';
+        }).join('')+'</div><button type="button" class="bl-btn bl-btn--primary bl-btn--block" style="margin-top:26px;min-height:56px;font-size:16px" onclick="BILAN.save()">Enregistrer ✓</button>';
     }
     return '';
   }
