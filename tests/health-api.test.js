@@ -48,7 +48,7 @@ test("POST forwards daily text rows and reports saved rows", async (t) => {
     { d: "2026-09-28", k: "steps", v: "8123" },
     { d: "2026-09-29", k: "steps", v: "9000" }
   ]);
-  assert.deepEqual(res.body, { ok: true, received: 2, saved: 2, recu: ["steps : 2 j"], attention: [] });
+  assert.deepEqual(res.body, { ok: true, received: 2, saved: 2, recu: ["steps : 2 j · moy. 8561,5"], attention: [] });
 });
 
 test("POST accepts hourly step rows from the iOS Shortcut", async (t) => {
@@ -110,7 +110,11 @@ test("POST accepte la nutrition Yazio et la pesée Renpho (02/11), par paquets, 
   assert.equal(res.statusCode, 200);
   assert.deepEqual(batches, [2000, 104]);
   assert.equal(res.body.saved, 2104);
-  assert.ok(res.body.recu.includes("nu_kcal : 1 j") && res.body.recu.includes("nu_prot : 1 j") && res.body.recu.includes("bw_kg : 1 j"));
-  assert.ok(res.body.recu.includes("kcal : 1 j"), "« kcal » reste l'énergie active");
+  assert.ok(res.body.recu.includes("nu_kcal : 1 j · moy. 2845,5") && res.body.recu.includes("nu_prot : 1 j · moy. 142,3") && res.body.recu.includes("bw_kg : 1 j · moy. 71,6"));
+  assert.ok(res.body.recu.includes("kcal : 1 j · moy. 512"), "« kcal » reste l'énergie active");
+  assert.deepEqual(res.body.attention, []);
+  const res2 = response();
+  await handler(request("POST", "2026-11-01;steps;7432\n2026-11-01;nu_kcal;7432"), res2);
+  assert.match(res2.body.attention[0], /les pas du jour/);
   assert.deepEqual(res.body.attention, []);
 });

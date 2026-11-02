@@ -27,19 +27,24 @@ function measureKey(value) {
 }
 // Résumé lisible renvoyé au Raccourci (il s'affiche à la fin) + garde-fous contre un bloc mal relié
 function summarize(rows) {
-  const days = {}, warn = [];
+  const days = {}, sums = {}, warn = [], steps = {};
+  const num = function (v) { return parseFloat(String(v).replace(/[^0-9,.]/g, '').replace(',', '.')); };
+  rows.forEach(function (r) { if (r.k === 'steps') steps[r.d] = num(r.v); });
   rows.forEach(function (r) {
     (days[r.k] = days[r.k] || new Set()).add(r.d);
-    const v = parseFloat(String(r.v).replace(/[^0-9,.]/g, '').replace(',', '.'));
+    const v = num(r.v);
+    if (!isNaN(v)) sums[r.k] = (sums[r.k] || 0) + v;
+    if (/^(nu|bw)_/.test(r.k) && steps[r.d] != null && v === steps[r.d] && v > 0) warn.push(r.k + ' ' + r.d + ' = les pas du jour (bloc relié au mauvais « Échantillons de Santé » ?)');
     if (r.k === 'nu_kcal' && v > 8000) warn.push('nu_kcal ' + r.d + ' = ' + v + ' (ce sont des pas ? vérifie le bloc Énergie alimentaire)');
     if (r.k === 'bw_kg' && (v < 30 || v > 200)) warn.push('bw_kg ' + r.d + ' = ' + v + ' (unité kg ?)');
     if (/^nu_(prot|glu|lip|fib|sucre|sat)$/.test(r.k) && v > 1500) warn.push(r.k + ' ' + r.d + ' = ' + v + ' (unité g ?)');
   });
   const keys = Object.keys(days).sort();
-  return { keys: keys.map(function (k) { return k + ' : ' + days[k].size + ' j'; }), warn: warn.slice(0, 6) };
+  return {
+    keys: keys.map(function (k) { const n = days[k].size, m = sums[k] != null ? Math.round(sums[k] / Math.max(1, rows.filter(function (r) { return r.k === k; }).length) * 10) / 10 : null; return k + ' : ' + n + ' j' + (m != null ? ' · moy. ' + String(m).replace('.', ',') : ''); }),
+    warn: warn.slice(0, 6)
+  };
 }
-
-// Le corps BRUT d'abord (sans toucher req.body, que Vercel ne découpe qu'à la lecture) — sinon repli sur req.body
 function readRaw(req) {
   return new Promise(function (resolve) {
     let data = '', done = false;
