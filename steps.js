@@ -74,7 +74,8 @@ var STEPS=(function(){
     var since=addD(today(),-370), offset=0, pageSize=1000, rows=[];
     try{
       while(true){
-        var r=await sb.from('health_days').select('d,k,v').gte('d',since).order('d').order('k').range(offset,offset+pageSize-1);
+        // 02/11 : la nutrition (nu_*) et les pesées (bw_*) vivent à part — elles ne doivent pas grossir DB.health (snapshot cloud)
+        var r=await sb.from('health_days').select('d,k,v').gte('d',since).not('k','like','nu_*').not('k','like','bw_*').order('d').order('k').range(offset,offset+pageSize-1);
         if(r.error){ _status=/does not exist|42P01|schema cache/i.test((r.error.message||'')+(r.error.code||''))?'notable':'err'; rerenderOpen(); return; }
         var page=r.data||[];
         rows=rows.concat(page);

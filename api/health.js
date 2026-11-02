@@ -3,17 +3,40 @@
 // (29/09/2026). Corps accepté, au plus simple pour Raccourcis :
 //   · du TEXTE, une ligne par jour et par mesure :  2026-09-28;steps;8 123
 //     (séparateur ; ou tabulation · mesure steps|kcal|km|exo|floors ou steps_h00…steps_h23)
+//   · 02/11 : + nutrition du jour (Yazio → Santé) nu_kcal, nu_prot, nu_glu, nu_lip, nu_fib, nu_sucre, nu_sat,
+//     nu_sodium, nu_potassium… (tout nu_xxx est accepté) et pesées (Renpho → Santé) bw_kg, bw_fat…
+//     Les noms en clair passent aussi (« calories », « protéines », « poids »…).
 //   · ou du JSON : {"rows":[{"d":"2026-09-28","k":"steps_h09","v":"8123"}]}
 // Le code (t) identifie le compte : health_push() (health.sql) n'écrit QUE chez lui.
 // Aucune clé secrète ici : la clé anon suffit, c'est la fonction SQL qui vérifie le code.
 // ─────────────────────────────────────────────────────────────
 const SUPABASE_URL = 'https://xtcmvbzjcpewivhnvvwz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0Y212YnpqY3Bld2l2aG52dnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MzA1MjYsImV4cCI6MjA5MjEwNjUyNn0.axsQZ8vxLaO_6LXlgVjaQSK8qGjHfu5f7MqOG7bgWgc';
-const KEYS = { steps: 'steps', pas: 'steps', kcal: 'kcal', energie: 'kcal', km: 'km', distance: 'km', exo: 'exo', exercice: 'exo', floors: 'floors', etages: 'floors' };
+const KEYS = { steps: 'steps', pas: 'steps', kcal: 'kcal', energie: 'kcal', km: 'km', distance: 'km', exo: 'exo', exercice: 'exo', floors: 'floors', etages: 'floors',
+  // nutrition (« kcal » seul reste l'énergie ACTIVE de Santé : la nourriture, c'est nu_kcal)
+  calories: 'nu_kcal', energie_alimentaire: 'nu_kcal', dietary_energy: 'nu_kcal', proteines: 'nu_prot', proteine: 'nu_prot', protein: 'nu_prot',
+  glucides: 'nu_glu', carbs: 'nu_glu', lipides: 'nu_lip', fat: 'nu_lip', fibres: 'nu_fib', fiber: 'nu_fib', sucres: 'nu_sucre', sucre: 'nu_sucre', sugar: 'nu_sucre',
+  graisses_saturees: 'nu_sat', acides_gras_satures: 'nu_sat', sodium: 'nu_sodium', potassium: 'nu_potassium', eau: 'nu_eau',
+  // pesée
+  poids: 'bw_kg', weight: 'bw_kg', graisse: 'bw_fat', masse_grasse: 'bw_fat' };
 function measureKey(value) {
-  const key = String(value || '').toLowerCase();
+  const key = String(value || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
   if (KEYS[key]) return KEYS[key];
+  if (/^(nu|bw)_[a-z0-9_]{1,24}$/.test(key)) return key;
   return /^steps_h(?:[01]\d|2[0-3])$/.test(key) ? key : null;
+}
+// Résumé lisible renvoyé au Raccourci (il s'affiche à la fin) + garde-fous contre un bloc mal relié
+function summarize(rows) {
+  const days = {}, warn = [];
+  rows.forEach(function (r) {
+    (days[r.k] = days[r.k] || new Set()).add(r.d);
+    const v = parseFloat(String(r.v).replace(/[^0-9,.]/g, '').replace(',', '.'));
+    if (r.k === 'nu_kcal' && v > 8000) warn.push('nu_kcal ' + r.d + ' = ' + v + ' (ce sont des pas ? vérifie le bloc Énergie alimentaire)');
+    if (r.k === 'bw_kg' && (v < 30 || v > 200)) warn.push('bw_kg ' + r.d + ' = ' + v + ' (unité kg ?)');
+    if (/^nu_(prot|glu|lip|fib|sucre|sat)$/.test(r.k) && v > 1500) warn.push(r.k + ' ' + r.d + ' = ' + v + ' (unité g ?)');
+  });
+  const keys = Object.keys(days).sort();
+  return { keys: keys.map(function (k) { return k + ' : ' + days[k].size + ' j'; }), warn: warn.slice(0, 6) };
 }
 
 // Le corps BRUT d'abord (sans toucher req.body, que Vercel ne découpe qu'à la lecture) — sinon repli sur req.body
@@ -85,18 +108,23 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ ok: false, error: 'méthode non autorisée' });
   }
   try {
-    const rows = parseRows(await readRaw(req)).slice(0, 5000);
+    const rows = parseRows(await readRaw(req)).slice(0, 20000);
     if (!rows.length) return res.status(400).json({ ok: false, saved: 0, error: 'aucune ligne lisible' });
-    const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/health_push', {
-      method: 'POST',
-      headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ p_token: token, p_rows: rows })
-    });
-    const out = await r.text();
-    if (!r.ok) return res.status(502).json({ ok: false, error: out.slice(0, 200) });
-    const saved = parseInt(out, 10) || 0;
-    if (!saved) return res.status(422).json({ ok: false, received: rows.length, saved: 0, error: 'aucune ligne valide enregistrée' });
-    return res.status(200).json({ ok: true, received: rows.length, saved: saved });
+    // Envoi par paquets de 2 000 lignes (import d'une année de nutrition)
+    let saved = 0;
+    for (let i = 0; i < rows.length; i += 2000) {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/health_push', {
+        method: 'POST',
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_token: token, p_rows: rows.slice(i, i + 2000) })
+      });
+      const out = await r.text();
+      if (!r.ok) return res.status(502).json({ ok: false, saved: saved, error: out.slice(0, 200) });
+      saved += parseInt(out, 10) || 0;
+    }
+    const sum = summarize(rows);
+    if (!saved) return res.status(422).json({ ok: false, received: rows.length, saved: 0, error: 'aucune ligne valide enregistrée', recu: sum.keys });
+    return res.status(200).json({ ok: true, received: rows.length, saved: saved, recu: sum.keys, attention: sum.warn });
   } catch (e) {
     return res.status(500).json({ ok: false, error: e.message });
   }

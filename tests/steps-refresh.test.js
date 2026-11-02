@@ -31,6 +31,7 @@ test("returning from Shortcuts forces a health pull despite the one-minute throt
   vm.runInNewContext(fs.readFileSync("steps.js", "utf8"), sandbox);
   const STEPS = sandbox.STEPS;
   let saves = 0;
+  const excluded = [];
   const rows = [
     { d: "2026-09-29", k: "steps", v: 8123 },
     { d: "2026-09-29", k: "steps_h09", v: 812.4 }
@@ -45,6 +46,7 @@ test("returning from Shortcuts forces a health pull despite the one-minute throt
         return {
           select() { return this; },
           gte() { return this; },
+          not(column, op, value) { excluded.push(column + " " + op + " " + value); return this; },
           order() { return this; },
           range() { return Promise.resolve({ data: rows }); }
         };
@@ -54,6 +56,8 @@ test("returning from Shortcuts forces a health pull despite the one-minute throt
   });
 
   await STEPS.pull(true);
+  // 02/11 : nutrition et pesées exclues de la lecture des pas (elles ne vont pas dans DB.health)
+  assert.deepEqual(excluded, ["k like nu_*", "k like bw_*"]);
   STEPS.refresh();
   assert.match(window.location.href, /^shortcuts:\/\/run-shortcut\?name=/);
   listeners.visibilitychange();
@@ -87,6 +91,7 @@ test("health pull imports the full chart year in pages, not only the latest ten 
       const query = {
         select() { return this; },
         gte(_column, date) { this.since = date; return this; },
+        not() { return this; },
         order() { return this; },
         range(start, end) {
           pageRequests.push({ since: this.since, start, end });

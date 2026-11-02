@@ -48,7 +48,7 @@ test("POST forwards daily text rows and reports saved rows", async (t) => {
     { d: "2026-09-28", k: "steps", v: "8123" },
     { d: "2026-09-29", k: "steps", v: "9000" }
   ]);
-  assert.deepEqual(res.body, { ok: true, received: 2, saved: 2 });
+  assert.deepEqual(res.body, { ok: true, received: 2, saved: 2, recu: ["steps : 2 j"], attention: [] });
 });
 
 test("POST accepts hourly step rows from the iOS Shortcut", async (t) => {
@@ -92,4 +92,25 @@ test("POST surfaces Supabase failures instead of returning success", async (t) =
   assert.equal(res.statusCode, 502);
   assert.equal(res.body.ok, false);
   assert.match(res.body.error, /RPC unavailable/);
+});
+
+test("POST accepte la nutrition Yazio et la pesée Renpho (02/11), par paquets, avec un résumé", async (t) => {
+  const originalFetch = global.fetch;
+  const batches = [];
+  global.fetch = async (_url, options) => {
+    const b = JSON.parse(options.body);
+    batches.push(b.p_rows.length);
+    return { ok: true, text: async () => String(b.p_rows.length) };
+  };
+  t.after(() => { global.fetch = originalFetch; });
+  const lines = ["2026-11-01;nu_kcal;2 845,5", "2026-11-01;Protéines;142,3", "01/11/2026;poids;71,6", "2026-11-01;kcal;512"];
+  for (let i = 0; i < 2100; i++) lines.push("2026-10-01;nu_sodium;" + i);
+  const res = response();
+  await handler(request("POST", lines.join("\n")), res);
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(batches, [2000, 104]);
+  assert.equal(res.body.saved, 2104);
+  assert.ok(res.body.recu.includes("nu_kcal : 1 j") && res.body.recu.includes("nu_prot : 1 j") && res.body.recu.includes("bw_kg : 1 j"));
+  assert.ok(res.body.recu.includes("kcal : 1 j"), "« kcal » reste l'énergie active");
+  assert.deepEqual(res.body.attention, []);
 });

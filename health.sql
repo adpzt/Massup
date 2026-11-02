@@ -24,7 +24,7 @@ create policy "health_tokens own" on public.health_tokens
 create table if not exists public.health_days (
   user_id    uuid not null references auth.users(id) on delete cascade,
   d          date not null,
-  k          text not null,          -- steps · steps_h00…steps_h23 · kcal · km · exo · floors
+  k          text not null,          -- steps · steps_h00…steps_h23 · kcal · km · exo · floors · nu_* (nutrition) · bw_* (pesée)
   v          numeric not null,
   updated_at timestamptz not null default now(),
   primary key (user_id, d, k)
@@ -51,7 +51,9 @@ begin
     begin
       dd  := left(r->>'d', 10)::date;
       kk  := lower(coalesce(nullif(r->>'k', ''), 'steps'));
-      if kk not in ('steps','kcal','km','exo','floors') and kk !~ '^steps_h([01][0-9]|2[0-3])$' then continue; end if;
+      -- 02/11 : + nutrition (nu_*, totaux du jour depuis Yazio via Santé) et pesées (bw_*, Renpho via Santé)
+      if kk not in ('steps','kcal','km','exo','floors') and kk !~ '^steps_h([01][0-9]|2[0-3])$'
+         and kk !~ '^(nu|bw)_[a-z0-9_]{1,24}$' then continue; end if;
       raw := replace(regexp_replace(coalesce(r->>'v', ''), '[^0-9,.]', '', 'g'), ',', '.');
       if raw = '' then continue; end if;
       vv  := raw::numeric;
