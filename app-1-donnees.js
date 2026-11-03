@@ -149,6 +149,7 @@ if(typeof SLEEP!=='undefined') SLEEP.init({db:function(){ return DB; },save:func
 // Nutrition du jour (02/11) : totaux Yazio via Santé — hors DB (copie locale), même raccourci que les pas
 if(typeof INTAKE!=='undefined') INTAKE.init({sb:function(){ return (typeof sbClient!=='undefined'&&sbClient)?sbClient:null; },toast:function(m){ showToast(m); },
   runShortcut:function(){ if(typeof STEPS!=='undefined') STEPS.refresh(); },
+  onWeights:function(m){ try{ importHealthWeights(m); }catch(e){ console.warn('[MASSUP] import pesées :',e); } },
   onChange:function(){ if(_currentView==='sante') try{ renderSante(); }catch(e){} }});
 var _saveDBTimer=null;
 function saveDB(){

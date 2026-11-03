@@ -77,6 +77,11 @@ var INTAKE=(function(){
       rows.forEach(function(row){ var k=String(row.k).slice(3), v=Number(row.v); if(!(v>0)) return; (days[row.d]=days[row.d]||{})[k]=Math.round(v*10)/10; });
       var changed=JSON.stringify(days)!==JSON.stringify(cache.days);
       cache={days:days,syncAt:Date.now()}; persist();
+      // Pesées Renpho → Santé → bw_kg (04/11) : remises à l'app, qui les ajoute à l'historique sans rien écraser
+      try{
+        var wr=await sb.from('health_days').select('d,v').eq('k','bw_kg').gte('d',since).order('d');
+        if(!wr.error&&A.onWeights){ var wm={}; (wr.data||[]).forEach(function(row){ var v=Number(row.v); if(v>=30&&v<=200) wm[row.d]=Math.round(v*10)/10; }); A.onWeights(wm); }
+      }catch(e){ console.warn('[MASSUP] pesées Santé :',e); }
       if(changed){ try{ A.onChange(); }catch(e){} if(Date.now()<_refreshUntil) A.toast('✅ Nutrition Yazio reçue dans MASSUP'); }
       rerender();
     }catch(e){ _status='err'; rerender(); }

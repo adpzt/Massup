@@ -525,7 +525,7 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 .cal-day.has-session.day-maison.day-hi{background:rgba(155,140,255,.22);border-color:rgba(155,140,255,.35);}
 .cal-day.has-session::after{content:'';width:4px;height:4px;border-radius:50%;background:currentColor;position:absolute;bottom:3px;}
 .cal-day.empty{background:transparent;cursor:default;}
-.cal-day.other{opacity:.42;}
+.cal-day.other{opacity:.8;} /* 04/11 : .42 → .8 (chiffres sous WCAG AA) */
 .cal-day:not(.empty):active{transform:scale(.93);}
 
 /* FREQUENCY MINI */
@@ -544,8 +544,8 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 .freq-bar.mid .freq-bar-num{color:#AEBBD6;}
 .freq-bar.low .freq-bar-num{color:#FF8A8A;}
 .freq-bar-lbl{font-size:.46rem;font-weight:600;color:var(--mut);letter-spacing:.04em;}
-.freq-bar.gold .freq-bar-lbl{color:rgba(255,201,77,.6);}
-.freq-bar.valid .freq-bar-lbl{color:rgba(113,255,180,.55);}
+.freq-bar.gold .freq-bar-lbl{color:var(--yellow);} /* 04/11 : couleur pleine (contraste AA) */
+.freq-bar.valid .freq-bar-lbl{color:var(--acc);}
 .freq-streak{font-size:.73rem;color:var(--mut);text-align:center;margin-top:.6rem;line-height:1.4;}
 
 /* SESSION DOTS */
@@ -2679,7 +2679,7 @@ span.bn-hero-bar i.n-gold,.bn-hero-bar i.n-blue{color:transparent;}
   /* Libellés de section / calendrier (anciennes valeurs .38/.5 → 2,4:1) */
   .slbl{color:var(--mut);}
   .cal-day{color:rgba(18,21,28,.74);}
-  .cal-day.other{color:rgba(18,21,28,.42);}
+  .cal-day.other{color:rgba(18,21,28,.74);opacity:1;filter:saturate(.55);} /* 04/11 : en clair, le retrait passe par la couleur (désaturée), pas par l'opacité qui délavait les chiffres */
   .mv-nav-btn,.st-chart-nav button{color:var(--txt);}
   /* LiveUp : fonds d'ambiance codés en dur quasi-noirs → teintes claires équivalentes */
   .as-overlay.as-exorest{background:#FBF6E9;}
@@ -2717,6 +2717,7 @@ span.bn-hero-bar i.n-gold,.bn-hero-bar i.n-blue{color:transparent;}
   .dash-prog-bar-wrap,.obj-bar-wrap,.nutri-prot-bar,.bn-hero-bar,.pv-d.has{background:rgba(18,21,28,0.053);}
   .bilan-hero-label,.sbbl span,.panel[data-t=pull] .warmup-btn,.panel[data-t=pull2] .warmup-btn,.panel[data-t=pull] .bonus-btn,.panel[data-t=pull2] .bonus-btn,.panel[data-t=pull] .ws-time,.panel[data-t=pull2] .ws-time,.freq-bar.mid .freq-bar-num{color:#1E62C8;}
   .bilan-compo-delta.neg,.bench-insight.i-neg .bench-ins-txt strong,.chip-hot,.weight-nudge.nudge-hot,.erritem,.tpl-chip-del,.freq-bar.low .freq-bar-num,.le-del,.wh-entry-del,.wh-entry-del:hover,.dle-del,.ssb-cancel{color:#C22B40;}
+  .freq-bar.low .freq-bar-num{color:var(--blood);} /* 04/11 : 4,35 → AA sur le fond rose */
   .as-dont,.as-exo-name.err,.as-rep-score.s-bad,.weight-execs.hot,.as-shbtns button.del,.as-prep-del,.sec-push>.as-sec-head,.n-red,.bn-hero-note.n-red .bn-hero-v,.wr-note20.n-red .wr-note20-v,.hc-pts-v.n-red,.wr-chip.n-red{color:#C22B40;}
   .wr-alert-title,.wr-hero-num.n-red .wr-hero-v{color:#C22B40;}
   .bench-tag,.st-behind,.bench-sum-lbl.neg,.chip-stale,.panel[data-t=push] .warmup-btn,.panel[data-t=push] .bonus-btn,.panel[data-t=push] .ws-time,.as-rep-score.s-mid,.weight-execs.warn,.n-orange,.bn-hero-note.n-orange .bn-hero-v,.wr-note20.n-orange .wr-note20-v{color:#B34310;}

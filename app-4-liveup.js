@@ -2326,6 +2326,22 @@ var PAIN_ZONES=[['poignet','Poignet'],['coude','Coude'],['epaule','&#xC9;paule']
   ['basdos','Bas du dos'],['hanche','Hanche'],['genou','Genou'],['cheville','Cheville / pied'],['autre','Autre']];
 function painZoneLabel(z){ if(z==='nr') return 'zone non notée'; for(var i=0;i<PAIN_ZONES.length;i++) if(PAIN_ZONES[i][0]===z) return PAIN_ZONES[i][1]; return z; }
 function painZonesTxt(pains){ return (pains||[]).map(function(p){ return painZoneLabel(p.z).toLowerCase()+(p.lvl?' '+p.lvl+'/5':''); }).join(', '); }
+// Journal du poignet (04/11, incohérence ③) : UNE entrée par jour (fusion par date inchangée), mais qui COMBINE les
+// séances du jour — avant, une 2e séance le même jour écrasait la douleur de la 1re. byLog = la part de chaque séance
+// (une séance reprise remplace la sienne) ; level = le plus haut, zones réunies (le plus haut par zone), notes à la suite.
+function painLogPut(date,logId,part,resumed){
+  if(!DB.painLog) DB.painLog=[];
+  var e=DB.painLog.find(function(p){ return p.date===date; });
+  if(!e){ e={date:date}; DB.painLog.push(e); }
+  if(!e.byLog){ e.byLog={}; if(e.level!=null&&!resumed) e.byLog.avant={level:e.level,zones:e.zones||[],note:e.note||''}; }
+  e.byLog[String(logId)]=part;
+  var lv=0, zm={}, notes=[];
+  Object.keys(e.byLog).forEach(function(k){ var b=e.byLog[k]; lv=Math.max(lv,b.level||0);
+    (b.zones||[]).forEach(function(z){ zm[z.z]=Math.max(zm[z.z]||0,z.lvl||0); });
+    if(b.note&&notes.indexOf(b.note)<0) notes.push(b.note); });
+  e.level=lv; e.zones=Object.keys(zm).map(function(z){ return {z:z,lvl:zm[z]}; }); e.note=notes.join(' · ');
+  DB.painLog.sort(function(a,b){return a.date.localeCompare(b.date);});
+}
 function asPainAnswered(e){ return e.painAny===false||(e.painAny===true&&(e.pains||[]).length>0&&e.pains.every(function(p){return p.lvl>=1;})); }
 function asPainShortened(){ // exos raccourcis ou passés : candidats « à cause de la douleur »
   return AS.exos.map(function(x,i){return {x:x,i:i};}).filter(function(o){ var d=(o.x.sets||[]).length; if(o.x.status==='pending') return false; if(o.x.pain) return true; if(!d&&liveExoSide(o.x)) return false; return d<(o.x.n||3); });
@@ -2512,9 +2528,7 @@ function asPersistLog(){
   DB.logs.sort(function(a,b){return b.date.localeCompare(a.date)||((b.time||'').localeCompare(a.time||''));});
   if(!DB.painLog) DB.painLog=[];
   if(AS.end.pain!==null&&AS.end.pain!==undefined){
-    DB.painLog=DB.painLog.filter(function(p){return p.date!==todayStr();});
-    DB.painLog.push({date:todayStr(),level:AS.end.pain,zones:(AS.end.pains||[]).filter(function(p){return p.lvl;}),note:AS.end.painNote||''});
-    DB.painLog.sort(function(a,b){return a.date.localeCompare(b.date);});
+    painLogPut(prevLog?prevLog.date:todayStr(),logId,{level:AS.end.pain,zones:(AS.end.pains||[]).filter(function(p){return p.lvl;}),note:AS.end.painNote||''},!!prevLog);
   }
   AS.savedLogId=logId;
   saveDB();

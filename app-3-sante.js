@@ -223,6 +223,24 @@ function peseeAdjust(delta){
   wEl.value=(Math.round((v+delta)*10)/10).toFixed(1);
 }
 
+// Pesées Renpho (via Santé, bw_kg) → historique des pesées (04/11, roadmap étape 3) : AJOUT seulement — un jour qui a
+// déjà une pesée (saisie à la main ou autre) n'est jamais modifié, une pesée supprimée (deletedBW) ne revient jamais.
+// Seulement à partir du 01/11/2026 : les 9 anciennes pesées Renpho (mars → octobre) ne réécrivent pas l'historique
+// sans l'accord d'Adrien (question posée le 04/11).
+var RENPHO_IMPORT_FROM='2026-11-01';
+function importHealthWeights(map){
+  if(!map) return 0;
+  if(!DB.bodyWeight) DB.bodyWeight=[];
+  var del=DB.deletedBW||[], n=0;
+  Object.keys(map).sort().forEach(function(d){
+    if(d<RENPHO_IMPORT_FROM||d>todayStr()) return;
+    if(del.indexOf(d)>=0) return;
+    if(DB.bodyWeight.some(function(b){ return b.date===d; })) return;
+    DB.bodyWeight.push({date:d,weight_kg:map[d],note:'Renpho'}); n++;
+  });
+  if(n){ DB.bodyWeight.sort(function(a,b){ return a.date<b.date?-1:1; }); saveDB(); try{ if(typeof BILAN!=='undefined') BILAN.render(); }catch(e){} }
+  return n;
+}
 function savePesee(){
   var dateEl=document.getElementById('peseeDate');
   var wEl=document.getElementById('peseeWeight');
@@ -1501,6 +1519,11 @@ var XLSX_LITE=(function(){
   return {build:build};
 })();
 
+// Pas d'un jour pour l'export : la même lecture que l'app (Santé, sinon saisie à la main) — 04/11
+function stepsAt(d){
+  if(typeof STEPS!=='undefined'&&STEPS.stepsOf) return STEPS.stepsOf(d);
+  var h=DB.health&&DB.health[d]; return h?(h.steps!=null?h.steps:(h.ms!=null?h.ms:null)):null;
+}
 function exportCoachDossier(opts){
   opts=opts||{};
   var _dec=document.createElement('textarea');
@@ -1638,7 +1661,7 @@ function exportCoachDossier(opts){
   add('Exercices stagnants (objectif de séries à la charge actuelle dépassé — 8 à 20 séances selon la taille du cran, encore pratiqués)',stag.length,'exercices','',stag.join(' · '));
   var ev=FEATURE_EVO?Object.keys(DB.evolution||{}).filter(function(k){return EXO[k];}):[];
   if(ev.length) add('Évolutions de charge en cours',ev.length,'exercices','',ev.map(function(k){var e=DB.evolution[k]; return name(k)+' '+e.from+' → '+e.to+' ('+e.hi+' série(s) au poids haut)';}).join(' · '));
-  var st=[]; for(var j=1;j<=30;j++){ var h=DB.health&&DB.health[rankAddDays(today,-j)]; if(h&&h.steps) st.push(h.steps); }
+  var st=[]; for(var j=1;j<=30;j++){ var sv=stepsAt(rankAddDays(today,-j)); if(sv) st.push(sv); }
   if(st.length) add('Pas moyens par jour',Math.round(avg(st)),'pas','30 jours',st.length+' jours renseignés');
   var sl=[]; Object.keys(DB.sleepLog||{}).forEach(function(n){ if(n>=d30){ var m=sleepMinutes(DB.sleepLog[n]); if(m) sl.push(m); } });
   if(sl.length) add('Sommeil moyen',r1(avg(sl)/60),'h','30 jours',sl.length+' nuits renseignées');
@@ -1653,7 +1676,7 @@ function exportCoachDossier(opts){
     var vol=muscleVolume(ws,we), tot=0; GROUPS.forEach(function(g){ tot+=vol[g]||0; });
     var notes=wl.map(liveLogNote20).filter(function(n){return n!=null;});
     var ton=wl.reduce(function(s,l){ return s+logTonnage(l); },0);
-    var stp=[]; for(var di=0;di<7;di++){ var hh=DB.health&&DB.health[rankAddDays(ws,di)]; if(hh&&hh.steps) stp.push(hh.steps); }
+    var stp=[]; for(var di=0;di<7;di++){ var sv2=stepsAt(rankAddDays(ws,di)); if(sv2) stp.push(sv2); }
     var bwk=null; bw.forEach(function(b){ if(b.date>=ws&&b.date<=we) bwk=b.weight_kg; });
     var slp=[]; for(var dj=0;dj<7;dj++){ var mm=sleepMinutes((DB.sleepLog||{})[rankAddDays(ws,dj)]); if(mm) slp.push(mm); }
     var rk=wl.filter(function(l){return l.sport==='course'&&l.run;});
@@ -1726,8 +1749,10 @@ function exportCoachDossier(opts){
 
   // ── Pas ──
   sheets.push({name:'Pas',cols:[{h:'Date',w:11},{h:'Jour',w:6},{h:'Pas',w:9},{h:'Distance (km)',w:9},{h:'Calories actives (kcal)',w:10},{h:'Étages',w:7},{h:'Saisie manuelle',w:9}],
-    rows:Object.keys(DB.health||{}).sort().filter(function(d){ var h=DB.health[d]; return h&&(h.steps||h.km); }).map(function(d){ var h=DB.health[d];
-      return [d,jour(d),h.steps||null,h.km?r2(h.km):null,h.kcal||null,h.floors||null,h.ms?'oui':'']; })});
+    // 04/11 (incohérence ④) : même lecture que l'app (STEPS.stepsOf : Santé, sinon saisie à la main, sinon heure par heure)
+    // — les jours saisis à la main étaient exclus de l'onglet. « Saisie manuelle » = oui seulement si c'est elle qui compte.
+    rows:Object.keys(DB.health||{}).sort().filter(function(d){ var h=DB.health[d]; return h&&(stepsAt(d)!=null||h.km); }).map(function(d){ var h=DB.health[d];
+      return [d,jour(d),stepsAt(d),h.km?r2(h.km):null,h.kcal||null,h.floors||null,(h.steps==null&&h.ms!=null)?'oui':'']; })});
 
   // ── Nutrition (02/11/2026) : totaux Yazio du jour via Santé (INTAKE) ──
   var NU=(typeof INTAKE!=='undefined')?INTAKE.days():{};

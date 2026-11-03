@@ -19,6 +19,11 @@ var BILAN=(function(){
   // À CHAQUE mise en ligne d'une nouveauté visible : ajouter une entrée EN TÊTE (id = date AAAA-MM-JJ), 3 à 6 lignes courtes.
   // Elle s'affiche une fois par appareil (localStorage massup_news = id déjà vu), sur le Bilan, avant la saisie de la nuit.
   var NEWS=[
+    {id:'2026-11-04c',t:'Petites finitions (4 novembre)',items:[
+      ['\u2696\uFE0F','Tes pesées Renpho (via Santé) arrivent toutes seules dans ton historique, sans jamais écraser ce que tu notes à la main.'],
+      ['\uD83E\uDE79','Deux séances le même jour : la douleur de la première n\u2019est plus effacée par la seconde.'],
+      ['\uD83D\uDCC5','Calendrier plus lisible : les jours du mois d\u2019avant et les étiquettes S-1\u2026S-5 ne sont plus délavés.']
+    ]},
     {id:'2026-11-04b',t:'La Sèche est prête (4 novembre)',items:[
       ['\uD83D\uDDD3\uFE0F','Ta saison Sèche est construite : elle démarre toute seule le lundi 4 janvier. D\u2019ici là, rien ne change.'],
       ['\uD83D\uDC41','Pour la voir avant : Réglages \u203A Saison Sèche \u203A « Voir l\u2019aperçu ». Rien n\u2019est enregistré, tu coupes quand tu veux.'],
