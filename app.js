@@ -498,6 +498,8 @@ function toggleWarmup(sid){
 function init(){
   loadDB();
   try{ noteRegrade(); }catch(e){ console.warn('[MASSUP] noteRegrade:',e); }
+  try{ noteRegradeTemps(); }catch(e){ console.warn('[MASSUP] noteRegradeTemps:',e); }
+  try{ fixLongDurations(); }catch(e){ console.warn('[MASSUP] fixLongDurations:',e); }
   initWeights();
   initHealthLogs();
   initLogs();
@@ -2413,8 +2415,7 @@ function showDayModal(date){
       var _st=(l.live.exos||[]).reduce(function(a,x){return a+(x.sets?x.sets.length:0);},0);
       liveLine='<div class="dm-live">&#x25B6; LiveUp &middot; '+_dn+' exo'+(_dn>1?'s':'')+' &middot; '+_st+' s&#xE9;ries'
         +(_sk?' &middot; '+_sk+' pass&#xE9;'+(_sk>1?'s':''):'')
-        +(l.live.pains&&l.live.pains.length?' &middot; &#x1FA79; '+painZonesTxt(l.live.pains)
-          :(l.live.painAny==null&&l.live.pain!==null&&l.live.pain!==undefined?' &middot; poignet '+l.live.pain+'/5':''))+'</div>';
+        +(function(){ var _pp=liveLogPains(l.live); return _pp.length?' &middot; &#x1FA79; '+painZonesTxt(_pp):''; })()+'</div>';
       var _detail=liveLogDetailHtml(l);
       if(_detail){
         detailBlock='<button class="dld-toggle" onclick="toggleLiveDetail(\''+l.id+'\')">D&#xE9;tail de la s&#xE9;ance <span id="dlda-'+l.id+'" aria-hidden="true">&#x203A;</span></button>'
@@ -5013,7 +5014,7 @@ function asStartEvo(key){
   var x=AS&&AS.exos?AS.exos.find(function(e){return e.key===key;}):null;
   if(!x) return;
   var curRef=getCurrentWeight(key);
-  var to=(AS.suggestW&&AS.suggestW[key]!=null&&AS.suggestW[key]>curRef)?AS.suggestW[key]:curRef+(x.repT?x.inc:1);
+  var to=(AS.suggestW&&AS.suggestW[key]!=null&&AS.suggestW[key]>curRef)?AS.suggestW[key]:curRef+(x.repT?x.inc:fsStep(x));
   if(!DB.evolution) DB.evolution={};
   DB.evolution[key]={from:curRef,to:to,hi:Math.max(1,Math.floor((x.n||4)/2))};
   saveDB(); asSave(); asRender();
@@ -7055,8 +7056,11 @@ function asAbort(){
 
 // ── Écran 4 : questions de fin ──
 // Logs d'avant le 07/10 : seule la douleur poignet existait (0 = aucune)
-function liveLogPainAny(lv){ if(!lv) return null; if(lv.painAny!=null) return lv.painAny; if(lv.pain==null) return null; return lv.pain>0; }
-function liveLogPains(lv){ if(!lv) return []; if(lv.pains) return lv.pains.map(function(p){return {z:p.z,lvl:p.lvl};}); return lv.pain>0?[{z:'poignet',lvl:lv.pain}]:[]; }
+// Séances d'avant le 07/10 : la seule question était « douleur poignet 0-5 » (lv.pain). Un arrêt 🩹 sur un exo
+// (x.pain) n'avait pas de zone → « zone non notée » (04/11, audit : il s'affichait « poignet » ou rien).
+function liveLogPainStop(lv){ return !!(lv&&(lv.exos||[]).some(function(x){ return x&&x.pain; })); }
+function liveLogPainAny(lv){ if(!lv) return null; if(lv.painAny!=null) return lv.painAny; if(liveLogPainStop(lv)) return true; if(lv.pain==null) return null; return lv.pain>0; }
+function liveLogPains(lv){ if(!lv) return []; if(lv.pains) return lv.pains.map(function(p){return {z:p.z,lvl:p.lvl};}); var o=lv.pain>0?[{z:'poignet',lvl:lv.pain}]:[]; if(liveLogPainStop(lv)) o.push({z:'nr',lvl:0}); return o; }
 function asRenderEnd(){
   var e=AS.end;
   var h=asHeader('S&#xE9;ance termin&#xE9;e &#x1F4AA;',asElapsedMin()+' min &#xB7; '+AS.sname,false);
@@ -7113,7 +7117,7 @@ function asRenderEnd(){
 // live.pain reste le niveau POIGNET (0 si pas de douleur au poignet) : le journal du poignet continue.
 var PAIN_ZONES=[['poignet','Poignet'],['coude','Coude'],['epaule','&#xC9;paule'],['nuque','Nuque / cou'],['hautdos','Haut du dos'],
   ['basdos','Bas du dos'],['hanche','Hanche'],['genou','Genou'],['cheville','Cheville / pied'],['autre','Autre']];
-function painZoneLabel(z){ for(var i=0;i<PAIN_ZONES.length;i++) if(PAIN_ZONES[i][0]===z) return PAIN_ZONES[i][1]; return z; }
+function painZoneLabel(z){ if(z==='nr') return 'zone non notée'; for(var i=0;i<PAIN_ZONES.length;i++) if(PAIN_ZONES[i][0]===z) return PAIN_ZONES[i][1]; return z; }
 function painZonesTxt(pains){ return (pains||[]).map(function(p){ return painZoneLabel(p.z).toLowerCase()+(p.lvl?' '+p.lvl+'/5':''); }).join(', '); }
 function asPainAnswered(e){ return e.painAny===false||(e.painAny===true&&(e.pains||[]).length>0&&e.pains.every(function(p){return p.lvl>=1;})); }
 function asPainShortened(){ // exos raccourcis ou passés : candidats « à cause de la douleur »
@@ -8956,7 +8960,7 @@ function asRenderReport(){
       any=true;
       var up=r.suggest===1||(r.suggest!==-1&&r.suggestTo!=null);
       var inv=asIsInverse(x.key);
-      var inc=x.repT?x.inc:1;
+      var inc=x.repT?x.inc:fsStep(x); // 04/11 : le vrai cran de la machine (REP_RANGE.step / inc de l'exo) — « +1 kg » donnait 99 kg, 34 kg (audit 03/11)
       // suggestTo (05/08) = valeur ABSOLUE proposée (test validé, calibration, assistance qui marche)
       // — sinon la reco classique ±1 cran. Le stepper part de la reco absolue quand elle existe.
       var reco=r.suggestTo!=null?r.suggestTo
@@ -8968,7 +8972,7 @@ function asRenderReport(){
         ?(inv?'&#x1F9ED; assistance &#xE0; caler':(r.suggest===1?'&#x1F53C; test valid&#xE9; &#x2014; ent&#xE9;rine':'&#x1F9ED; r&#xE9;f&#xE9;rence &#xE0; caler'))
         :(up?(inv?'&#x1F53C; moins d\'assistance valid&#xE9;e':'&#x1F53C; hausse valid&#xE9;e')
             :(inv?'&#x1F53D; plus d\'assistance conseill&#xE9;e':'&#x1F53D; baisse conseill&#xE9;e'));
-      if(AS.suggestW[x.key]==null) AS.suggestW[x.key]=(r.suggestTo!=null?r.suggestTo:x.weight);
+      if(AS.suggestW[x.key]==null) AS.suggestW[x.key]=reco; // le stepper part de la reco affichée (avant : du poids actuel)
       var nw=AS.suggestW[x.key];
       // Anti double-application (bug 05/08 : bilan relu = poids +8 au lieu de +4) : si la
       // RÉFÉRENCE a déjà bougé depuis le début de cette séance (w0), la suggestion est
@@ -8988,9 +8992,9 @@ function asRenderReport(){
         h+='<button class="as-apply done" disabled>&#x2705; Appliqu&#xE9; &#x2014; r&#xE9;f. actuelle '+(refMoved?curRef:x.weight)+' '+x.unite+'</button>';
       } else {
         h+='<div class="as-sugg-row">'
-          +'<button class="as-wbtn" onclick="asSuggestChg(\''+x.key+'\',-0.5)">&#x2212;</button>'
+          +'<button class="as-wbtn" onclick="asSuggestChg(\''+x.key+'\','+(-inc)+')">&#x2212;</button>'
           +'<span class="as-sugg-val">'+nw+'<small> '+x.unite+'</small></span>'
-          +'<button class="as-wbtn plus" onclick="asSuggestChg(\''+x.key+'\',0.5)">+</button>'
+          +'<button class="as-wbtn plus" onclick="asSuggestChg(\''+x.key+'\','+inc+')">+</button>'
           +'<button class="as-apply" '+((curRef!=null?nw===curRef:nw===x.weight)?'disabled':'')+' onclick="asApplySuggest(\''+x.key+'\')">'+(inv?'Appliquer cette assistance':'Appliquer &#x2713;')+'</button>'
           +'</div>';
         // ⚡ Alternative à la bascule sèche (15/08, demande Adrien) : hausse validée sur un exo
@@ -10790,6 +10794,38 @@ function noteRegrade(){
   });
   if(n) saveDB();
   return n;
+}
+// Re-notation « manque de temps » (04/11, demande Adrien : « fais-le, comme ça c'est fait ») : les séances PASSÉES
+// déclarées « manque de temps » (et les abdos passés avant le 07/12) reçoivent l'exemption du 03/11. Seul l'ÉCART dû à
+// l'exemption s'ajoute à la note gravée (les séances de septembre gardent leur barème d'époque). Une fois par séance
+// (live.n20x = 1), ancienne note dans live.note20Prev. Les semaines déjà gravées ne bougent pas.
+// Durées gonflées (04/11, audit des bilans) : avant l'horodatage des séries, la durée = ouverture → enregistrement ;
+// l'app restée ouverte donnait 250 ou 322 min. Une séance de plus de 3 h sans séries horodatées perd sa durée
+// (valeur gardée dans durationRaw). Depuis, asElapsedMin mesure de la 1re à la dernière série.
+function fixLongDurations(){
+  var n=0;
+  (DB.logs||[]).forEach(function(l){
+    if(!l||!(l.duration_min>180)||l.durationRaw!=null) return;
+    var hasT=l.live&&(l.live.exos||[]).some(function(x){ return (x.sets||[]).some(function(st){ return st.t; }); });
+    if(hasT) return;
+    l.durationRaw=l.duration_min; l.duration_min=null; n++;
+  });
+  if(n) saveDB();
+  return n;
+}
+function noteRegradeTemps(){
+  var n=0, ch=0;
+  (DB.logs||[]).forEach(function(l){
+    if(!l||!l.live||l.live.n20x||l.live.note20==null||!l.live.exos||!liveNotedExos(l.live.exos).length) return;
+    var ctx=l.live.context||null;
+    if(ctx==='temps') l.live.exos.forEach(function(x){ var d=(x.sets||[]).length; if(d>0&&d<(x.n||3)) x.tc=true; });
+    var plain=l.live.exos.map(function(x){ var c=Object.assign({},x); delete c.tc; return c; });
+    var delta=asNote20From(l.live.exos,ctx,l.date)-asNote20From(plain,null,'9999-12-31');
+    if(delta>0){ if(l.live.note20Prev==null) l.live.note20Prev=l.live.note20; l.live.note20=Math.min(20,l.live.note20+delta); ch++; }
+    l.live.n20x=1; n++;
+  });
+  if(n) saveDB();
+  return ch;
 }
 function bilanNoteWeek(ws){
   var g=noteGravOf(ws);

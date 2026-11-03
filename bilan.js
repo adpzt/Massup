@@ -19,6 +19,12 @@ var BILAN=(function(){
   // À CHAQUE mise en ligne d'une nouveauté visible : ajouter une entrée EN TÊTE (id = date AAAA-MM-JJ), 3 à 6 lignes courtes.
   // Elle s'affiche une fois par appareil (localStorage massup_news = id déjà vu), sur le Bilan, avant la saisie de la nuit.
   var NEWS=[
+    {id:'2026-11-04',t:'Corrections du 4 novembre',items:[
+      ['\u23F0','Tes séances « manque de temps » déjà faites sont re-notées (celle du 3/11 passe de 14 à 18).'],
+      ['\u2696\uFE0F','Charge conseillée en fin de séance : le vrai cran de la machine (fini les 99\u00a0kg impossibles), et le − / + avance d\u2019un cran.'],
+      ['\uD83C\uDF7D\uFE0F','Calendrier : la fiche d\u2019un jour ne montre plus que les kcal et G · P · L (le détail reste dans Nutrition).'],
+      ['\uD83E\uDE79','Anciennes séances : un arrêt douleur sans zone s\u2019affiche « zone non notée » (plus « poignet » par défaut).']
+    ]},
     {id:'2026-11-03c',t:'Petites corrections (3 novembre, soir)',items:[
       ['\u23F0','« Manque de temps » en fin de séance : un exo passé ne compte plus dans la note, un exo écourté est jugé sur ses séries faites.'],
       ['\uD83D\uDD25','Abdo passé : non noté (plus de 0) jusqu\u2019au 7 décembre, où il devient obligatoire.'],

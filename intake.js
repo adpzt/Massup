@@ -298,14 +298,11 @@ var INTAKE=(function(){
 
   /* ── Fiche d'un jour du calendrier (page 3) : la seule carte nutrition (.bl-daycard), même sans séance ──
      03/11 (Adrien : « trop gros, au moins 2× plus compact ») : kcal sur une ligne, G · P · L côte à côte (composant
-     bl-macro du Bilan, resserré), le reste en une ligne, carte entière touchable vers la page Nutrition. */
+     bl-macro du Bilan, resserré), carte entière touchable vers la page Nutrition. 04/11 : kcal + 3 macros SEULEMENT
+     (Adrien : fibres, sucres… « cool dans la vraie page Nutrition, pas en avant sur le calendrier »). */
   function dayCardHtml(d){
     var e=day(d); if(!e) return '';
     var n=BY.kcal, pct=Math.round(e.kcal/n.goal*100);
-    var mic=NUT.filter(function(x){ return x.col==='mic'&&e[x.k]>0; }).map(function(x){
-      var over=stateOf(x,e[x.k])==='bad';
-      return '<span class="'+(over?'bl-warn':'bl-mut')+'">'+(x.k==='sat'?'Gr. sat.':x.lbl)+' <b'+(over?'':' style="color:var(--txt)"')+'>'+nb(e[x.k])+NB+x.u+'</b></span>';
-    }).join('');
     var mac=MACROS.map(function(k){
       var m=BY[k], v=e[k]>0?e[k]:null;
       if(v==null) return '<div class="bl-macro"><div class="bl-macro__n"><i class="bl-dot" style="background:'+cvar(m)+'"></i>'+m.lbl+'</div><div class="bl-num bl-macro__v bl-mut">—</div><div class="bl-trk"></div></div>';
@@ -318,7 +315,6 @@ var INTAKE=(function(){
       +'<div class="bl-daycard__h"><span class="bl-daycard__t">🍽️ Nutrition</span><span class="bl-num bl-daycard__k">'+nb(e.kcal)+un('/'+nb(n.goal)+' kcal')
       +' <small class="'+(pct>=100?'bl-pos':'bl-mut')+'">'+pct+NB+'%</small></span><span class="bl-daycard__go" aria-hidden="true">›</span></div>'
       +'<div class="bl-macros">'+mac+'</div>'
-      +(mic?'<div class="bl-daymic">'+mic+'</div>':'')
       +'</button>';
   }
 

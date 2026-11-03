@@ -77,3 +77,34 @@ test("paliers : une séance moins bonne après avoir atteint × 10 compte encore
   assert.equal(lc.lvl, 10);
   assert.equal(lc.done, 8);
 });
+
+test("re-notation « manque de temps » : séance du 03/11 (2 exos écourtés + Pallof passé) 14 → 18, une seule fois", () => {
+  const S = (w, reps, feel) => ({ w, reps, feel });
+  const E = (key, n, lo, hi, w0, sets, status) => ({ key, n, reps: lo, rHi: hi, w: w0, w0, main: true, unite: "kg", status: status || "done", pain: false, sets });
+  const l = { id: 1, date: "2026-11-03", live: { context: "temps", note20: 14, n20v: 6, exos: [
+    E("dev_incline", 4, 8, 10, 24, [S(24, 8, "ok"), S(24, 8, "dur"), S(24, 8, "ok"), S(24, 10, "echec")]),
+    E("hip_thrust", 4, 10, 12, 60, [S(60, 10, "dur"), S(60, 9, "dur"), S(60, 10, "dur")], "skipped"),
+    E("chestpress_v", 4, 8, 10, 55, [S(55, 10, "facile"), S(55, 10, "ok"), S(55, 10, "dur")], "skipped"),
+    E("pecdeck", 4, 10, 12, 54, [S(54, 8, "ok"), S(54, 8, "dur"), S(54, 10, "dur"), S(54, 10, "echec")]),
+    E("elev_lat", 4, 8, 12, 8, [S(8, 10, "ok"), S(8, 9, "dur"), S(8, 10, "dur"), S(8, 9, "echec")]),
+    E("pallof", 3, 10, 12, 10, [], "skipped")] } };
+  run("DB.logs=[__l];noteRegradeTemps();noteRegradeTemps();", { __l: l });
+  assert.equal(l.live.note20, 18);
+  assert.equal(l.live.note20Prev, 14);
+});
+
+test("douleur d'avant le 07/10 : arrêt 🩹 sans zone = « zone non notée », plus « poignet 0 »", () => {
+  const lv = { pain: 0, exos: [{ key: "leg_press", pain: true, sets: [] }] };
+  assert.equal(run("liveLogPainAny(__v)", { __v: lv }), true);
+  assert.equal(run("painZonesTxt(liveLogPains(__v))", { __v: lv }), "zone non notée");
+  assert.equal(run("painZonesTxt(liveLogPains(__v))", { __v: { pain: 2, exos: [] } }), "poignet 2/5");
+});
+
+test("durée > 3 h sans séries horodatées : neutralisée, valeur gardée", () => {
+  const a = { id: 5, date: "2026-10-10", duration_min: 250, live: { exos: [{ key: "pecdeck", sets: [{ reps: 10 }] }] } };
+  const b = { id: 6, date: "2026-11-03", duration_min: 55, live: { exos: [] } };
+  run("DB.logs=[__a,__b];fixLongDurations();", { __a: a, __b: b });
+  assert.equal(a.duration_min, null);
+  assert.equal(a.durationRaw, 250);
+  assert.equal(b.duration_min, 55);
+});
