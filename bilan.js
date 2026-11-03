@@ -19,6 +19,11 @@ var BILAN=(function(){
   // À CHAQUE mise en ligne d'une nouveauté visible : ajouter une entrée EN TÊTE (id = date AAAA-MM-JJ), 3 à 6 lignes courtes.
   // Elle s'affiche une fois par appareil (localStorage massup_news = id déjà vu), sur le Bilan, avant la saisie de la nuit.
   var NEWS=[
+    {id:'2026-11-04b',t:'La Sèche est prête (4 novembre)',items:[
+      ['\uD83D\uDDD3\uFE0F','Ta saison Sèche est construite : elle démarre toute seule le lundi 4 janvier. D\u2019ici là, rien ne change.'],
+      ['\uD83D\uDC41','Pour la voir avant : Réglages \u203A Saison Sèche \u203A « Voir l\u2019aperçu ». Rien n\u2019est enregistré, tu coupes quand tu veux.'],
+      ['\uD83C\uDF7D\uFE0F','Au programme : 2\u00a0450\u00a0kcal et 160\u00a0g de protéines, 3 séances + 1 course, un objectif abdos, et une note qui récompense le maintien de tes charges.']
+    ]},
     {id:'2026-11-04',t:'Corrections du 4 novembre',items:[
       ['\u23F0','Tes séances « manque de temps » déjà faites sont re-notées (celle du 3/11 passe de 14 à 18).'],
       ['\u2696\uFE0F','Charge conseillée en fin de séance : le vrai cran de la machine (fini les 99\u00a0kg impossibles), et le − / + avance d\u2019un cran.'],
