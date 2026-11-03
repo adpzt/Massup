@@ -14,9 +14,20 @@ button.bl-mrow--btn:active{background:var(--bl-press);}
 .bl-errbar button{appearance:none;border:0;background:none;padding:0;color:inherit;font:inherit;text-decoration:underline;cursor:pointer;}
 /* Fiche du jour (calendrier) */
 .bl-daycard{margin-top:.6rem;}
-.bl-daymic{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 16px;margin-top:14px;font-size:13px;font-weight:700;}
+/* Fiche du jour compacte (03/11) : une ligne kcal, G · P · L côte à côte, le reste en une ligne — carte touchable */
+button.bl-daycard--c{appearance:none;-webkit-appearance:none;display:block;width:100%;box-sizing:border-box;padding:12px 14px;color:inherit;font:inherit;text-align:left;cursor:pointer;}
+button.bl-daycard--c:active{background:var(--bl-press);}
+.bl-daycard--c .bl-daycard__h{align-items:center;}
+.bl-daycard__t{font-size:13px;font-weight:800;white-space:nowrap;}
+.bl-daycard__k{flex:1;min-width:0;text-align:right;font-size:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bl-daycard__k small{font:800 11px/1 'Manrope',system-ui,sans-serif;font-style:normal;}
+.bl-daycard__go{flex-shrink:0;font-size:18px;line-height:1;color:var(--mut);}
+.bl-daycard--c .bl-macros{gap:12px;margin-top:10px;}
+.bl-daycard--c .bl-macro__n{font-size:11px;}
+.bl-daycard--c .bl-macro__v{font-size:16px;margin-top:4px;white-space:nowrap;}
+.bl-daycard--c .bl-macro .bl-trk{margin-top:6px;height:4px;}
+.bl-daymic{display:flex;flex-wrap:wrap;gap:3px 12px;margin-top:10px;font-size:11.5px;font-weight:700;line-height:1.35;}
 .bl-daymic span{min-width:0;overflow-wrap:anywhere;}
-.bl-daycard__more{padding:0;margin-top:6px;color:var(--acc);}
 /* v2 (02/11 soir) : mesure choisie dans une petite liste (sélecteur natif iOS), segment compact, jour non noté = un trou */
 .bl-pick{position:relative;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border-radius:18px;border:1px solid var(--bl-line);
   background:var(--x-track);color:var(--txt);font:700 12px 'Manrope',sans-serif;white-space:nowrap;flex:none;}

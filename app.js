@@ -1531,6 +1531,13 @@ function getSessionsAtWeight(key){
 // Adrien : « élévation latérale, il en faut beaucoup plus ») : séances visées = 6 + 40 × (cran / charge),
 // bornées 8-20, × séries prévues — pec deck 54 kg, cran 5 → 10 séances (40 séries) ; élévation 6 kg,
 // cran 2 (+33 %) → 19 séances (76 séries). liveX = l'exo de la séance en cours (pas encore enregistrée).
+// Paliers de reps (03/11, demande Adrien : « différencier 24 kg × 8, × 10, × 12 — même poids, je change l'échelle,
+// ça peut stagner ») : à la même charge, monter de 2 reps EST une progression. Un palier = charge × niveau de reps
+// (paliers de 2 depuis le bas de la fourchette : 8-10 → × 8 · × 10 · × 12 ; 12-15 → × 12 · × 14 · × 16). Le niveau
+// d'une séance = moyenne arrondie de ses séries à la charge ; le palier ACTUEL = le meilleur niveau atteint à cette charge,
+// et on compte depuis la 1re séance qui l'a atteint (les séances moins bonnes d'après comptent : c'est de la stagnation)
+// → passer de × 8 à × 10 relance la barre. Exos comptés en secondes / minutes : pas de palier (comme avant).
+function lcRepLevel(lo,r){ return lo+2*Math.floor((r-lo)/2); }
 function loadCount(key,liveX){
   var d=asExoDef(key); if(!d||exoIsCardio(key)) return null;
   var W=getCurrentWeight(key); if(W==null) return null;
@@ -1538,20 +1545,31 @@ function loadCount(key,liveX){
   var stepK=fsStep({key:key,inc:d.e.inc}), sess=Math.max(8,Math.min(20,Math.round(6+40*stepK/Math.max(1,W))));
   var target=sess*n;
   var at=function(w){ return w!=null&&(inv?w<=W:w>=W); };
-  var count=function(x){ return (x.sets||[]).filter(function(st){ return at(st.w!=null?st.w:x.w); }).length; };
-  var done=0;
-  if(liveX) done+=count(liveX);
+  var setsAt=function(x){ return (x.sets||[]).filter(function(st){ return at(st.w!=null?st.w:x.w); }); };
+  var lo=(!d.e.repTarget&&REP_RANGE[key])?REP_RANGE[key].r[0]:(d.e.repTarget?0:asParseSerie(d.e).reps);
+  var byReps=lo>0&&(d.e.cnt||'reps')==='reps';
+  var lvlOf=function(ss){ if(!byReps||!ss.length) return null; var t=0; ss.forEach(function(st){ t+=st.reps||0; }); return lcRepLevel(lo,Math.round(t/ss.length)); };
   var logs=(DB.logs||[]).filter(function(l){ return l.live&&l.live.exos&&(!liveX||(String(l.id)!==String(AS&&AS.savedLogId)&&String(l.id)!==String(AS&&AS.resumeLogId))); })
     .sort(function(a,b){ return b.date.localeCompare(a.date)||(b.time||'').localeCompare(a.time||''); });
-  for(var i=0;i<logs.length;i++){
-    logs[i].live.exos.forEach(function(x){ if(x.key===key&&liveExoCounted(x)) done+=count(x); });
-  }
-  return {w:W,done:done,target:target,sess:sess,ratio:done/target,unite:d.e.unite||'kg'};
+  var sessAt=[]; // séances (de la plus récente à la plus ancienne) : séries à la charge + leur palier
+  logs.forEach(function(l){
+    var ss=[]; l.live.exos.forEach(function(x){ if(x.key===key&&liveExoCounted(x)) ss=ss.concat(setsAt(x)); });
+    if(ss.length) sessAt.push({c:ss.length,lv:lvlOf(ss)});
+  });
+  var L=null, from=sessAt.length-1;
+  sessAt.forEach(function(o,i){ if(o.lv!=null&&(L==null||o.lv>L)) L=o.lv; });
+  if(L!=null) for(var j=sessAt.length-1;j>=0;j--){ if(sessAt[j].lv===L){ from=j; break; } } // 1re séance (la plus ancienne) au palier
+  if(L==null&&liveX) L=lvlOf(setsAt(liveX)); // 1re séance à cette charge : le palier du jour
+  var done=0;
+  if(liveX) done+=setsAt(liveX).length; // séance en cours : ses séries vont au palier actuel
+  for(var k=0;k<=from;k++) done+=sessAt[k].c;
+  var unite=d.e.unite||'kg';
+  return {w:W,lvl:L,lbl:W+' '+unite+(L!=null?' &#xD7; '+L:''),done:done,target:target,sess:sess,ratio:done/target,unite:unite};
 }
 // Alerte de stagnation : 75 % de l'objectif = « bientôt », 100 % = « il est temps »
 function getProgressNudge(key){
   var lc=loadCount(key); if(!lc) return null;
-  var lbl='<strong>'+lc.done+' / '+lc.target+' s&#xE9;ries</strong> &#xE0; '+lc.w+' '+lc.unite;
+  var lbl='<strong>'+lc.done+' / '+lc.target+' s&#xE9;ries</strong> &#xE0; '+lc.lbl;
   if(lc.ratio>=1) return {lvl:'hot',chip:'&#x1F534; '+lc.done+'/'+lc.target+' séries',msg:lbl+' &#x2014; l\'objectif de s&#xE9;ries est d&#xE9;pass&#xE9; sans monter&#x202F;: il est temps de charger plus (ou de changer d\'angle&#x202F;: tempo, +1 rep).'};
   if(lc.ratio>=0.75) return {lvl:'warn',chip:'&#x26A0; '+lc.done+'/'+lc.target+' séries',msg:lbl+' &#x2014; si tes s&#xE9;ries passent proprement, la hausse arrive bient&#xF4;t.'};
   return null;
@@ -1569,7 +1587,7 @@ function lcLiveHtml(x){
   var pc=function(v){ return Math.max(0,Math.min(100,v/T*100)); };
   var wB=pc(base.done), wT=Math.min(100-wB,pc(today)), wL=Math.min(100-wB-wT,pc(left));
   var cls=r>=1?' hot':r>=0.75?' warn':'';
-  return '<div class="lc-live'+cls+'"><div class="lc-top"><span>&#x1F4CA; S&#xE9;ries &#xE0; '+W+' '+base.unite+'</span>'
+  return '<div class="lc-live'+cls+'"><div class="lc-top"><span>&#x1F4CA; S&#xE9;ries &#xE0; '+base.lbl+'</span>'
     +'<strong>'+tot+' / '+T+'</strong></div>'
     +'<div class="lc-bar lc-bar3"><i class="lc-b" style="width:'+wB.toFixed(1)+'%"></i><i class="lc-t holo-fill" style="width:'+wT.toFixed(1)+'%"></i><i class="lc-l" style="width:'+wL.toFixed(1)+'%"></i></div>'
     +(r>=1?'<div class="lc-sub">Objectif d&#xE9;pass&#xE9;&#x202F;: c\'est le moment de monter.</div>':'')
@@ -1579,9 +1597,9 @@ function lcLiveHtml(x){
 function loadCountHtml(key){
   var lc=loadCount(key); if(!lc||!lc.done) return '';
   var cls=lc.ratio>=1?' hot':lc.ratio>=0.75?' warn':'';
-  return '<div class="lc-box'+cls+'"><div class="lc-top"><span>&#x1F4CA; S&#xE9;ries &#xE0; '+lc.w+' '+lc.unite+'</span><strong>'+lc.done+' / '+lc.target+'</strong></div>'
+  return '<div class="lc-box'+cls+'"><div class="lc-top"><span>&#x1F4CA; S&#xE9;ries &#xE0; '+lc.lbl+'</span><strong>'+lc.done+' / '+lc.target+'</strong></div>'
     +'<div class="lc-bar"><i style="width:'+Math.min(100,Math.round(lc.ratio*100))+'%"></i></div>'
-    +'<div class="lc-sub">'+(lc.ratio>=1?'Objectif d&#xE9;pass&#xE9; sans monter&#x202F;: il est temps de changer quelque chose.':'Rep&#xE8;re pour cet exo&#x202F;: ~'+lc.target+' s&#xE9;ries ('+lc.sess+' s&#xE9;ances) &#xE0; une charge, puis elle doit monter.')+'</div></div>';
+    +'<div class="lc-sub">'+(lc.ratio>=1?'Objectif d&#xE9;pass&#xE9; sans monter&#x202F;: il est temps de changer quelque chose.':'Rep&#xE8;re pour cet exo&#x202F;: ~'+lc.target+' s&#xE9;ries ('+lc.sess+' s&#xE9;ances) par palier (charge &#xD7; reps), puis passe au suivant&#x202F;: +2 reps ou +1 cran.')+'</div></div>';
 }
 
 // Pour les exos Maison "repTarget" : la valeur saisie est l'objectif par série (3 séries)
@@ -2250,11 +2268,11 @@ function liveLogDetailHtml(l){
   if(!l.live||!(l.live.exos||[]).length) return '';
   var exos=l.live.exos;
   var noted=liveNotedExos(exos);
-  // Note /20 recalculée sur les exos PRINCIPAUX (même règle que le bilan de séance — bonus hors note)
+  // Note /20 : la note GRAVÉE (03/11 — le recalcul affichait 12/20 sous un 16/20 gravé) ; recalcul seulement pour les vieux logs
   var g=0;
   if(noted.length){
-    var t=0; noted.forEach(function(x){ t+=asScoreExoRaw(x); });
-    g=Math.max(0,Math.min(20,Math.round(t/noted.length*4)));
+    var _gv=liveLogNote20(l);
+    g=_gv!=null?_gv:asNote20From(exos,l.live.context,l.date);
   }
   var rows='';
   exos.forEach(function(x){
@@ -2318,7 +2336,7 @@ function toggleLiveDetail(id){
   var open=el.style.display!=='none';
   el.style.display=open?'none':'';
   var arr=document.getElementById('dlda-'+id);
-  if(arr) arr.innerHTML=open?'&#x25B8;':'&#x25BE;';
+  if(arr&&arr.parentNode) arr.parentNode.classList.toggle('open',!open); // chevron qui pivote (CSS)
 }
 
 function showDayModal(date){
@@ -2399,7 +2417,7 @@ function showDayModal(date){
           :(l.live.painAny==null&&l.live.pain!==null&&l.live.pain!==undefined?' &middot; poignet '+l.live.pain+'/5':''))+'</div>';
       var _detail=liveLogDetailHtml(l);
       if(_detail){
-        detailBlock='<button class="dld-toggle" onclick="toggleLiveDetail(\''+l.id+'\')">D&#xE9;tail de la s&#xE9;ance <span id="dlda-'+l.id+'">&#x25B8;</span></button>'
+        detailBlock='<button class="dld-toggle" onclick="toggleLiveDetail(\''+l.id+'\')">D&#xE9;tail de la s&#xE9;ance <span id="dlda-'+l.id+'" aria-hidden="true">&#x203A;</span></button>'
           +'<div class="dld-body" id="dld-'+l.id+'" style="display:none">'+_detail+'</div>';
       }
     }
@@ -4597,7 +4615,7 @@ function exportCoachDossier(opts){
     var a=DB.weights[k]; if(!a||!a.length||EXO[k].e.hidden) return;
     var cur=a[a.length-1], prev=null; a.forEach(function(e){ if(e.date<d30) prev=e; });
     if(prev&&cur.val!==prev.val&&(asIsInverse(k)?cur.val<prev.val:cur.val>prev.val)) ups.push(name(k)+' '+prev.val+' → '+cur.val);
-    var lcS=loadCount(k); if(lcS&&lcS.ratio>=1&&exoStats[k]&&exoStats[k].n30) stag.push(name(k)+' ('+lcS.done+'/'+lcS.target+' séries à '+lcS.w+')');
+    var lcS=loadCount(k); if(lcS&&lcS.ratio>=1&&exoStats[k]&&exoStats[k].n30) stag.push(name(k)+' ('+lcS.done+'/'+lcS.target+' séries à '+lcS.w+(lcS.lvl!=null?'×'+lcS.lvl:'')+')');
   });
   add('Charges de référence en hausse',ups.length,'exercices','30 jours',ups.join(' · '));
   add('Exercices stagnants (objectif de séries à la charge actuelle dépassé — 8 à 20 séances selon la taille du cran, encore pratiqués)',stag.length,'exercices','',stag.join(' · '));
@@ -7077,7 +7095,7 @@ function asRenderEnd(){
     h+='<div class="as-execs">';
     doneEx.forEach(function(x){
       var lc=loadCount(x.key,x); if(!lc) return;
-      h+='<div class="as-exec-row"><span class="as-exec-name">'+x.name+'</span><span class="as-exec-ct'+(lc.ratio>=0.75?' hot':'')+'">'+lc.done+' / '+lc.target+' s&#xE9;ries &#xE0; '+lc.w+' '+lc.unite+'</span></div>';
+      h+='<div class="as-exec-row"><span class="as-exec-name">'+x.name+'</span><span class="as-exec-ct'+(lc.ratio>=0.75?' hot':'')+'">'+lc.done+' / '+lc.target+' s&#xE9;ries &#xE0; '+lc.lbl+'</span></div>';
     });
     h+='</div>';
   }
@@ -7172,7 +7190,13 @@ function asEndSet(field,v){
 function asEndCtx(v){
   var note=document.getElementById('asPainNote');
   if(note) AS.end.painNote=note.value;
-  AS.end.context=v; asSave(); asRender();
+  AS.end.context=v; asSyncTimeCut(); asSave(); asRender();
+}
+// « Manque de temps » (03/11) : un exo écourté porte tc → sa note /5 se juge sur ses séries faites (asScoreExoRaw),
+// gravé avec le log. Retiré dès que le contexte change.
+function asSyncTimeCut(){
+  var t=AS&&AS.end&&AS.end.context==='temps';
+  (AS.exos||[]).forEach(function(x){ var d=(x.sets||[]).length; if(t&&d>0&&d<(x.n||3)) x.tc=true; else delete x.tc; });
 }
 // Retour aux exos depuis les étirements : rouvre le dernier exo en MODE BONUS
 // (jamais de série forcée ni d'exo re-marqué « pending »)
@@ -7212,7 +7236,7 @@ function asAutoRefFollow(){
 function asSaveAndReport(){
   var note=document.getElementById('asPainNote');
   if(note) AS.end.painNote=note.value;
-  if(!AS.savedLogId){ asPersistLog(); }
+  if(!AS.savedLogId){ asSyncTimeCut(); asPersistLog(); }
   // Évolutions de charge : évaluées UNE fois, au moment où le log est figé (15/08)
   if(!AS.evoResults){ try{ AS.evoResults=asEvoEvaluate(); }catch(e){ AS.evoResults=[]; } }
   if(!AS.autoRef){ try{ AS.autoRef=asAutoRefFollow(); }catch(e){ AS.autoRef={}; } }
@@ -7259,7 +7283,7 @@ function asPersistLog(){
   var live={
     // main = statut principal/bonus FIGÉ au moment de la séance (15/08) : les refontes de
     // programme ne réécrivent plus les notes passées. note20 = la note /20 gravée (idem).
-    exos:AS.exos.map(function(x){return {key:x.key,w:x.weight,w0:x.w0,n:x.n,reps:x.reps,rHi:x.rHi||undefined,unite:x.unite,cnt:x.cnt||null,status:x.status,extra:!!(x.extra||x.added),main:!liveExoSide(x),sets:x.sets,sk:x.skippedSets||0,pain:!!x.pain,evo:x.evo?{from:x.evo.from,to:x.evo.to,hi:x.evo.hi}:null,cardio:x.cardio&&(x.sets||[]).length?x.cardio:undefined};}),
+    exos:AS.exos.map(function(x){return {key:x.key,w:x.weight,w0:x.w0,n:x.n,reps:x.reps,rHi:x.rHi||undefined,unite:x.unite,cnt:x.cnt||null,status:x.status,extra:!!(x.extra||x.added),main:!liveExoSide(x),sets:x.sets,sk:x.skippedSets||0,pain:!!x.pain,tc:x.tc||undefined,evo:x.evo?{from:x.evo.from,to:x.evo.to,hi:x.evo.hi}:null,cardio:x.cardio&&(x.sets||[]).length?x.cardio:undefined};}),
     pain:AS.end.pain,painAny:AS.end.painAny,pains:(AS.end.pains||[]).filter(function(p){return p.lvl;}),painNote:AS.end.painNote||'',
     context:AS.end.context||null,
     stretch:AS.end.stretch===true,
@@ -7378,7 +7402,7 @@ function asScoreExoRaw(x){
   // d'effondrement ni de prorata charges (la douleur explique la chute, pas l'effort).
   var painMiss=0;
   if(x.pain){ painMiss=Math.max(0,n-sets.length); n=Math.max(1,sets.length); }
-  else if(liveExoSide(x)){ n=Math.max(1,sets.length); } // ② bonus : jugé sur les séries faites
+  else if(liveExoSide(x)||x._tc||x.tc){ n=Math.max(1,sets.length); } // ② bonus (ou écourté « manque de temps ») : jugé sur les séries faites
   var progLast=x.n||3; // rang de la dernière série PROGRAMMÉE (l'échec s'y garde, règle 14/08)
   var inv=asIsInverse(x.key);
   var isKg=/kg/.test(x.unite||'')&&x.w0>0;
@@ -7469,8 +7493,28 @@ function asScoreExoRaw(x){
 //    BRUTES — l'acquis anti-double-arrondi du 19/08 est conservé.
 // Les notes déjà gravées ne bougent PAS (règle 15/08) : v3.2 ne joue que sur les prochaines
 // séances et sur les corrections assumées via l'éditeur.
-function asNote20From(list){
-  var ex=liveNotedExos(list);
+// Exos qui notent le /20, après les exemptions du 03/11 (demandes Adrien) :
+// ① contexte « manque de temps » : un exo passé ne note pas, un exo écourté se juge sur ses séries FAITES
+//    (comme un bonus) — « des fois j'ai juste pas beaucoup de temps, j'y vais avant le travail » ;
+// ② abdo passé AVANT le 07/12 (RUN_REQ_START) : non noté (pas 0) — obligatoire et noté 0 dès le 07/12.
+// Si tout est exempté, on garde la liste brute (la séance reste notée).
+function liveGradedExos(list,ctx,date){
+  var ex=liveNotedExos(list), d=date||todayStr();
+  var out=ex.filter(function(x){
+    var none=!(x.sets||[]).length||(x.status==='skipped'&&!liveExoCounted(x));
+    if(!none) return true;
+    if(ctx==='temps') return false;
+    var i=findExoIndex(x.key);
+    if(d<RUN_REQ_START&&i&&i.exo&&i.exo.cat==='abdo') return false;
+    return true;
+  }).map(function(x){
+    if(ctx==='temps'&&(x.sets||[]).length<(x.n||3)) return Object.assign({},x,{_tc:true});
+    return x;
+  });
+  return out.length?out:ex;
+}
+function asNote20From(list,ctx,date){
+  var ex=liveGradedExos(list,ctx,date);
   if(!ex.length) return 0;
   var t=0, mn=5;
   ex.forEach(function(x){ var v=asScoreExoRaw(x); t+=v; if(v<mn) mn=v; });
@@ -7478,10 +7522,15 @@ function asNote20From(list){
   if(g>=20&&mn<4.75) g=19;
   return Math.max(0,Math.min(20,g));
 }
+function asSessionDate(){ // date de la séance en cours (reprise d'un log = sa date d'origine)
+  if(AS&&AS.resumeLogId){ var l=(DB.logs||[]).find(function(x){ return String(x.id)===String(AS.resumeLogId); }); if(l&&l.date) return l.date; }
+  if(AS&&AS.savedLogId){ var m=(DB.logs||[]).find(function(x){ return String(x.id)===String(AS.savedLogId); }); if(m&&m.date) return m.date; }
+  return todayStr();
+}
 function asGlobalScore(){
   // Le /20 se joue sur les exos PRINCIPAUX (liveNotedExos) : les bonus gardent leur note /5
   // affichée mais ne pèsent pas dans la note de séance — ils ne rapportent que des points.
-  return asNote20From(AS.exos);
+  return asNote20From(AS.exos,AS.end&&AS.end.context,asSessionDate());
 }
 function asGradeInfo(g){
   // Paliers v5 (02/11) : < 8 · 8-11,5 · 12-13,5 · 14-17,5 · ≥ 18 — mêmes couleurs que toute l'app (--x-note-1..5)
@@ -7495,7 +7544,7 @@ function asGradeInfo(g){
 // combien d'exos tenus au plan (≥ 4,5/5), lesquels sont à reprendre (< 3,5/5). Plus de phrase toute faite
 // (« séries pleines, exécution propre » s'affichait même un jour malade).
 function asGradeSummary(g,doneCt,skipCt,total){
-  var ex=[]; try{ ex=liveNotedExos(AS.exos).map(function(x){ return {n:x.name||getExoName(x.key),v:asScoreExoRaw(x)}; }); }catch(e){}
+  var ex=[]; try{ ex=liveGradedExos(AS.exos,AS.end&&AS.end.context,asSessionDate()).map(function(x){ return {n:x.name||getExoName(x.key),v:asScoreExoRaw(x)}; }); }catch(e){}
   var top=ex.filter(function(e){ return e.v>=4.5; }).length, weak=ex.filter(function(e){ return e.v<3.5; }).sort(function(a,b){ return a.v-b.v; });
   var fact='<strong>'+top+'/'+(ex.length||total)+' exos au plan</strong>'+(skipCt?' &#xB7; '+skipCt+' pass&#xE9;'+(skipCt>1?'s':''):'');
   var fix=weak.length?' &#xC0; reprendre&#x202F;: '+weak.slice(0,3).map(function(e){ return e.n; }).join(', ')+'.':'';
@@ -7633,7 +7682,7 @@ function asAnalyzeExo(x){
   var pyramidUp=isKg&&!inv&&sets.length>=2&&ws[0]<ws[ws.length-1];
   var dropSetW=isKg&&!inv&&sets.length>=2&&ws[0]>ws[ws.length-1];
   var _lc=null; try{ _lc=loadCount(x.key); }catch(e){}
-  var stag=_lc?_lc.ratio:0, stagTxt=_lc?_lc.done+' / '+_lc.target+' s&#xE9;ries &#xE0; '+_lc.w+' '+_lc.unite:'';
+  var stag=_lc?_lc.ratio:0, stagTxt=_lc?_lc.done+' / '+_lc.target+' s&#xE9;ries &#xE0; '+_lc.lbl:'';
   var wUp=x.weight>x.w0, wDown=x.weight<x.w0;
   var unit=cntU(x)==='s'?'s':(cntU(x)==='min'?' min':' reps');
 
@@ -9355,7 +9404,7 @@ function edSave(){
     // Une correction de séries/cibles change la note : on re-grave note20 sur les statuts FIGÉS (main)
     // — au barème COURANT (v3.2), comme toute correction assumée (règle 15/08).
     try{
-      if(liveNotedExos(ED.live.exos||[]).length){ entry.live.note20=asNote20From(ED.live.exos); entry.live.n20v=6; }
+      if(liveNotedExos(ED.live.exos||[]).length){ entry.live.note20=asNote20From(ED.live.exos,ED.live.context,ED.date); entry.live.n20v=6; }
     }catch(e){}
   }
   DB.logs.push(entry);

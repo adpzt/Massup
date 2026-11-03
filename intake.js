@@ -296,19 +296,30 @@ var INTAKE=(function(){
     IN.selected=IN.selected===i?null:i; updateHistory();
   }
 
-  /* ── Fiche d'un jour du calendrier (page 3) : la seule carte nutrition (.bl-daycard), même sans séance ── */
+  /* ── Fiche d'un jour du calendrier (page 3) : la seule carte nutrition (.bl-daycard), même sans séance ──
+     03/11 (Adrien : « trop gros, au moins 2× plus compact ») : kcal sur une ligne, G · P · L côte à côte (composant
+     bl-macro du Bilan, resserré), le reste en une ligne, carte entière touchable vers la page Nutrition. */
   function dayCardHtml(d){
     var e=day(d); if(!e) return '';
     var n=BY.kcal, pct=Math.round(e.kcal/n.goal*100);
     var mic=NUT.filter(function(x){ return x.col==='mic'&&e[x.k]>0; }).map(function(x){
       var over=stateOf(x,e[x.k])==='bad';
-      return '<span class="'+(over?'bl-warn':'bl-mut')+'">'+(x.k==='sat'?'Gr. saturées':x.lbl)+' <b'+(over?'':' style="color:var(--txt)"')+'>'+nb(e[x.k])+' '+x.u+'</b>'+'</span>';
+      return '<span class="'+(over?'bl-warn':'bl-mut')+'">'+(x.k==='sat'?'Gr. sat.':x.lbl)+' <b'+(over?'':' style="color:var(--txt)"')+'>'+nb(e[x.k])+NB+x.u+'</b></span>';
     }).join('');
-    return '<div class="bl-daycard"><div class="bl-daycard__h"><span style="font-weight:800;font-size:14px">🍽️ Nutrition</span><span class="'+(pct>=100?'bl-pos':'bl-mut')+'" style="font-size:12px;font-weight:800">'+pct+NB+'%</span></div>'
-      +'<div class="bl-num" style="font-size:29px;margin-top:10px">'+nb(e.kcal)+un('/ '+nb(n.goal)+' kcal')+'</div>'
-      +'<div style="margin-top:6px">'+MACROS.map(function(k){ return rowHtml(BY[k],{v:e[k]>0?e[k]:null,n:1,total:1},false,false); }).join('')+'</div>'
+    var mac=MACROS.map(function(k){
+      var m=BY[k], v=e[k]>0?e[k]:null;
+      if(v==null) return '<div class="bl-macro"><div class="bl-macro__n"><i class="bl-dot" style="background:'+cvar(m)+'"></i>'+m.lbl+'</div><div class="bl-num bl-macro__v bl-mut">—</div><div class="bl-trk"></div></div>';
+      var t=tagOf(m,v);
+      return '<div class="bl-macro"><div class="bl-macro__n"><i class="bl-dot" style="background:'+cvar(m)+'"></i>'+m.lbl+'</div>'
+        +'<div class="bl-num bl-macro__v '+t[2]+'">'+nb(v)+un('/'+nb(m.goal)+NB+m.u)+'</div>'
+        +'<div class="bl-trk"><i class="'+t[3]+'" style="width:'+Math.min(100,v/refOf(m)*100).toFixed(0)+'%;'+(t[3]?'':'background:'+cvar(m))+'"></i></div></div>';
+    }).join('');
+    return '<button type="button" class="bl-daycard bl-daycard--c" onclick="INTAKE.open(\''+d+'\')" aria-label="Voir dans Nutrition">'
+      +'<div class="bl-daycard__h"><span class="bl-daycard__t">🍽️ Nutrition</span><span class="bl-num bl-daycard__k">'+nb(e.kcal)+un('/'+nb(n.goal)+' kcal')
+      +' <small class="'+(pct>=100?'bl-pos':'bl-mut')+'">'+pct+NB+'%</small></span><span class="bl-daycard__go" aria-hidden="true">›</span></div>'
+      +'<div class="bl-macros">'+mac+'</div>'
       +(mic?'<div class="bl-daymic">'+mic+'</div>':'')
-      +'<button type="button" class="bl-sec__link bl-daycard__more" onclick="INTAKE.open(\''+d+'\')">Voir dans Nutrition ›</button></div>';
+      +'</button>';
   }
 
   function init(adapter){ A=adapter; load(); }

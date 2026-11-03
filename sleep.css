@@ -74,11 +74,12 @@
 }
 .slp-manual{opacity:1;}
 /* « Ton rythme » (02/11, v2 plus simple) : deux heures à retenir */
-.slp-adv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-top:14px;}
+.slp-adv{display:grid;grid-template-columns:auto minmax(0,1fr);margin-top:14px;} /* 03/11 : col. 1 à sa taille, « 07:00 → 09:00 » ne sort plus de l'écran */
 .slp-adv>div{display:flex;flex-direction:column;gap:6px;min-width:0;}
 .slp-adv>div+div{padding-left:18px;border-left:1px solid var(--x-line,var(--gb));}
 .slp-adv span{font-size:12px;font-weight:800;color:var(--mut);}
 .slp-adv b{font:italic 900 34px/1 'Saira',system-ui,sans-serif;color:var(--txt);}
 .slp-adv-sub{margin:12px 0 0;font-size:12px;font-weight:700;line-height:1.4;color:var(--mut);}
 .slp-adv b small{font-size:.55em;color:var(--mut);}
-.slp-adv b{white-space:nowrap;} .slp-adv>div+div b{font-size:26px;}
+.slp-adv b{white-space:nowrap;} .slp-adv>div+div b{font-size:clamp(18px,6.2vw,26px);}
+.slp-adv>div:first-child{padding-right:18px;}

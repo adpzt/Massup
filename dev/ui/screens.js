@@ -32,6 +32,8 @@ const ADRIEN = [
   ['a_settings', ['openSettings()']],
   ['a_pesee', ["BILAN.sheet('pesee')"]],
   ['a_logmodal', ['openLogModal()']],
+  // (03/11) Fiche du jour avec séance LiveUp + nutrition : détail de la séance ouvert, carte nutrition compacte
+  ['a_day_live', ["(function(){var x=new Date();x.setDate(x.getDate()-2);var ds=x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');DB.logs=DB.logs.filter(function(l){return l.date!==ds;});var E=function(k,w,a){return {key:k,w:w,w0:w,n:a.length,reps:8,rHi:10,unite:'kg',status:'done',main:true,sets:a.map(function(r){return {reps:r,feel:'ok'};})};};DB.logs.push({id:7781,date:ds,time:'07:10',sessions:['s1'],duration_min:58,energy:4,feeling:4,live:{exos:[E('tirage_vert',56,[10,10,9,8]),E('dev_incline',24,[9,8,8,7]),{key:'crunch_decline',status:'skipped',main:true,sets:[],n:3,reps:12}],note20:16,n20v:6,context:'temps',painAny:false}});showDayModal(ds);toggleLiveDetail('7781');})()"], { scroll: '#dayModalContent' }],
   ['a_liveup', ['asOpen()'], { scroll: '#asOverlay .as-body,#asOverlay' }],
   ['a_detente', ['dzOpen()']],
   ['a_weekreport', ["(function(){var x=new Date();x.setDate(x.getDate()-((x.getDay()+6)%7)-7);wrOpen(x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'));})()"]],

@@ -19,6 +19,12 @@ var BILAN=(function(){
   // À CHAQUE mise en ligne d'une nouveauté visible : ajouter une entrée EN TÊTE (id = date AAAA-MM-JJ), 3 à 6 lignes courtes.
   // Elle s'affiche une fois par appareil (localStorage massup_news = id déjà vu), sur le Bilan, avant la saisie de la nuit.
   var NEWS=[
+    {id:'2026-11-03c',t:'Petites corrections (3 novembre, soir)',items:[
+      ['\u23F0','« Manque de temps » en fin de séance : un exo passé ne compte plus dans la note, un exo écourté est jugé sur ses séries faites.'],
+      ['\uD83D\uDD25','Abdo passé : non noté (plus de 0) jusqu\u2019au 7 décembre, où il devient obligatoire.'],
+      ['\uD83D\uDCCA','Barre « séries à la charge » par palier de reps : 24\u00a0kg \u00d7\u00a08, puis \u00d7 10, puis \u00d7 12 — monter de 2 reps relance la barre.'],
+      ['\uD83C\uDF7D\uFE0F','Fiche d\u2019un jour : nutrition 3\u00d7 plus compacte, flèche du détail corrigée. Page Sommeil : plus de défilement de côté.']
+    ]},
     {id:'2026-11-03b',t:'Bilans plus clairs (3 novembre)',items:[
       ['\uD83D\uDCCB','Bilan de séance : une seule ligne par exo, la décision et ta prochaine charge.'],
       ['\uD83C\uDFAF','Bilan de la semaine : une consigne, la plus importante.'],

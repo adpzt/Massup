@@ -807,13 +807,14 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 /* Détail séance en direct (modal jour) */
 .dld-toggle{display:block;width:100%;background:none;border:1px dashed rgba(255,126,182,.25);border-radius:var(--x-r-sm);color:var(--acc);font-family:'Manrope',system-ui,sans-serif;font-size:.7rem;font-weight:700;padding:.4rem .7rem;cursor:pointer;text-align:left;margin-top:.55rem;transition:all .2s;}
 .dld-toggle:active{background:rgba(255,126,182,.08);}
-.dld-toggle span{float:right;}
+.dld-toggle{display:flex;align-items:center;justify-content:space-between;gap:.6rem;text-align:left;min-width:0;max-width:100%;box-sizing:border-box;}
+.dld-toggle span{flex-shrink:0;font-size:1.25em;line-height:1;transition:transform .2s ease;} .dld-toggle.open span{transform:rotate(90deg);} /* 03/11 : chevron qui pivote (plus de ▸ flottant) */
 .dld-body{margin-top:.5rem;border-top:1px solid rgba(255,255,255,.06);padding-top:.5rem;}
 .dld-note{font-size:.72rem;color:var(--mut);margin-bottom:.5rem;}
 .dld-note strong{font-family:'Saira',system-ui,sans-serif;font-style:italic;font-size:1rem;}
 .dld-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.15rem .5rem;padding:.4rem 0;border-bottom:1px solid rgba(255,255,255,.04);}
 .dld-row:last-child{border-bottom:none;}
-.dld-name{font-size:.76rem;font-weight:600;min-width:0;}
+.dld-name{font-size:.76rem;font-weight:600;min-width:0;overflow-wrap:anywhere;}
 .dld-tag{font-size:.72rem;flex-shrink:0;}
 .dld-sets{width:100%;font-size:.66rem;color:var(--mut);}
 /* Détail des notes du radar */
@@ -1983,7 +1984,7 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 /* Croix : petite, nue, alignée à la date */
 .day-modal .hc-close{background:none;border:none;border-radius:0;width:auto;height:auto;padding:.2rem .1rem;font-size:1rem;color:var(--mut);line-height:1;}
 /* Le CONTENU scrolle (le cadre holo reste fixe) — fix « ça scroll derrière l'overlay » */
-#dayModalContent{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;min-height:0;flex:1;margin:0 -.35rem;padding:0 .35rem;}
+#dayModalContent{overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;min-height:0;flex:1;margin:0 -.35rem;padding:0 .35rem;}
 /* Aération générale */
 .day-modal .hc-chips{margin-bottom:1.15rem;gap:.45rem;}
 .day-modal .hc-hero{margin-bottom:1rem;}

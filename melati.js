@@ -1648,7 +1648,7 @@ function renderLogSummary(){
 // méta, ligne LiveUp, « Détail de la séance » repliable, 📊 Bilan) ──
 function melToggleDetail(id){
   var b=$id('dld-'+id), a=$id('dlda-'+id); if(!b) return;
-  var open=b.style.display==='none'; b.style.display=open?'':'none'; if(a) a.textContent=open?'▾':'▸';
+  var open=b.style.display==='none'; b.style.display=open?'':'none'; if(a&&a.parentNode) a.parentNode.classList.toggle('open',open); // chevron qui pivote (CSS)
 }
 function showDayModal(date){
   var logs=DB.logs.filter(function(l){return l.date===date;});
@@ -1689,7 +1689,7 @@ function showDayModal(date){
       +(meta.length?'<div class="hc-meta">'+meta.join(' · ')+'</div>':'')
       +(l.note?'<div class="dm-comment">« '+l.note+' »</div>':'')
       +'<div class="dm-live">▶ LiveUp · '+dn+' exo'+(dn>1?'s':'')+' · '+st+' séries'+(sk?' · '+sk+' passé'+(sk>1?'s':''):'')+'</div>'
-      +(rows?'<button class="dld-toggle" onclick="melToggleDetail(\''+l.id+'\')">Détail de la séance <span id="dlda-'+l.id+'">▸</span></button>'
+      +(rows?'<button class="dld-toggle" onclick="melToggleDetail(\''+l.id+'\')">Détail de la séance <span id="dlda-'+l.id+'" aria-hidden="true">›</span></button>'
         +'<div class="dld-body" id="dld-'+l.id+'" style="display:none">'+rows+'</div>':'')
       +'<div class="dm-actrow"><button class="dm-report" onclick="rpOpen(\''+l.id+'\')">📊 Bilan</button></div>'
       +'</div>';
