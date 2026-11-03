@@ -53,15 +53,17 @@ test("v5 avant le 07/12 : salle 9 + nutrition 6 + activité 3 = 18/19, ramené �
   assert.equal(B.graved, undefined, "sans données cloud chargées, rien n'est gravé");
 });
 
-test("v5 : malus −0,5 par jour sous 1 000 pas et −0,5 sans pesée ; donnée manquante = 0", () => {
+test("v5 : malus −0,5 sans pesée ; les jours sous 1 000 pas ne comptent qu'à partir du 07/12 ; donnée manquante = 0", () => {
   const run = load();
   run("(DB.bodyWeight=[],1)", { __low: { "2026-11-10": 640, "2026-11-14": 820 } });
   const B = run("bilanNoteWeek('2026-11-09')");
-  assert.equal(B.note, 17.5);
-  assert.equal(B.malus.length, 3);
+  assert.equal(B.note, 18.5, "19 − 0,5 sans pesée ; les 2 jours sous 1 000 pas ne coûtent rien avant le 07/12");
+  assert.equal(B.malus.length, 1);
   run("(DB.rank.weekly={},1)");
   const C = run("bilanNoteWeek('2026-11-09')");
   assert.equal(C.pil[1].c[2][2], 0, "shaker non coché = 0");
+  run("(DB.logs.forEach(function(l,i){ l.date=rankAddDays('2026-12-07',i*2); }),DB.rank.weekly={'2026-12-07':{v:3,shaker:7,run:1}},todayStr=function(){ return '2026-12-20'; },1)", { __low: { "2026-12-08": 640 } });
+  assert.equal(run("bilanNoteWeek('2026-12-07').malus.length"), 2, "dès le 07/12 : sans pesée + 1 jour sous 1 000 pas");
 });
 
 test("dès le 07/12 : la course compte sur 1, sans malus en plus si elle manque", () => {

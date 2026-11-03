@@ -15,6 +15,19 @@ var BILAN=(function(){
     {id:'masse',lbl:'Prise de masse',start:'2026-03-01',end:'2027-01-03',cible:76},
     {id:'seche',lbl:'Sèche',start:'2027-01-04',end:'2027-06-01',cible:68,gras:12}
   ];
+  // ── Nouveautés (03/11, demande d'Adrien : « les jours où il y a des nouveautés, un pop-up à l'arrivée dans l'app ») ──
+  // À CHAQUE mise en ligne d'une nouveauté visible : ajouter une entrée EN TÊTE (id = date AAAA-MM-JJ), 3 à 6 lignes courtes.
+  // Elle s'affiche une fois par appareil (localStorage massup_news = id déjà vu), sur le Bilan, avant la saisie de la nuit.
+  var NEWS=[
+    {id:'2026-11-03',t:'Nouveautés du 3 novembre',items:[
+      ['\uD83C\uDFC6','Nouvelle notation /20 depuis la semaine du 26 octobre : Salle /10, Nutrition /6 (tes vraies données Yazio), Activité.'],
+      ['\uD83C\uDFC3','La course et le malus des jours sous 1 000 pas comptent à partir de la semaine du 7 décembre.'],
+      ['\uD83D\uDD12','Ta note est gravée le lundi matin, après ton \u21bb (Yazio + pas) : ensuite elle ne bouge plus.'],
+      ['\uD83D\uDD0D','Notes : touche une semaine pour voir pourquoi tu as cette note.'],
+      ['\uD83D\uDCAA','Indice de force dans Progression, sous l\u2019évolution des poids.'],
+      ['\uD83C\uDF19','Sommeil : au lit avant minuit, réveil entre 7\u00a0h et 9\u00a0h.']
+    ]}
+  ];
   var S={tab:'today',notes:false,sel:null,psel:null,per:'all',pall:false,conf:null,mconf:null,mOpen:false,allw:false,mel:false,pop:null,screen:null,sheet:null};
 
   /* ── Format français ── */
@@ -246,7 +259,7 @@ var BILAN=(function(){
     try{ if(typeof PV!=='undefined'&&S.mel) PV.render(); }catch(e){ console.warn('[MASSUP] PV:',e); }
     if(S.screen) renderScreen();
     if(S.sheet) renderSheet();
-    autoNight();
+    if(!autoNews()) autoNight();
   }
 
   /* ══════════ ESPACE POIDS (plein écran) ══════════ */
@@ -372,6 +385,12 @@ var BILAN=(function(){
           +'<button type="button" class="bl-step" onclick="BILAN.step(\''+M.k+'\',0.5)" aria-label="'+M.l+' plus 0,5 cm">+</button></div>';
       }).join('')+'</div><button type="button" class="bl-btn bl-btn--primary bl-btn--block" style="margin-top:26px;min-height:56px;font-size:16px" onclick="BILAN.save()">Enregistrer ✓</button>';
     }
+    if(S.sheet==='news'){
+      var N=NEWS[0];
+      return head('\u2728 Nouveautés')+'<div class="bl-meta" style="margin-top:2px">'+esc(N.t)+'</div>'
+        +'<div class="bl-news">'+N.items.map(function(it){ return '<div><span aria-hidden="true">'+it[0]+'</span><p>'+esc(it[1])+'</p></div>'; }).join('')+'</div>'
+        +'<button type="button" class="bl-btn bl-btn--primary bl-btn--block" style="margin-top:22px;min-height:54px;font-size:17px" onclick="BILAN.close()">C\u2019est noté \u2713</button>';
+    }
     if(S.sheet==='nuit'){
       var d=((F.wake-F.bed)%1440+1440)%1440, inz=sleepZone(d), nk=F.night;
       var lbl=dlab(nk).replace(/\.$/,'')+' → '+dlab(addD(nk,1));
@@ -390,7 +409,7 @@ var BILAN=(function(){
     if(!S.sheet){ if(L) L.remove(); document.removeEventListener('keydown',onKey); return; }
     var fresh=!L;
     if(fresh){ L=document.createElement('div'); L.id='blSheet'; L.className='bl-layer'; document.body.appendChild(L); document.addEventListener('keydown',onKey); }
-    var lbl={pesee:'Nouvelle pesée',mensu:'Mensurations',nuit:'Saisie de la nuit'}[S.sheet];
+    var lbl={pesee:'Nouvelle pesée',mensu:'Mensurations',nuit:'Saisie de la nuit',news:'Nouveautés'}[S.sheet];
     L.innerHTML='<div class="bl-scrim'+(fresh?'':' is-still')+'" onclick="BILAN.close()"></div><div class="bl-sheet bl-page-font'+(fresh?'':' is-still')+'" role="dialog" aria-modal="true" aria-label="'+lbl+'">'+sheetHtml()+'</div>';
   }
   function onKey(e){ if(e.key==='Escape') close(); }
@@ -405,10 +424,10 @@ var BILAN=(function(){
     if(kind==='pesee') F={date:today(),kg:last?Math.round((parseFloat(last.weight_kg)+0.1)*10)/10:70};
     else if(kind==='mensu'){ var L=bodyMeasList(), lv=L.length?L[L.length-1].v:{}; F={date:today(),m:{},prev:{}}; BODY_MEAS.forEach(function(M){ F.prev[M.k]=lv[M.k]!=null?lv[M.k]:null; F.m[M.k]=lv[M.k]!=null?lv[M.k]:null; }); }
     else if(kind==='nuit') loadNight(SLEEP._night());
-    else return;
+    else if(kind!=='news') return;
     S.sheet=kind; renderSheet();
   }
-  function close(){ S.sheet=null; renderSheet(); }
+  function close(){ if(S.sheet==='news'){ markNews(); setTimeout(autoNight,400); } S.sheet=null; renderSheet(); }
   function step(k,d){
     if(S.sheet==='pesee') F.kg=Math.max(30,Math.min(200,Math.round((F.kg+d)*10)/10));
     else if(S.sheet==='mensu'){ var v=F.m[k]!=null?F.m[k]:(F.prev[k]!=null?F.prev[k]:{bras:35,poitrine:95,taille:80,cuisse:55}[k]); F.m[k]=Math.max(10,Math.min(200,Math.round((v+d)*10)/10)); }
@@ -438,6 +457,15 @@ var BILAN=(function(){
     }
     S.sheet=null; renderSheet(); renderSante();
   }
+  function newsSeen(){ try{ return localStorage.getItem('massup_news')||''; }catch(e){ return '9999'; } }
+  function autoNews(){
+    if(!NEWS.length||S.sheet||S.screen||S.newsShown) return false;
+    var v=document.getElementById('view-sante'); if(!v||!v.classList.contains('active')) return false;
+    if(NEWS[0].id<=newsSeen()) return false;
+    S.newsShown=1; setTimeout(function(){ if(!S.sheet&&!S.screen) openSheet('news'); },300);
+    return true;
+  }
+  function markNews(){ try{ localStorage.setItem('massup_news',NEWS[0].id); }catch(e){} }
   // Comme avant (01/11) : la saisie de la nuit s'ouvre d'office, une fois par jour, si la nuit n'est pas notée
   function autoNight(){
     if(typeof SLEEP==='undefined'||S.sheet||S.screen) return;

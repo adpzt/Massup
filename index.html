@@ -139,6 +139,9 @@
       <div id="weightHistory"></div>
       <div id="weightAlert"></div>
     </div>
+    <!-- 💪 Indice de force (03/11) : force générale des exos clés, base 100 au début de la saison (force.js) -->
+    <div class="slbl">Indice de force</div>
+    <div class="chart-section fx-sec" id="forceIdx" style="margin-bottom:1.5rem;"></div>
     <!-- Objectifs de poids mis de côté le 15/08 — se réactivent via FEATURE_GOALS (app.js) -->
     <div class="slbl" id="lblObjectifs">&#x1F3AF; Objectifs &amp; repères &#x2014; 1er janvier</div>
     <div id="objectifs" style="margin-bottom:1.5rem;"></div>
@@ -475,6 +478,7 @@ if('serviceWorker' in navigator){
 <script src="intake.js"></script>
 <script src="sleep.js"></script>
 <script src="bilan.js"></script>
+<script src="force.js"></script>
 <script src="cardio.js"></script>
 <script src="app.js"></script>
 <script src="sport.js"></script>

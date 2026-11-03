@@ -18,6 +18,8 @@ const ADRIEN = [
   ['a_intake_daymodal', ["(function(){var x=new Date();x.setDate(x.getDate()-2);var ds=x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');DB.logs=DB.logs.filter(function(l){return l.date!==ds;});showDayModal(ds);})()"]],
   ['a_bilan_read', ["window.scrollTo(0,document.querySelector('#bilanPage .bl-chart').getBoundingClientRect().top+window.scrollY-260)", "(function(){var b=document.querySelector('#bilanPage .bl-chart__hit'),r=b.getBoundingClientRect();BILAN.pick({clientX:r.left+r.width*0.6},b);})()"]],
   ['a_poids', ["BILAN.go('poids')"], { scroll: '#blScreen' }],
+  ['a_news', ["localStorage.removeItem('massup_news');BILAN._state.newsShown=0;renderSante()", "new Promise(function(r){ setTimeout(r,700); })"]],
+  ['a_force', ["switchView('progression',document.querySelectorAll('.bni')[2])", "document.getElementById('forceIdx').scrollIntoView({block:'start'});window.scrollBy(0,-60)"]],
   ['a_bilan_notes', ["BILAN.toggle('notes')", "window.scrollTo(0,document.body.scrollHeight)"]],
   ['a_note', ["BILAN.note(rankAddDays(rankMonday(todayStr()),-7))"], { scroll: '#blScreen' }],
   ['a_note_v5', ["NOTE_V5_START=rankAddDays(rankMonday(todayStr()),-7);BILAN.note(rankAddDays(rankMonday(todayStr()),-7))"], { scroll: '#blScreen' }],

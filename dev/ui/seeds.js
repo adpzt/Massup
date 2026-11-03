@@ -30,6 +30,8 @@ function adrienSeed(){
     nu[d(j)]={kcal:kc,glu:Math.round(kc*.5/4),prot:115+((j*13)%70),lip:55+((j*7)%45),fib:8+(j%15),sucre:35+((j*11)%40),sat:14+(j%20),potassium:900+((j*91)%900)};
     if(j%5) nu[d(j)].sodium=1200+((j*137)%2000); }
   localStorage.setItem('massup_intake',JSON.stringify({days:nu,syncAt:Date.now()-5*60000}));
+  // Pop-up « Nouveautés » déjà vue (sinon elle recouvrirait toutes les captures du Bilan) — écran dédié : a_news
+  localStorage.setItem('massup_news','9999-12-31');
 }
 function melatiSeed(){
   if(localStorage.getItem('melati_db')) return;

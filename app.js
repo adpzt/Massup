@@ -2945,6 +2945,7 @@ function switchView(name, btn){
     renderHisto();
     try{ renderFreqChart(); }catch(e){ console.warn('[MASSUP] renderFreqChart error:',e); }
     try{ renderMuscleVolume(); }catch(e){ console.warn('[MASSUP] renderMuscleVolume error:',e); }
+    try{ if(typeof FORCE!=='undefined') FORCE.render(); }catch(e){ console.warn('[MASSUP] FORCE:',e); }
     buildChartSelect();
     renderProgressionTable();
     try{ renderObjectifs(); }catch(e){ console.warn('[MASSUP] renderObjectifs:',e); }
@@ -10658,7 +10659,8 @@ function bilanNoteWeekCalc(ws){
 //         + Nutrition /6 (jours ≥ 2 600 kcal /3 · jours ≥ 135 g de protéines /2 · shaker 7/7 /1 — vraies données Yazio)
 //         + Activité /4 (pas /2 · nuits ≥ 7 h /1 · course /1 SEULEMENT dès le 07/12 — avant : note sur 19 ramenée à 20 ;
 //           ensuite, pas de course = 0/1, sans malus en plus) ; donnée manquante = 0.
-// Malus : −0,5 par jour < 1 000 pas · −0,5 sans pesée dans la semaine (03/11 : plus de malus « muscle en rouge sang »).
+// Malus : −0,5 sans pesée dans la semaine · −0,5 par jour < 1 000 pas DÈS LE 07/12 (comme la course) ;
+//         plus de malus « muscle en rouge sang » (03/11).
 // 03/11 (Adrien) : la v5 s'applique dès la semaine du lundi 26/10 — cette semaine-là est recalculée (ses éventuelles
 // gravures d'un autre barème sont ignorées, voir noteGravOf). Avant le 26/10 : barèmes d'époque (v1-v3), gravés tels quels.
 // GRAVURE v5 : le LUNDI matin (≥ 5 h) qui suit la semaine, et seulement si un ↻ (raccourci Santé : Yazio + pas) a été
@@ -10722,7 +10724,8 @@ function bilanNoteWeekV5(ws){
   var pR=run>=1?1:0, pN=nights/7;
   // Malus
   var malus=[];
-  if(typeof STEPS!=='undefined'){ for(var s=0;s<7;s++){ var sd=rankAddDays(ws,s); if(sd>=t) break; var sv=STEPS.stepsOf(sd);
+  // −0,5 par jour < 1 000 pas : seulement dès la semaine du 07/12, comme la course (Adrien, 03/11)
+  if(ws>=RUN_REQ_START&&typeof STEPS!=='undefined'){ for(var s=0;s<7;s++){ var sd=rankAddDays(ws,s); if(sd>=t) break; var sv=STEPS.stepsOf(sd);
     if(sv!=null&&sv<1000) malus.push({l:new Date(sd+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'})+' · '+Math.round(sv).toLocaleString('fr-FR')+' pas',p:0.5}); } }
   var runOn=ws>=RUN_REQ_START, runMiss=runOn&&run<1;
   if(noteWeekClosed(ws)&&!(DB.bodyWeight||[]).some(function(b){ return b.date>=ws&&b.date<=we; })) malus.push({l:'Aucune pesée dans la semaine',p:0.5});
