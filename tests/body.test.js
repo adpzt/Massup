@@ -20,7 +20,7 @@ function load() {
   ctx.window = ctx;
   vm.createContext(ctx);
   vm.runInContext(fs.readFileSync("cardio.js", "utf8"), ctx, { filename: "cardio.js" });
-  vm.runInContext(fs.readFileSync("app.js", "utf8"), ctx, { filename: "app.js" });
+  require("./_app").loadApp(vm, ctx);
   return (code, vars) => { Object.assign(ctx, vars || {}); return JSON.parse(vm.runInContext("JSON.stringify(" + code + ")", ctx)); };
 }
 const bw = (pairs) => pairs.map(([date, kg]) => ({ date, weight_kg: kg }));

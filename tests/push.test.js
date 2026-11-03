@@ -101,7 +101,7 @@ test("service worker still shows timer notifications while MASSUP is visible", a
 });
 
 test("natural timer completion keeps its server push queued", () => {
-  const app = fs.readFileSync("app.js", "utf8");
+  const app = require("./_app").appSource();
   const restTimer = app.slice(app.indexOf("function startTimer("), app.indexOf("function updateTimerUI("));
   const liveTimer = app.slice(app.indexOf("function asTickFn()"), app.indexOf("function asUpdateWorkTimerUI("));
   const stopTimer = app.slice(app.indexOf("function stopTimer("), app.indexOf("function formatTime("));

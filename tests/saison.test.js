@@ -19,7 +19,8 @@ const ctx = {
 };
 ctx.window = ctx;
 vm.createContext(ctx);
-for (const f of ["saison.js", "cardio.js", "app.js"]) vm.runInContext(fs.readFileSync(f, "utf8"), ctx, { filename: f });
+for (const f of ["saison.js", "cardio.js"]) vm.runInContext(fs.readFileSync(f, "utf8"), ctx, { filename: f });
+require("./_app").loadApp(vm, ctx);
 const run = (code, vars) => { Object.assign(ctx, vars || {}); return vm.runInContext(code, ctx); };
 const preview = (on) => { if (on) store.massup_seche_preview = "1"; else delete store.massup_seche_preview; };
 

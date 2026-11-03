@@ -29,7 +29,7 @@ test("the suggested distance starts at 5 km and grows by 0.5 km on the best rece
 });
 
 test("a run never counts as a gym session and the course flow replaces the manual session link", () => {
-  const app = fs.readFileSync("app.js", "utf8");
+  const app = require("./_app").appSource();
   assert.match(app, /function logWeight\(l\)\{\n  if\(l&&l\.sport==='course'\) return 0;/);
   assert.match(app, /onclick="asOtherSport\(\)"/);
   assert.doesNotMatch(app, /onclick="asManualEntry\(\)"/);

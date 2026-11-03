@@ -20,7 +20,7 @@ function load() {
   ctx.window = ctx;
   vm.createContext(ctx);
   vm.runInContext(fs.readFileSync("cardio.js", "utf8"), ctx, { filename: "cardio.js" });
-  vm.runInContext(fs.readFileSync("app.js", "utf8"), ctx, { filename: "app.js" });
+  require("./_app").loadApp(vm, ctx);
   // Semaine du lundi 09/11/2026 (1re semaine v5), vue depuis le dimanche 22/11 ; modules Pas / Sommeil / Yazio simulés
   ctx.__low = {};
   ctx.__kcal = 2800;

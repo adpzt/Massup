@@ -21,7 +21,7 @@ function load() {
   ctx.window = ctx;
   vm.createContext(ctx);
   vm.runInContext(fs.readFileSync("cardio.js", "utf8"), ctx, { filename: "cardio.js" });
-  vm.runInContext(fs.readFileSync("app.js", "utf8"), ctx, { filename: "app.js" });
+  require("./_app").loadApp(vm, ctx);
   vm.runInContext("DB.weights={tirage_vert:[{date:'2026-10-28',val:56}],dev_incline:[{date:'2026-10-28',val:24}]}; DB.logs=[];", ctx);
   return ctx;
 }
