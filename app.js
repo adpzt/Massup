@@ -497,6 +497,7 @@ function toggleWarmup(sid){
 // ══════════════════════════════════════════════════
 function init(){
   loadDB();
+  try{ noteRegrade(); }catch(e){ console.warn('[MASSUP] noteRegrade:',e); }
   initWeights();
   initHealthLogs();
   initLogs();
@@ -4228,7 +4229,7 @@ function mergeBackupIntoDB(bk){
     Object.keys(bk.noteGrav).forEach(function(w){
       var r=bk.noteGrav[w], l=DB.noteGrav[w];
       if(!r||r.note==null) return;
-      var v5=w>=NOTE_V5_START, rOk=!v5||r.v===5, lOk=l&&l.note!=null&&(!v5||l.v===5);
+      var rOk=noteGravValid(w,r), lOk=noteGravValid(w,l);
       if(rOk&&(!lOk||(r.at||0)<(l.at||0))) DB.noteGrav[w]=r;
     });
   }
@@ -4894,7 +4895,7 @@ function asIsInverse(key){ return key==='traction_assist'||key==='dips_assist'; 
 // step = 1 cran (kg). Pas de séries d'échauffement affichées (Adrien n'a pas le temps).
 var REP_RANGE={
   dev_incline:{r:[8,10],step:2}, chestpress_v:{r:[8,10],step:5}, pecdeck:{r:[10,12],step:5},
-  elev_lat:{r:[8,12],step:2}, // 01/11 (Adrien) : retour à 8 kg en 8-12 (6 kg × 15-20 bloquait depuis avril) triceps_corde:{r:[10,12],step:2}, triceps_barre:{r:[10,12],step:2},
+  elev_lat:{r:[8,12],step:2}, triceps_corde:{r:[10,12],step:2}, triceps_barre:{r:[10,12],step:2}, // élévations : 01/11 (Adrien) retour à 8 kg en 8-12 (6 kg × 15-20 bloquait depuis avril) · 03/11 : ce commentaire avalait les 2 triceps
   shoulder_press:{r:[8,10],step:5}, seated_dips:{r:[8,10],step:5}, dips_assist:{r:[8,10],step:4},
   cable_fly:{r:[10,12],step:1}, dev_militaire:{r:[8,10],step:2},
   tirage_vert:{r:[8,10],step:4}, rowing_pb:{r:[8,10],step:4}, rowing_uni:{r:[8,10],step:2},
@@ -7265,7 +7266,7 @@ function asPersistLog(){
     // (rituel posture de fin supprimé le 04/08 — abdo obligatoire au setup + routines dans Détente)
     warmup:AS.warmupDone===true
   };
-  try{ if(liveNotedExos(AS.exos).length&&AS.sid!=='sm') live.note20=asGlobalScore(); }catch(e){} // la note /20 se grave ici, une fois pour toutes (cardio seul : pas de note, 19/10)
+  try{ if(liveNotedExos(AS.exos).length&&AS.sid!=='sm'){ live.note20=asGlobalScore(); live.n20v=6; } }catch(e){} // n20v 6 = barème du 03/11 (pas de regravure) // la note /20 se grave ici, une fois pour toutes (cardio seul : pas de note, 19/10)
   // Reprise après gel (26/08) : contexte figé avec la note — le coach relit la séance avec
   try{ live.reprise=gelRepriseCtx(prevLog?prevLog.date:todayStr()); }catch(e){ live.reprise=null; }
   DB.logs.push({id:logId,date:prevLog?prevLog.date:todayStr(),
@@ -7347,9 +7348,11 @@ function asSetQuality(s,target,isLast){
 // Reps : ≥ bas = 1 · à ≤ tolérance sous le bas = 0,8 (1 si dernière série à l'échec : c'est le max
 // honnête) · plus loin = 0,5. Plus lourd que la référence en frôlant le bas = reps pleines.
 // +1 rep ne baisse jamais la note.
+// 03/11 (audit + Adrien : « bonne note = très bonne séance, mais le plan bien fait ne doit pas être mal noté ») :
+// une série « facile » là où le plan demandait OK / DUR = charge trop légère → 0,9 / 0,85 (avant 1).
 var FS_FEEL_Q={
-  ok:{ok:1,dur:0.95,facile:1,echec:0.5},
-  dur:{dur:1,ok:1,facile:1,echec:1},
+  ok:{ok:1,dur:0.95,facile:0.9,echec:0.5},
+  dur:{dur:1,ok:1,facile:0.85,echec:1},
   echec:{echec:1,dur:0.9,ok:0.8,facile:0.6}
 };
 function asSetQualityV4(x,s,setNo){
@@ -7360,7 +7363,7 @@ function asSetQualityV4(x,s,setNo){
     var near=s.reps>=lo-setTol(lo);
     var sw=(s.w!=null?s.w:x.w)||0;
     var heavier=/kg/.test(x.unite||'')&&x.w0>0&&!asIsInverse(x.key)&&sw>x.w0;
-    rq=near?((g==='echec'&&s.feel==='echec')||heavier?1:0.8):0.5;
+    rq=near?((g==='echec'&&s.feel==='echec')||heavier?1:0.75):0.4; // 03/11 : 0,8 → 0,75 · 0,5 → 0,4 (reps sous la fourchette)
   }
   return fq*rq;
 }
@@ -7488,15 +7491,19 @@ function asGradeInfo(g){
   if(g<18) return {cls:'good',emoji:'&#x1F4AA;',title:'Tr&#xE8;s bonne s&#xE9;ance',anim:'bounce'};
   return {cls:'top',emoji:'&#x1F3C6;',title:'S&#xE9;ance de champion',anim:'bounce'};
 }
+// Synthèse sous la note (03/11, audit) : mêmes paliers que le titre (asGradeInfo : 8 · 12 · 14 · 18) et des FAITS —
+// combien d'exos tenus au plan (≥ 4,5/5), lesquels sont à reprendre (< 3,5/5). Plus de phrase toute faite
+// (« séries pleines, exécution propre » s'affichait même un jour malade).
 function asGradeSummary(g,doneCt,skipCt,total){
-  if(g<7){
-    if(doneCt<=Math.ceil(total/3)) return 'Seulement <strong>'+doneCt+'/'+total+' exos</strong> men&#xE9;s au bout aujourd\'hui. &#xC7;a arrive &#x2014; mais soyons honn&#xEA;tes&#x202F;: ce n\'est pas avec &#xE7;a qu\'on construit. Regarde ce qui a bloqu&#xE9; (temps ? &#xE9;nergie ? douleur ?) et corrige-le d&#xE8;s la prochaine.';
-    return 'Trop de s&#xE9;ries incompl&#xE8;tes ou loin de la cible aujourd\'hui. Pas de panique&#x202F;: identifie LA cause (sommeil, bouffe, charges trop hautes) et reviens plus fort.';
-  }
-  if(g<11) return 'Du bon et du moins bon&#x202F;: '+doneCt+'/'+total+' exos au bout'+(skipCt?', '+skipCt+' pass&#xE9;'+(skipCt>1?'s':''):'')+'. La base est l&#xE0;, le d&#xE9;tail p&#xEA;che. Les slides suivantes te disent exactement quoi ajuster.';
-  if(g<15) return 'S&#xE9;ance solide&#x202F;: '+doneCt+'/'+total+' exos men&#xE9;s au bout. Pas parfaite, mais c\'est ce genre de s&#xE9;ances r&#xE9;guli&#xE8;res qui font les prises de masse r&#xE9;ussies.';
-  if(g<18) return 'Grosse s&#xE9;ance&#x202F;: '+doneCt+'/'+total+' exos, s&#xE9;ries pleines, ex&#xE9;cution propre. Continue exactement comme &#xE7;a.';
-  return total+'/'+total+' ou presque, s&#xE9;ries pleines, z&#xE9;ro rel&#xE2;chement. La d&#xE9;finition d\'une s&#xE9;ance parfaite. Chapeau.';
+  var ex=[]; try{ ex=liveNotedExos(AS.exos).map(function(x){ return {n:x.name||getExoName(x.key),v:asScoreExoRaw(x)}; }); }catch(e){}
+  var top=ex.filter(function(e){ return e.v>=4.5; }).length, weak=ex.filter(function(e){ return e.v<3.5; }).sort(function(a,b){ return a.v-b.v; });
+  var fact='<strong>'+top+'/'+(ex.length||total)+' exos au plan</strong>'+(skipCt?' &#xB7; '+skipCt+' pass&#xE9;'+(skipCt>1?'s':''):'');
+  var fix=weak.length?' &#xC0; reprendre&#x202F;: '+weak.slice(0,3).map(function(e){ return e.n; }).join(', ')+'.':'';
+  if(g<8) return fact+'.'+fix+' Trop loin de ton plan aujourd\'hui&#x202F;: m&#xEA;mes charges la prochaine fois, et vise S1 OK &#xB7; S2 dur &#xB7; derni&#xE8;re &#xE0; l\'&#xE9;chec.';
+  if(g<12) return fact+'.'+fix+' La base est l&#xE0;, mais plusieurs exos sont sortis du plan.';
+  if(g<14) return fact+'.'+fix+' Correct&#x202F;: quelques s&#xE9;ries sous la fourchette ou un &#xE9;chec trop t&#xF4;t.';
+  if(g<18) return fact+'.'+(fix||' Plan tenu presque partout.');
+  return fact+'.'+(fix||' Plan tenu sur toute la s&#xE9;ance.');
 }
 // Analyse v4 (28/10, règles d'Adrien) : hausse d'un cran quand TOUTES les séries atteignent le
 // HAUT de la fourchette, à la même charge ≥ référence, sans échec en série 1 ni en série 2.
@@ -7872,6 +7879,30 @@ function asAnalyzeExo(x){
       }
     }
   }catch(e){}
+  return asCoachTrim(out,x);
+}
+// ── Bilan « pertinent » (03/11, audit de ses 13 vrais bilans d'octobre — étape 5 du plan) ──
+// Sous chaque exo : UNE ligne de verdict (la prochaine charge : 🚀 monte · ✅ garde · 📉 même charge · 💥 trop lourd ·
+// 🎯 pas encore prêt), puis au plus 2 alertes qui changent vraiment quelque chose (échec S1/S2, cible manquée sans
+// échec, gauche/droite, dernière série pas poussée, retour après 30 j, 1re fois, écourté, plan si note faible).
+// Retiré : compteur ⏳ (ancien système, chiffres faux), phrases tournantes 📈, « bonne décision de baisser » (contredit
+// la règle « même charge »), 🥵 / 🔁 / 🎢 / 🧩 / 🔑 / « gauche = droite », bonus hors note, doublons.
+var COACH_VERDICT=['&#x1F4A5;','&#x1F680;','&#x1F3AF;','&#x1F4C9;','&#x2705;','&#x26A0;'];
+var COACH_ALERT=['&#x26A0;&#xFE0F; S&#xE9;rie','&#x1F6A9;','&#x1F448;','&#x1F449;','&#x1F50B;','&#x267B;','&#x1F195;','&#x1F4AA; &#xC9;court&#xE9;','&#x1F4AA; ','&#x1F4CC;','&#x2696;&#xFE0F; Charges diff','&#x1FA79;','&#x1F3C3;'];
+function asCoachTrim(out,x){
+  if(!out||!out.lines||!out.lines.length) return out;
+  var src=out.lines, verdict=null, alerts=[], seen={};
+  src.forEach(function(l){
+    if(seen[l]) return; seen[l]=1;
+    if(/^&#x23F3;|^&#x1F4C8;|^&#x1F53D;|^&#x1F53C;|^&#x1F975;|^&#x1F501;|^&#x1F3A2;|^&#x1F9E9;|^&#x1F511;|^&#x2B50;|^&#x1F522;|^&#x2696;&#xFE0F; Gauche|^&#x1F44D;/.test(l)) return;
+    var isV=!verdict&&COACH_VERDICT.some(function(p){ return l.indexOf(p)===0; })&&!/^&#x26A0;&#xFE0F; S&#xE9;rie/.test(l);
+    if(isV){ verdict=l; return; }
+    if(COACH_ALERT.some(function(p){ return l.indexOf(p)===0; })) alerts.push(l);
+  });
+  // « 💪 écourté » et « 💪 N/4 puis stop » disent la même chose : un seul
+  var ec=false; alerts=alerts.filter(function(l){ if(l.indexOf('&#x1F4AA; ')!==0) return true; if(ec) return false; ec=true; return true; });
+  out.lines=(verdict?[verdict]:[]).concat(alerts.slice(0,verdict?2:3));
+  if(!out.lines.length) out.lines=src.slice(0,1);
   return out;
 }
 function asAnalyzeSession(){
@@ -9324,7 +9355,7 @@ function edSave(){
     // Une correction de séries/cibles change la note : on re-grave note20 sur les statuts FIGÉS (main)
     // — au barème COURANT (v3.2), comme toute correction assumée (règle 15/08).
     try{
-      if(liveNotedExos(ED.live.exos||[]).length) entry.live.note20=asNote20From(ED.live.exos);
+      if(liveNotedExos(ED.live.exos||[]).length){ entry.live.note20=asNote20From(ED.live.exos); entry.live.n20v=6; }
     }catch(e){}
   }
   DB.logs.push(entry);
@@ -10680,11 +10711,36 @@ function noteCanGrave(ws){
   return true;
 }
 // Gravure valable : pour une semaine v5, seule une gravure v5 compte (une gravure d'un autre barème est ignorée)
+function noteGravValid(ws,g){
+  if(!g||g.note==null) return false;
+  if(ws>=NOTE_V5_START&&g.v!==5) return false;
+  if(ws>=NOTE_REGRADE_FROM&&ws<'2026-11-02'&&g.rgv!==2) return false; // gravée avant la regravure du 03/11
+  return true;
+}
 function noteGravOf(ws){
   var g=DB.noteGrav&&DB.noteGrav[ws];
-  if(!g||g.note==null) return null;
-  if(ws>=NOTE_V5_START&&g.v!==5) return null;
-  return g;
+  return noteGravValid(ws,g)?g:null;
+}
+// ── REGRAVURE du 03/11 (accord explicite d'Adrien dans le chat : « tu peux changer la note de la semaine dernière
+// aussi… avec le nouveau système ») : les séances depuis le lundi 26/10 sont re-notées avec le barème du 03/11
+// (asSetQualityV4 durci, voir FS_FEEL_Q) ; l'ancienne note est gardée dans live.note20Prev. Une seule fois par
+// séance (live.n20v = 6). Les semaines ≥ 26/10 se regravent ensuite (rgv 2). Rien avant le 26/10 ne bouge.
+var NOTE_REGRADE_FROM='2026-10-26';
+function noteRegrade(){
+  var n=0;
+  (DB.logs||[]).forEach(function(l){
+    if(!l||!l.live||l.date<NOTE_REGRADE_FROM||l.live.n20v>=6||l.live.note20==null||!l.live.exos) return;
+    // Séances d'avant le barème « une seule charge » (28/10) : jugées elles aussi avec la fourchette (REP_RANGE) et le plan
+    // S1 OK · S2-S3 DUR · dernière à l'échec — c'est « le nouveau système » demandé (ex. pec deck 27/10 : échec aux 4 séries).
+    l.live.exos.forEach(function(x){
+      var R=REP_RANGE[x.key];
+      if(x&&!x.rHi&&R&&!exoIsCardio(x.key)){ x.rHiPrev=null; x.repsPrev=x.reps; x.reps=R.r[0]; x.rHi=R.r[1]; }
+    });
+    var nv=asNote20From(l.live.exos);
+    l.live.note20Prev=l.live.note20; l.live.note20=nv; l.live.n20v=6; n++;
+  });
+  if(n) saveDB();
+  return n;
 }
 function bilanNoteWeek(ws){
   var g=noteGravOf(ws);
@@ -10692,7 +10748,7 @@ function bilanNoteWeek(ws){
   var B=ws>=NOTE_V5_START?bilanNoteWeekV5(ws):bilanNoteWeekCalc(ws);
   if(noteWeekClosed(ws)&&noteCanGrave(ws)){
     if(!DB.noteGrav) DB.noteGrav={};
-    var copy=JSON.parse(JSON.stringify(B)); copy.graved=1; copy.at=Date.now();
+    var copy=JSON.parse(JSON.stringify(B)); copy.graved=1; copy.at=Date.now(); copy.rgv=2;
     DB.noteGrav[ws]=copy; saveDB();
     return copy;
   }
@@ -10928,6 +10984,7 @@ function wrAnalyze(ws){
       var ef=x.rHi?fsBlockFails(x,sets):0;
       if(sf||hf||ef){
         if(!errs[x.key]) errs[x.key]={soft:0,hard:0,early:0};
+        errs[x.key].lo=x.reps; errs[x.key].unite=x.unite||''; // 03/11 : la cible et l'unité de l'exo tel qu'il a été fait
         errs[x.key].soft+=sf; errs[x.key].hard+=hf; errs[x.key].early=(errs[x.key].early||0)+ef;
       }
       if(sets.length>n) bonusSeries+=sets.length-n;
@@ -10935,6 +10992,8 @@ function wrAnalyze(ws){
     });
     try{ rankSeanceRP(l).events.forEach(function(ev){ if(ev.label.indexOf('PR appliqu')>=0) prs.push(ev.label.replace('PR appliqué : ','')); }); }catch(e){}
   });
+  // 03/11 (audit) : un PR par exo (le dernier), jamais « → 0 kg » (série d'essai)
+  var _prBy={}; prs.forEach(function(p){ var n=p.split(' → ')[0]; if(!/→ 0 /.test(p)) _prBy[n]=p; }); prs=Object.keys(_prBy).map(function(n){ return _prBy[n]; });
   // 16/08 soir (retour Adrien : « les erreurs ne m'aident pas ») : chaque erreur embarque la
   // cible de reps et la charge de référence → le message devient un PLAN chiffré, pas un constat.
   var topErrs=Object.keys(errs).map(function(k){
@@ -10942,8 +11001,9 @@ function wrAnalyze(ws){
     var inf=findExoIndex(k);
     var reps=null; try{ if(inf) reps=asParseSerie(inf.exo).reps; }catch(e2){}
     if(REP_RANGE[k]&&inf&&!inf.exo.repTarget) reps=REP_RANGE[k].r[0]; // bas de fourchette (28/10)
-    var wNow=null; try{ wNow=weightAtDate(k,we); }catch(e3){}
-    return {key:k,name:getExoName(k),soft:e.soft,hard:e.hard,early:e.early||0,tot:e.soft+e.hard+(e.early||0),reps:reps,w:wNow};
+    if(e.lo) reps=e.lo; // 03/11 (audit) : la cible réellement suivie en séance (élévations 15, pas 8)
+    var isKg=/kg/.test(e.unite||'kg'), wNow=null; try{ if(isKg) wNow=weightAtDate(k,we); }catch(e3){} // pas de « kg » sur un exo en reps
+    return {key:k,name:getExoName(k),soft:e.soft,hard:e.hard,early:e.early||0,tot:e.soft+e.hard+(e.early||0),reps:reps,w:wNow,u:e.unite||'kg'};
   }).sort(function(a,b){return b.tot-a.tot;}).filter(function(e){return e.tot>=2;}).slice(0,3);
   // Volume par muscle + délaissés (<6 = à peine touché) + sous la fenêtre (<12)
   var vol=muscleVolume(ws,we);
@@ -11021,6 +11081,25 @@ var WR_TYPE_ICO={push:'&#x1F4AA;',pull:'&#x1F3CB;',pull2:'&#x1F3CB;',legs:'&#x1F
 // v3 (02/08 soir) : contenu CENTRÉ verticalement (wr-inner), chiffres XXL, entrées échelonnées
 // (15/08 soir, retour Adrien : les bilans hebdo/mensuel restent COMPLETS — analyse, best séance,
 // conseils. Seuls les RP/pts du rank sont débranchés via FEATURE_RANK ; le verdict = la note /20.)
+// ── LA consigne de la semaine (03/11, plan étape 5 : « 1 consigne, pas 10 retours ») ──
+// Une seule phrase, la plus importante, dans cet ordre : un muscle sous la fenêtre 3 semaines de suite → l'erreur
+// d'exécution la plus fréquente → une séance manquante → la nutrition (Yazio) → sinon « même plan ».
+function wrConsigne(ws,A){
+  var under=RADAR_GROUPS.map(function(g){ return g.label; }).filter(function(lb){
+    for(var k=0;k<3;k++){ var w=rankAddDays(ws,-7*k), v=muscleVolume(w,rankAddDays(w,6))[lb]||0; if(v>=volBlueMin(lb)) return false; }
+    return true;
+  });
+  var FIX={'Jambes':'2 s&#xE9;ries de leg press ou de hip thrust en plus &#xE0; ta s&#xE9;ance LEGS','Abdos':'2 s&#xE9;ries d\'abdos en fin de chaque s&#xE9;ance','Pecs':'2 s&#xE9;ries de chest press en plus au PUSH','Dos':'2 s&#xE9;ries de rowing en plus au PULL','&#xC9;paules':'2 s&#xE9;ries d\'&#xE9;l&#xE9;vations lat&#xE9;rales en plus','Biceps':'2 s&#xE9;ries de curl en plus au PULL','Triceps':'2 s&#xE9;ries de triceps en plus au PUSH'};
+  if(under.length) return '<strong>'+under.join(' et ')+'</strong> sous '+volBlueMin(under[0])+' s&#xE9;ries 3 semaines de suite&#x202F;: ajoute '+(FIX[under[0]]||'2 s&#xE9;ries de ce muscle')+'.';
+  var e=A.topErrs&&A.topErrs[0];
+  if(e){
+    if(e.early&&e.early>=e.soft&&e.early>=e.hard) return '<strong>'+e.name+'</strong>&#x202F;: S1 &#xE0; OK, S2 &#xE0; DUR, l\'&#xE9;chec seulement sur la derni&#xE8;re s&#xE9;rie ('+e.early+' &#xE9;chec'+(e.early>1?'s':'')+' trop t&#xF4;t cette semaine).';
+    return '<strong>'+e.name+'</strong>&#x202F;: chaque s&#xE9;rie &#xE0; '+(e.reps||'la cible')+(e.reps?' reps':'')+' minimum, ou jusqu\'&#xE0; l\'&#xE9;chec &#x2014; pas d\'arr&#xEA;t entre les deux.';
+  }
+  if(A.v<A.goal) return 'Cale ta '+(Math.floor(A.v)+1)+'<sup>e</sup> s&#xE9;ance d&#xE8;s maintenant dans ton agenda&#x202F;: l\'assiduit&#xE9; vaut 5 points.';
+  try{ var B=bilanNoteWeek(ws); if(B.v===5){ if(B.kcalDays<5) return 'Calories&#x202F;: '+B.kcalDays+'/7 jours &#xE0; 2&#x202F;600 kcal ou plus &#x2014; vise 5 jours sur 7.'; if(B.protDays<5) return 'Prot&#xE9;ines&#x202F;: '+B.protDays+'/7 jours &#xE0; 135 g ou plus &#x2014; vise 5 jours sur 7.'; } }catch(e2){}
+  return 'Rien &#xE0; corriger&#x202F;: m&#xEA;me plan, m&#xEA;mes r&#xE8;gles, et monte d&#xE8;s que le haut de fourchette passe partout.';
+}
 function wrRender(){
   var body=document.getElementById('wrBody'); if(!body||!WR) return;
   var A=WR.A;
@@ -11053,12 +11132,12 @@ function wrRender(){
     if(isGold) h+='<div class="wr-badge gold">&#x1F451; Semaine l&#xE9;gendaire</div>';
     else if(isBlue) h+='<div class="wr-badge blue">&#x2705; Objectif rempli</div>';
     h+='<div class="wr-hook">'+hook+'</div>';
+    try{ var _cs=wrConsigne(WR.week,A); if(_cs) h+='<div class="wr-consigne"><span>&#x1F3AF; Ta consigne pour la semaine</span><p>'+_cs+'</p></div>'; }catch(e){}
     // Chips utiles uniquement (16/08 soir : kg soulevés + séries bonus retirés — « aucun intérêt »)
     var chips=[];
     if(A.prs.length) chips.push('<div class="wr-chip n-gold">&#x1F3C6; '+A.prs.length+' PR cette semaine</div>');
     if(A.avgNote!==null) chips.push('<div class="wr-chip '+note20Cls(A.avgNote)+'">&#x1F4DD; '+String(A.avgNote).replace('.',',')+'/20 de moyenne</div>');
     if(A.stretchCt) chips.push('<div class="wr-chip n-green">&#x1F9D8; '+A.stretchCt+' jour'+(A.stretchCt>1?'s':'')+' &#xE9;tir&#xE9;'+(A.stretchCt>1?'s':'')+'</div>');
-    else if(A.det.length) chips.push('<div class="wr-chip n-red">&#x1F9D8; 0 &#xE9;tirement</div>');
     if(chips.length) h+='<div class="wr-chips">'+chips.join('')+'</div>';
     foot='<button class="as-ghost-btn" onclick="wrClose()">Plus tard</button>'
       +'<button class="as-cta" onclick="wrGoto(1)">C\'est parti &#x203A;</button>';
@@ -11096,7 +11175,7 @@ function wrRender(){
     h+='<div class="wr-say">Maintenant, COMMENT tu as travaill&#xE9;.</div>';
     if(A.avgNote!==null){
       h+='<div class="wr-hero-num small '+note20Cls(A.avgNote)+'"><span class="wr-hero-v" data-cu="'+A.avgNote+'" data-cu-dec="'+(A.avgNote%1?1:0)+'">0</span><span class="wr-hero-sur">/20 de moyenne</span></div>';
-      h+='<div class="wr-hook">'+(A.avgNote>=15?'Ex&#xE9;cution de tr&#xE8;s haut niveau &#x2014; c\'est &#xE7;a qui fait monter les charges.':A.avgNote>=12?'Ex&#xE9;cution correcte. Les d&#xE9;tails ci-dessous valent des points.':'L\'ex&#xE9;cution a co&#xFB;t&#xE9; cher cette semaine &#x2014; regarde bien ce qui suit.')+'</div>';
+      h+='<div class="wr-hook">'+(A.avgNote>=18?'Ex&#xE9;cution en or&#x202F;: ton plan tenu presque partout.':A.avgNote>=14?'Tr&#xE8;s bonne ex&#xE9;cution. Le d&#xE9;tail ci-dessous dit o&#xF9; grappiller.':A.avgNote>=12?'Ex&#xE9;cution correcte&#x202F;: quelques s&#xE9;ries sorties du plan.':'L\'ex&#xE9;cution a co&#xFB;t&#xE9; cher cette semaine &#x2014; regarde ce qui suit.')+'</div>';
     }
     // PR d'abord : la meilleure nouvelle de la semaine mérite une vitrine, pas une bulle (16/08 soir)
     if(A.prs.length){
@@ -11105,7 +11184,7 @@ function wrRender(){
         var parts=p.split(' → '); // format des events RP : « Nom → 56 kg »
         h+='<div class="wr-pr-row"><span>'+(parts[0]||p)+'</span><span class="wr-pr-w">'+(parts[1]?'&#x2197; '+parts[1]:'')+'</span></div>';
       });
-      h+='<div class="wr-pr-sub">La surcharge progressive, c\'est EXACTEMENT &#xE7;a.</div></div>';
+      h+='</div>';
     }
     // Erreurs → PLAN chiffré par exo (16/08 soir : « les descriptions ne m'aident pas »)
     if(A.topErrs.length){
@@ -11113,13 +11192,13 @@ function wrRender(){
       A.topErrs.forEach(function(e){
         var plan;
         if(e.early&&e.early>=e.soft&&e.early>=e.hard){
-          plan=e.early+' &#xE9;chec'+(e.early>1?'s':'')+' en s&#xE9;rie 1 ou 2. Le plan&#x202F;: '+(e.w?'&#xE0; <strong>'+e.w+' kg</strong>, ':'')
+          plan=e.early+' &#xE9;chec'+(e.early>1?'s':'')+' en s&#xE9;rie 1 ou 2. Le plan&#x202F;: '+(e.w?'&#xE0; <strong>'+e.w+' '+e.u+'</strong>, ':'')
             +'S1 &#xE0; OK (2-3 reps en r&#xE9;serve), S2 &#xE0; DUR (1 en r&#xE9;serve), le max seulement sur la derni&#xE8;re. S1 encore &#xE0; l\'&#xE9;chec sous '+(e.reps||'la cible')+(e.reps?' reps':'')+' &#x2192; un cran en dessous.';
         } else if(e.soft>e.hard){
           plan=e.soft+' s&#xE9;rie'+(e.soft>1?'s':'')+' pos&#xE9;e'+(e.soft>1?'s':'')+' entre la cible et l\'&#xE9;chec. Le plan&#x202F;: '
-            +(e.w?'&#xE0; <strong>'+e.w+' kg</strong>, ':'')+'chaque s&#xE9;rie atteint au moins <strong>'+(e.reps||'la cible')+(e.reps?' reps':'')+'</strong> (bas de fourchette)&#x202F;; s\'arr&#xEA;ter avant sans &#xE9;chec, c\'est laisser des reps. Si &#xE7;a cale encore 2 s&#xE9;ances &#x2192; un cran en dessous et tu remplis.';
+            +(e.w?'&#xE0; <strong>'+e.w+' '+e.u+'</strong>, ':'')+'chaque s&#xE9;rie atteint au moins <strong>'+(e.reps||'la cible')+(e.reps?' reps':'')+'</strong> (bas de fourchette)&#x202F;; s\'arr&#xEA;ter avant sans &#xE9;chec, c\'est laisser des reps. Si &#xE7;a cale encore 2 s&#xE9;ances &#x2192; un cran en dessous et tu remplis.';
         } else {
-          plan=e.hard+' vrai'+(e.hard>1?'s':'')+' rat&#xE9;'+(e.hard>1?'s':'')+' (3+ reps sous la cible). Le plan&#x202F;: un cran sous '+(e.w?'<strong>'+e.w+' kg</strong>':'ta r&#xE9;f&#xE9;rence')+', tu remplis toutes les s&#xE9;ries &#xE0; <strong>'+(e.reps||'la cible')+(e.reps?' reps':'')+'</strong> proprement, et tu retestes seulement quand tout passe.';
+          plan=e.hard+' vrai'+(e.hard>1?'s':'')+' rat&#xE9;'+(e.hard>1?'s':'')+' (3+ reps sous la cible). Le plan&#x202F;: un cran sous '+(e.w?'<strong>'+e.w+' '+e.u+'</strong>':'ta r&#xE9;f&#xE9;rence')+', tu remplis toutes les s&#xE9;ries &#xE0; <strong>'+(e.reps||'la cible')+(e.reps?' reps':'')+'</strong> proprement, et tu retestes seulement quand tout passe.';
         }
         h+='<div class="as-rep-note tone-warn"><strong>'+e.name+'</strong><br>'+plan+'</div>';
       });
@@ -11127,11 +11206,7 @@ function wrRender(){
       h+='<div class="as-rep-note tone-good">&#x2728; Aucune erreur r&#xE9;currente d&#xE9;tect&#xE9;e &#x2014; s&#xE9;ries men&#xE9;es au bout, charges respect&#xE9;es. Rare et pr&#xE9;cieux.</div>';
     }
     // Étirements : le zéro se voit en ROUGE (16/08 soir — « beaucoup plus dramatique »)
-    if(A.det.length&&A.stretchCt===0){
-      h+='<div class="wr-alert"><div class="wr-alert-title">&#x1F6A8; Z&#xC9;RO &#xE9;tirement cette semaine</div>'
-        +'<div class="wr-alert-sub">Tes fl&#xE9;chisseurs de hanche tirent ton bassin vers l\'avant &#xE0; chaque jour sans &#xE9;tirement &#x2014; c\'est LE seul non-n&#xE9;gociable de ta posture. 10 min dans D&#xE9;tente &#x1F9D8;, d&#xE8;s ce soir.</div></div>';
-    }
-    else if(A.stretchCt>0) h+='<div class="as-rep-note tone-good">&#x1F9D8; '+A.stretchCt+' jour'+(A.stretchCt>1?'s':'')+' d\'&#xE9;tirements cette semaine'+(FEATURE_RANK?' (+'+(Math.min(A.stretchCt,RANK_ECO.stretchCap)*RANK_ECO.stretchPts)+' pts)':'')+' &#x2014; la posture se gagne l&#xE0;.</div>';
+    if(A.stretchCt>0) h+='<div class="as-rep-note tone-good">&#x1F9D8; '+A.stretchCt+' jour'+(A.stretchCt>1?'s':'')+' d\'&#xE9;tirements cette semaine'+(FEATURE_RANK?' (+'+(Math.min(A.stretchCt,RANK_ECO.stretchCap)*RANK_ECO.stretchPts)+' pts)':'')+' &#x2014; la posture se gagne l&#xE0;.</div>';
     foot='<button class="as-ghost-btn" onclick="wrGoto(1)">&#x2039;</button><button class="as-cta" onclick="wrGoto(3)">Suivant &#x203A;<span class="as-cta-sub">tes muscles</span></button>';
   } else if(i===3){
     // ── Slide 3 : muscle par muscle ──

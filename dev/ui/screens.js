@@ -164,6 +164,8 @@ const MELATI = [
   ['m_push_lost', ["DB.reminders.enabled=true;_mlPushState={state:'lost',reason:'subscribe'};mlRenderPushSettings();document.getElementById('mlPushStatus').scrollIntoView()"]],
   ['m_liveflow', ['asOpen()', "document.querySelector('#asOverlay .as-bigcard').click()"], { scroll: '#asOverlay' }],
 ];
+// Bilan de séance, cartes d'exo DÉPLIÉES (03/11 : une ligne de verdict + 2 alertes max)
+(function(){ var b=ADRIEN.find(function(x){ return x[0]==='a_fs_notes'; }); if(b) ADRIEN.push(['a_fs_notes_open', b[1].concat(["document.querySelectorAll('#asOverlay .as-rep-exo.compact').forEach(function(e){e.classList.add('open');})"]), b[2]]); })();
 module.exports = {
   adrien: { page: 'index.html', seed: 'adrienSeed', list: ADRIEN },
   melati: { page: 'melati.html', seed: 'melatiSeed', list: MELATI },

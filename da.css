@@ -257,3 +257,7 @@ button.bl-sec__link{appearance:none;border:0;background:transparent;font-family:
 .bl-news span{font-size:18px;line-height:1.3;}
 .bl-news p{margin:0;font-size:13px;font-weight:700;line-height:1.45;color:var(--txt);}
 .slbl.slbl-toggle .toggle-arr{opacity:1;color:var(--mut);} /* la flèche était à 0,5 d'opacité (2,3:1) */
+/* 🎯 La consigne de la semaine (bilan hebdo, wrConsigne) */
+.wr-consigne{margin:16px auto 4px;max-width:420px;padding:12px 14px;border-radius:14px;background:var(--x-acc2-08);border:1px solid var(--x-acc2-45);text-align:left;}
+.wr-consigne span{display:block;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--acc2);}
+.wr-consigne p{margin:6px 0 0;font-size:13px;font-weight:700;line-height:1.45;color:var(--txt);}

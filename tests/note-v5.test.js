@@ -102,3 +102,19 @@ test("v5 dès la semaine du 26/10 (demande d'Adrien) : une ancienne gravure v3 d
   run("(mergeBackupIntoDB({noteGrav:{'2026-10-26':{v:3,note:9,at:0}}}),1)");
   assert.equal(run("bilanNoteWeek('2026-10-26').v"), 5, "une gravure v3 venue du cloud ne revient pas");
 });
+
+test("regravure du 03/11 : séances ≥ 26/10 re-notées une seule fois (ancienne note gardée), exo d'avant les fourchettes jugé avec REP_RANGE", () => {
+  const run = load();
+  run(`(DB.logs=[
+    {id:1,date:'2026-10-27',sessions:['s1'],live:{note20:20,exos:[{key:'pecdeck',name:'Pec Deck',n:4,reps:10,w:54,w0:49,unite:'kg',status:'done',sets:[{reps:10,feel:'echec',w:54},{reps:8,feel:'echec',w:54},{reps:9,feel:'echec',w:54},{reps:8,feel:'echec',w:54}]}]}},
+    {id:2,date:'2026-10-19',sessions:['s1'],live:{note20:20,exos:[{key:'pecdeck',n:4,reps:10,w:54,w0:49,unite:'kg',status:'done',sets:[{reps:10,feel:'echec',w:54}]}]}}
+  ],1)`);
+  assert.equal(run("noteRegrade()"), 1, "seule la séance du 27/10 est re-notée");
+  const l = run("DB.logs[0].live");
+  assert.equal(l.note20Prev, 20);
+  assert.equal(l.n20v, 6);
+  assert.equal(l.exos[0].rHi, 12, "fourchette 10-12 du pec deck appliquée");
+  assert.ok(l.note20 <= 16, "échec dès la série 1 : 4/5 au plus → 16/20 au plus");
+  assert.equal(run("DB.logs[1].live.note20"), 20, "avant le 26/10 : rien ne bouge");
+  assert.equal(run("noteRegrade()"), 0, "une seule fois");
+});

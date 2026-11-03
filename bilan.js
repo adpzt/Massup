@@ -19,6 +19,12 @@ var BILAN=(function(){
   // À CHAQUE mise en ligne d'une nouveauté visible : ajouter une entrée EN TÊTE (id = date AAAA-MM-JJ), 3 à 6 lignes courtes.
   // Elle s'affiche une fois par appareil (localStorage massup_news = id déjà vu), sur le Bilan, avant la saisie de la nuit.
   var NEWS=[
+    {id:'2026-11-03b',t:'Bilans plus clairs (3 novembre)',items:[
+      ['\uD83D\uDCCB','Bilan de séance : une seule ligne par exo, la décision et ta prochaine charge.'],
+      ['\uD83C\uDFAF','Bilan de la semaine : une consigne, la plus importante.'],
+      ['\u2696\uFE0F','Notation des exos plus juste : ton plan bien fait (OK · dur · dur · échec) reste noté haut, les séries sous la fourchette coûtent un peu plus.'],
+      ['\uD83D\uDD01','Tes séances et ta semaine du 26 octobre sont recalculées avec ce barème.']
+    ]},
     {id:'2026-11-03',t:'Nouveautés du 3 novembre',items:[
       ['\uD83C\uDFC6','Nouvelle notation /20 depuis la semaine du 26 octobre : Salle /10, Nutrition /6 (tes vraies données Yazio), Activité.'],
       ['\uD83C\uDFC3','La course et le malus des jours sous 1 000 pas comptent à partir de la semaine du 7 décembre.'],
@@ -386,7 +392,8 @@ var BILAN=(function(){
       }).join('')+'</div><button type="button" class="bl-btn bl-btn--primary bl-btn--block" style="margin-top:26px;min-height:56px;font-size:16px" onclick="BILAN.save()">Enregistrer ✓</button>';
     }
     if(S.sheet==='news'){
-      var N=NEWS[0];
+      // Toutes les nouveautés pas encore vues sur cet appareil (la plus récente en premier)
+      var seenId=newsSeen(), unseen=NEWS.filter(function(x){ return x.id>seenId; }), N={t:(unseen[0]||NEWS[0]).t,items:[].concat.apply([],(unseen.length?unseen:[NEWS[0]]).map(function(x){ return x.items; }))};
       return head('\u2728 Nouveautés')+'<div class="bl-meta" style="margin-top:2px">'+esc(N.t)+'</div>'
         +'<div class="bl-news">'+N.items.map(function(it){ return '<div><span aria-hidden="true">'+it[0]+'</span><p>'+esc(it[1])+'</p></div>'; }).join('')+'</div>'
         +'<button type="button" class="bl-btn bl-btn--primary bl-btn--block" style="margin-top:22px;min-height:54px;font-size:17px" onclick="BILAN.close()">C\u2019est noté \u2713</button>';
