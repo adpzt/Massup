@@ -214,6 +214,11 @@
         <option value="5">5 / semaine</option>
       </select>
     </div>
+    <!-- (04/11) Saison Sèche : construite d'avance, active le lundi 4 janvier 2027 ; aperçu par appareil, rien n'est gravé -->
+    <div class="form-row">
+      <label class="form-lbl">Saison Sèche <span style="color:var(--mut);font-weight:600;">(dès le lundi 4 janvier)</span></label>
+      <div id="settingsSeason"></div>
+    </div>
     <div class="form-row" style="margin-top:1.1rem;padding-top:1rem;border-top:1px solid var(--gb);">
       <label class="form-lbl">Rappels et notifications</label>
       <div id="reminderSettings"></div>
@@ -474,6 +479,7 @@ if('serviceWorker' in navigator){
 <script src="state_sync.js"></script>
 <script src="supabase.js"></script>
 <script src="push_timer.js"></script>
+<script src="saison.js"></script>
 <script src="steps.js"></script>
 <script src="intake.js"></script>
 <script src="sleep.js"></script>

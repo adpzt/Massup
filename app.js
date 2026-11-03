@@ -1189,7 +1189,7 @@ function renderGymGreet(){
   var wstart=new Date(now); var dow=wstart.getDay(); var off=dow===0?6:dow-1;
   wstart.setDate(wstart.getDate()-off); wstart.setHours(0,0,0,0);
   var count=weekValue((DB.logs||[]).filter(function(l){return new Date(l.date)>=wstart;}));
-  var GOAL=getWeekGoal(), GOLD=GOAL+1; // 01/11 (Adrien) : affiché sur 5 (le gold), la semaine reste validée à 4
+  var GOAL=(typeof SAISON!=='undefined')?SAISON.weekGoal(todayStr(),getWeekGoal()):getWeekGoal(), GOLD=GOAL+1; // 01/11 (Adrien) : affiché sur 5 (le gold), la semaine reste validée à 4
   var sub;
   if(count<=0) sub='C\'est parti pour la semaine&#x202F;!';
   else if(count<GOAL) sub='Plus que <strong>'+fmtSeances(GOAL-count)+'</strong> pour valider ta semaine &#x1F3AF;';
@@ -1425,6 +1425,14 @@ function weekValue(logs){
 function fmtSeances(n){ return (Math.round(n*10)/10).toString().replace('.',','); }
 
 // Objectif de séances/semaine — configurable dans Paramètres. Défaut 4.
+// Réglages › Saison Sèche (04/11) : interrupteur d'APERÇU (saison.js) — immédiat, sans « Sauvegarder », par appareil
+function renderSettingsSeason(){
+  var el=document.getElementById('settingsSeason'); if(!el||typeof SAISON==='undefined') return;
+  var real=SAISON.realIdAt(todayStr())==='seche', on=SAISON.preview();
+  el.innerHTML=real?'<div style="font-size:.74rem;color:var(--mut);">La S&#xE8;che est en cours.</div>'
+    :'<button type="button" class="btn-primary" style="margin:0;'+(on?'':'background:none;border:1px solid var(--gb);color:var(--txt);')+'" onclick="SAISON.setPreview('+(!on)+')">'+(on?'&#x1F441; Aper&#xE7;u actif &#xB7; le couper':'&#x1F441; Voir l\'aper&#xE7;u de la S&#xE8;che')+'</button>'
+      +'<div style="font-size:.68rem;color:var(--mut);margin-top:.4rem;line-height:1.4;">Le Bilan, les objectifs, la nutrition et la note de la semaine s\'affichent en S&#xE8;che. Rien n\'est grav&#xE9;, tes s&#xE9;ances gardent les r&#xE8;gles actuelles.</div>';
+}
 function getWeekGoal(){
   var g=DB.profile&&DB.profile.weekGoal;
   return (g>=2&&g<=6)?g:4;
@@ -1570,6 +1578,7 @@ function loadCount(key,liveX){
 }
 // Alerte de stagnation : 75 % de l'objectif = « bientôt », 100 % = « il est temps »
 function getProgressNudge(key){
+  if(typeof SAISON!=='undefined'&&SAISON.realIdAt(todayStr())==='seche') return null; // Sèche : tenir la charge, c'est réussi (04/11)
   var lc=loadCount(key); if(!lc) return null;
   var lbl='<strong>'+lc.done+' / '+lc.target+' s&#xE9;ries</strong> &#xE0; '+lc.lbl;
   if(lc.ratio>=1) return {lvl:'hot',chip:'&#x1F534; '+lc.done+'/'+lc.target+' séries',msg:lbl+' &#x2014; l\'objectif de s&#xE9;ries est d&#xE9;pass&#xE9; sans monter&#x202F;: il est temps de charger plus (ou de changer d\'angle&#x202F;: tempo, +1 rep).'};
@@ -1592,7 +1601,7 @@ function lcLiveHtml(x){
   return '<div class="lc-live'+cls+'"><div class="lc-top"><span>&#x1F4CA; S&#xE9;ries &#xE0; '+base.lbl+'</span>'
     +'<strong>'+tot+' / '+T+'</strong></div>'
     +'<div class="lc-bar lc-bar3"><i class="lc-b" style="width:'+wB.toFixed(1)+'%"></i><i class="lc-t holo-fill" style="width:'+wT.toFixed(1)+'%"></i><i class="lc-l" style="width:'+wL.toFixed(1)+'%"></i></div>'
-    +(r>=1?'<div class="lc-sub">Objectif d&#xE9;pass&#xE9;&#x202F;: c\'est le moment de monter.</div>':'')
+    +(r>=1?'<div class="lc-sub">'+((typeof SAISON!=='undefined'&&SAISON.realIdAt(todayStr())==='seche')?'S&#xE8;che&#x202F;: tenir cette charge, c\'est d&#xE9;j&#xE0; gagner.':'Objectif d&#xE9;pass&#xE9;&#x202F;: c\'est le moment de monter.')+'</div>':'')
     +'</div>';
 }
 // Barre « séries à cette charge » de la fiche d'un exo (toujours visible dès qu'il y a des séries)
@@ -3684,6 +3693,7 @@ function openSettings(){
   var a=document.getElementById('settingsAge'); if(a) a.value=p.age||'';
   var g=document.getElementById('settingsGoal'); if(g) g.value=p.goal||'masse';
   var wg=document.getElementById('settingsWeekGoal'); if(wg) wg.value=String(getWeekGoal());
+  renderSettingsSeason();
   try{ renderRankPauses(); }catch(e){}
   renderReminderSettings();
   document.getElementById('settingsModal').classList.add('open');
@@ -4978,7 +4988,8 @@ function asMakeExo(key,extra,eDef,sDef){
     unite:e.unite||'kg',cnt:e.cnt||null,rest:e.rest||60,inc:e.inc||1,repT:!!e.repTarget,uni:!!e.uni,
     n:t.n,reps:rg?rg[0]:t.reps,rHi:rg?rg[1]:null,w0:getCurrentWeight(key),weight:ev?ev.to:getCurrentWeight(key),
     evo:ev?{from:ev.from,to:ev.to,hi:Math.min(ev.hi||1,t.n)}:null,
-    t:st,extra:!!extra,added:false,status:'pending',sets:[]};
+    t:st,extra:!!extra,added:false,status:'pending',sets:[],
+    sz:(typeof SAISON!=='undefined'&&SAISON.realIdAt(todayStr())==='seche')?'seche':undefined}; // saison RÉELLE de la séance (04/11)
 }
 
 // ── ÉVOLUTION DE CHARGE (15/08/2026, demande Adrien — sens inversé le 22/08/2026) ──
@@ -5648,8 +5659,9 @@ function asLegsRequirement(){
   if(!sel.sid) return {ok:true,msg:''};
   var s=DATA.find(function(x){return x.id===sel.sid;});
   if(!s||(s.t!=='push'&&s.t!=='pull')) return {ok:true,msg:''};
-  if(asPrevSessionHas().legs) return {ok:true,msg:''};
-  if(!sel.legsMain) return {ok:false,need:true,msg:'&#x1F9B5; Pas de jambes &#xE0; ta derni&#xE8;re s&#xE9;ance &#x2014; choisis <strong>ton exo jambes du jour</strong> pour valider celle-ci.'};
+  var _szL=typeof SAISON!=='undefined'&&SAISON.realIdAt(todayStr())==='seche'; // Sèche (04/11) : « plus de jambes » → à chaque séance
+  if(!_szL&&asPrevSessionHas().legs) return {ok:true,msg:''};
+  if(!sel.legsMain) return {ok:false,need:true,msg:_szL?'&#x1F9B5; S&#xE8;che&#x202F;: un exo jambes &#xE0; chaque s&#xE9;ance &#x2014; choisis <strong>ton exo jambes du jour</strong>.':'&#x1F9B5; Pas de jambes &#xE0; ta derni&#xE8;re s&#xE9;ance &#x2014; choisis <strong>ton exo jambes du jour</strong> pour valider celle-ci.'};
   return {ok:true,need:true,msg:''};
 }
 // ── Règle abdos (04/08) : toute séance PUSH/PULL/LEGS doit embarquer AU MOINS 1 exo abdo,
@@ -7287,7 +7299,7 @@ function asPersistLog(){
   var live={
     // main = statut principal/bonus FIGÉ au moment de la séance (15/08) : les refontes de
     // programme ne réécrivent plus les notes passées. note20 = la note /20 gravée (idem).
-    exos:AS.exos.map(function(x){return {key:x.key,w:x.weight,w0:x.w0,n:x.n,reps:x.reps,rHi:x.rHi||undefined,unite:x.unite,cnt:x.cnt||null,status:x.status,extra:!!(x.extra||x.added),main:!liveExoSide(x),sets:x.sets,sk:x.skippedSets||0,pain:!!x.pain,tc:x.tc||undefined,evo:x.evo?{from:x.evo.from,to:x.evo.to,hi:x.evo.hi}:null,cardio:x.cardio&&(x.sets||[]).length?x.cardio:undefined};}),
+    exos:AS.exos.map(function(x){return {key:x.key,w:x.weight,w0:x.w0,n:x.n,reps:x.reps,rHi:x.rHi||undefined,unite:x.unite,cnt:x.cnt||null,status:x.status,extra:!!(x.extra||x.added),main:!liveExoSide(x),sets:x.sets,sk:x.skippedSets||0,pain:!!x.pain,tc:x.tc||undefined,sz:x.sz||undefined,evo:x.evo?{from:x.evo.from,to:x.evo.to,hi:x.evo.hi}:null,cardio:x.cardio&&(x.sets||[]).length?x.cardio:undefined};}),
     pain:AS.end.pain,painAny:AS.end.painAny,pains:(AS.end.pains||[]).filter(function(p){return p.lvl;}),painNote:AS.end.painNote||'',
     context:AS.end.context||null,
     stretch:AS.end.stretch===true,
@@ -7391,7 +7403,8 @@ function asSetQualityV4(x,s,setNo){
     var near=s.reps>=lo-setTol(lo);
     var sw=(s.w!=null?s.w:x.w)||0;
     var heavier=/kg/.test(x.unite||'')&&x.w0>0&&!asIsInverse(x.key)&&sw>x.w0;
-    rq=near?((g==='echec'&&s.feel==='echec')||heavier?1:0.75):0.4; // 03/11 : 0,8 → 0,75 · 0,5 → 0,4 (reps sous la fourchette)
+    var hold=x.sz==='seche'&&s.reps>=lo-1&&/kg/.test(x.unite||'')&&x.w0>0&&(asIsInverse(x.key)?sw<=x.w0:sw>=x.w0); // Sèche (04/11) : MAINTIEN de la charge à 1 rep près = réussi
+    rq=near?((g==='echec'&&s.feel==='echec')||heavier||hold?1:0.75):0.4; // 03/11 : 0,8 → 0,75 · 0,5 → 0,4 (reps sous la fourchette)
   }
   return fq*rq;
 }
@@ -9991,7 +10004,7 @@ function gelDaysInWeek(ws){
 // Règle Adrien (26/08 soir, simplifiée) : le gel est exceptionnel → rien ne change SAUF si la semaine
 // compte ≥2 jours gelés : l'objectif de séances est alors plafonné à 3 (et le bilan hebdo le dit).
 function gelWeekGoal(ws){
-  var g=getWeekGoal(), f=gelDaysInWeek(ws);
+  var g=(typeof SAISON!=='undefined')?SAISON.weekGoal(ws,getWeekGoal()):getWeekGoal(), f=gelDaysInWeek(ws); // Sèche : 3 (04/11)
   if(f<2) return g;
   return Math.min(g,3);
 }
@@ -10647,6 +10660,15 @@ function runWeekAuto(monday){
   var end=rankAddDays(monday,6);
   return (DB.logs||[]).filter(function(l){ return l.date>=monday&&l.date<=end&&cardioLogHasRun(l); }).length;
 }
+// Séances de la semaine avec au moins un exo ABDO compté (objectif « abdos » de la Sèche, 04/11 — automatique)
+function abdoWeekAuto(monday){
+  var end=rankAddDays(monday,6);
+  return (DB.logs||[]).filter(function(l){
+    if(l.date<monday||l.date>end) return false;
+    if(l.live&&l.live.exos) return l.live.exos.some(function(x){ var i=findExoIndex(x.key); return i&&i.exo&&i.exo.cat==='abdo'&&liveExoCounted(x); });
+    return (l.sessions||[]).some(function(sid){ if(sid.indexOf('exo:')!==0) return false; var i=findExoIndex(sid.slice(4)); return !!(i&&i.exo&&i.exo.cat==='abdo'); });
+  }).length;
+}
 function renderBilanWeekNut(){
   if(!document.getElementById('bilanWeekNut')){ try{ BILAN.render(); }catch(e){} return; } // page Bilan v6 (bilan.js)
   var el=document.getElementById('bilanWeekNut'); if(!el) return;
@@ -10756,6 +10778,7 @@ function noteWeekClosed(ws){ return Date.now()>=new Date(rankAddDays(ws,6)+'T20:
 function noteRefreshAt(){ try{ return Number(localStorage.getItem('massup_refreshAt'))||0; }catch(e){ return 0; } }
 function noteCanGrave(ws){
   if(typeof _cloudPullOk==='undefined'||!_cloudPullOk) return false;
+  if(typeof SAISON!=='undefined'&&SAISON.previewAt(ws)) return false; // aperçu de la Sèche : rien ne se grave (04/11)
   if(ws<NOTE_V5_START) return true; // anciennes semaines : stables, gravées dès que le cloud est chargé
   if(Date.now()<new Date(rankAddDays(ws,7)+'T05:00:00').getTime()) return false; // à partir du lundi matin
   var sun20=new Date(rankAddDays(ws,6)+'T20:00:00').getTime(), r=noteRefreshAt();
@@ -10851,11 +10874,12 @@ function bilanNoteWeekV5(ws){
   var notes=logs.map(liveLogNote20).filter(function(n){ return n!=null; });
   var avg=notes.length?notes.reduce(function(s,n){ return s+n; },0)/notes.length:null;
   var pQ=avg!=null?Math.min(5,avg/4):0;
-  // Nutrition /6 (Yazio)
+  // Nutrition /6 (Yazio) — seuils de la SAISON (04/11) : masse ≥ 2 600 kcal · ≥ 135 g P ; Sèche 2 100-2 600 kcal (le déficit) · ≥ 150 g P
+  var SZ=(typeof SAISON!=='undefined')?SAISON.cfg(ws):null, NZ=SZ?SZ.note:{kcalLo:NOTE_V5.kcalDay,kcalHi:null,protDay:NOTE_V5.protDay};
   var kd=0, pd=0;
   for(var d=0;d<7;d++){ var day=rankAddDays(ws,d); if(day>t) break;
     var k=typeof INTAKE!=='undefined'?INTAKE.val(day,'kcal'):null, p=typeof INTAKE!=='undefined'?INTAKE.val(day,'prot'):null;
-    if(k!=null&&k>=NOTE_V5.kcalDay) kd++; if(p!=null&&p>=NOTE_V5.protDay) pd++; }
+    if(k!=null&&k>=NZ.kcalLo&&(NZ.kcalHi==null||k<=NZ.kcalHi)) kd++; if(p!=null&&p>=NZ.protDay) pd++; }
   var shk=ans?(ans.shaker||0):nutWeekCount('shaker',ws);
   var pK=kd/7*3, pP=pd/7*2, pS=Math.min(1,shk/7);
   // Activité /4
@@ -10874,11 +10898,11 @@ function bilanNoteWeekV5(ws){
   var raw=pA+pQ+pK+pP+pS+(pSteps||0)+pN+(runOn?pR:0), tot=runOn?raw:raw*20/19;
   var pil=[
     {k:'salle',i:'🏋️',l:'Salle',m:10,c:[['Assiduité',fmtSeances(v)+'/'+goal+' séances',pA,5],['Qualité',avg!=null?'moy. '+String(r1(avg)).replace('.',',')+'/20':'pas de note',pQ,5]]},
-    {k:'nut',i:'🍽️',l:'Nutrition',m:6,c:[['Jours ≥ 2 600 kcal',kd+'/7',pK,3],['Jours ≥ 135 g de protéines',pd+'/7',pP,2],['Shaker',shk+'/7',pS,1]]},
+    {k:'nut',i:'🍽️',l:'Nutrition',m:6,c:[[NZ.kcalHi!=null?'Jours dans le déficit ('+NZ.kcalLo.toLocaleString('fr-FR')+'-'+NZ.kcalHi.toLocaleString('fr-FR')+' kcal)':'Jours ≥ '+NZ.kcalLo.toLocaleString('fr-FR')+' kcal',kd+'/7',pK,3],['Jours ≥ '+NZ.protDay+' g de protéines',pd+'/7',pP,2],['Shaker',shk+'/7',pS,1]]},
     {k:'act',i:'👟',l:'Activité',m:runOn?4:3,c:[['Pas',sw&&sw.sum?Math.round(sw.sum).toLocaleString('fr-FR')+'/50 000':'non renseignés',pSteps||0,2],['Nuits ≥ 7 h',nights+'/7',pN,1]].concat(runOn?[['Course',(run>=1?1:0)+'/1',pR,1]]:[])}
   ];
   pil.forEach(function(P){ P.c=P.c.map(function(c){ return [c[0],c[1],r1(c[2]),c[3]]; }); P.p=r1(P.c.reduce(function(a,c){ return a+c[2]; },0)); });
-  return {v:5,note:Math.max(0,Math.min(20,Math.round((tot-mal)*2)/2)),pil:pil,malus:malus,scaled:runOn?0:1,
+  return {v:5,sz:SZ?SZ.id:'masse',note:Math.max(0,Math.min(20,Math.round((tot-mal)*2)/2)),pil:pil,malus:malus,scaled:runOn?0:1,
     salle:v,goal:goal,avg:avg,stepAvg:sw?sw.avg:null,shk:shk,run:run,maison:ans?(ans.maison||0):nutWeekCount('maison',ws),
     kcalDays:kd,protDays:pd,nights:nights,blood:malus.filter(function(m){ return /pas$/.test(m.l); }).length,runReq:runOn,runMiss:runMiss,declared:!!ans};
 }
@@ -11329,7 +11353,14 @@ function wrRender(){
     if(A.bwDelta!==null){
       var rate=A.bwDelta;
       // Fin de prise de masse (v3, 12/10) : le poids doit rester STABLE jusqu'à la sèche du 4 janvier
-      var rMsg=WR.v3?(rate>0.3?'&#x26A0; &#xC7;a monte encore &#x2014; on est en fin de prise de masse : l\'objectif est un poids STABLE (73-74 kg max) jusqu\'&#xE0; la s&#xE8;che du 4 janvier.':
+      // Sèche (04/11) : la zone utile est −0,35 à −0,55 kg/sem ; plateau = cardio salle, trop rapide = remonter un peu
+      var _szW=typeof SAISON!=='undefined'&&SAISON.is('seche',WR.week);
+      var rMsg=_szW?(rate>-0.15?'&#x1F50E; Poids qui ne baisse pas &#x2014; si &#xE7;a dure 2 semaines&#x202F;: + 20 &#xE0; 30 min de cardio salle apr&#xE8;s la muscu.':
+        rate>-0.35?'&#x1F642; &#xC7;a baisse, un peu lentement (zone : &#x2212;0,35 &#xE0; &#x2212;0,55 kg/sem). Les plats maison font la diff&#xE9;rence.':
+        rate>=-0.55?'&#x2705; Pile dans la zone de s&#xE8;che (&#x2212;0,35 &#xE0; &#x2212;0,55 kg/sem). Continue exactement pareil.':
+        rate>=-0.8?'&#x26A0; Un peu rapide &#x2014; v&#xE9;rifie tes 160 g de prot&#xE9;ines pour garder le muscle.':
+        '&#x1F6A8; Trop rapide (&#x2212;0,8 kg/sem ou plus) &#x2014; remonte d\'environ 150 kcal : on veut perdre du gras, pas du muscle.')
+        :WR.v3?(rate>0.3?'&#x26A0; &#xC7;a monte encore &#x2014; on est en fin de prise de masse : l\'objectif est un poids STABLE (73-74 kg max) jusqu\'&#xE0; la s&#xE8;che du 4 janvier.':
         rate>=-0.25?'&#x2705; Poids stable &#x2014; exactement l\'objectif de fin de prise : on garde la force, on ne prend plus.':
         '&#x1F50E; Poids en baisse &#x2014; pas encore la s&#xE8;che : il manque des calories (plats maison + shaker).')
         :rate>0.55?'&#x26A0; Rythme au-dessus de la zone utile (0,25-0,4 kg/sem) &#x2014; si &#xE7;a se r&#xE9;p&#xE8;te 2-3 semaines, on enl&#xE8;ve ~200 kcal.':
@@ -11338,7 +11369,7 @@ function wrRender(){
         '&#x1F6A8; Poids en baisse en pleine prise de masse &#x2014; l&#xE0; c\'est s&#xFB;r&#x202F;: tu ne manges pas assez.';
       h+='<div class="as-lbl" style="margin-top:1rem;">&#x2696;&#xFE0F; Ton poids</div>'
         +'<div class="wr-bw"><span class="wr-bw-v" data-cu="'+A.bwEnd.weight_kg+'" data-cu-dec="1">0</span><span class="wr-bw-u">kg</span>'
-        +'<span class="wr-bw-d '+(rate>0.55?'warn':rate>=0.15?'ok':'warn')+'">'+(rate>0?'+':'')+String(rate).replace('.',',')+' kg cette semaine</span></div>'
+        +'<span class="wr-bw-d '+(_szW?(rate<=-0.35&&rate>=-0.55?'ok':'warn'):(rate>0.55?'warn':rate>=0.15?'ok':'warn'))+'">'+(rate>0?'+':'')+String(rate).replace('.',',')+' kg cette semaine</span></div>'
         +'<div class="as-rep-note">'+rMsg+'</div>';
     }
     foot='<button class="as-ghost-btn" onclick="wrGoto(3)">&#x2039;</button>'
@@ -11661,8 +11692,8 @@ function mrRender(){
     if(A.bwDelta!==null){
       h+='<div class="as-lbl" style="margin-top:1rem;">&#x2696;&#xFE0F; Ton poids sur le mois</div>'
         +'<div class="wr-bw"><span class="wr-bw-v" data-cu="'+A.bwEnd.weight_kg+'" data-cu-dec="1">0</span><span class="wr-bw-u">kg</span>'
-        +'<span class="wr-bw-d '+(A.bwDelta>2.2?'warn':A.bwDelta>=0.6?'ok':'warn')+'">'+(A.bwDelta>0?'+':'')+String(A.bwDelta).replace('.',',')+' kg ce mois</span></div>'
-        +'<div class="as-rep-note">'+(_om.v===3?(A.bwDelta>1?'&#x26A0; Plus d\'1 kg sur le mois &#x2014; en fin de prise, le poids doit rester stable jusqu\'&#xE0; la s&#xE8;che du 4 janvier.':A.bwDelta>=-1?'&#x2705; Poids stable &#x2014; la fin de prise se passe comme pr&#xE9;vu : la force monte, le poids ne bouge plus.':'&#x1F50E; Poids en baisse avant la s&#xE8;che &#x2014; il manque des calories : plats maison et shaker d\'abord.'):A.bwDelta>2.2?'&#x26A0; Plus de 2 kg sur un mois&#x202F;: une partie part en gras. Vise 1 &#xE0; 1,7 kg/mois &#x2014; l&#xE8;ve un peu le pied sur le surplus.':A.bwDelta>=0.6?'&#x2705; Rythme de prise propre (1-1,7 kg/mois = la zone). Continue pareil.':'&#x1F50E; Prise trop lente pour un bulk &#x2014; il manque des calories quelque part (petits-d&#xE9;j&#x202F;?).')+'</div>';
+        +'<span class="wr-bw-d '+((typeof SAISON!=='undefined'&&SAISON.is('seche',A.mEnd))?(A.bwDelta<=-1.5&&A.bwDelta>=-2.4?'ok':'warn'):(A.bwDelta>2.2?'warn':A.bwDelta>=0.6?'ok':'warn'))+'">'+(A.bwDelta>0?'+':'')+String(A.bwDelta).replace('.',',')+' kg ce mois</span></div>'
+        +'<div class="as-rep-note">'+((typeof SAISON!=='undefined'&&SAISON.is('seche',A.mEnd))?(A.bwDelta>-0.6?'&#x1F50E; Le poids n\'a presque pas boug&#xE9; ce mois &#x2014; ajoute du cardio salle et serre les plats maison.':A.bwDelta>-1.5?'&#x1F642; &#xC7;a descend, un peu lentement (vise &#x2212;1,5 &#xE0; &#x2212;2,4 kg par mois).':A.bwDelta>=-2.4?'&#x2705; Mois de s&#xE8;che parfait : pile dans la zone (&#x2212;1,5 &#xE0; &#x2212;2,4 kg).':'&#x26A0; Plus de 2,4 kg perdus en un mois &#x2014; remonte un peu les calories pour garder le muscle.'):_om.v===3?(A.bwDelta>1?'&#x26A0; Plus d\'1 kg sur le mois &#x2014; en fin de prise, le poids doit rester stable jusqu\'&#xE0; la s&#xE8;che du 4 janvier.':A.bwDelta>=-1?'&#x2705; Poids stable &#x2014; la fin de prise se passe comme pr&#xE9;vu : la force monte, le poids ne bouge plus.':'&#x1F50E; Poids en baisse avant la s&#xE8;che &#x2014; il manque des calories : plats maison et shaker d\'abord.'):A.bwDelta>2.2?'&#x26A0; Plus de 2 kg sur un mois&#x202F;: une partie part en gras. Vise 1 &#xE0; 1,7 kg/mois &#x2014; l&#xE8;ve un peu le pied sur le surplus.':A.bwDelta>=0.6?'&#x2705; Rythme de prise propre (1-1,7 kg/mois = la zone). Continue pareil.':'&#x1F50E; Prise trop lente pour un bulk &#x2014; il manque des calories quelque part (petits-d&#xE9;j&#x202F;?).')+'</div>';
     }
     foot='<button class="as-ghost-btn" onclick="mrGoto(2)">&#x2039;</button><button class="as-cta" onclick="mrGoto(4)">Le verdict &#x203A;</button>';
   } else {

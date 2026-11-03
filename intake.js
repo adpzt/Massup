@@ -28,6 +28,18 @@ var INTAKE=(function(){
     {k:'potassium',lbl:'Potassium',u:'mg',goal:3500,kind:'min',col:'mic',info:1}
   ];
   var BY={}; NUT.forEach(function(n){ BY[n.k]=n; });
+  // Objectifs de la SAISON affichée (04/11, saison.js) : masse 2 900 kcal · 150 P · lipides 75/85 ; Sèche 2 450 kcal (2 600 max) ·
+  // 160 P · lipides 65/75. Les valeurs de NUT ci-dessus = la masse ; syncGoals les ajuste avant chaque rendu (aperçu compris).
+  var BASE={}; NUT.forEach(function(n){ BASE[n.k]={goal:n.goal,low:n.low,max:n.max,kind:n.kind}; });
+  function syncGoals(){
+    var c=(typeof SAISON!=='undefined')?SAISON.cfg().nut:null;
+    NUT.forEach(function(n){
+      var b=BASE[n.k], o=(c&&c[n.k])||{};
+      n.goal=o.goal!=null?o.goal:b.goal; n.kind=o.kind||b.kind;
+      n.low=('low' in o)?o.low:(o.kind&&o.kind!==b.kind?undefined:b.low);
+      n.max=('max' in o)?o.max:(o.kind&&o.kind!==b.kind?undefined:b.max);
+    });
+  }
   var MACROS=['glu','prot','lip'];
   var cache={days:{},syncAt:0}, _pullAt=0, _status=null, _refreshUntil=0;
 
@@ -246,6 +258,7 @@ var INTAKE=(function(){
     return '<div class="bl-top"><button type="button" class="bl-ib bl-ib--fill" onclick="INTAKE.close()" aria-label="Fermer">✕</button><div style="min-width:0"><h1 class="bl-top__t">🍽️ Nutrition</h1></div><span></span></div>';
   }
   function render(fresh){
+    syncGoals();
     var body=$('inBody'); if(!body) return;
     var h=topBar();
     if(!Object.keys(cache.days).length){
@@ -301,6 +314,7 @@ var INTAKE=(function(){
      bl-macro du Bilan, resserré), carte entière touchable vers la page Nutrition. 04/11 : kcal + 3 macros SEULEMENT
      (Adrien : fibres, sucres… « cool dans la vraie page Nutrition, pas en avant sur le calendrier »). */
   function dayCardHtml(d){
+    syncGoals();
     var e=day(d); if(!e) return '';
     var n=BY.kcal, pct=Math.round(e.kcal/n.goal*100);
     var mac=MACROS.map(function(k){
@@ -320,7 +334,7 @@ var INTAKE=(function(){
 
   function init(adapter){ A=adapter; load(); }
   // ready() : la lecture serveur de CETTE session a réussi (la gravure de la note v5 l'attend — 03/11)
-  return {init:init,ready:function(){ return _status==='ok'; },syncAt:function(){ return cache.syncAt||0; },renderCard:renderCard,open:open,close:close,refresh:refresh,pull:pull,day:day,val:val,avg:avg,last7:last7,last15:last15,NUT:NUT,
+  return {init:init,ready:function(){ return _status==='ok'; },syncAt:function(){ return cache.syncAt||0; },renderCard:renderCard,open:open,close:close,refresh:refresh,pull:pull,day:day,val:val,avg:avg,last7:last7,last15:last15,NUT:NUT,syncGoals:syncGoals,
     dayCardHtml:dayCardHtml,days:function(){ return cache.days; },
     _metric:setMetric,_mode:setMode,_select:select,_page:page};
 })();

@@ -65,7 +65,12 @@ var BILAN=(function(){
   function noteN(v){ return v<8?1:v<12?2:v<14?3:v<18?4:5; }
   var NOTE_PAL=['','rouge sang','rouge','gris','bleu','gold'];
 
-  function saison(d){ d=d||today(); for(var i=0;i<SAISONS.length;i++){ if(d<=SAISONS[i].end) return SAISONS[i]; } return SAISONS[SAISONS.length-1]; }
+  function saison(d){ d=d||today(); var id=(typeof SAISON!=='undefined')?SAISON.idAt(d):(d>=SAISONS[1].start?'seche':'masse'); return id==='seche'?SAISONS[1]:SAISONS[0]; }
+  function seche(){ return saison().id==='seche'; }
+  // Couleurs du poids selon la saison (04/11) : en masse, monter = vert ; en Sèche, baisser = vert, et le rythme
+  // est vert dans la zone −0,35 à −0,55 kg/sem (gris un peu lent, rouge hors zone : plateau ou trop rapide)
+  function dCls(d){ if(d==null) return ''; return seche()?(d<=0?'bl-pos':'bl-neg'):(d>=0?'bl-pos':'bl-neg'); }
+  function rCls(r){ if(r==null) return ''; if(!seche()) return r>=0?'bl-pos':'bl-neg'; var z=SAISON.CFG.seche.rate; return r>=z[0]&&r<=z[1]?'bl-pos':(r>z[1]&&r<=-0.15)?'bl-mut':'bl-neg'; }
   function weights(){ return (DB.bodyWeight||[]).filter(function(b){ return b&&b.date&&parseFloat(b.weight_kg)>0; }); }
 
   /* ══════════ PAGE BILAN ══════════ */
@@ -75,7 +80,16 @@ var BILAN=(function(){
       var denied=_pushState.reason==='denied';
       L.push(['🔕','Notifications coupées',denied?'Réglages':'Réactiver',denied?'openSettings()':'enablePushNotifications()']);
     }
+    if(typeof SAISON!=='undefined'&&SAISON.previewAt(today())) L.push(['👁','Aperçu Sèche','Quitter','SAISON.setPreview(false)']);
     if(typeof SPORT!=='undefined'&&SPORT.active()) L.push(['🏃','Course en cours','Reprendre','SPORT.resume()']);
+    if(seche()){
+      // Plateau 2 semaines (cardio salle conditionnel, décision 12/10) : pente des pesées sur 14 jours au-dessus de −0,15 kg/sem
+      var R14=null; try{ R14=bwRate(weights(),14); }catch(e){}
+      if(R14&&R14.rate>-0.15) L.push(['🫀','Plateau 2 sem.','+ cardio',"BILAN.go('poids')"]);
+      // Photo du mois (les 3 premiers jours du mois ; l'app ne stocke pas les photos)
+      var dm=parseInt(today().slice(8,10),10), pk='massup_photo_'+today().slice(0,7), seen=false; try{ seen=localStorage.getItem(pk)==='1'; }catch(e){}
+      if(dm<=3&&!seen) L.push(['📸','Photo du mois','Faite',"BILAN.photoDone()"]);
+    }
     var wk=null; try{ wk=wrPendingWeek(); }catch(e){}
     if(wk) L.push(['📊','Bilan de la semaine prêt',dshort(wk),"wrOpen('"+wk+"')"]);
     var mk=null; try{ mk=mrPendingMonth(); }catch(e){}
@@ -87,18 +101,18 @@ var BILAN=(function(){
   }
 
   function situationHtml(){
-    var p=DB.profile||{}, name=p.name||'Adrien', sa=saison(), j=Math.max(0,days(today(),sa.id==='masse'?SAISONS[1].start:sa.end));
+    var p=DB.profile||{}, name=p.name||'Adrien', sa=saison(), prv=typeof SAISON!=='undefined'&&SAISON.previewAt(today()), j=Math.max(0,days(today(),sa.id==='masse'?SAISONS[1].start:sa.end));
     var ws=weights(), last=ws[ws.length-1], prev=ws[ws.length-2];
     var poids=last
       ? '<button type="button" class="bl-hero__it" onclick="BILAN.go(\'poids\')"><div class="bl-lbl">⚖️ Poids</div><div class="bl-num bl-hero__v"><span class="bl-hero-txt">'+fr(parseFloat(last.weight_kg),1)+'</span>'+u('kg')+'</div><div class="bl-hero__s">'
-        +(prev?'<span class="'+(last.weight_kg-prev.weight_kg>=0?'bl-pos':'bl-neg')+'">'+sgn(last.weight_kg-prev.weight_kg,1)+' kg</span> ':'')+'<span class="bl-mut">· '+dshort(last.date)+'</span></div></button>'
+        +(prev?'<span class="'+dCls(last.weight_kg-prev.weight_kg)+'">'+sgn(last.weight_kg-prev.weight_kg,1)+' kg</span> ':'')+'<span class="bl-mut">· '+dshort(last.date)+'</span></div></button>'
       : '<div class="bl-hero__it"><div class="bl-lbl">⚖️ Poids</div><button type="button" class="bl-btn bl-btn--primary bl-btn--sm" style="margin-top:12px" onclick="BILAN.sheet(\'pesee\')">+ 1re pesée</button></div>';
     var kc=null, goal=2900;
     if(typeof INTAKE!=='undefined'){ var w=INTAKE.last15(); kc=INTAKE.avg(w.start,w.end,'kcal').v; goal=INTAKE.NUT[0].goal; }
     var kcal=kc!=null
       ? '<button type="button" class="bl-hero__it" onclick="INTAKE.open()"><div class="bl-lbl">🍽️ kcal · 15 jours</div><div class="bl-num bl-hero__v"><span class="bl-hero-txt">'+nf(kc)+'</span></div><div class="bl-hero__s bl-mut">sur '+nf(goal)+' · '+Math.round(kc/goal*100)+NB+'%</div></button>'
       : '<div class="bl-hero__it"><div class="bl-lbl">🍽️ kcal · 15 jours</div><div class="bl-num bl-hero__v bl-mut">—</div><div class="bl-hero__s bl-mut">rien de Yazio</div></div>';
-    return '<section class="bl-sit"><div class="bl-sit__top"><h1 class="bl-sit__name">'+esc(name)+'</h1><span class="bl-pill">'+sa.lbl+' · J-'+j+'</span></div><div class="bl-hero">'+poids+kcal+'</div></section>';
+    return '<section class="bl-sit"><div class="bl-sit__top"><h1 class="bl-sit__name">'+esc(name)+'</h1><span class="bl-pill">'+sa.lbl+(prv?' · aperçu':' · J-'+j)+'</span></div><div class="bl-hero">'+poids+kcal+'</div></section>';
   }
 
   function objectivesHtml(B0){
@@ -109,6 +123,7 @@ var BILAN=(function(){
       ['shaker','🥤','Shaker',nutWeekCount('shaker',mon),o.shk||7,true],
       ['run','🏃','Courir',run,o.run||1,true]
     ];
+    if(seche()){ var ab=0; try{ ab=abdoWeekAuto(mon); }catch(e){} rows.push(['abdos','🔥','Séances avec abdos',ab,SAISON.CFG.seche.abdos,false]); }
     return '<section class="bl-obj" aria-label="Objectifs de la semaine">'+rows.map(function(r){
       var k=r[0],v=r[3],g=r[4],done=v>=g, cls=done?'is-done':v===0?'is-zero':'';
       var cap=r[5]?nutTapMax(k):g;
@@ -232,7 +247,7 @@ var BILAN=(function(){
       +'<button type="button" class="bl-chart__hit" data-c="'+c+'" onclick="BILAN.pick(event,this)" aria-label="Lire une pesée sur la courbe"></button></div>';
   }
   function axHtml(md,lg){ return '<div class="bl-ax bl-ax--abs'+(lg?' bl-ax--lg':'')+'">'+md.ax.map(function(a){ return '<span style="left:'+a[0]+'%">'+a[1]+'</span>'; }).join('')+'</div>'; }
-  function rateTxt(){ var R=bwRate(weights()); return R?'<span class="'+(R.rate>=0?'bl-pos':'bl-neg')+'" style="font-weight:800">'+sgn(R.rate,2)+' kg/sem</span>':''; }
+  function rateTxt(){ var R=bwRate(weights()); return R?'<span class="'+rCls(R.rate)+'" style="font-weight:800">'+sgn(R.rate,2)+' kg/sem</span>':''; }
   function readHtml(md,selIdx,withDelta){
     var sel=selIdx!=null?md.pts[selIdx]:null;
     if(!sel) return '<div class="bl-read"><span>Tendance <span class="bl-num" style="font-size:18px">'+(md.trend==null?'—':fr(md.trend,1)+' kg')+'</span></span>'+rateTxt()+'</div>';
@@ -256,9 +271,9 @@ var BILAN=(function(){
     var M=null; try{ M=bilanNoteMonth(pmk); }catch(e){}
     if(M&&M.salle) rows.push([mrMonthLabel(pmk),'mois · '+M.salle+' séances',M.note,"mrOpen('"+pmk+"',true)"]);
     var older=[], season=rankCurrentSeason();
-    for(var j=2;j<=30;j++){ var w2=rankAddDays(curWs,-7*j); if(season&&w2<season.start) break; var B2=bilanNoteWeek(w2); if(B2.salle) older.push(['Sem. du '+dshort(w2),det(B2)+(B2.graved?' · gravée':''),B2.note,"BILAN.note('"+w2+"')"]); }
+    for(var j=2;j<=30;j++){ var w2=rankAddDays(curWs,-7*j); if(season&&w2<season.start) break; var B2=bilanNoteWeek(w2); if(B2.salle&&saison(w2).id!==saison(rankAddDays(w2,7)).id) older.push(['Saison 1 · Prise de masse','archivée, relisible',null,'']); if(B2.salle) older.push(['Sem. du '+dshort(w2),det(B2)+(B2.graved?' · gravée':''),B2.note,"BILAN.note('"+w2+"')"]); }
     if(S.allw) rows=rows.concat(older);
-    var row=function(r){ return '<button type="button" class="bl-nrow" onclick="'+r[3]+'"><div style="min-width:0"><div class="bl-nrow__n">'+r[0]+'</div><div class="bl-nrow__s">'+r[1]+'</div></div><div class="bl-num bl-nrow__v" style="color:var(--bl-note-'+noteN(r[2])+')">'+fr(r[2],1)+u('/20')+'<span class="bl-mut bl-nrow__a" aria-hidden="true">›</span></div></button>'; };
+    var row=function(r){ if(r[2]==null) return '<div class="bl-nsep">'+r[0]+' <span class="bl-mut">· '+r[1]+'</span></div>'; return '<button type="button" class="bl-nrow" onclick="'+r[3]+'"><div style="min-width:0"><div class="bl-nrow__n">'+r[0]+'</div><div class="bl-nrow__s">'+r[1]+'</div></div><div class="bl-num bl-nrow__v" style="color:var(--bl-note-'+noteN(r[2])+')">'+fr(r[2],1)+u('/20')+'<span class="bl-mut bl-nrow__a" aria-hidden="true">›</span></div></button>'; };
     return '<button type="button" class="bl-fold" aria-expanded="'+S.notes+'" aria-controls="blNotes" onclick="BILAN.toggle(\'notes\')"><span aria-hidden="true" style="font-size:18px">🏆</span><span>Notes</span><span class="bl-fold__i" aria-hidden="true">›</span></button>'
       +(S.notes?'<div class="bl-notes" id="blNotes">'+rows.map(row).join('')+(older.length?'<button type="button" class="bl-more" onclick="BILAN.toggle(\'allw\')">'+(S.allw?'Moins ▴':'Toutes les semaines ▾')+'</button>':'')+'</div>':'');
   }
@@ -271,6 +286,7 @@ var BILAN=(function(){
 
   function render(){
     var host=$('bilanPage'); if(!host) return;
+    try{ if(typeof INTAKE!=='undefined'&&INTAKE.syncGoals) INTAKE.syncGoals(); }catch(e){}
     var curWs=rankMonday(today()), B0=bilanNoteWeek(curWs);
     host.innerHTML=alertsHtml()+'<div class="bl-topcard">'+situationHtml()+'<hr class="bl-hr">'+objectivesHtml(B0)+'</div>'+nutritionHtml()+'<hr class="bl-hr">'+duoHtml()+'<hr class="bl-hr">'+weightHtml()+'<hr class="bl-hr">'+notesHtml(B0,curWs)+'<hr class="bl-hr">'+melatiHtml();
     S.pop=null;
@@ -293,12 +309,12 @@ var BILAN=(function(){
     var h=top('⚖️ Poids &amp; corps')
       +'<section class="bl-sec" style="padding-top:26px"><div class="bl-lbl">Dernière pesée · '+dlab(last.date)+'</div>'
       +'<div class="bl-num" style="font-size:68px;margin-top:10px"><span class="bl-hero-txt">'+fr(cur,1)+'</span>'+u('kg')+'</div>'
-      +(prev?'<div style="font-size:13px;font-weight:800;margin-top:10px"><span class="'+(cur-prev.weight_kg>=0?'bl-pos':'bl-neg')+'">'+sgn(cur-prev.weight_kg,1)+' kg</span> <span class="bl-mut">vs '+dlab(prev.date)+'</span></div>':'')
+      +(prev?'<div style="font-size:13px;font-weight:800;margin-top:10px"><span class="'+dCls(cur-prev.weight_kg)+'">'+sgn(cur-prev.weight_kg,1)+' kg</span> <span class="bl-mut">vs '+dlab(prev.date)+'</span></div>':'')
       +'<div class="bl-stats">'
       +stat('Tendance',fr(tr[tr.length-1].y,1)+u('kg'),'moy. 7 jours')
-      +stat('Rythme',R?sgn(R.rate,2):'—','kg/sem · 4 sem.',R?(R.rate>=0?'bl-pos':'bl-neg'):'')
+      +stat('Rythme',R?sgn(R.rate,2):'—',(seche()?'kg/sem · vise −0,35 à −0,55':'kg/sem · 4 sem.'),R?rCls(R.rate):'')
       +stat('Pesées',n7+u('/7 j'),'objectif 3+'+(n7>=3?' ✓':''))
-      +stat('30 jours',d30==null?'—':sgn(d30,1)+u('kg'),d30==null?'pas assez de pesées':'au rythme actuel',d30==null?'':d30>=0?'bl-pos':'bl-neg')
+      +stat('30 jours',d30==null?'—':sgn(d30,1)+u('kg'),d30==null?'pas assez de pesées':'au rythme actuel',d30==null?'':dCls(d30))
       +stat('Saison',sgn(tot,1)+u('kg'),'depuis '+dshort(first.date),tot>=0?'bl-pos':'bl-neg')
       +stat('Sèche',SAISONS[1].gras+u('% gras'),SAISONS[1].cible+' kg · 1 juin')
       +'</div></section><hr class="bl-hr">';
@@ -334,7 +350,7 @@ var BILAN=(function(){
       +BODY_MEAS.map(function(M){
         var cur=last.v[M.k], first=null; for(var i=0;i<L.length;i++){ if(L[i].v[M.k]!=null){ first=L[i]; break; } }
         var d=(cur!=null&&first&&first.date!==last.date)?Math.round((cur-first.v[M.k])*10)/10:null;
-        return '<div><div class="bl-lbl">'+M.l+'</div><div class="bl-num" style="font-size:25px;margin-top:6px">'+(cur!=null?fr(cur,1)+u('cm'):'—')+'</div><div style="font-size:12px;font-weight:800;margin-top:4px" class="'+(d==null||d===0||!M.up?'bl-mut':d>0?'bl-pos':'bl-neg')+'">'+(d==null?'point de départ':sgn(d,1)+' <span class="bl-mut">depuis le '+dshort(first.date)+'</span>')+'</div></div>';
+        return '<div><div class="bl-lbl">'+M.l+'</div><div class="bl-num" style="font-size:25px;margin-top:6px">'+(cur!=null?fr(cur,1)+u('cm'):'—')+'</div><div style="font-size:12px;font-weight:800;margin-top:4px" class="'+(d==null||d===0?'bl-mut':(seche()&&M.k==='taille')?(d<0?'bl-pos':'bl-neg'):!M.up?'bl-mut':d>0?'bl-pos':'bl-neg')+'">'+(d==null?'point de départ':sgn(d,1)+' <span class="bl-mut">depuis le '+dshort(first.date)+'</span>')+'</div></div>';
       }).join('')+'</div>'
       +'<button type="button" class="bl-btn bl-btn--ghost bl-btn--block" style="margin-top:22px;min-height:48px" onclick="BILAN.sheet(\'mensu\')">+ Mesurer</button>'
       +'<button type="button" class="bl-more" onclick="BILAN.toggle(\'mOpen\')">'+(S.mOpen?'Masquer les mesures ▴':'Historique des mesures ▾')+'</button>';
@@ -519,6 +535,7 @@ var BILAN=(function(){
 
   return {
     render:render,
+    photoDone:function(){ try{ localStorage.setItem('massup_photo_'+today().slice(0,7),'1'); }catch(e){} render(); },
     refresh:function(){ try{ INTAKE.refresh(); }catch(e){ try{ STEPS.refresh(); }catch(e2){} } try{ PV.pull(true); }catch(e){} },
     go:function(s){ S.screen=s; S.psel=null; renderScreen(); document.body.style.overflow='hidden'; },
     note:function(ws){ S.screen='note'; S.noteWs=ws; var ov=$('blScreen'); if(ov) ov.remove(); renderScreen(); document.body.style.overflow='hidden'; },
