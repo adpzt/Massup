@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), http = require('http');
 // PW_CORE = autre copie de playwright-core ; sinon la copie du SSD, puis celle du Mac
 const PW = process.env.PW_CORE || ['/Volumes/Adrien SSD/x_ia/IA Creative Space/node_modules/playwright-core',
-  '/Users/Adrien/01_ia/IA Creative Space/node_modules/playwright-core'].find(p => fs.existsSync(p));
+  '/Users/Adrien/01_ia/IA Creative Space/node_modules/playwright-core', '/Users/Adrien/01_ia/Création Design/IA Creative Space/node_modules/playwright-core'].find(p => fs.existsSync(p));
 // WebKit (02/11) = le moteur de Safari iOS : il voit les bugs propres à l'iPhone que Chromium rate
 // (ex. sommeil v2 : enfants d'un <button> en flex non étirés). Installé par `node <PW>/cli.js install webkit`.
 const { chromium, webkit } = require(PW);
