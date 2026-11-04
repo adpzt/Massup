@@ -142,7 +142,7 @@ function loadDB(){
 // thread principal à chaque action — on regroupe. Flush garanti sur pagehide/visibilitychange.
 // ── 👟 Pas & activité (29/09, demande Adrien) — module commun steps.js (chargé avant app.js) ──
 // Bloc « Pas » sous « Cette semaine » au Bilan, écran complet, données Santé via Raccourci iOS → /api/health.
-if(typeof STEPS!=='undefined') STEPS.init({app:'adrien',weekGoal:50000,blood:1000,db:function(){ return DB; },save:function(){ saveDB(); },toast:function(m){ showToast(m); },
+if(typeof STEPS!=='undefined') STEPS.init({app:'adrien',weekGoal:50000,blood:1000,tiers:{green:7000,gray:5000,blood:2000},db:function(){ return DB; },save:function(){ saveDB(); },toast:function(m){ showToast(m); },
   sb:function(){ return (typeof sbClient!=='undefined'&&sbClient)?sbClient:null; },weekPtsMax:3,
   onChange:function(){ if(_currentView==='sante') try{ renderSante(); }catch(e){} }});
 if(typeof SLEEP!=='undefined') SLEEP.init({db:function(){ return DB; },save:function(){ saveDB(); },toast:function(m){ showToast(m); }});

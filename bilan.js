@@ -19,6 +19,10 @@ var BILAN=(function(){
   // À CHAQUE mise en ligne d'une nouveauté visible : ajouter une entrée EN TÊTE (id = date AAAA-MM-JJ), 3 à 6 lignes courtes.
   // Elle s'affiche une fois par appareil (localStorage massup_news = id déjà vu), sur le Bilan, avant la saisie de la nuit.
   var NEWS=[
+    {id:'2026-11-05',t:'Couleurs des pas (5 novembre)',items:[
+      ['\uD83D\uDC5F','Nouveaux paliers : vert dès 7\u00a0000 pas, gris dès 5\u00a0000, rouge en dessous, rouge sang sous 2\u00a0000. 10\u00a0000 reste gold.'],
+      ['\u2705','La stat « Jours à … pas » compte maintenant les jours à 7\u00a0000. Le malus de la note (sous 1\u00a0000 pas) ne change pas.']
+    ]},
     {id:'2026-11-04c',t:'Petites finitions (4 novembre)',items:[
       ['\u2696\uFE0F','Tes pesées Renpho (via Santé) arrivent toutes seules dans ton historique, sans jamais écraser ce que tu notes à la main.'],
       ['\uD83E\uDE79','Deux séances le même jour : la douleur de la première n\u2019est plus effacée par la seconde.'],

@@ -29,9 +29,13 @@ var STEPS=(function(){
     return n?sum:null;
   }
   function stepsOf(d){ if(!A) return null; var e=H()[d]; if(!e) return null; if(e.steps!=null) return e.steps; if(e.ms!=null) return e.ms; return hourlySteps(d); }
-  // « blood » (01/11, MASSUP seulement via adapter.blood) : journée sous 1 000 pas = rouge sang
-  function tier(v){ return v==null?'none':v>=10000?'gold':v>=8000?'green':v>=6000?'gray':(A&&A.blood&&v<A.blood?'blood':'red'); }
-  var TLBL={gold:'🥇 10 000+',green:'✅ 8 000+',gray:'6 000+',red:'sous 6 000',blood:'sous 1 000',none:'—'};
+  // Paliers de COULEUR (affichage seulement). Défaut (Melati) : 10 000 gold · 8 000 vert · 6 000 gris · sinon rouge.
+  // MASSUP (05/11, demande Adrien, via adapter.tiers) : 7 000 vert · 5 000 gris · < 2 000 rouge sang · sinon rouge.
+  // Le malus de la note (adapter.blood, < 1 000 pas) est un AUTRE seuil, inchangé.
+  function TH(){ var t=A&&A.tiers||{}; return {gold:t.gold||10000,green:t.green||8000,gray:t.gray||6000,blood:t.blood||(A&&A.blood)||0}; }
+  // Seuil « journée réussie » (stat « Jours à X pas », trait du graphique) = le palier vert de l'app
+  function dayGoal(){ return TH().green; }
+  function tier(v){ var t=TH(); return v==null?'none':v>=t.gold?'gold':v>=t.green?'green':v>=t.gray?'gray':(t.blood&&v<t.blood?'blood':'red'); }
   // Moyenne visée par jour : objectif de la semaine / 7 si l'app en fixe un (MASSUP : 50 000 → ~7 143)
   function avgGoal(){ return A&&A.weekGoal?A.weekGoal/7:GOAL; }
   // Libellé de l'objectif : par semaine si l'app en fixe un (MASSUP), sinon par jour
@@ -244,7 +248,7 @@ var STEPS=(function(){
       var selectedClass=i===ST.selected?' selected':'';
       var avgMode=ST.mode==='year';
       return '<button type="button" class="st-point'+(ST.mode==='month'?' dense':'')+(p.hour!=null?' hour-point':'')+selectedClass+(p.v==null?' empty':'')+'" onclick="STEPS._select('+i+')" aria-pressed="'+(i===ST.selected)+'" aria-label="'+p.detail+' : '+(p.v==null?'aucune donnée':fmt(p.v)+(avgMode?' pas de moyenne par jour':' pas'))+'">'
-        +'<span class="st-point-val">'+(p.v==null?'':fmt(p.v))+'</span><span class="st-point-track"><i class="t-'+tier(p.v)+'" style="height:'+ht+'%"></i>'+(p.hour==null?'<b class="st-goal-line" style="bottom:'+Math.min(100,GOAL/max*100)+'%"></b>':'')+'</span><span class="st-point-label">'+p.l+'</span></button>';
+        +'<span class="st-point-val">'+(p.v==null?'':fmt(p.v))+'</span><span class="st-point-track"><i class="t-'+tier(p.v)+'" style="height:'+ht+'%"></i>'+(p.hour==null?'<b class="st-goal-line" style="bottom:'+Math.min(100,dayGoal()/max*100)+'%"></b>':'')+'</span><span class="st-point-label">'+p.l+'</span></button>';
     }).join('');
     var dailyValue=ST.mode==='day'?stepsOf(ST.anchor):null;
     var value=selected&&selected.v!=null?fmt(selected.v):ST.mode==='day'&&!data.hasHourly&&dailyValue!=null?fmt(dailyValue):'—';
@@ -340,7 +344,7 @@ var STEPS=(function(){
     for(var d=start;d<=end&&d<=today();d=addD(d,1)){
       var v=stepsOf(d); if(v==null) continue;
       days.push({d:d,v:v}); sum+=v;
-      if(v>=GOAL) goalDays++;
+      if(v>=dayGoal()) goalDays++;
       if(!best||v>best.v) best={d:d,v:v};
     }
     if(!days.length) return null;
@@ -363,7 +367,7 @@ var STEPS=(function(){
       {value:fmt(sum),label:'Pas au total'},
       {value:fmt(avg),label:'Moyenne par jour',tier:tier(avg)},
       {value:fmt(best.v),label:'Meilleur jour',note:dm(best.d),tier:tier(best.v)},
-      {value:String(goalDays)+' / '+days.length,label:'Jours à '+fmt(GOAL)+' pas'}
+      {value:String(goalDays)+' / '+days.length,label:'Jours à '+fmt(dayGoal())+' pas'}
     ];
     if(mode==='year'){
       var months={};
