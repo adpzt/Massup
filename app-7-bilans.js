@@ -129,7 +129,7 @@ function renderBilanWeekNut(){
     +'<button class="wn-tile'+(mai>0?' on':'')+(mai>=o.maison?' full':'')+'" onclick="nutTapWeek(\'maison\')">'
     +'<span class="wn-ico">&#x1F372;</span><span class="wn-count">'+mai+'<small>/'+o.maisonMax+'</small></span><span class="wn-lbl">plats maison<em class="wn-obj">obj. '+o.maison+'</em></span></button>'
     +'<button class="wn-tile'+(shk>0?' on':'')+(shk>=o.shk?' full':'')+'" onclick="nutTapWeek(\'shaker\')">'
-    +'<span class="wn-ico">'+o.shkIco+'</span><span class="wn-count">'+shk+'<small>/7</small></span><span class="wn-lbl">shaker<em class="wn-obj">obj. '+o.shk+'</em></span></button>'
+    +'<span class="wn-ico">'+o.shkIco+'</span><span class="wn-count">'+shk+'<small>/7</small></span><span class="wn-lbl">cr&#xE9;atine<em class="wn-obj">obj. '+o.shk+'</em></span></button>'
     +'<button class="wn-tile'+(run>0?' on':'')+(run>=o.run?' full':'')+'" onclick="nutTapWeek(\'run\')">'
     +'<span class="wn-ico">&#x1F3C3;</span><span class="wn-count">'+run+'<small>/'+o.run+'</small></span><span class="wn-lbl">courir<em class="wn-obj">'+(monday>=RUN_REQ_START?'obligatoire':'obj. '+o.run)+'</em></span></button>'
     +'</div></div>';
@@ -155,7 +155,7 @@ var NUT_V3_START='2026-10-12';
 // · dès la semaine du 07/12 (1er lundi de décembre) : courir 1×/semaine OBLIGATOIRE (sans sortie : −1 pt de plus).
 var STEP_BLOOD_START='2026-11-02', FREQ_STRICT_START='2026-11-02', RUN_REQ_START='2026-12-07';
 function nutObjectives(ws){
-  if(!ws||ws>=NUT_V3_START) return {v:3,maison:10,maisonMax:14,shk:7,shkLbl:'shakers',shkIco:'&#x1F964;',run:1,pdj:0,cardio:0};
+  if(!ws||ws>=NUT_V3_START) return {v:3,maison:10,maisonMax:14,shk:7,shkLbl:'cr&#xE9;atine',shkIco:'&#x1F964;',run:1,pdj:0,cardio:0};
   var v2=ws>=NUT_V2_START;
   return v2?{v:2,pdj:5,shk:5,shkLbl:'cr&#xE9;atine',shkIco:'&#x1F9EA;',cardio:3}
            :{v:1,pdj:4,shk:2,shkLbl:'shakers',shkIco:'&#x1F964;',cardio:2};
@@ -345,7 +345,7 @@ function bilanNoteWeekV5(ws){
   var raw=pA+pQ+pK+pP+pS+(pSteps||0)+pN+(runOn?pR:0), tot=runOn?raw:raw*20/19;
   var pil=[
     {k:'salle',i:'🏋️',l:'Salle',m:10,c:[['Assiduité',fmtSeances(v)+'/'+goal+' séances',pA,5],['Qualité',avg!=null?'moy. '+String(r1(avg)).replace('.',',')+'/20':'pas de note',pQ,5]]},
-    {k:'nut',i:'🍽️',l:'Nutrition',m:6,c:[[NZ.kcalHi!=null?'Jours dans le déficit ('+NZ.kcalLo.toLocaleString('fr-FR')+'-'+NZ.kcalHi.toLocaleString('fr-FR')+' kcal)':'Jours ≥ '+NZ.kcalLo.toLocaleString('fr-FR')+' kcal',kd+'/7',pK,3],['Jours ≥ '+NZ.protDay+' g de protéines',pd+'/7',pP,2],['Shaker',shk+'/7',pS,1]]},
+    {k:'nut',i:'🍽️',l:'Nutrition',m:6,c:[[NZ.kcalHi!=null?'Jours dans le déficit ('+NZ.kcalLo.toLocaleString('fr-FR')+'-'+NZ.kcalHi.toLocaleString('fr-FR')+' kcal)':'Jours ≥ '+NZ.kcalLo.toLocaleString('fr-FR')+' kcal',kd+'/7',pK,3],['Jours ≥ '+NZ.protDay+' g de protéines',pd+'/7',pP,2],['Créatine',shk+'/7',pS,1]]},
     {k:'act',i:'👟',l:'Activité',m:runOn?4:3,c:[['Pas',sw&&sw.sum?Math.round(sw.sum).toLocaleString('fr-FR')+'/50 000':'non renseignés',pSteps||0,2],['Nuits ≥ 7 h',nights+'/7',pN,1]].concat(runOn?[['Course',(run>=1?1:0)+'/1',pR,1]]:[])}
   ];
   pil.forEach(function(P){ P.c=P.c.map(function(c){ return [c[0],c[1],r1(c[2]),c[3]]; }); P.p=r1(P.c.reduce(function(a,c){ return a+c[2]; },0)); });
@@ -359,7 +359,7 @@ function noteWeekDetail(B){
   var r=function(x){ return x==null?0:x; };
   if(B.v===3) return {pil:[
       {i:'🏋️',l:'Salle',m:12,p:r(B.pA)+r(B.pE),c:[['Assiduité',fmtSeances(B.salle)+'/'+B.goal+' séances',r(B.pA),6],['Exécution',B.avg!=null?'moy. '+String(Math.round(B.avg*10)/10).replace('.',',')+'/20':'pas de LiveUp',r(B.pE),6]]},
-      {i:'🍽️',l:'Nutrition',m:6,p:r(B.pS)+r(B.pM)+r(B.pR),c:[['Shaker',B.shk+'/7',r(B.pS),3],['Plats maison',B.maison+'/14',r(B.pM),2],['Courir',B.run+'/1',r(B.pR),1]]},
+      {i:'🍽️',l:'Nutrition',m:6,p:r(B.pS)+r(B.pM)+r(B.pR),c:[['Créatine',B.shk+'/7',r(B.pS),3],['Plats maison',B.maison+'/14',r(B.pM),2],['Courir',B.run+'/1',r(B.pR),1]]},
       {i:'👟',l:'Pas',m:2,p:r(B.pP),c:[['Pas',B.stepAvg!=null?'moy. '+Math.round(B.stepAvg).toLocaleString('fr-FR')+' / j':'non renseignés',r(B.pP),2]]}],
     malus:(B.blood?[{l:B.blood+' journée'+(B.blood>1?'s':'')+' sous 1 000 pas',p:B.blood*0.5}]:[]).concat(B.runMiss?[{l:'Course obligatoire non faite',p:1}]:[])};
   return {pil:[
@@ -790,7 +790,7 @@ function wrRender(){
     var _o=nutObjectives(WR.week);
     if(WR.v3){
       h+=wrCountRow('maison','&#x1F372; Combien de plats maison ?','sur 14 repas (midi + soir) &#x2014; objectif '+_o.maison+' : cuisiner, c\'est TES calories et TES prot&#xE9;ines',14);
-      h+=wrCountRow('shaker','&#x1F964; Combien de jours avec ton shaker ?','whey + cr&#xE9;atine &#x2014; objectif '+_o.shk+'/7, il p&#xE8;se lourd dans la note');
+      h+=wrCountRow('shaker','&#x1F964; Combien de jours avec ta cr&#xE9;atine ?','dans le shaker ou avec de l\'eau &#x2014; objectif '+_o.shk+'/7, il p&#xE8;se lourd dans la note');
       h+=wrCountRow('run','&#x1F3C3; Combien de sorties course ?','objectif '+_o.run+' par semaine',3);
     } else {
       h+=wrCountRow('pdj','&#x1F373; Combien de petits-d&#xE9;jeuners ?','objectif '+_o.pdj+'+ &#x2014; LA priorit&#xE9; nutrition, le levier n&#xB0;1 de ta prise de masse');
@@ -863,7 +863,7 @@ function wrRender(){
       else if(B.v===3) h+='<div class="wr-breakdown">'
         +'<div class="wr-b-row"><span>&#x1F3CB; Assiduit&#xE9; &#x2014; '+fmtSeances(B.salle)+'/'+B.goal+' s&#xE9;ances</span><span style="color:var(--acc)">'+String(B.pA).replace('.',',')+' /6</span></div>'
         +'<div class="wr-b-row"><span>&#x1F4DD; Ex&#xE9;cution &#x2014; '+(B.avg!=null?'moy. '+String(Math.round(B.avg*10)/10).replace('.',',')+'/20':'pas de LiveUp')+'</span><span style="color:var(--acc2)">'+String(B.pE).replace('.',',')+' /6</span></div>'
-        +'<div class="wr-b-row"><span>&#x1F964; Shaker &#x2014; '+B.shk+'/7 jours</span><span style="color:var(--yellow)">'+String(B.pS).replace('.',',')+' /3</span></div>'
+        +'<div class="wr-b-row"><span>&#x1F964; Cr&#xE9;atine &#x2014; '+B.shk+'/7 jours</span><span style="color:var(--yellow)">'+String(B.pS).replace('.',',')+' /3</span></div>'
         +'<div class="wr-b-row"><span>&#x1F372; Plats maison &#x2014; '+B.maison+'/14</span><span style="color:var(--yellow)">'+String(B.pM).replace('.',',')+' /2</span></div>'
         +'<div class="wr-b-row"><span>&#x1F3C3; Courir &#x2014; '+B.run+' sortie'+(B.run>1?'s':'')+(B.runReq?' (obligatoire)':'')+'</span><span style="color:var(--yellow)">'+String(B.pR).replace('.',',')+' /1</span></div>'
         +(B.runMiss?'<div class="wr-b-row"><span>&#x1F6A8; Course obligatoire non faite</span><span style="color:var(--red)">&#x2212;1</span></div>':'')
@@ -1129,7 +1129,7 @@ function mrRender(){
     h+='<div class="wr-mini-stats" style="margin-top:.6rem;">'
       +(_om.v===3
         ?'<div class="wr-ms"><span data-cu="'+A.mai+'">0</span>&#x1F372; plats maison</div>'
-          +'<div class="wr-ms"><span data-cu="'+A.shk+'">0</span>&#x1F964; shakers</div>'
+          +'<div class="wr-ms"><span data-cu="'+A.shk+'">0</span>&#x1F964; cr&#xE9;atine</div>'
           +'<div class="wr-ms"><span data-cu="'+A.run+'">0</span>&#x1F3C3; courses</div>'
         :'<div class="wr-ms"><span data-cu="'+A.pdj+'">0</span>&#x1F373; petits-d&#xE9;j</div>'
           +'<div class="wr-ms"><span data-cu="'+A.shk+'">0</span>'+_om.shkIco+' '+_om.shkLbl+'</div>'

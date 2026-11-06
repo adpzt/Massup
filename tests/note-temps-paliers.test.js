@@ -57,25 +57,44 @@ test("tout exempté : la séance reste notée sur la liste brute", () => {
   assert.equal(run("asNote20From(__l,'temps','2026-11-03')", { __l: [skipped()] }), 0);
 });
 
-test("paliers de reps : 24 kg × 8 puis × 10 = deux barres distinctes", () => {
-  const log = (id, date, reps) => ({ id, date, time: "07:00", sessions: ["s1"], live: { exos: [ex("dev_incline", 24, reps.map((r) => [r, "ok"]))] } });
-  run("DB.logs=__logs", { __logs: [log(1, "2026-10-20", [8, 8, 8, 8]), log(2, "2026-10-24", [8, 9, 8, 8]), log(3, "2026-10-30", [10, 10, 10, 9])] });
-  const lc = run("loadCount('dev_incline')");
-  assert.equal(lc.lvl, 10);
-  assert.equal(lc.done, 4); // seule la séance à × 10 compte
-  run("DB.logs=__logs", { __logs: [log(1, "2026-10-20", [8, 8, 8, 8]), log(2, "2026-10-24", [8, 9, 8, 8])] });
+// 06/11 (Adrien) : palier = charge du jour × reps visées ; défaut = 5 dernières séances ; ½ série à 1-2 reps de la cible.
+const plog = (id, date, reps, extra) => ({ id, date, time: "07:00", sessions: ["s1"], live: { exos: [ex("dev_incline", 24, reps.map((r) => [r, "ok"]), extra)] } });
+
+test("paliers : reps par défaut = médiane des 5 dernières séances à cette charge", () => {
+  run("DB.logs=__logs", { __logs: [plog(1, "2026-10-20", [8, 8, 8, 8]), plog(2, "2026-10-24", [8, 9, 8, 8]), plog(3, "2026-10-30", [10, 10, 10, 9])] });
   const lc8 = run("loadCount('dev_incline')");
   assert.equal(lc8.lvl, 8);
-  assert.equal(lc8.done, 8);
+  assert.equal(lc8.done, 12);
   assert.match(lc8.lbl, /24 kg\/côté &#xD7; 8/);
+  run("DB.logs=__logs", { __logs: [plog(1, "2026-10-20", [8, 8, 8, 8]), plog(2, "2026-10-24", [8, 9, 8, 8]), plog(3, "2026-10-30", [10, 10, 10, 9]), plog(4, "2026-11-02", [10, 10, 10, 10]), plog(5, "2026-11-05", [10, 10, 10, 10])] });
+  const lc10 = run("loadCount('dev_incline')");
+  assert.equal(lc10.lvl, 10);
+  assert.equal(lc10.done, 11.5); // depuis la 1re séance à × 10 : 3,5 + 4 + 4 (le 9 vaut ½)
+  assert.equal(lc10.doneTxt, "11,5");
 });
 
-test("paliers : une séance moins bonne après avoir atteint × 10 compte encore (stagnation)", () => {
-  const log = (id, date, reps) => ({ id, date, time: "07:00", sessions: ["s1"], live: { exos: [ex("dev_incline", 24, reps.map((r) => [r, "ok"]))] } });
-  run("DB.logs=__logs", { __logs: [log(1, "2026-10-20", [8, 8, 8, 8]), log(2, "2026-10-24", [10, 10, 10, 10]), log(3, "2026-10-30", [8, 9, 8, 8])] });
+test("crédit partiel : cible 12 → 12 = 1, 11 et 10 = ½, 9 = 0", () => {
+  run("DB.logs=[]");
+  const lc = run("loadCount('dev_incline',{key:'dev_incline',w:24,weight:24,gR:12,sets:[{w:24,reps:12},{w:24,reps:11},{w:24,reps:10},{w:24,reps:9}]})");
+  assert.equal(lc.lvl, 12);
+  assert.equal(lc.done, 2);
+});
+
+test("en séance : le palier suit le poids de travail du jour (60 kg, pas la réf. 56)", () => {
+  const T = (id, d, w, reps) => ({ id, date: d, time: "07:00", sessions: ["s2"], live: { exos: [ex("tirage_vert", w, reps.map((r) => [r, "dur"]))] } });
+  run("DB.logs=__logs", { __logs: [T(1, "2026-10-28", 56, [10, 10, 10, 10]), T(2, "2026-11-02", 60, [8, 8, 7, 6])] });
+  const lc = run("loadCount('tirage_vert',{key:'tirage_vert',w:60,weight:60,sets:[{w:60,reps:8}]})");
+  assert.equal(lc.w, 60);
+  assert.equal(lc.lvl, 8);
+  assert.equal(lc.done, 4); // aujourd'hui 1 + séance du 02/11 : 8, 8, 7 (½), 6 (½) — les séries à 56 ne comptent pas
+});
+
+test("reps choisies en séance : gravées dans le log, elles restent le défaut à ce poids", () => {
+  run("DB.logs=__logs", { __logs: [plog(1, "2026-10-20", [8, 8, 8, 8]), plog(2, "2026-10-24", [10, 9, 9, 8], { gR: 10 })] });
   const lc = run("loadCount('dev_incline')");
   assert.equal(lc.lvl, 10);
-  assert.equal(lc.done, 8);
+  assert.equal(lc.auto, false);
+  assert.equal(lc.done, 2.5); // séance du 24/10 seulement (palier visé ce jour-là) : 1 + ½ + ½ + ½
 });
 
 test("re-notation « manque de temps » : séance du 03/11 (2 exos écourtés + Pallof passé) 14 → 18, une seule fois", () => {

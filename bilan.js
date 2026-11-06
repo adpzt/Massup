@@ -19,6 +19,12 @@ var BILAN=(function(){
   // À CHAQUE mise en ligne d'une nouveauté visible : ajouter une entrée EN TÊTE (id = date AAAA-MM-JJ), 3 à 6 lignes courtes.
   // Elle s'affiche une fois par appareil (localStorage massup_news = id déjà vu), sur le Bilan, avant la saisie de la nuit.
   var NEWS=[
+    {id:'2026-11-06',t:'Compteur de séries à ta main (6 novembre)',items:[
+      ['🎯','Sur l’intro de chaque exo : ton poids du jour + les reps visées (8, 10, 12…). La barre « Séries à X kg × N » suit ton choix, à l’intro et pendant le repos.'],
+      ['🔁','Reps par défaut = tes 5 dernières séances à ce poids, jamais sous le bas de la fourchette du programme.'],
+      ['½','Une série à 1 ou 2 reps de la cible compte pour ½ (cible 12 : 11 et 10 = ½, 9 = 0). Ta note /20 ne change pas.'],
+      ['🥤','« Shaker » devient « Créatine » : avec ou sans shaker, c’est la créatine qui compte.']
+    ]},
     {id:'2026-11-05',t:'Couleurs des pas (5 novembre)',items:[
       ['\uD83D\uDC5F','Nouveaux paliers : vert dès 7\u00a0000 pas, gris dès 5\u00a0000, rouge en dessous, rouge sang sous 2\u00a0000. 10\u00a0000 reste gold.'],
       ['\u2705','La stat « Jours à … pas » compte maintenant les jours à 7\u00a0000. Le malus de la note (sous 1\u00a0000 pas) ne change pas.']
@@ -134,7 +140,7 @@ var BILAN=(function(){
     var run=Math.max(nutWeekCount('run',mon),runWeekAuto(mon));
     var rows=[
       ['maison','🍲','Plats maison',nutWeekCount('maison',mon),o.maison||10,true],
-      ['shaker','🥤','Shaker',nutWeekCount('shaker',mon),o.shk||7,true],
+      ['shaker','🥤','Créatine',nutWeekCount('shaker',mon),o.shk||7,true],
       ['run','🏃','Courir',run,o.run||1,true]
     ];
     if(seche()){ var ab=0; try{ ab=abdoWeekAuto(mon); }catch(e){} rows.push(['abdos','🔥','Séances avec abdos',ab,SAISON.CFG.seche.abdos,false]); }

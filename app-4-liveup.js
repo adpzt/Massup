@@ -518,6 +518,7 @@ function asResumeLog(id){
     var e=asMakeExo(x.key,!!x.extra); if(!e) return;
     e.weight=(x.w!=null?x.w:e.weight); e.w0=(x.w0!=null?x.w0:e.w0);
     e.n=x.n||e.n; e.reps=x.reps||e.reps; e.rHi=x.rHi||null; // fourchette gravée : une vieille séance garde son barème
+    if(x.gR!=null) e.gR=x.gR; // reps visées choisies sur l'intro (06/11)
     e.status=x.status||'pending'; e.sets=(x.sets||[]).slice(); e.skippedSets=x.sk||0; e.pain=!!x.pain;
     if(x.main!=null) e.main=x.main; // statut principal/bonus gravé — une reprise ne le perd pas (31/08)
     if(e.status==='skipped'&&e.sets.length>=(e.n||3)) e.status='done'; // état hérité : jamais « écourté » à séries pleines
@@ -561,6 +562,7 @@ function asViewReport(id){
     var e=asMakeExo(x.key,!!x.extra); if(!e) return;
     e.weight=(x.w!=null?x.w:e.weight); e.w0=(x.w0!=null?x.w0:e.w0);
     e.n=x.n||e.n; e.reps=x.reps||e.reps; e.rHi=x.rHi||null; // fourchette gravée : une vieille séance garde son barème
+    if(x.gR!=null) e.gR=x.gR; // reps visées choisies sur l'intro (06/11)
     e.status=x.status||'done'; e.sets=(x.sets||[]).slice(); e.skippedSets=x.sk||0; e.pain=!!x.pain;
     if(x.main!=null) e.main=x.main; // le bilan relu affiche les statuts gravés, pas ceux du programme du jour
     if(e.status==='skipped'&&e.sets.length>=(e.n||3)) e.status='done';
@@ -1523,6 +1525,7 @@ function asChgW(dir){
   var fsw=document.getElementById('as-fs-w'); if(fsw) fsw.textContent=x.weight+' '+x.unite;
   // repTarget : la valeur réglée EST l'objectif de la série — l'objectif affiché doit suivre
   if(x.repT){ var tg=document.querySelector('.as-target-reps'); if(tg) tg.innerHTML=cntFmt(x,x.reps); }
+  asLcRefresh(x);
 }
 function asSetW(input){
   var x=AS.exos[AS.cur];
@@ -1532,6 +1535,37 @@ function asSetW(input){
   if(x.repT) x.reps=x.weight;
   input.value=x.weight; asSave();
   var fsw=document.getElementById('as-fs-w'); if(fsw) fsw.textContent=x.weight+' '+x.unite;
+  asLcRefresh(x);
+}
+// ── Reps visées du palier (06/11, demande Adrien) : réglées sur l'intro de l'exo, elles fixent le palier
+// du compteur « Séries à X kg × N » (intro + repos). Défaut = tes 5 dernières séances à ce poids (loadCount).
+// Ne touche ni la fourchette du programme ni la note /20 : c'est le compteur de séries seulement.
+function asRepsRow(x){
+  if(!x||x.repT||exoIsCardio(x.key)) return '';
+  var lc=null; try{ lc=loadCount(x.key,{key:x.key,sets:[]},{w:x.weight,r:x.gR}); }catch(e){}
+  if(!lc||lc.lvl==null) return '';
+  return '<div id="as-reps-blk"><div class="as-lbl" style="text-align:center;">Reps vis&#xE9;es <span class="as-lbl-hint">'+(x.gR!=null?'ton choix':'auto &#xB7; tes 5 derni&#xE8;res s&#xE9;ances')+' &#xB7; compteur de s&#xE9;ries</span></div>'
+    +'<div class="as-wrow small">'
+    +'<button class="as-wbtn" onclick="asChgR(-1)" aria-label="2 reps de moins">&#x2212;</button>'
+    +'<input class="as-winput" id="asR" type="number" step="1" min="1" inputmode="numeric" value="'+lc.lvl+'" onblur="asSetR(this)" onkeydown="if(event.key===\'Enter\')this.blur()"/>'
+    +'<span class="as-wunit">reps</span>'
+    +'<button class="as-wbtn plus" onclick="asChgR(1)" aria-label="2 reps de plus">+</button></div></div>';
+}
+function asCurReps(x){ var lc=null; try{ lc=loadCount(x.key,{key:x.key,sets:[]},{w:x.weight,r:x.gR}); }catch(e){} return lc?lc.lvl:null; }
+function asChgR(dir){
+  var x=AS.exos[AS.cur]; var r=asCurReps(x); if(r==null) return;
+  x.gR=Math.max(1,r+2*dir); asSave(); asLcRefresh(x);
+}
+function asSetR(input){
+  var x=AS.exos[AS.cur]; var v=parseInt(input.value,10);
+  if(isNaN(v)||v<1){ input.value=asCurReps(x)||''; return; }
+  if(v!==asCurReps(x)){ x.gR=Math.min(50,v); asSave(); }
+  asLcRefresh(x);
+}
+// Rafraîchit sur place le compteur et la ligne des reps (sans re-render de l'écran)
+function asLcRefresh(x){
+  var el=document.getElementById('as-lc'); if(el) el.outerHTML=lcLiveHtml(x)||'<div id="as-lc"></div>';
+  var rb=document.getElementById('as-reps-blk'); if(rb) rb.outerHTML=asRepsRow(x)||'<div id="as-reps-blk"></div>';
 }
 // Intro en 3 slides : présentation → conseils → erreurs à éviter
 function asRenderIntro(x){
@@ -1557,10 +1591,10 @@ function asRenderIntro(x){
         h+='<div class="as-record-chip first">&#x1F3C6; Premi&#xE8;re fois &#x2014; la perf du jour pose le record.</div>';
       }
     }catch(e){}
-    h+=lcLiveHtml(x);
     if(hasImg) h+='<div class="as-demo"><img src="'+IMGS[x.img]+'" alt="'+x.name+'" loading="lazy"/></div>';
     h+='<div class="as-cue">&#x27A1; '+x.cue+(x.bless?'<div class="cue-bless">&#x1FA79; '+x.bless+'</div>':'')+'</div>';
     h+='<div class="as-lbl" style="text-align:center;">Poids de travail <span class="as-lbl-hint">cette s&#xE9;ance seulement &#xB7; r&#xE9;f. '+x.w0+' '+x.unite+'</span></div>'+asWeightRow(x);
+    h+=asRepsRow(x)+lcLiveHtml(x); // objectif du jour : poids + reps visées → le compteur suit (06/11)
     if(x.evo) h+='<div class="as-evo-chip">&#x26A1; &#xC9;volution en cours : '+x.evo.from+'&#x2192;'+x.evo.to+' '+x.unite+' &#xB7; aujourd\'hui '+asEvoPlanStr(x)+' &#x2014; le poids se cale tout seul &#xE0; chaque s&#xE9;rie</div>';
   } else if(AS.introIdx===1){
     h+='<div class="as-exo-kicker">'+x.name+'</div>';
@@ -2306,7 +2340,7 @@ function asRenderEnd(){
     h+='<div class="as-execs">';
     doneEx.forEach(function(x){
       var lc=loadCount(x.key,x); if(!lc) return;
-      h+='<div class="as-exec-row"><span class="as-exec-name">'+x.name+'</span><span class="as-exec-ct'+(lc.ratio>=0.75?' hot':'')+'">'+lc.done+' / '+lc.target+' s&#xE9;ries &#xE0; '+lc.lbl+'</span></div>';
+      h+='<div class="as-exec-row"><span class="as-exec-name">'+x.name+'</span><span class="as-exec-ct'+(lc.ratio>=0.75?' hot':'')+'">'+lc.doneTxt+' / '+lc.target+' s&#xE9;ries &#xE0; '+lc.lbl+'</span></div>';
     });
     h+='</div>';
   }
@@ -2510,7 +2544,7 @@ function asPersistLog(){
   var live={
     // main = statut principal/bonus FIGÉ au moment de la séance (15/08) : les refontes de
     // programme ne réécrivent plus les notes passées. note20 = la note /20 gravée (idem).
-    exos:AS.exos.map(function(x){return {key:x.key,w:x.weight,w0:x.w0,n:x.n,reps:x.reps,rHi:x.rHi||undefined,unite:x.unite,cnt:x.cnt||null,status:x.status,extra:!!(x.extra||x.added),main:!liveExoSide(x),sets:x.sets,sk:x.skippedSets||0,pain:!!x.pain,tc:x.tc||undefined,sz:x.sz||undefined,evo:x.evo?{from:x.evo.from,to:x.evo.to,hi:x.evo.hi}:null,cardio:x.cardio&&(x.sets||[]).length?x.cardio:undefined};}),
+    exos:AS.exos.map(function(x){return {key:x.key,w:x.weight,w0:x.w0,n:x.n,reps:x.reps,rHi:x.rHi||undefined,gR:x.gR!=null?x.gR:undefined,unite:x.unite,cnt:x.cnt||null,status:x.status,extra:!!(x.extra||x.added),main:!liveExoSide(x),sets:x.sets,sk:x.skippedSets||0,pain:!!x.pain,tc:x.tc||undefined,sz:x.sz||undefined,evo:x.evo?{from:x.evo.from,to:x.evo.to,hi:x.evo.hi}:null,cardio:x.cardio&&(x.sets||[]).length?x.cardio:undefined};}),
     pain:AS.end.pain,painAny:AS.end.painAny,pains:(AS.end.pains||[]).filter(function(p){return p.lvl;}),painNote:AS.end.painNote||'',
     context:AS.end.context||null,
     stretch:AS.end.stretch===true,
@@ -2908,7 +2942,7 @@ function asAnalyzeExo(x){
   var pyramidUp=isKg&&!inv&&sets.length>=2&&ws[0]<ws[ws.length-1];
   var dropSetW=isKg&&!inv&&sets.length>=2&&ws[0]>ws[ws.length-1];
   var _lc=null; try{ _lc=loadCount(x.key); }catch(e){}
-  var stag=_lc?_lc.ratio:0, stagTxt=_lc?_lc.done+' / '+_lc.target+' s&#xE9;ries &#xE0; '+_lc.lbl:'';
+  var stag=_lc?_lc.ratio:0, stagTxt=_lc?_lc.doneTxt+' / '+_lc.target+' s&#xE9;ries &#xE0; '+_lc.lbl:'';
   var wUp=x.weight>x.w0, wDown=x.weight<x.w0;
   var unit=cntU(x)==='s'?'s':(cntU(x)==='min'?' min':' reps');
 

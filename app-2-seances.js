@@ -1054,58 +1054,86 @@ function getSessionsAtWeight(key){
 // et on compte depuis la 1re séance qui l'a atteint (les séances moins bonnes d'après comptent : c'est de la stagnation)
 // → passer de × 8 à × 10 relance la barre. Exos comptés en secondes / minutes : pas de palier (comme avant).
 function lcRepLevel(lo,r){ return lo+2*Math.floor((r-lo)/2); }
-function loadCount(key,liveX){
+// ── Palier choisi + crédit partiel (06/11, demande Adrien) ──
+// · Le palier = charge × reps VISÉES. En séance, la charge = le poids de travail du jour (avant : la réf.
+//   — « 60 kg aujourd'hui, la barre affichait 56 kg ») et les reps se règlent sur l'intro de l'exo (x.gR).
+// · Reps par défaut = tes 5 dernières séances de l'exo à cette charge (médiane des médianes, palier de 2,
+//   jamais sous le bas de la fourchette) — « curl marteau : 12 × 8 affiché alors que l'exo c'est du 12 × 10 ».
+//   Un choix fait en séance (gR gravé dans le log) reste le défaut tant que la charge ne change pas.
+// · Une série vaut 1 si reps ≥ cible, ½ à 1 ou 2 reps près (cible 12 : 11 et 10 = ½, 9 = 0).
+// · On compte depuis la 1re séance entrée dans ce palier (médiane de ses séries ≥ cible, ou palier visé exprès) :
+//   passer à + 2 reps relance toujours la barre (règle du 03/11).
+function lcCredit(r,R){ return r>=R?1:(r>=R-2?0.5:0); }
+function lcNum(v){ return String(Math.round(v*2)/2).replace('.',','); }
+function lcMed(a){ a=a.slice().sort(function(p,q){return p-q;}); var m=a.length>>1; return a.length%2?a[m]:(a[m-1]+a[m])/2; }
+function loadCount(key,liveX,g){
   var d=asExoDef(key); if(!d||exoIsCardio(key)) return null;
-  var W=getCurrentWeight(key); if(W==null) return null;
+  var ref=getCurrentWeight(key); if(ref==null) return null;
+  if(!g&&liveX&&liveX.weight!=null) g={w:liveX.weight,r:liveX.gR};
+  var W=(g&&g.w!=null)?g.w:ref;
   var n=asParseSerie(d.e).n||3, inv=asIsInverse(key);
-  var stepK=fsStep({key:key,inc:d.e.inc}), sess=Math.max(8,Math.min(20,Math.round(6+40*stepK/Math.max(1,W))));
+  var stepK=fsStep({key:key,inc:d.e.inc}), sess=Math.max(8,Math.min(20,Math.round(6+40*stepK/Math.max(1,ref))));
   var target=sess*n;
   var at=function(w){ return w!=null&&(inv?w<=W:w>=W); };
-  var setsAt=function(x){ return (x.sets||[]).filter(function(st){ return at(st.w!=null?st.w:x.w); }); };
+  var setsAt=function(x){ return (x.sets||[]).filter(function(st){ return at(st.w!=null?st.w:(x.w!=null?x.w:x.weight)); }); };
   var lo=(!d.e.repTarget&&REP_RANGE[key])?REP_RANGE[key].r[0]:(d.e.repTarget?0:asParseSerie(d.e).reps);
   var byReps=lo>0&&(d.e.cnt||'reps')==='reps';
-  var lvlOf=function(ss){ if(!byReps||!ss.length) return null; var t=0; ss.forEach(function(st){ t+=st.reps||0; }); return lcRepLevel(lo,Math.round(t/ss.length)); };
   var logs=(DB.logs||[]).filter(function(l){ return l.live&&l.live.exos&&(!liveX||(String(l.id)!==String(AS&&AS.savedLogId)&&String(l.id)!==String(AS&&AS.resumeLogId))); })
     .sort(function(a,b){ return b.date.localeCompare(a.date)||(b.time||'').localeCompare(a.time||''); });
-  var sessAt=[]; // séances (de la plus récente à la plus ancienne) : séries à la charge + leur palier
+  var sessAt=[]; // séances (de la plus récente à la plus ancienne) qui ont des séries à cette charge
   logs.forEach(function(l){
-    var ss=[]; l.live.exos.forEach(function(x){ if(x.key===key&&liveExoCounted(x)) ss=ss.concat(setsAt(x)); });
-    if(ss.length) sessAt.push({c:ss.length,lv:lvlOf(ss)});
+    var ss=[], gR=null; l.live.exos.forEach(function(x){ if(x.key===key&&liveExoCounted(x)){ ss=ss.concat(setsAt(x)); if(x.gR!=null&&x.w===W) gR=x.gR; } });
+    if(ss.length) sessAt.push({ss:ss,gR:gR});
   });
-  var L=null, from=sessAt.length-1;
-  sessAt.forEach(function(o,i){ if(o.lv!=null&&(L==null||o.lv>L)) L=o.lv; });
-  if(L!=null) for(var j=sessAt.length-1;j>=0;j--){ if(sessAt[j].lv===L){ from=j; break; } } // 1re séance (la plus ancienne) au palier
-  if(L==null&&liveX) L=lvlOf(setsAt(liveX)); // 1re séance à cette charge : le palier du jour
+  var R=null, auto=false;
+  if(byReps){
+    R=(g&&g.r!=null)?g.r:null;
+    if(R==null) sessAt.some(function(o){ if(o.gR!=null){ R=o.gR; return true; } return false; }); // dernier palier choisi à cette charge
+    if(R==null){
+      auto=true;
+      var meds=sessAt.slice(0,5).map(function(o){ return lcMed(o.ss.map(function(st){ return st.reps||0; })); });
+      R=meds.length?Math.max(lo,lcRepLevel(lo,Math.round(lcMed(meds)))):lo;
+    }
+  }
+  var from=sessAt.length-1;
+  if(byReps){
+    from=-1;
+    for(var j=sessAt.length-1;j>=0;j--){
+      var o=sessAt[j];
+      if((o.gR!=null&&o.gR>=R)||Math.round(lcMed(o.ss.map(function(st){ return st.reps||0; })))>=R){ from=j; break; } // 1re séance (la plus ancienne) dans le palier
+    }
+  }
+  var cr=function(ss){ var c=0; ss.forEach(function(st){ c+=byReps?lcCredit(st.reps||0,R):1; }); return c; };
   var done=0;
-  if(liveX) done+=setsAt(liveX).length; // séance en cours : ses séries vont au palier actuel
-  for(var k=0;k<=from;k++) done+=sessAt[k].c;
+  if(liveX) done+=cr(setsAt(liveX)); // séance en cours : ses séries vont au palier choisi
+  for(var k=0;k<=from;k++) done+=cr(sessAt[k].ss);
   var unite=d.e.unite||'kg';
-  return {w:W,lvl:L,lbl:W+' '+unite+(L!=null?' &#xD7; '+L:''),done:done,target:target,sess:sess,ratio:done/target,unite:unite};
+  return {w:W,ref:ref,lvl:R,lo:byReps?lo:null,auto:auto,lbl:W+' '+unite+(R!=null?' &#xD7; '+R:''),done:done,doneTxt:lcNum(done),target:target,sess:sess,ratio:done/target,unite:unite};
 }
 // Alerte de stagnation : 75 % de l'objectif = « bientôt », 100 % = « il est temps »
 function getProgressNudge(key){
   if(typeof SAISON!=='undefined'&&SAISON.realIdAt(todayStr())==='seche') return null; // Sèche : tenir la charge, c'est réussi (04/11)
   var lc=loadCount(key); if(!lc) return null;
-  var lbl='<strong>'+lc.done+' / '+lc.target+' s&#xE9;ries</strong> &#xE0; '+lc.lbl;
-  if(lc.ratio>=1) return {lvl:'hot',chip:'&#x1F534; '+lc.done+'/'+lc.target+' séries',msg:lbl+' &#x2014; l\'objectif de s&#xE9;ries est d&#xE9;pass&#xE9; sans monter&#x202F;: il est temps de charger plus (ou de changer d\'angle&#x202F;: tempo, +1 rep).'};
-  if(lc.ratio>=0.75) return {lvl:'warn',chip:'&#x26A0; '+lc.done+'/'+lc.target+' séries',msg:lbl+' &#x2014; si tes s&#xE9;ries passent proprement, la hausse arrive bient&#xF4;t.'};
+  var lbl='<strong>'+lc.doneTxt+' / '+lc.target+' s&#xE9;ries</strong> &#xE0; '+lc.lbl;
+  if(lc.ratio>=1) return {lvl:'hot',chip:'&#x1F534; '+lc.doneTxt+'/'+lc.target+' séries',msg:lbl+' &#x2014; l\'objectif de s&#xE9;ries est d&#xE9;pass&#xE9; sans monter&#x202F;: il est temps de charger plus (ou de changer d\'angle&#x202F;: tempo, +1 rep).'};
+  if(lc.ratio>=0.75) return {lvl:'warn',chip:'&#x26A0; '+lc.doneTxt+'/'+lc.target+' séries',msg:lbl+' &#x2014; si tes s&#xE9;ries passent proprement, la hausse arrive bient&#xF4;t.'};
   return null;
 }
 // Même barre EN SÉANCE (01/11, demande Adrien : « avoir un œil dessus » à l'intro et pendant le repos) :
 // plein = séries déjà faites à la charge, irisé = celles du jour, pointillé = celles qui restent prévues.
 function lcLiveHtml(x){
   if(!x||exoIsCardio(x.key)) return '';
-  var base=loadCount(x.key,{key:x.key,sets:[]}); if(!base) return '';
-  var withToday=loadCount(x.key,x)||base;
+  var g={w:x.weight,r:x.gR}; // palier du jour : poids de travail × reps visées (06/11)
+  var base=loadCount(x.key,{key:x.key,sets:[]},g); if(!base) return '';
+  var withToday=loadCount(x.key,x,g)||base;
   var today=Math.max(0,withToday.done-base.done), T=base.target;
-  var W=base.w, inv=asIsInverse(x.key), atW=inv?x.weight<=W:x.weight>=W;
-  var left=atW&&!x.bonusMode?Math.max(0,(x.n||0)-(x.sets||[]).length-(x.skippedSets||0)):0;
+  var left=!x.bonusMode?Math.max(0,(x.n||0)-(x.sets||[]).length-(x.skippedSets||0)):0;
   var tot=base.done+today, r=tot/T;
   var pc=function(v){ return Math.max(0,Math.min(100,v/T*100)); };
   var wB=pc(base.done), wT=Math.min(100-wB,pc(today)), wL=Math.min(100-wB-wT,pc(left));
   var cls=r>=1?' hot':r>=0.75?' warn':'';
-  return '<div class="lc-live'+cls+'"><div class="lc-top"><span>&#x1F4CA; S&#xE9;ries &#xE0; '+base.lbl+'</span>'
-    +'<strong>'+tot+' / '+T+'</strong></div>'
+  return '<div class="lc-live'+cls+'" id="as-lc"><div class="lc-top"><span>&#x1F4CA; S&#xE9;ries &#xE0; '+base.lbl+'</span>'
+    +'<strong>'+lcNum(tot)+' / '+T+'</strong></div>'
     +'<div class="lc-bar lc-bar3"><i class="lc-b" style="width:'+wB.toFixed(1)+'%"></i><i class="lc-t holo-fill" style="width:'+wT.toFixed(1)+'%"></i><i class="lc-l" style="width:'+wL.toFixed(1)+'%"></i></div>'
     +(r>=1?'<div class="lc-sub">'+((typeof SAISON!=='undefined'&&SAISON.realIdAt(todayStr())==='seche')?'S&#xE8;che&#x202F;: tenir cette charge, c\'est d&#xE9;j&#xE0; gagner.':'Objectif d&#xE9;pass&#xE9;&#x202F;: c\'est le moment de monter.')+'</div>':'')
     +'</div>';
@@ -1114,7 +1142,7 @@ function lcLiveHtml(x){
 function loadCountHtml(key){
   var lc=loadCount(key); if(!lc||!lc.done) return '';
   var cls=lc.ratio>=1?' hot':lc.ratio>=0.75?' warn':'';
-  return '<div class="lc-box'+cls+'"><div class="lc-top"><span>&#x1F4CA; S&#xE9;ries &#xE0; '+lc.lbl+'</span><strong>'+lc.done+' / '+lc.target+'</strong></div>'
+  return '<div class="lc-box'+cls+'"><div class="lc-top"><span>&#x1F4CA; S&#xE9;ries &#xE0; '+lc.lbl+'</span><strong>'+lc.doneTxt+' / '+lc.target+'</strong></div>'
     +'<div class="lc-bar"><i style="width:'+Math.min(100,Math.round(lc.ratio*100))+'%"></i></div>'
     +'<div class="lc-sub">'+(lc.ratio>=1?'Objectif d&#xE9;pass&#xE9; sans monter&#x202F;: il est temps de changer quelque chose.':'Rep&#xE8;re pour cet exo&#x202F;: ~'+lc.target+' s&#xE9;ries ('+lc.sess+' s&#xE9;ances) par palier (charge &#xD7; reps), puis passe au suivant&#x202F;: +2 reps ou +1 cran.')+'</div></div>';
 }

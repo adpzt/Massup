@@ -93,7 +93,7 @@ test("séries à la charge actuelle (historique réel du pec deck) et référenc
     L(6, "2026-10-31", [[54, 10], [54, 10], [54, 10], [54, 11]]),
   ];
   const r = app2.eval(logs, 54, "JSON.stringify(loadCount('pecdeck'))");
-  assert.deepEqual(JSON.parse(r).done, 17);
+  assert.deepEqual(JSON.parse(r).done, 14.5); // 06/11 : palier 54 × 10 (5 dernières séances), 8-9 reps = ½
   assert.deepEqual(JSON.parse(r).target, 40);
   const ar = app2.eval([], 49, "AS={exos:[{key:'pecdeck',name:'Pec Deck',w0:49,weight:54,n:4,reps:10,rHi:12,unite:'kg',status:'done',main:true,sets:[{w:54,reps:10,feel:'ok'},{w:54,reps:10,feel:'dur'},{w:54,reps:10,feel:'dur'},{w:54,reps:11,feel:'echec'}]}]};JSON.stringify({a:asAutoRefFollow(),ref:getCurrentWeight('pecdeck')})");
   assert.deepEqual(JSON.parse(ar), { a: { pecdeck: { from: 49, to: 54 } }, ref: 54 });
@@ -108,7 +108,7 @@ test("une séance plus légère ne remet pas le compteur de séries à zéro (cu
     C(3, "2026-10-28", [[10, 10], [10, 10], [10, 10], [8, 12]]),
   ];
   const r = JSON.parse(app3.eval(logs, 54, "DB.weights.curl_marteau_croise=[{date:'2026-08-18',val:10}];JSON.stringify(loadCount('curl_marteau_croise'))"));
-  assert.equal(r.done, 7);
+  assert.equal(r.done, 6); // 06/11 : palier 10 × 10, les 9 valent ½
 });
 
 test("durée de séance = de la 1re à la dernière série validée (oubli de « terminé » ignoré)", () => {

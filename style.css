@@ -1126,6 +1126,7 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 .as-scard[data-t=legs].on{border-color:var(--legs);background:rgba(201,123,255,.09);box-shadow:0 0 16px rgba(201,123,255,.14);}
 .as-lbl{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mut);margin:.85rem 0 .45rem;}
 .as-lbl-hint{text-transform:none;letter-spacing:0;font-weight:500;opacity:.7;}
+.as-overlay .as-lbl-hint{opacity:1;} /* 06/11 : en séance, l'indice reste lisible (AA) — --mut seul */
 .as-exo-picks,.as-ready-chips{display:flex;flex-wrap:wrap;gap:.4rem;}
 .as-pick{display:inline-flex;align-items:center;gap:.35rem;padding:.5rem .7rem;background:var(--glass);border:1.5px solid var(--gb);border-radius:var(--x-r-pill);color:var(--mut);font-family:'Manrope',system-ui,sans-serif;font-size:.72rem;font-weight:600;cursor:pointer;transition:all .18s;}
 .as-pick .as-pick-tick{opacity:0;color:var(--acc);font-weight:800;transition:opacity .18s;}

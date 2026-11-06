@@ -900,7 +900,7 @@ function checkReminders(){
     if(!seance || !shk){
       var parts=[];
       if(!seance) parts.push('ta séance');
-      if(!shk) parts.push('ton shaker &#x1F964;');
+      if(!shk) parts.push('ta cr&#xE9;atine &#x1F964;');
       banner={type:'day',msg:'&#x1F4AA; Jour de séance ! N\'oublie pas '+parts.join(' et ')+'.',showShaker:!shk};
     }
   }
@@ -926,7 +926,7 @@ function renderReminderBanner(banner){
   el.innerHTML='<div class="reminder-banner rb-'+banner.type+'">'
     +'<div class="rb-msg">'+banner.msg+'</div>'
     +'<div class="rb-actions">'
-    +(banner.showShaker?'<button class="rb-shaker" onclick="markShakerDone()" title="Valider le shaker du jour">&#x1F964; Fait</button>':'')
+    +(banner.showShaker?'<button class="rb-shaker" onclick="markShakerDone()" title="Valider la cr&#xE9;atine du jour">&#x1F964; Fait</button>':'')
     +'<button class="rb-go" onclick="switchToSeances()">Go</button>'
     +'<button class="rb-x" onclick="dismissReminder(\''+banner.type+'\')" title="Masquer">&#x2715;</button>'
     +'</div></div>';
@@ -936,7 +936,7 @@ function renderReminderBanner(banner){
 function markShakerDone(){
   var d=ensureNutriDay(todayStr());
   d.shaker=true; saveDB();
-  showToast('&#x1F964; Shaker validé !');
+  showToast('&#x1F964; Créatine validée !');
   try{ checkReminders(); }catch(e){}
 }
 function switchToSeances(){
@@ -1025,7 +1025,7 @@ var NUTRI_MEALS=[
   {key:'petit_dej',label:'Petit-déj',icon:'&#x1F950;'},
   {key:'dejeuner', label:'Déjeuner', icon:'&#x1F37D;&#xFE0F;'},
   {key:'diner',    label:'Dîner',    icon:'&#x1F319;'},
-  {key:'shaker',   label:'Shaker',    icon:'&#x1F964;'}
+  {key:'shaker',   label:'Créatine',  icon:'&#x1F964;'}
 ];
 function nutriGoal(){
   var p=DB.profile||{};
@@ -1152,7 +1152,7 @@ function renderNutrition(){
   html+='<div class="nutri-stats">'
     +'<div class="nutri-stat"><div class="nutri-stat-val">'+avgKcal+'</div><div class="nutri-stat-lbl">kcal / jour</div></div>'
     +'<div class="nutri-stat"><div class="nutri-stat-val">'+(avgProt||'—')+'</div><div class="nutri-stat-lbl">g prot. / jour</div></div>'
-    +'<div class="nutri-stat"><div class="nutri-stat-val">'+shakerPerWeek+'</div><div class="nutri-stat-lbl">shakers / sem.</div></div>'
+    +'<div class="nutri-stat"><div class="nutri-stat-val">'+shakerPerWeek+'</div><div class="nutri-stat-lbl">cr&#xE9;atine / sem.</div></div>'
     +'<div class="nutri-stat"><div class="nutri-stat-val" style="color:var(--acc)">'+pdjPris+'</div><div class="nutri-stat-lbl">ptit-déj pris</div></div>'
     +'<div class="nutri-stat"><div class="nutri-stat-val" style="color:'+(pdjLoupe>0?'var(--red)':'var(--mut)')+'">'+pdjLoupe+'</div><div class="nutri-stat-lbl">ptit-déj loupés</div></div>'
     +'<div class="nutri-stat"><div class="nutri-stat-val">'+kcalDays.length+'</div><div class="nutri-stat-lbl">jours suivis</div></div>'
@@ -1655,7 +1655,7 @@ function exportCoachDossier(opts){
     var a=DB.weights[k]; if(!a||!a.length||EXO[k].e.hidden) return;
     var cur=a[a.length-1], prev=null; a.forEach(function(e){ if(e.date<d30) prev=e; });
     if(prev&&cur.val!==prev.val&&(asIsInverse(k)?cur.val<prev.val:cur.val>prev.val)) ups.push(name(k)+' '+prev.val+' → '+cur.val);
-    var lcS=loadCount(k); if(lcS&&lcS.ratio>=1&&exoStats[k]&&exoStats[k].n30) stag.push(name(k)+' ('+lcS.done+'/'+lcS.target+' séries à '+lcS.w+(lcS.lvl!=null?'×'+lcS.lvl:'')+')');
+    var lcS=loadCount(k); if(lcS&&lcS.ratio>=1&&exoStats[k]&&exoStats[k].n30) stag.push(name(k)+' ('+lcS.doneTxt+'/'+lcS.target+' séries à '+lcS.w+(lcS.lvl!=null?'×'+lcS.lvl:'')+')');
   });
   add('Charges de référence en hausse',ups.length,'exercices','30 jours',ups.join(' · '));
   add('Exercices stagnants (objectif de séries à la charge actuelle dépassé — 8 à 20 séances selon la taille du cran, encore pratiqués)',stag.length,'exercices','',stag.join(' · '));
@@ -1721,7 +1721,7 @@ function exportCoachDossier(opts){
     var rg=!d.e.repTarget&&REP_RANGE[k], presc=d.e.serie||'';
     if(rg){ var _pm=presc.match(/^(\d+)[×x]\d+(.*)$/); presc=(_pm?_pm[1]:'4')+'×'+rg.r[0]+'-'+rg.r[1]+(_pm?_pm[2]:''); }
     exoRows.push([name(k),k,txt(d.s.name),d.e.hidden?'retiré':d.e.bonus?'bonus':'principal',d.e.imp?'oui':'',group(k),presc,d.e.rest||null,unitOf(k),inv,
-      cur?cur.val:null,cur?cur.date:'',(function(){ var lcE=loadCount(k); return lcE&&lcE.done?lcE.done+' / '+lcE.target:null; })(),first?first.val:null,first?first.date:'',dl,(first&&first.val&&dl!=null)?Math.round(dl/first.val*100):null,d30v,
+      cur?cur.val:null,cur?cur.date:'',(function(){ var lcE=loadCount(k); return lcE&&lcE.done?lcE.doneTxt+' / '+lcE.target:null; })(),first?first.val:null,first?first.date:'',dl,(first&&first.val&&dl!=null)?Math.round(dl/first.val*100):null,d30v,
       es?es.n:0,es?es.n30:0,es&&es.last||'',es&&es.best?r1(es.best):null,es&&es.bestDate||'',es&&es.bestSet||'',evo?evo.from+' → '+evo.to+' ('+evo.hi+' série(s) au poids haut)':'',txt(d.e.bless||'')]);
   });
   sheets.push({name:'Exercices',cols:[{h:'Exercice',w:30},{h:'Clé',w:16},{h:'Séance du programme',w:10},{h:'Rôle',w:9},{h:'Exo clé',w:6},{h:'Groupe musculaire',w:11},{h:'Prescription (séries × fourchette de reps)',w:12},{h:'Repos (s)',w:7},{h:'Unité',w:8},{h:'Assistance (moins = mieux)',w:9},{h:'Charge de référence actuelle',w:10},{h:'Depuis le',w:11},{h:'Séries à la charge actuelle / objectif',w:11},{h:'Charge de départ',w:9},{h:'Date de départ',w:11},{h:'Progression totale',w:9},{h:'Progression %',w:9},{h:'Variation sur 30 j',w:9},{h:'Exécutions LiveUp',w:9},{h:'Exécutions 30 j',w:9},{h:'Dernière exécution',w:11},{h:'Meilleure e1RM (kg)',w:9},{h:'Date meilleure e1RM',w:11},{h:'Meilleure série (charge × reps)',w:12},{h:'Évolution de charge en cours',w:22},{h:'Consigne blessure',w:50,wrap:true}],rows:exoRows});
