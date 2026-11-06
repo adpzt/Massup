@@ -142,9 +142,13 @@
 .bl-chart svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .bl-chart__band{fill:var(--bl-band)}
 .bl-chart__area{fill:url(#bl-area)}
-.bl-chart__line{fill:none;stroke:var(--acc);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.bl-chart__line{fill:none;stroke:var(--acc);stroke-width:2.25;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
 .bl-chart__target{stroke:var(--bl-target);stroke-width:1.5;stroke-dasharray:5 5;vector-effect:non-scaling-stroke}
-.bl-chart__dot{position:absolute;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:4px;background:var(--acc);pointer-events:none}
+.bl-chart__dot{position:absolute;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:4px;background:var(--acc);box-shadow:0 0 0 2px var(--bg);pointer-events:none}
+.bl-chart__dot--last{width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:6px;box-shadow:0 0 0 2.5px var(--bg),0 0 10px var(--acc)}
+.bl-chart__trend{fill:none;stroke:var(--txt);stroke-width:1.75;stroke-dasharray:4 4;stroke-linecap:round;vector-effect:non-scaling-stroke;opacity:.7}
+.bl-leg__line{background:var(--acc);height:3px!important}
+.bl-leg__trend{height:0!important;border-top:2px dashed var(--txt);opacity:.7;border-radius:0!important}
 .bl-chart__ring{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:8px;border:2px solid var(--txt);background:var(--bg);pointer-events:none}
 .bl-chart__v{position:absolute;top:0;bottom:0;width:1px;background:var(--mut);pointer-events:none}
 .bl-chart__hit{position:absolute;inset:-12px 0;width:100%;background:transparent;border:0;padding:0;cursor:crosshair;-webkit-tap-highlight-color:transparent}

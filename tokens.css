@@ -247,6 +247,7 @@
   --bl-zone:rgba(113,255,180,0.10);     /* zone 7-9 h du sommeil */
   --bl-sleep-ok:var(--st-green);
   --bl-sleep-ko:var(--st-red);
+  --bl-sleep-long:var(--acc2); /* nuit > 9 h : bleu, comme la page Sommeil (06/11) */
 
   /* Répartition G · P · L : toujours les teintes vives, texte foncé (≥5.7:1 dans les deux modes) */
   --bl-rep-glu:#3F8FE0;

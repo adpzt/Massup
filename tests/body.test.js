@@ -25,10 +25,10 @@ function load() {
 }
 const bw = (pairs) => pairs.map(([date, kg]) => ({ date, weight_kg: kg }));
 
-test("tendance = moyenne des pesées des 7 derniers jours", () => {
+test("tendance = moyenne des 5 dernières pesées (06/11)", () => {
   const run = load();
-  const t = run("bwTrend(__d)", { __d: bw([["2026-10-01", 70], ["2026-10-03", 72], ["2026-10-07", 71], ["2026-10-09", 73]]) });
-  assert.deepEqual(t.map((p) => p.y), [70, 71, 71, 72]);
+  const t = run("bwTrend(__d)", { __d: bw([["2026-10-01", 70], ["2026-10-03", 72], ["2026-10-07", 71], ["2026-10-09", 73], ["2026-10-10", 74], ["2026-10-11", 75]]) });
+  assert.deepEqual(t.map((p) => p.y), [70, 71, 71, 71.5, 72, 73]);
 });
 
 test("rythme : pente sur 4 semaines, null sans 3 pesées étalées sur 10 jours", () => {

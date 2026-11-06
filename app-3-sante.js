@@ -130,14 +130,12 @@ function renderSanteChart(){
     });
   }
 }
-// Tendance (02/11) : à chaque pesée, moyenne des pesées des 7 derniers jours (elle comprise).
-// Avec une pesée par semaine, la tendance = la pesée ; avec 3-7 pesées par semaine, le bruit disparaît.
+// Tendance (06/11, demande Adrien — pesée quotidienne) : à chaque pesée, moyenne des 5 DERNIÈRES pesées
+// (elle comprise), quelle que soit leur date. Avant (02/11) : moyenne des pesées des 7 derniers jours.
 function bwTrend(data){
-  return data.map(function(b){
-    var t=new Date(b.date).getTime(), s=0, n=0;
-    data.forEach(function(o){ var u=new Date(o.date).getTime(); if(u<=t&&u>t-7*86400000){ s+=parseFloat(o.weight_kg); n++; } });
-    return {x:t,y:Math.round(s/n*100)/100};
-  });
+  var sorted=(data||[]).slice().sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:0; });
+  var at={}; sorted.forEach(function(b,i){ var s=0,n=0; for(var j=Math.max(0,i-4);j<=i;j++){ s+=parseFloat(sorted[j].weight_kg); n++; } at[b.date]=Math.round(s/n*100)/100; });
+  return (data||[]).map(function(b){ return {x:new Date(b.date).getTime(),y:at[b.date]}; });
 }
 // Rythme (02/11) : pente (moindres carrés) des pesées des 28 jours qui finissent à la dernière pesée,
 // en kg/semaine — robuste à une pesée « gonflée ». null sans 3 pesées étalées sur 10 jours ou plus.

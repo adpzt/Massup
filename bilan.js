@@ -19,6 +19,13 @@ var BILAN=(function(){
   // À CHAQUE mise en ligne d'une nouveauté visible : ajouter une entrée EN TÊTE (id = date AAAA-MM-JJ), 3 à 6 lignes courtes.
   // Elle s'affiche une fois par appareil (localStorage massup_news = id déjà vu), sur le Bilan, avant la saisie de la nuit.
   var NEWS=[
+    {id:'2026-11-06b',t:'Courbe de poids refaite (6 novembre)',items:[
+      ['\u2696\uFE0F','Tes 32 pesées Renpho depuis mars sont dans l\u2019historique.'],
+      ['\uD83D\uDCC8','La courbe s\u2019ouvre sur 3 semaines, avec une échelle serrée sur tes valeurs. La ligne passe par tes pesées.'],
+      ['\u2796','Tendance = moyenne de tes 5 dernières pesées, en pointillés.'],
+      ['\u2B05\uFE0F','3 mois, 6 mois et Saison démarrent maintenant tout à gauche.'],
+      ['\uD83C\uDF19','Sommeil : une nuit longue (plus de 9 h) est bleue, plus rouge.']
+    ]},
     {id:'2026-11-06',t:'Compteur de séries à ta main (6 novembre)',items:[
       ['🎯','Sur l’intro de chaque exo : ton poids du jour + les reps visées (8, 10, 12…). La barre « Séries à X kg × N » suit ton choix, à l’intro et pendant le repos.'],
       ['🔁','Reps par défaut = tes 5 dernières séances à ce poids, jamais sous le bas de la fourchette du programme.'],
@@ -66,7 +73,7 @@ var BILAN=(function(){
       ['\uD83C\uDF19','Sommeil : au lit avant minuit, réveil entre 7\u00a0h et 9\u00a0h.']
     ]}
   ];
-  var S={tab:'today',notes:false,sel:null,psel:null,per:'all',pall:false,conf:null,mconf:null,mOpen:false,allw:false,mel:false,pop:null,screen:null,sheet:null};
+  var S={tab:'today',notes:false,sel:null,psel:null,per:'3w',pall:false,conf:null,mconf:null,mOpen:false,allw:false,mel:false,pop:null,screen:null,sheet:null};
 
   /* ── Format français ── */
   function fr(v,d){ return Number(v).toFixed(d).replace('.',','); }
@@ -210,7 +217,7 @@ var BILAN=(function(){
       var cur=nights[6], valid=nights.filter(function(n){ return n.m!=null; });
       var avgm=valid.length?Math.round(valid.reduce(function(a,n){ return a+n.m; },0)/valid.length):null;
       var sb=nights.map(function(n,i){
-        return '<span class="'+(i===6?'is-today':'')+'"><i style="height:'+(n.m==null?100:Math.min(100,n.m/600*100)).toFixed(0)+'%;background:'+(n.m==null?'var(--bl-track)':sleepZone(n.m)?'var(--bl-sleep-ok)':'var(--bl-sleep-ko)')+'"></i><em>'+new Date(addD(n.k,1)+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'narrow'})+'</em></span>';
+        return '<span class="'+(i===6?'is-today':'')+'"><i style="height:'+(n.m==null?100:Math.min(100,n.m/600*100)).toFixed(0)+'%;background:'+(n.m==null?'var(--bl-track)':sleepZone(n.m)?'var(--bl-sleep-ok)':n.m>540?'var(--bl-sleep-long)':'var(--bl-sleep-ko)')+'"></i><em>'+new Date(addD(n.k,1)+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'narrow'})+'</em></span>';
       }).join('');
       var top=cur.m==null
         ? '<div class="bl-num bl-big bl-mut">—</div>'
@@ -224,60 +231,82 @@ var BILAN=(function(){
     return '<section class="bl-duo">'+pas+som+'</section>';
   }
 
-  /* ── Courbe de poids (SVG + HTML, sans Chart.js — HANDOFF §4) ── */
+  /* ── Courbe de poids (SVG + HTML, sans Chart.js — HANDOFF §4) ──
+     06/11 (Adrien, pesée quotidienne) : vue « 3 sem. » par défaut ; la ligne pleine PASSE PAR les pesées
+     (avant : moyenne glissante → des points au-dessus et en dessous de la ligne) ; la tendance = moyenne des
+     5 dernières pesées (bwTrend), en pointillés ; échelle serrée sur les valeurs de la vue ; chaque vue démarre
+     à sa 1re pesée, tout à gauche (avant : 3 mois / 6 mois commençaient au milieu). */
+  var PERS=[['3w','3 sem.',21],['3m','3 mois',91],['6m','6 mois',182],['all','Saison',0]];
+  function niceStep(span){ return span<=2.5?0.5:span<=6?1:span<=12?2:4; }
   function weightModel(per,w,h){
-    var ws=weights(), end=today();
-    var from=per==='3m'?addD(end,-91):per==='6m'?addD(end,-182):(ws[0]?ws[0].date:end);
-    var data=ws.filter(function(b){ return b.date>=from; }).map(function(b){ return {d:b.date,v:parseFloat(b.weight_kg),t:new Date(b.date+'T12:00:00').getTime()}; });
-    if(!data.length) return null;
-    var vals=data.map(function(p){ return p.v; }), sa=SAISONS[0];
+    var ws=weights(), end=today(); if(!ws.length) return null;
+    var P=PERS.filter(function(x){ return x[0]===per; })[0]||PERS[0];
+    var trAll=bwTrend(ws);
+    var all=ws.map(function(b,i){ return {d:b.date,v:parseFloat(b.weight_kg),tr:trAll[i].y,t:new Date(b.date+'T12:00:00').getTime()}; });
+    var data=P[2]?all.filter(function(p){ return p.d>addD(end,-P[2]); }):all;
+    if(data.length<2) data=all.slice(-Math.min(all.length,5)); // vue trop vide : les dernières pesées
+    var sa=SAISONS[0], sb=SAISONS[1];
+    var vals=[]; data.forEach(function(p){ vals.push(p.v,p.tr); });
     var lo=Math.min.apply(null,vals), hi=Math.max.apply(null,vals);
-    var y0=Math.min(Math.floor(lo-1),67), y1=Math.ceil(Math.max(hi,sa.cible)+1);
-    var t0=new Date(from+'T12:00:00').getTime(), T=Math.max(86400000,new Date(end+'T12:00:00').getTime()-t0);
-    var Y=function(v){ return h-(v-y0)/(y1-y0)*h; };
+    var showGoal=per==='all'||per==='6m'||sa.cible<=hi+0.6;
+    if(showGoal) hi=Math.max(hi,sa.cible);
+    var pad=Math.max(0.3,(hi-lo)*0.12), y0=lo-pad, y1=hi+pad;
+    if(y1-y0<1.5){ var mid=(y0+y1)/2; y0=mid-0.75; y1=mid+0.75; }
+    var st=niceStep(y1-y0); y0=Math.floor(y0/st)*st; y1=Math.ceil(y1/st)*st;
+    var t0=data[0].t, T=Math.max(86400000,data[data.length-1].t-t0);
+    var X=function(t){ return 6+(t-t0)/T*(w-12); }, Y=function(v){ return h-(v-y0)/(y1-y0)*h; };
     var pts=data.map(function(p,k){
-      var x=4+(p.t-t0)/T*(w-8), y=Y(p.v);
-      return {x:x,y:y,v:p.v,d:p.d,lx:(x/w*100).toFixed(2),ty:(y/h*100).toFixed(2),dl:k>0?sgn(p.v-data[k-1].v,1):''};
+      var x=X(p.t), y=Y(p.v);
+      return {x:x,y:y,v:p.v,tr:p.tr,d:p.d,lx:(x/w*100).toFixed(2),ty:(y/h*100).toFixed(2),dl:k>0?sgn(p.v-data[k-1].v,1):''};
     });
-    // Tendance tracée : moyenne glissante centrée sur 3 pesées (HANDOFF §4)
-    var tr=pts.map(function(p,i){ var a=data.slice(Math.max(0,i-1),i+2); return [p.x,Y(a.reduce(function(q,r){ return q+r.v; },0)/a.length)]; });
-    var line=tr.map(function(p,i){ return (i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1); }).join(' ');
-    var step=(y1-y0)>8?4:2, grid=[];
-    for(var v=Math.ceil(y0/step)*step;v<=y1;v+=step) grid.push([(Y(v)/h*100).toFixed(1),v]);
-    // Repères de mois : au plus 5, placés à leur vraie date
-    var ax=[], m=new Date(from+'T12:00:00'); m.setDate(1); m.setMonth(m.getMonth()+1);
-    var months=[]; while(ymd(m)<=end){ months.push(ymd(m)); m.setMonth(m.getMonth()+1); }
-    var every=Math.max(1,Math.ceil(months.length/5));
-    months.forEach(function(ms,i){ if((months.length-1-i)%every===0){ var x=4+(new Date(ms+'T12:00:00').getTime()-t0)/T*(w-8); ax.push([(x/w*100).toFixed(1),mshort(ms)]); } });
-    var bw=bwTrend(ws);
-    return {pts:pts,line:line,area:line+' L'+(tr[tr.length-1][0]).toFixed(1)+' '+h+' L'+tr[0][0].toFixed(1)+' '+h+' Z',y76:Y(sa.cible),y68:Y(SAISONS[1].cible),grid:grid,ax:ax,h:h,w:w,
-      trend:bw.length?bw[bw.length-1].y:null};
+    var path=function(a){ return a.map(function(p,i){ return (i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1); }).join(' '); };
+    var line=path(pts.map(function(p){ return [p.x,p.y]; }));
+    var tline=path(data.map(function(p){ return [X(p.t),Y(p.tr)]; }));
+    var grid=[]; for(var v=y0;v<=y1+1e-9;v+=st) grid.push([(Y(v)/h*100).toFixed(1),st<1?fr(v,1):String(Math.round(v))]);
+    var ax=[];
+    if(per==='3w'){ // un repère par semaine, en partant de la dernière pesée
+      for(var k=0;k<5;k++){ var tt=data[data.length-1].t-k*7*86400000; if(tt<t0-43200000) break; ax.unshift([(X(tt)/w*100).toFixed(1),dshort(ymd(new Date(tt)))]); }
+    } else { // repères de mois (au plus 5), à leur vraie date
+      var m=new Date(data[0].d+'T12:00:00'); m.setDate(1); m.setMonth(m.getMonth()+1);
+      var months=[]; while(m.getTime()<=data[data.length-1].t){ months.push(ymd(m)); m.setMonth(m.getMonth()+1); }
+      var every=Math.max(1,Math.ceil(months.length/5));
+      months.forEach(function(ms,i){ if((months.length-1-i)%every===0) ax.push([(X(new Date(ms+'T12:00:00').getTime())/w*100).toFixed(1),mshort(ms)]); });
+    }
+    var inR=function(v){ return v>=y0&&v<=y1; };
+    return {pts:pts,line:line,tline:tline,area:line+' L'+pts[pts.length-1].x.toFixed(1)+' '+h+' L'+pts[0].x.toFixed(1)+' '+h+' Z',
+      y76:showGoal&&inR(sa.cible)?Y(sa.cible):null,y68:inR(sb.cible)?Y(sb.cible):null,grid:grid,ax:ax,h:h,w:w,dots:pts.length<=45,
+      trend:trAll[trAll.length-1].y};
   }
   function chartHtml(md,selIdx,lg){
-    var sel=selIdx!=null&&md.pts[selIdx]?md.pts[selIdx]:null, c=lg?'psel':'sel';
+    var sel=selIdx!=null&&md.pts[selIdx]?md.pts[selIdx]:null, c=lg?'psel':'sel', last=md.pts[md.pts.length-1];
     return '<div class="bl-chart'+(lg?' bl-chart--lg':'')+'">'
       +(lg?md.grid.map(function(g){ return '<i class="bl-chart__grid" style="top:'+g[0]+'%"></i><span class="bl-chart__yl" style="top:'+g[0]+'%">'+g[1]+'</span>'; }).join(''):'')
-      +'<svg viewBox="0 0 '+md.w+' '+md.h+'" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="bl-area-'+c+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--acc);stop-opacity:.24"/><stop offset="1" style="stop-color:var(--acc);stop-opacity:0"/></linearGradient></defs>'
-      +'<line class="bl-chart__goal" x1="0" x2="'+md.w+'" y1="'+md.y76.toFixed(1)+'" y2="'+md.y76.toFixed(1)+'"/>'
-      +(lg?'<line class="bl-chart__target" x1="0" x2="'+md.w+'" y1="'+md.y68.toFixed(1)+'" y2="'+md.y68.toFixed(1)+'"/>':'')
-      +'<path class="bl-chart__area" style="fill:url(#bl-area-'+c+')" d="'+md.area+'"/><path class="bl-chart__line" d="'+md.line+'"/></svg>'
-      +'<span class="bl-chart__tag" style="top:'+(md.y76/md.h*100).toFixed(1)+'%">objectif masse '+SAISONS[0].cible+' kg</span>'
-      +md.pts.map(function(p){ return '<i class="bl-chart__dot" style="left:'+p.lx+'%;top:'+p.ty+'%"></i>'; }).join('')
+      +'<svg viewBox="0 0 '+md.w+' '+md.h+'" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="bl-area-'+c+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--acc);stop-opacity:.22"/><stop offset="1" style="stop-color:var(--acc);stop-opacity:0"/></linearGradient></defs>'
+      +(md.y76!=null?'<line class="bl-chart__goal" x1="0" x2="'+md.w+'" y1="'+md.y76.toFixed(1)+'" y2="'+md.y76.toFixed(1)+'"/>':'')
+      +(lg&&md.y68!=null?'<line class="bl-chart__target" x1="0" x2="'+md.w+'" y1="'+md.y68.toFixed(1)+'" y2="'+md.y68.toFixed(1)+'"/>':'')
+      +'<path class="bl-chart__area" style="fill:url(#bl-area-'+c+')" d="'+md.area+'"/><path class="bl-chart__trend" d="'+md.tline+'"/><path class="bl-chart__line" d="'+md.line+'"/></svg>'
+      +(md.y76!=null?'<span class="bl-chart__tag" style="top:'+(md.y76/md.h*100).toFixed(1)+'%">objectif masse '+SAISONS[0].cible+' kg</span>':'')
+      +md.pts.map(function(p,i){ return (md.dots||i===md.pts.length-1)?'<i class="bl-chart__dot'+(i===md.pts.length-1?' bl-chart__dot--last':'')+'" style="left:'+p.lx+'%;top:'+p.ty+'%"></i>':''; }).join('')
       +(sel?'<i class="bl-chart__v" style="left:'+sel.lx+'%"></i><i class="bl-chart__ring" style="left:'+sel.lx+'%;top:'+sel.ty+'%"></i>':'')
       +'<button type="button" class="bl-chart__hit" data-c="'+c+'" onclick="BILAN.pick(event,this)" aria-label="Lire une pesée sur la courbe"></button></div>';
   }
   function axHtml(md,lg){ return '<div class="bl-ax bl-ax--abs'+(lg?' bl-ax--lg':'')+'">'+md.ax.map(function(a){ return '<span style="left:'+a[0]+'%">'+a[1]+'</span>'; }).join('')+'</div>'; }
+  function legHtml(md,lg){
+    return '<div class="bl-leg"><span><i class="bl-leg__line"></i>pesées</span><span><i class="bl-leg__trend"></i>tendance (5 dernières)</span>'
+      +(md.y76!=null?'<span><i style="background:var(--acc);height:2px"></i>masse '+SAISONS[0].cible+' kg</span>':'')
+      +(lg&&md.y68!=null?'<span><i style="background:var(--bl-target);height:2px"></i>sèche '+SAISONS[1].cible+' kg</span>':'')+'</div>';
+  }
   function rateTxt(){ var R=bwRate(weights()); return R?'<span class="'+rCls(R.rate)+'" style="font-weight:800">'+sgn(R.rate,2)+' kg/sem</span>':''; }
   function readHtml(md,selIdx,withDelta){
     var sel=selIdx!=null?md.pts[selIdx]:null;
     if(!sel) return '<div class="bl-read"><span>Tendance <span class="bl-num" style="font-size:18px">'+(md.trend==null?'—':fr(md.trend,1)+' kg')+'</span></span>'+rateTxt()+'</div>';
-    return '<div class="bl-read" aria-live="polite"><span class="bl-read__d"><span class="bl-mut">'+dlab(sel.d)+'</span><span class="bl-num" style="font-size:18px">'+fr(sel.v,1)+' kg</span>'+(withDelta&&sel.dl?'<span class="bl-mut" style="font-size:12px">'+sel.dl+'</span>':'')+'</span>'
+    return '<div class="bl-read" aria-live="polite"><span class="bl-read__d"><span class="bl-mut">'+dlab(sel.d)+'</span><span class="bl-num" style="font-size:18px">'+fr(sel.v,1)+' kg</span>'+(withDelta&&sel.dl?'<span class="bl-mut" style="font-size:12px">'+sel.dl+'</span>':'')+'<span class="bl-mut" style="font-size:12px">tend. '+fr(sel.tr,1)+'</span></span>'
       +'<button type="button" class="bl-ib" style="margin-right:-10px" onclick="BILAN.unpick(\''+(withDelta?'psel':'sel')+'\')" aria-label="Fermer la lecture">✕</button></div>';
   }
   function weightHtml(){
     var ws=weights(), inner;
     if(ws.length<2) inner='<div class="bl-empty"><span class="bl-empty__t">'+(ws.length?'Encore une pesée pour tracer la courbe':'Aucune pesée pour l’instant')+'</span></div>';
-    else { var md=weightModel('all',350,150); inner=readHtml(md,S.sel,false)+chartHtml(md,S.sel,false)+axHtml(md,false); }
+    else { var md=weightModel('3w',350,150); inner=readHtml(md,S.sel,false)+chartHtml(md,S.sel,false)+axHtml(md,false)+legHtml(md,false); }
     return '<section class="bl-sec"><button type="button" class="bl-sec__head" onclick="BILAN.go(\'poids\')"><h2 class="bl-sec__t"><span aria-hidden="true">⚖️</span>Poids &amp; corps</h2><span class="bl-mut" style="font-weight:800;font-size:16px;padding-right:12px" aria-hidden="true">›</span></button>'+inner
       +'<div class="bl-actions"><button type="button" class="bl-btn bl-btn--primary" onclick="BILAN.sheet(\'pesee\')">+ Pesée</button><button type="button" class="bl-btn bl-btn--ghost" onclick="BILAN.sheet(\'mensu\')">📏 Mensurations</button></div></section>';
   }
@@ -331,7 +360,7 @@ var BILAN=(function(){
       +'<div class="bl-num" style="font-size:68px;margin-top:10px"><span class="bl-hero-txt">'+fr(cur,1)+'</span>'+u('kg')+'</div>'
       +(prev?'<div style="font-size:13px;font-weight:800;margin-top:10px"><span class="'+dCls(cur-prev.weight_kg)+'">'+sgn(cur-prev.weight_kg,1)+' kg</span> <span class="bl-mut">vs '+dlab(prev.date)+'</span></div>':'')
       +'<div class="bl-stats">'
-      +stat('Tendance',fr(tr[tr.length-1].y,1)+u('kg'),'moy. 7 jours')
+      +stat('Tendance',fr(tr[tr.length-1].y,1)+u('kg'),'moy. 5 pesées')
       +stat('Rythme',R?sgn(R.rate,2):'—',(seche()?'kg/sem · vise −0,35 à −0,55':'kg/sem · 4 sem.'),R?rCls(R.rate):'')
       +stat('Pesées',n7+u('/7 j'),'objectif 3+'+(n7>=3?' ✓':''))
       +stat('30 jours',d30==null?'—':sgn(d30,1)+u('kg'),d30==null?'pas assez de pesées':'au rythme actuel',d30==null?'':dCls(d30))
@@ -348,9 +377,9 @@ var BILAN=(function(){
     if(ws.length>=2){
       var md=weightModel(S.per,320,220);
       h+='<section class="bl-sec"><div class="bl-sec__head"><h2 class="bl-sec__t"><span aria-hidden="true">📈</span>Courbe</h2></div>'
-        +'<div class="bl-seg" role="tablist" style="margin-top:8px">'+[['3m','3 mois'],['6m','6 mois'],['all','Saison']].map(function(x){ return '<button type="button" role="tab" aria-selected="'+(S.per===x[0])+'" onclick="BILAN.per(\''+x[0]+'\')">'+x[1]+'</button>'; }).join('')+'</div>'
+        +'<div class="bl-seg" role="tablist" style="margin-top:8px">'+PERS.map(function(x){ return '<button type="button" role="tab" aria-selected="'+(S.per===x[0])+'" onclick="BILAN.per(\''+x[0]+'\')">'+x[1]+'</button>'; }).join('')+'</div>'
         +'<div style="margin-top:10px">'+readHtml(md,S.psel,true)+'</div>'+chartHtml(md,S.psel,true)+axHtml(md,true)
-        +'<div class="bl-leg"><span><i style="background:var(--acc);height:3px"></i>tendance</span><span><i style="background:var(--acc);width:7px;height:7px;border-radius:4px"></i>pesée</span><span><i style="background:var(--acc);height:2px"></i>masse '+SAISONS[0].cible+' kg</span><span><i style="background:var(--bl-target);height:2px"></i>sèche '+SAISONS[1].cible+' kg</span></div></section><hr class="bl-hr">';
+        +legHtml(md,true)+'</section><hr class="bl-hr">';
     }
     var all=ws.slice().reverse(), list=all.slice(0,S.pall?all.length:6);
     h+='<section class="bl-sec"><div class="bl-sec__head"><h2 class="bl-sec__t"><span aria-hidden="true">📋</span>Pesées</h2><span class="bl-meta">'+ws.length+' au total</span></div>'
@@ -536,7 +565,7 @@ var BILAN=(function(){
   /* ── Actions ── */
   function pick(ev,btn){
     var c=btn.getAttribute('data-c'), r=btn.getBoundingClientRect(), x=(ev.clientX-r.left)/r.width;
-    var md=c==='psel'?weightModel(S.per,320,220):weightModel('all',350,150); if(!md) return;
+    var md=c==='psel'?weightModel(S.per,320,220):weightModel('3w',350,150); if(!md) return;
     var best=0,bd=1e9; md.pts.forEach(function(p,i){ var d=Math.abs(p.x/md.w-x); if(d<bd){ bd=d; best=i; } });
     S[c]=S[c]===best?null:best;
     if(c==='psel') renderScreen(); else render();
