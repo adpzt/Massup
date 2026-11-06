@@ -11,14 +11,15 @@
 var INTAKE=(function(){
   var A=null, $=function(id){ return document.getElementById(id); };
   var LS='massup_intake';
-  // Objectifs : 2 900 kcal (24/08, confirmé 02/11) · 360 G · 150 P · lipides 75 visés (dès 60 c'est très bien), 85 = le gros
+  // Objectifs : 3 000 kcal depuis le 06/11 (Adrien : poids à plat ~74,2 kg depuis le 14/10 avec ~2 780 kcal de moyenne ;
+  // +200 kcal en glucides → 410 G ; avant : 2 900 kcal du 24/08, confirmé 02/11, avec 360 G) · 150 P · lipides 75 visés (dès 60 c'est très bien), 85 = le gros
   // max acceptable un jour de fast-food — c'est la MOYENNE qui compte, pas un jour (Adrien, 02/11 soir)
   // Sucres = sucres TOTAUX de Yazio (fruits, lait, céréales, sauces) : repère UE 90 g pour 2 000 kcal → ~130 g max à 2 900 kcal (03/11).
   // Potassium : simple repère (info) — Yazio ne le renseigne pas pour beaucoup d'aliments, le total est sous-estimé.
   // low = sous ce seuil, la journée est « pas bonne » (chiffre en orange) — ex. protéines : 150 c'est bien, ~140 ça va, < 130 non (Adrien, 02/11)
   var NUT=[
-    {k:'kcal',lbl:'Calories',pick:'G\u00e9n\u00e9ral',short:'kcal',u:'kcal',goal:2900,low:2600,kind:'min',col:'kcal'},
-    {k:'glu',lbl:'Glucides',short:'G',u:'g',goal:360,low:300,kind:'min',col:'glu'},
+    {k:'kcal',lbl:'Calories',pick:'G\u00e9n\u00e9ral',short:'kcal',u:'kcal',goal:3000,low:2600,kind:'min',col:'kcal'},
+    {k:'glu',lbl:'Glucides',short:'G',u:'g',goal:410,low:300,kind:'min',col:'glu'},
     {k:'prot',lbl:'Protéines',short:'P',u:'g',goal:150,low:130,kind:'min',col:'prot'},
     {k:'lip',lbl:'Lipides',short:'L',u:'g',goal:75,max:85,kind:'target',col:'lip'},
     {k:'fib',lbl:'Fibres',u:'g',goal:30,low:20,kind:'min',col:'mic'},
@@ -28,7 +29,7 @@ var INTAKE=(function(){
     {k:'potassium',lbl:'Potassium',u:'mg',goal:3500,kind:'min',col:'mic',info:1}
   ];
   var BY={}; NUT.forEach(function(n){ BY[n.k]=n; });
-  // Objectifs de la SAISON affichée (04/11, saison.js) : masse 2 900 kcal · 150 P · lipides 75/85 ; Sèche 2 450 kcal (2 600 max) ·
+  // Objectifs de la SAISON affichée (04/11, saison.js) : masse 3 000 kcal (06/11) · 410 G · 150 P · lipides 75/85 ; Sèche 2 450 kcal (2 600 max) ·
   // 160 P · lipides 65/75. Les valeurs de NUT ci-dessus = la masse ; syncGoals les ajuste avant chaque rendu (aperçu compris).
   var BASE={}; NUT.forEach(function(n){ BASE[n.k]={goal:n.goal,low:n.low,max:n.max,kind:n.kind}; });
   function syncGoals(){

@@ -24,7 +24,8 @@ var BILAN=(function(){
       ['\uD83D\uDCC8','La courbe s\u2019ouvre sur 3 semaines, avec une échelle serrée sur tes valeurs. La ligne passe par tes pesées.'],
       ['\u2796','Tendance = moyenne de tes 5 dernières pesées, en pointillés.'],
       ['\u2B05\uFE0F','3 mois, 6 mois et Saison démarrent maintenant tout à gauche.'],
-      ['\uD83C\uDF19','Sommeil : une nuit longue (plus de 9 h) est bleue, plus rouge.']
+      ['\uD83C\uDF19','Sommeil : une nuit longue (plus de 9 h) est bleue, plus rouge.'],
+      ['\uD83C\uDF5A','Nouvel objectif : 3\u00a0000 kcal (dont 410 g de glucides). À 2\u00a0800, ton poids ne bougeait plus depuis mi-octobre.']
     ]},
     {id:'2026-11-06',t:'Compteur de séries à ta main (6 novembre)',items:[
       ['🎯','Sur l’intro de chaque exo : ton poids du jour + les reps visées (8, 10, 12…). La barre « Séries à X kg × N » suit ton choix, à l’intro et pendant le repos.'],
@@ -134,7 +135,7 @@ var BILAN=(function(){
       ? '<button type="button" class="bl-hero__it" onclick="BILAN.go(\'poids\')"><div class="bl-lbl">⚖️ Poids</div><div class="bl-num bl-hero__v"><span class="bl-hero-txt">'+fr(parseFloat(last.weight_kg),1)+'</span>'+u('kg')+'</div><div class="bl-hero__s">'
         +(prev?'<span class="'+dCls(last.weight_kg-prev.weight_kg)+'">'+sgn(last.weight_kg-prev.weight_kg,1)+' kg</span> ':'')+'<span class="bl-mut">· '+dshort(last.date)+'</span></div></button>'
       : '<div class="bl-hero__it"><div class="bl-lbl">⚖️ Poids</div><button type="button" class="bl-btn bl-btn--primary bl-btn--sm" style="margin-top:12px" onclick="BILAN.sheet(\'pesee\')">+ 1re pesée</button></div>';
-    var kc=null, goal=2900;
+    var kc=null, goal=3000;
     if(typeof INTAKE!=='undefined'){ var w=INTAKE.last15(); kc=INTAKE.avg(w.start,w.end,'kcal').v; goal=INTAKE.NUT[0].goal; }
     var kcal=kc!=null
       ? '<button type="button" class="bl-hero__it" onclick="INTAKE.open()"><div class="bl-lbl">🍽️ kcal · 15 jours</div><div class="bl-num bl-hero__v"><span class="bl-hero-txt">'+nf(kc)+'</span></div><div class="bl-hero__s bl-mut">sur '+nf(goal)+' · '+Math.round(kc/goal*100)+NB+'%</div></button>'

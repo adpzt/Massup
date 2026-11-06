@@ -20,7 +20,7 @@ var SAISON=(function(){
   var START='2027-01-04', END='2027-06-01', PK='massup_seche_preview';
   var CFG={
     masse:{id:'masse',lbl:'Prise de masse',banner:'PRISE DE MASSE',start:'2026-03-01',end:'2027-01-03',cible:76,
-      nut:{kcal:{goal:2900,low:2600,kind:'min'},glu:{goal:360,low:300},prot:{goal:150,low:130},lip:{goal:75,max:85}},
+      nut:{kcal:{goal:3000,low:2600,kind:'min'},glu:{goal:410,low:300},prot:{goal:150,low:130},lip:{goal:75,max:85}},
       note:{kcalLo:2600,kcalHi:null,protDay:135},seances:null,abdos:0,legsEach:false,rate:null},
     seche:{id:'seche',lbl:'Sèche',banner:'SÈCHE',start:START,end:END,cible:68,gras:12,
       nut:{kcal:{goal:2450,max:2600,kind:'target'},glu:{goal:280,low:220},prot:{goal:160,low:140},lip:{goal:65,max:75}},
