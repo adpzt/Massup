@@ -2295,7 +2295,7 @@ function renderFreqChart(){
     var wend=new Date(wstart); wend.setDate(wend.getDate()+6); wend.setHours(23,59,59,999);
     var count=weekValue(DB.logs.filter(function(l){ var d=new Date(l.date); return d>=wstart&&d<=wend; }));
     var goal=getWeekGoal();
-    var strict=dateKeyLocal(wstart)>=FREQ_STRICT_START; // 01/11 : dès le 02/11, 3 séances (objectif 4) = rouge
+    var strict=false; // 01/11 : 3/4 = rouge dès le 02/11 → ANNULÉ le 09/11 (Adrien : trop sévère) : une séance sous l'objectif = gris
     var cls=count>=goal+1?'freq-bar gold':count>=goal?'freq-bar valid':(!strict&&count>=goal-1)?'freq-bar mid':'freq-bar low';
     var lbl=w===0?'★':('S-'+w);
     var bar=document.createElement('div');

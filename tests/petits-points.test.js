@@ -52,3 +52,27 @@ test("pesées Renpho : ajout seulement, jamais d'écrasement ni de pesée suppri
   assert.ok(!bw.includes(y2) && !bw.includes("2026-10-31") && !bw.includes(f));
   assert.equal(run("importHealthWeights(__m)", { __m: m }), 0); // idempotent
 });
+
+// 09/11 (Adrien : « j'ai supprimé la 1re pesée d'hier, la 2e ne vient jamais ») — le raccourci envoie la moyenne du jour.
+test("pesées Renpho : une pesée importée suit Santé, une saisie à la main jamais", () => {
+  const y = run("rankAddDays(todayStr(),-1)"), y2 = run("rankAddDays(todayStr(),-2)");
+  if (y2 < "2026-11-01") return;
+  run("DB.deletedBW=[];DB.deletedBWv={};DB.bodyWeight=[{date:__y,weight_kg:74.0,note:'Renpho'},{date:__y2,weight_kg:74.5,note:''}];", { __y: y, __y2: y2 });
+  const m = {}; m[y] = 73.9; m[y2] = 74.1;
+  assert.equal(run("importHealthWeights(__m)", { __m: m }), 1);
+  assert.equal(run("DB.bodyWeight.find(function(b){return b.date===__y;}).weight_kg"), 73.9, "2e pesée du jour : la moyenne remplace");
+  assert.equal(run("DB.bodyWeight.find(function(b){return b.date===__y2;}).weight_kg"), 74.5, "la saisie à la main gagne");
+});
+
+test("pesées Renpho : supprimer bloque CETTE valeur seulement — une nouvelle pesée ce jour-là revient", () => {
+  const y = run("rankAddDays(todayStr(),-1)");
+  if (y < "2026-11-01") return;
+  run("renderSante=function(){};DB.deletedBW=[];DB.deletedBWv={};DB.bodyWeight=[{date:__y,weight_kg:74.0,note:'Renpho'}];deleteBodyWeightEntry(__y);", { __y: y });
+  assert.equal(run("DB.deletedBWv[__y]"), 74.0);
+  const same = {}; same[y] = 74.0;
+  assert.equal(run("importHealthWeights(__m)", { __m: same }), 0, "même valeur = la pesée supprimée, elle ne revient pas");
+  const other = {}; other[y] = 73.8;
+  assert.equal(run("importHealthWeights(__m)", { __m: other }), 1);
+  assert.equal(run("DB.deletedBW.indexOf(__y)"), -1, "la marque de suppression est levée");
+  assert.equal(run("DB.bodyWeight.find(function(b){return b.date===__y;}).weight_kg"), 73.8);
+});

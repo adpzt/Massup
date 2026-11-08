@@ -19,6 +19,12 @@ var BILAN=(function(){
   // À CHAQUE mise en ligne d'une nouveauté visible : ajouter une entrée EN TÊTE (id = date AAAA-MM-JJ), 3 à 6 lignes courtes.
   // Elle s'affiche une fois par appareil (localStorage massup_news = id déjà vu), sur le Bilan, avant la saisie de la nuit.
   var NEWS=[
+    {id:'2026-11-09',t:'Tes retours du 9 novembre',items:[
+      ['\u2696\uFE0F','Renpho : une 2e pesée dans la journée met la pesée du jour à jour. Si tu supprimes une pesée, une nouvelle pesée ce jour-là revient quand même.'],
+      ['\uD83D\uDCCA','Le bilan de la semaine attend que tu aies fait \u21BB après dimanche 20 h. Avant, il affiche « \u21BB d\u2019abord ».'],
+      ['\uD83C\uDF7D\uFE0F','La moyenne des 15 jours ne compte que des journées complètes : ni aujourd\u2019hui, ni un jour synchronisé avant sa fin.'],
+      ['\uD83C\uDFCB\uFE0F','3 séances sur 4 : la barre redevient grise et l\u2019assiduité vaut 3,5/5. Avec une qualité parfaite, ça fait 8,5/10 en Salle.']
+    ]},
     {id:'2026-11-06b',t:'Courbe de poids refaite (6 novembre)',items:[
       ['\u2696\uFE0F','Tes 32 pesées Renpho depuis mars sont dans l\u2019historique.'],
       ['\uD83D\uDCC8','La courbe s\u2019ouvre sur 3 semaines, avec une échelle serrée sur tes valeurs. La ligne passe par tes pesées.'],
@@ -120,6 +126,7 @@ var BILAN=(function(){
     }
     var wk=null; try{ wk=wrPendingWeek(); }catch(e){}
     if(wk) L.push(['📊','Bilan de la semaine prêt',dshort(wk),"wrOpen('"+wk+"')"]);
+    else { var ww=null; try{ ww=wrWaitWeek(); }catch(e){} if(ww) L.push(['📊','Bilan de la semaine','↻ d’abord','BILAN.refresh()']); } // 09/11
     var mk=null; try{ mk=mrPendingMonth(); }catch(e){}
     if(mk) L.push(['🗓️','Bilan du mois prêt',mrMonthLabel(mk).split(' ')[0],"mrOpen('"+mk+"')"]);
     if(!L.length) return '';
@@ -525,7 +532,8 @@ var BILAN=(function(){
       if(!(F.kg>=30&&F.kg<=200)){ showToast('Poids invalide (30-200 kg).'); return; }
       if(!DB.bodyWeight) DB.bodyWeight=[];
       var idx=DB.bodyWeight.findIndex(function(b){ return b.date===F.date; });
-      if(idx>=0) DB.bodyWeight[idx].weight_kg=F.kg; else DB.bodyWeight.push({date:F.date,weight_kg:F.kg,note:''});
+      if(idx>=0){ DB.bodyWeight[idx].weight_kg=F.kg; DB.bodyWeight[idx].note=''; } else DB.bodyWeight.push({date:F.date,weight_kg:F.kg,note:''}); // à la main : Renpho ne la réécrit plus (09/11)
+      if(typeof bwUntomb==='function') bwUntomb(F.date); // re-saisir une date supprimée l'annule
       DB.bodyWeight.sort(function(a,b){ return a.date.localeCompare(b.date); });
       saveDB(); showToast('✓ Pesée enregistrée');
     } else if(S.sheet==='mensu'){

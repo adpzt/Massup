@@ -104,6 +104,7 @@ var DB = {
   profile: {name:'', height:0, goal:'masse'},
   deletedWeights: {},
   deletedBW: [],   // tombstones pesées : dates supprimées — la synchro ne doit JAMAIS les ressusciter (12/08)
+  deletedBWv: {},  // 09/11 : valeur de la pesée supprimée par date — une NOUVELLE pesée Renpho ce jour-là peut revenir
   deletedLogs: [], // tombstones séances : ids supprimés — idem
   nutrition: {},   // 'YYYY-MM-DD' -> {kcal, prot, petit_dej, dejeuner, diner, shaker}
   reminders: null, // {enabled, days:[..], shaker, inactivity}
@@ -135,7 +136,7 @@ function loadDB(){
   if(_saveDBTimer) _flushSaveDB(); // une écriture débouncée est en attente → flush avant relecture
   try{
     var s = localStorage.getItem('massup_db');
-    if(s){ var d=JSON.parse(s); if(d.weights) DB.weights=d.weights; if(d.logs) DB.logs=d.logs; if(d.weightSetDate) DB.weightSetDate=d.weightSetDate; if(d.bodyWeight) DB.bodyWeight=d.bodyWeight; if(d.healthLogs) DB.healthLogs=d.healthLogs; if(d.health) DB.health=d.health; if(d.healthMeta) DB.healthMeta=d.healthMeta; if(d.sleepLog) DB.sleepLog=d.sleepLog; if(d.templates) DB.templates=d.templates; if(d.profile) DB.profile=d.profile; if(d.deletedWeights) DB.deletedWeights=d.deletedWeights; if(d.deletedBW) DB.deletedBW=d.deletedBW; if(d.deletedLogs) DB.deletedLogs=d.deletedLogs; if(d.nutrition) DB.nutrition=d.nutrition; if(d.reminders) DB.reminders=d.reminders; if(d.painLog) DB.painLog=d.painLog; if(d.rank) DB.rank=d.rank; if(d.prepared) DB.prepared=d.prepared; if(d.dz) DB.dz=d.dz; if(d.evolution) DB.evolution=d.evolution; if(d.recHidden) DB.recHidden=d.recHidden; if(d.bodyMeas) DB.bodyMeas=d.bodyMeas; if(d.noteGrav) DB.noteGrav=d.noteGrav; if(d.nutriA) DB.nutriA=d.nutriA; if(d.pv) DB.pv=d.pv; }
+    if(s){ var d=JSON.parse(s); if(d.weights) DB.weights=d.weights; if(d.logs) DB.logs=d.logs; if(d.weightSetDate) DB.weightSetDate=d.weightSetDate; if(d.bodyWeight) DB.bodyWeight=d.bodyWeight; if(d.healthLogs) DB.healthLogs=d.healthLogs; if(d.health) DB.health=d.health; if(d.healthMeta) DB.healthMeta=d.healthMeta; if(d.sleepLog) DB.sleepLog=d.sleepLog; if(d.templates) DB.templates=d.templates; if(d.profile) DB.profile=d.profile; if(d.deletedWeights) DB.deletedWeights=d.deletedWeights; if(d.deletedBW) DB.deletedBW=d.deletedBW; if(d.deletedBWv) DB.deletedBWv=d.deletedBWv; if(d.deletedLogs) DB.deletedLogs=d.deletedLogs; if(d.nutrition) DB.nutrition=d.nutrition; if(d.reminders) DB.reminders=d.reminders; if(d.painLog) DB.painLog=d.painLog; if(d.rank) DB.rank=d.rank; if(d.prepared) DB.prepared=d.prepared; if(d.dz) DB.dz=d.dz; if(d.evolution) DB.evolution=d.evolution; if(d.recHidden) DB.recHidden=d.recHidden; if(d.bodyMeas) DB.bodyMeas=d.bodyMeas; if(d.noteGrav) DB.noteGrav=d.noteGrav; if(d.nutriA) DB.nutriA=d.nutriA; if(d.pv) DB.pv=d.pv; }
   }catch(e){}
 }
 // Écriture localStorage débouncée (300ms) : localStorage.setItem est synchrone et bloque le

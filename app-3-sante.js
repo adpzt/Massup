@@ -192,6 +192,9 @@ function renderSanteHisto(){
 }
 
 function deleteBodyWeightEntry(date){
+  // 09/11 : on retient la valeur supprimée — la date ne reste bloquée que tant que Santé renvoie CETTE pesée
+  var _old=(DB.bodyWeight||[]).find(function(b){return b.date===date;});
+  if(_old&&parseFloat(_old.weight_kg)>0){ if(!DB.deletedBWv) DB.deletedBWv={}; DB.deletedBWv[date]=parseFloat(_old.weight_kg); }
   DB.bodyWeight=(DB.bodyWeight||[]).filter(function(b){return b.date!==date;});
   // On purge aussi l'éventuelle entrée legacy RENPHO du même jour
   DB.healthLogs=(DB.healthLogs||[]).filter(function(h){return h.date!==date;});
@@ -225,16 +228,31 @@ function peseeAdjust(delta){
 // déjà une pesée (saisie à la main ou autre) n'est jamais modifié, une pesée supprimée (deletedBW) ne revient jamais.
 // Seulement à partir du 01/11/2026 : les 9 anciennes pesées Renpho (mars → octobre) ne réécrivent pas l'historique
 // sans l'accord d'Adrien (question posée le 04/11).
+// 09/11 (Adrien : « j'ai supprimé la 1re pesée d'hier, la 2e ne vient jamais ») — le raccourci envoie la MOYENNE des
+// pesées du jour : · une pesée importée (note 'Renpho') SUIT la valeur de Santé quand elle change (2e pesée du jour,
+// pesée effacée dans Santé) ; une pesée saisie à la main n'est jamais touchée ; · une suppression ne bloque que la
+// valeur supprimée (DB.deletedBWv) : une nouvelle pesée ce jour-là change la moyenne et revient. Anciennes suppressions
+// (sans valeur retenue) : toujours bloquées.
 var RENPHO_IMPORT_FROM='2026-11-01';
+function bwUntomb(date){
+  DB.deletedBW=(DB.deletedBW||[]).filter(function(x){ return x!==date; });
+  if(DB.deletedBWv) delete DB.deletedBWv[date];
+}
 function importHealthWeights(map){
   if(!map) return 0;
   if(!DB.bodyWeight) DB.bodyWeight=[];
-  var del=DB.deletedBW||[], n=0;
+  var n=0;
   Object.keys(map).sort().forEach(function(d){
     if(d<RENPHO_IMPORT_FROM||d>todayStr()) return;
-    if(del.indexOf(d)>=0) return;
-    if(DB.bodyWeight.some(function(b){ return b.date===d; })) return;
-    DB.bodyWeight.push({date:d,weight_kg:map[d],note:'Renpho'}); n++;
+    var v=map[d];
+    if((DB.deletedBW||[]).indexOf(d)>=0){
+      var dv=DB.deletedBWv&&DB.deletedBWv[d];
+      if(dv==null||Math.abs(dv-v)<0.05) return; // c'est encore la pesée supprimée (ou une ancienne suppression)
+      bwUntomb(d); // une nouvelle pesée ce jour-là
+    }
+    var e=DB.bodyWeight.find(function(b){ return b.date===d; });
+    if(e){ if(e.note==='Renpho'&&Math.abs(parseFloat(e.weight_kg)-v)>=0.05){ e.weight_kg=v; n++; } return; }
+    DB.bodyWeight.push({date:d,weight_kg:v,note:'Renpho'}); n++;
   });
   if(n){ DB.bodyWeight.sort(function(a,b){ return a.date<b.date?-1:1; }); saveDB(); try{ if(typeof BILAN!=='undefined') BILAN.render(); }catch(e){} }
   return n;
@@ -249,8 +267,9 @@ function savePesee(){
   w=Math.round(w*10)/10;
   if(!DB.bodyWeight) DB.bodyWeight=[];
   var idx=DB.bodyWeight.findIndex(function(b){return b.date===date;});
-  if(idx>=0){DB.bodyWeight[idx].weight_kg=w;}
+  if(idx>=0){DB.bodyWeight[idx].weight_kg=w; DB.bodyWeight[idx].note='';} // saisie à la main : Renpho ne la réécrit plus (09/11)
   else{DB.bodyWeight.push({date:date,weight_kg:w,note:''});}
+  bwUntomb(date); // re-saisir une date supprimée l'annule (09/11)
   DB.bodyWeight.sort(function(a,b){return a.date.localeCompare(b.date);});
   saveDB();
   closePeseeModal();
@@ -1294,6 +1313,8 @@ function mergeBackupIntoDB(bk){
   }
   if(bk.templates&&bk.templates.length&&(!DB.templates||!DB.templates.length)) DB.templates=bk.templates;
   if(bk.deletedWeights&&!Object.keys(DB.deletedWeights||{}).length) DB.deletedWeights=bk.deletedWeights;
+  // Valeurs des pesées supprimées (09/11) : seulement pour les dates que CET appareil a aussi supprimées
+  if(bk.deletedBWv){ if(!DB.deletedBWv) DB.deletedBWv={}; Object.keys(bk.deletedBWv).forEach(function(d){ if(DB.deletedBWv[d]==null&&(DB.deletedBW||[]).indexOf(d)>=0) DB.deletedBWv[d]=bk.deletedBWv[d]; }); }
   if(bk.prepared&&!DB.prepared) DB.prepared=bk.prepared;
   return true;
 }

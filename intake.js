@@ -67,7 +67,7 @@ var INTAKE=(function(){
     var since=addD(today(),-400), offset=0, rows=[];
     try{
       while(true){
-        var r=await sb.from('health_days').select('d,k,v').gte('d',since).like('k','nu_*').order('d').order('k').range(offset,offset+999);
+        var r=await sb.from('health_days').select('d,k,v,updated_at').gte('d',since).like('k','nu_*').order('d').order('k').range(offset,offset+999);
         if(r.error){ _status='err'; rerender(); return; }
         var page=r.data||[]; rows=rows.concat(page);
         if(page.length<1000) break;
@@ -75,7 +75,10 @@ var INTAKE=(function(){
       }
       _status='ok';
       var days={};
-      rows.forEach(function(row){ var k=String(row.k).slice(3), v=Number(row.v); if(!(v>0)) return; (days[row.d]=days[row.d]||{})[k]=Math.round(v*10)/10; });
+      rows.forEach(function(row){ var k=String(row.k).slice(3), v=Number(row.v);
+        // 09/11 : heure d'envoi des kcal du jour — un jour envoyé AVANT sa fin (↻ fait dans la journée) est incomplet
+        if(k==='kcal'&&row.updated_at){ var u=Date.parse(row.updated_at); if(u>0) (days[row.d]=days[row.d]||{})._u=u; }
+        if(!(v>0)) return; (days[row.d]=days[row.d]||{})[k]=Math.round(v*10)/10; });
       var changed=JSON.stringify(days)!==JSON.stringify(cache.days);
       cache={days:days,syncAt:Date.now()}; persist();
       // Pesées Renpho → Santé → bw_kg (04/11) : remises à l'app, qui les ajoute à l'historique sans rien écraser
@@ -83,7 +86,7 @@ var INTAKE=(function(){
         var wr=await sb.from('health_days').select('d,v').eq('k','bw_kg').gte('d',since).order('d');
         if(!wr.error&&A.onWeights){ var wm={}; (wr.data||[]).forEach(function(row){ var v=Number(row.v); if(v>=30&&v<=200) wm[row.d]=Math.round(v*10)/10; }); A.onWeights(wm); }
       }catch(e){ console.warn('[MASSUP] pesées Santé :',e); }
-      if(changed){ try{ A.onChange(); }catch(e){} if(Date.now()<_refreshUntil) A.toast('✅ Nutrition Yazio reçue dans MASSUP'); }
+      if(changed||Date.now()<_refreshUntil){ try{ A.onChange(); }catch(e){} if(changed&&Date.now()<_refreshUntil) A.toast('✅ Nutrition Yazio reçue dans MASSUP'); } // après un ↻ : le Bilan se redessine toujours (alerte « bilan prêt », 09/11)
       rerender();
     }catch(e){ _status='err'; rerender(); }
   }
@@ -101,10 +104,13 @@ var INTAKE=(function(){
   });
 
   /* ── Calculs ── */
-  // Moyenne d'une mesure sur [start, end] : jours NOTÉS seulement (n = nb de jours notés, total = jours écoulés)
+  // Jour COMPLET (09/11, Adrien : « le matin je n'ai pas fait mes calories, la moyenne est faussée ») : ses totaux ont été
+  // envoyés APRÈS minuit (un ↻ fait pendant la journée donne un jour à moitié rempli). Aujourd'hui ne l'est jamais.
+  function complete(d){ if(d>=today()) return false; var e=cache.days[d]; if(!e||e._u==null) return true; return e._u>=new Date(addD(d,1)+'T00:00:00').getTime(); }
+  // Moyenne d'une mesure sur [start, end] : jours NOTÉS et COMPLETS seulement (n = nb de jours comptés, total = jours écoulés)
   function avg(start,end,k){
     var s=0,n=0,total=0;
-    for(var d=start;d<=end&&d<=today();d=addD(d,1)){ total++; var v=val(d,k); if(v!=null){ s+=v; n++; } }
+    for(var d=start;d<=end&&d<=today();d=addD(d,1)){ total++; var v=val(d,k); if(v!=null&&complete(d)){ s+=v; n++; } }
     return {v:n?s/n:null,n:n,total:total};
   }
   // Les 7 derniers jours COMPLETS (hier et les 6 d'avant) : aujourd'hui, encore en cours, fausserait la moyenne
@@ -340,7 +346,7 @@ var INTAKE=(function(){
 
   function init(adapter){ A=adapter; load(); }
   // ready() : la lecture serveur de CETTE session a réussi (la gravure de la note v5 l'attend — 03/11)
-  return {init:init,ready:function(){ return _status==='ok'; },syncAt:function(){ return cache.syncAt||0; },renderCard:renderCard,open:open,close:close,refresh:refresh,pull:pull,day:day,val:val,avg:avg,last7:last7,last15:last15,NUT:NUT,syncGoals:syncGoals,
+  return {init:init,ready:function(){ return _status==='ok'; },syncAt:function(){ return cache.syncAt||0; },complete:complete,renderCard:renderCard,open:open,close:close,refresh:refresh,pull:pull,day:day,val:val,avg:avg,last7:last7,last15:last15,NUT:NUT,syncGoals:syncGoals,
     dayCardHtml:dayCardHtml,days:function(){ return cache.days; },
     _metric:setMetric,_mode:setMode,_select:select,_page:page};
 })();

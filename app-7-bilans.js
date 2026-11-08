@@ -6,7 +6,18 @@ var WR=null;
 // La dernière semaine close (lundi→dimanche terminé) de la saison courante, non encore déclarée.
 // Dès le DIMANCHE 20h (demande Adrien 02/08), la semaine qui se termine le soir même devient déclarable —
 // aligné sur le check hebdo du rank (dimanche 20h).
-function wrPendingWeek(){
+// 09/11 (Adrien : « j'ai eu mon bilan alors que je n'avais pas pu tout rafraîchir ») : une semaine v5 n'est proposée
+// qu'après un ↻ fait après son dimanche 20 h ET Yazio relu après ce ↻ (mêmes conditions que la gravure) — sinon
+// wrWaitWeek() la renvoie et la page Bilan affiche « fais ↻ d'abord ».
+function wrDataReady(ws){
+  if(ws<NOTE_V5_START) return true;
+  var sun20=new Date(rankAddDays(ws,6)+'T20:00:00').getTime(), r=noteRefreshAt();
+  if(r<sun20) return false;
+  return typeof INTAKE!=='undefined'&&INTAKE.ready&&INTAKE.ready()&&INTAKE.syncAt&&INTAKE.syncAt()>=r;
+}
+function wrPendingWeek(){ var w=wrPendingWeekRaw(); return w&&wrDataReady(w)?w:null; }
+function wrWaitWeek(){ var w=wrPendingWeekRaw(); return w&&!wrDataReady(w)?w:null; }
+function wrPendingWeekRaw(){
   var season=rankCurrentSeason();
   var today=todayStr();
   if(today<season.start) return null;
@@ -154,6 +165,10 @@ var NUT_V3_START='2026-10-12';
 // · dès la semaine du 02/11 : journée sous 1 000 pas = −0,5 pt sur la note de semaine ; 3 séances = rouge (4 = vert) ;
 // · dès la semaine du 07/12 (1er lundi de décembre) : courir 1×/semaine OBLIGATOIRE (sans sortie : −1 pt de plus).
 var STEP_BLOOD_START='2026-11-02', FREQ_STRICT_START='2026-11-02', RUN_REQ_START='2026-12-07';
+// 09/11 (Adrien : « trop sévère — douleurs, corps fragile, je préfère écouter mon corps ») : une séance sous l'objectif
+// = 3,5/5 d'assiduité (avant 2,5) → 3/4 avec une qualité parfaite = 8,5/10 en Salle. Dès la semaine du 02/11 (pas encore
+// gravée le 09/11 ; une note gravée ne change jamais). La barre de fréquence 3/4 redevient grise (fin du « rouge strict »).
+var ASSID_SOFT_START='2026-11-02';
 function nutObjectives(ws){
   if(!ws||ws>=NUT_V3_START) return {v:3,maison:10,maisonMax:14,shk:7,shkLbl:'cr&#xE9;atine',shkIco:'&#x1F964;',run:1,pdj:0,cardio:0};
   var v2=ws>=NUT_V2_START;
@@ -208,7 +223,7 @@ function bilanNoteWeekCalc(ws){
     salle:salle.length,goal:goal,avg:avg,pdj:pdj,shk:shk,declared:!!ans};
 }
 // ══ NOTATION v5 + GRAVURE (03/11/2026, plan validé par Adrien le 02/11) ══
-// Semaine = Salle /10 (assiduité /5 sur weekValue : objectif → 5 · −1 → 2,5 · −2 → 1 ; qualité /5 = moyenne des /20 ÷ 4)
+// Semaine = Salle /10 (assiduité /5 sur weekValue : objectif → 5 · −1 → 2,5 (3,5 dès le 02/11) · −2 → 1 ; qualité /5 = moyenne des /20 ÷ 4)
 //         + Nutrition /6 (jours ≥ 2 600 kcal /3 · jours ≥ 135 g de protéines /2 · shaker 7/7 /1 — vraies données Yazio)
 //         + Activité /4 (pas /2 · nuits ≥ 7 h /1 · course /1 SEULEMENT dès le 07/12 — avant : note sur 19 ramenée à 20 ;
 //           ensuite, pas de course = 0/1, sans malus en plus) ; donnée manquante = 0.
@@ -315,7 +330,7 @@ function bilanNoteWeekV5(ws){
   var ans=DB.rank&&DB.rank.weekly&&DB.rank.weekly[ws];
   // Salle /10
   var v=weekValue(logs), goal=gelWeekGoal(ws);
-  var pts=[[0,0],[goal-2,1],[goal-1,2.5],[goal,5]], pA=0;
+  var pts=[[0,0],[goal-2,1],[goal-1,ws>=ASSID_SOFT_START?3.5:2.5],[goal,5]], pA=0;
   if(v>=goal) pA=5; else for(var i=1;i<pts.length;i++){ if(v<=pts[i][0]){ var a=pts[i-1],b=pts[i]; pA=v<=a[0]?a[1]:a[1]+(b[1]-a[1])*(v-a[0])/(b[0]-a[0]); break; } }
   pA=Math.max(0,pA);
   var notes=logs.map(liveLogNote20).filter(function(n){ return n!=null; });

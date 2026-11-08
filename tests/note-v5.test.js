@@ -118,3 +118,27 @@ test("regravure du 03/11 : séances ≥ 26/10 re-notées une seule fois (ancienn
   assert.equal(run("DB.logs[1].live.note20"), 20, "avant le 26/10 : rien ne bouge");
   assert.equal(run("noteRegrade()"), 0, "une seule fois");
 });
+
+// 09/11 (Adrien : « trop sévère ») : une séance sous l'objectif = 3,5/5 d'assiduité dès la semaine du 02/11.
+test("assiduité : 3/4 séances = 3,5/5 (avant le 02/11 : 2,5)", () => {
+  const run = load();
+  run("(DB.logs=DB.logs.slice(0,3),1)");
+  const B = run("bilanNoteWeekV5('2026-11-09')");
+  assert.equal(B.pil[0].c[0][2], 3.5);
+  assert.equal(B.pil[0].p, 7.5, "3,5 + qualité 16/20 = 4");
+  run("(ASSID_SOFT_START='2026-12-01',1)");
+  assert.equal(run("bilanNoteWeekV5('2026-11-09')").pil[0].c[0][2], 2.5);
+});
+
+// 09/11 : le bilan de la semaine n'est proposé qu'après un ↻ fait après le dimanche 20 h (et Yazio relu ensuite).
+test("bilan de la semaine : attend un ↻ après le dimanche 20 h", () => {
+  const run = load();
+  const sun20 = new Date("2026-11-15T20:00:00").getTime();
+  run("(localStorage.setItem('massup_refreshAt',String(__r)),1)", { __r: sun20 - 3600000, __sync: sun20 });
+  assert.equal(run("wrDataReady('2026-11-09')"), false, "↻ fait avant le dimanche 20 h");
+  run("(localStorage.setItem('massup_refreshAt',String(__r)),1)", { __r: sun20 + 600000, __sync: sun20 + 300000 });
+  assert.equal(run("wrDataReady('2026-11-09')"), false, "Yazio pas encore relu après le ↻");
+  run("1", { __sync: sun20 + 900000 });
+  assert.equal(run("wrDataReady('2026-11-09')"), true);
+  assert.equal(run("wrDataReady('2026-10-19')"), true, "semaines d'avant la v5 : comme avant");
+});
