@@ -241,6 +241,13 @@ function bwUntomb(date){
 function importHealthWeights(map){
   if(!map) return 0;
   if(!DB.bodyWeight) DB.bodyWeight=[];
+  // 09/11 (Adrien : « la pesée d'avant-hier ne vient toujours pas ») : les suppressions de la période Renpho faites AVANT
+  // ce correctif bloquaient la journée entière, sans valeur retenue → levées UNE fois ; Santé redonne la pesée du jour.
+  if(!DB.profile) DB.profile={};
+  if(!DB.profile.bwTomb0911){
+    DB.deletedBW=(DB.deletedBW||[]).filter(function(d){ return d<RENPHO_IMPORT_FROM||(DB.deletedBWv&&DB.deletedBWv[d]!=null); });
+    DB.profile.bwTomb0911=1;
+  }
   var n=0;
   Object.keys(map).sort().forEach(function(d){
     if(d<RENPHO_IMPORT_FROM||d>todayStr()) return;

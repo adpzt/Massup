@@ -19,6 +19,12 @@ var BILAN=(function(){
   // À CHAQUE mise en ligne d'une nouveauté visible : ajouter une entrée EN TÊTE (id = date AAAA-MM-JJ), 3 à 6 lignes courtes.
   // Elle s'affiche une fois par appareil (localStorage massup_news = id déjà vu), sur le Bilan, avant la saisie de la nuit.
   var NEWS=[
+    {id:'2026-11-09b',t:'Fin de prise : on lève le pied (9 novembre)',items:[
+      ['\uD83D\uDCC5','La course comptée, le malus des jours sous 1\u00a0000 pas et l\u2019abdo obligatoire démarrent le lundi 4 janvier, avec la sèche (au lieu du 7 décembre).'],
+      ['\uD83D\uDC5F','D\u2019ici là, les pas comptent sur 1 point au lieu de 2. La note est ensuite ramenée sur 20.'],
+      ['\uD83D\uDD12','Notes : plus de « Cette semaine » en premier. La semaine écoulée reste cachée tant que tu n\u2019as pas ouvert son bilan.'],
+      ['\u2696\uFE0F','Renpho : ta pesée du 6/11 n\u2019est plus bloquée. Elle revient au prochain \u21BB.']
+    ]},
     {id:'2026-11-09',t:'Tes retours du 9 novembre',items:[
       ['\u2696\uFE0F','Renpho : une 2e pesée dans la journée met la pesée du jour à jour. Si tu supprimes une pesée, une nouvelle pesée ce jour-là revient quand même.'],
       ['\uD83D\uDCCA','Le bilan de la semaine attend que tu aies fait \u21BB après dimanche 20 h. Avant, il affiche « \u21BB d\u2019abord ».'],
@@ -322,15 +328,21 @@ var BILAN=(function(){
   function notesHtml(B0,curWs){
     var sa=saison(), rows=[];
     function det(B){ return fmtSeances(B.salle)+'/'+B.goal+' séance'+(B.goal>1?'s':''); }
-    rows.push(['Cette semaine','en cours · '+det(B0),B0.note,"BILAN.note('"+curWs+"')"]);
-    var ws=rankAddDays(curWs,-7), B=bilanNoteWeek(ws); if(B.salle) rows.push(['Sem. du '+dshort(ws),det(B)+(B.graved?' · gravée':''),B.note,"BILAN.note('"+ws+"')"]);
+    // 09/11 (Adrien : « pas de spoil ») : plus de « Cette semaine » en tête — elle n'est pas finie. La semaine écoulée
+    // reste cachée (🔒) tant que son bilan n'a pas été ouvert : il se découvre dans le bilan du dimanche soir.
+    var ws=rankAddDays(curWs,-7), B=bilanNoteWeek(ws);
+    if(B.salle){
+      var pend=null; try{ pend=wrPendingWeekRaw(); }catch(e){}
+      if(pend===ws){ var rdy=false; try{ rdy=wrDataReady(ws); }catch(e){} rows.push(['Sem. du '+dshort(ws),rdy?'bilan à découvrir':'↻ d’abord, puis ton bilan',0,rdy?"wrOpen('"+ws+"')":'BILAN.refresh()',true]); }
+      else rows.push(['Sem. du '+dshort(ws),det(B)+(B.graved?' · gravée':''),B.note,"BILAN.note('"+ws+"')"]);
+    }
     var t=today(), pm=new Date(parseInt(t.slice(0,4),10),parseInt(t.slice(5,7),10)-2,1), pmk=pm.getFullYear()+'-'+String(pm.getMonth()+1).padStart(2,'0');
     var M=null; try{ M=bilanNoteMonth(pmk); }catch(e){}
     if(M&&M.salle) rows.push([mrMonthLabel(pmk),'mois · '+M.salle+' séances',M.note,"mrOpen('"+pmk+"',true)"]);
     var older=[], season=rankCurrentSeason();
     for(var j=2;j<=30;j++){ var w2=rankAddDays(curWs,-7*j); if(season&&w2<season.start) break; var B2=bilanNoteWeek(w2); if(B2.salle&&saison(w2).id!==saison(rankAddDays(w2,7)).id) older.push(['Saison 1 · Prise de masse','archivée, relisible',null,'']); if(B2.salle) older.push(['Sem. du '+dshort(w2),det(B2)+(B2.graved?' · gravée':''),B2.note,"BILAN.note('"+w2+"')"]); }
     if(S.allw) rows=rows.concat(older);
-    var row=function(r){ if(r[2]==null) return '<div class="bl-nsep">'+r[0]+' <span class="bl-mut">· '+r[1]+'</span></div>'; return '<button type="button" class="bl-nrow" onclick="'+r[3]+'"><div style="min-width:0"><div class="bl-nrow__n">'+r[0]+'</div><div class="bl-nrow__s">'+r[1]+'</div></div><div class="bl-num bl-nrow__v" style="color:var(--bl-note-'+noteN(r[2])+')">'+fr(r[2],1)+u('/20')+'<span class="bl-mut bl-nrow__a" aria-hidden="true">›</span></div></button>'; };
+    var row=function(r){ if(r[2]==null) return '<div class="bl-nsep">'+r[0]+' <span class="bl-mut">· '+r[1]+'</span></div>'; return '<button type="button" class="bl-nrow" onclick="'+r[3]+'"><div style="min-width:0"><div class="bl-nrow__n">'+r[0]+'</div><div class="bl-nrow__s">'+r[1]+'</div></div><div class="bl-num bl-nrow__v"'+(r[4]?'':' style="color:var(--bl-note-'+noteN(r[2])+')"')+'>'+(r[4]?'<span aria-label="note cachée">🔒</span>':fr(r[2],1)+u('/20'))+'<span class="bl-mut bl-nrow__a" aria-hidden="true">›</span></div></button>'; };
     return '<button type="button" class="bl-fold" aria-expanded="'+S.notes+'" aria-controls="blNotes" onclick="BILAN.toggle(\'notes\')"><span aria-hidden="true" style="font-size:18px">🏆</span><span>Notes</span><span class="bl-fold__i" aria-hidden="true">›</span></button>'
       +(S.notes?'<div class="bl-notes" id="blNotes">'+rows.map(row).join('')+(older.length?'<button type="button" class="bl-more" onclick="BILAN.toggle(\'allw\')">'+(S.allw?'Moins ▴':'Toutes les semaines ▾')+'</button>':'')+'</div>':'');
   }
@@ -433,7 +445,7 @@ var BILAN=(function(){
   /* ══════════ DÉTAIL DE LA NOTE (« pourquoi j'ai X », notation v5 — 03/11) ══════════ */
   function noteHtml(ws){
     var B=bilanNoteWeek(ws), D=noteWeekDetail(B), tot=B.note, n=noteN(tot), cur=ws===rankMonday(today());
-    var sun=rankAddDays(ws,6), mon=rankAddDays(ws,7), foot=(B.graved?'Gravée le '+(B.at?new Date(B.at).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'short'}):dlab(mon))+' · elle ne changera plus.':B.v===5?(Date.now()>=new Date(mon+'T05:00:00').getTime()?'Sera gravée dès ton prochain \u21bb (Yazio + pas).':'Sera gravée lundi '+dshort(mon)+' au matin, après ton \u21bb (Yazio + pas) fait après dimanche 20 h.'):'Gravée avec le barème de l\u2019époque.')+(B.scaled?' Note sur 19 ramenée à 20 : la course compte dès le 7 décembre.':'');
+    var sun=rankAddDays(ws,6), mon=rankAddDays(ws,7), foot=(B.graved?'Gravée le '+(B.at?new Date(B.at).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'short'}):dlab(mon))+' · elle ne changera plus.':B.v===5?(Date.now()>=new Date(mon+'T05:00:00').getTime()?'Sera gravée dès ton prochain \u21bb (Yazio + pas).':'Sera gravée lundi '+dshort(mon)+' au matin, après ton \u21bb (Yazio + pas) fait après dimanche 20 h.'):'Gravée avec le barème de l\u2019époque.')+(B.scaled?' Note sur '+(B.maxRaw||19)+' ramenée à 20 : la course compte dès le 4 janvier'+((B.maxRaw||19)<19?', les pas sur 1 point d’ici là':'')+'.':'');
     var mt=D.malus.reduce(function(a,m){ return a+m.p; },0);
     var h=top('\uD83C\uDFC6 Ta note',(cur?'Cette semaine':'Semaine du '+dshort(ws))+(B.v===5?'':' · barème d\u2019époque'))
       +'<section class="bl-sec"><div class="bl-lbl">'+(cur?'En cours':'Semaine du '+dshort(ws)+' \u2192 '+dshort(sun))+'</div>'

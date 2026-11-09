@@ -24,7 +24,7 @@ function load() {
   // Semaine du lundi 09/11/2026 (1re semaine v5), vue depuis le dimanche 22/11 ; modules Pas / Sommeil / Yazio simulés
   ctx.__low = {};
   ctx.__kcal = 2800;
-  ctx.STEPS = { weekPts: () => 2, week: () => ({ sum: 55000, avg: 7857 }), stepsOf: (d) => (ctx.__low[d] != null ? ctx.__low[d] : 8000) };
+  ctx.STEPS = { weekPts: (ws, max) => max, week: () => ({ sum: 55000, avg: 7857 }), stepsOf: (d) => (ctx.__low[d] != null ? ctx.__low[d] : 8000) };
   ctx.SLEEP = { _duration: () => 480 };
   ctx.INTAKE = { val: (d, k) => (k === "kcal" ? ctx.__kcal : 140), ready: () => true, syncAt: () => ctx.__sync };
   ctx.__sync = 0;
@@ -42,33 +42,37 @@ function load() {
   return (code, vars) => { Object.assign(ctx, vars || {}); return JSON.parse(vm.runInContext("JSON.stringify(" + code + ")", ctx)); };
 }
 
-test("v5 avant le 07/12 : salle 9 + nutrition 6 + activité 3 = 18/19, ramené à 20 → 19 (la course ne compte pas)", () => {
+test("v5 avant le 04/01 : salle 9 + nutrition 6 + activité 2 (pas sur 1 dès le 09/11) = 17/18, ramené à 20 → 19", () => {
   const run = load();
   const B = run("bilanNoteWeek('2026-11-09')");
   assert.equal(B.v, 5);
   assert.equal(B.note, 19);
-  assert.deepEqual(B.pil.map((p) => p.p), [9, 6, 3]);
-  assert.equal(B.pil[2].c.length, 2, "pas de ligne Course avant le 07/12");
+  assert.deepEqual(B.pil.map((p) => p.p), [9, 6, 2]);
+  assert.equal(B.maxRaw, 18);
+  assert.equal(B.pil[2].c[0][3], 1, "pas sur 1 point jusqu'au 04/01");
+  assert.equal(B.pil[2].c.length, 2, "pas de ligne Course avant le 04/01");
   assert.equal(B.malus.length, 0);
   assert.equal(B.graved, undefined, "sans données cloud chargées, rien n'est gravé");
 });
 
-test("v5 : malus −0,5 sans pesée ; les jours sous 1 000 pas ne comptent qu'à partir du 07/12 ; donnée manquante = 0", () => {
+test("v5 : malus −0,5 sans pesée ; les jours sous 1 000 pas ne comptent qu'à partir de la bascule (04/01) ; donnée manquante = 0", () => {
   const run = load();
   run("(DB.bodyWeight=[],1)", { __low: { "2026-11-10": 640, "2026-11-14": 820 } });
   const B = run("bilanNoteWeek('2026-11-09')");
-  assert.equal(B.note, 18.5, "19 − 0,5 sans pesée ; les 2 jours sous 1 000 pas ne coûtent rien avant le 07/12");
+  assert.equal(B.note, 18.5, "19 − 0,5 sans pesée ; les 2 jours sous 1 000 pas ne coûtent rien avant la bascule");
   assert.equal(B.malus.length, 1);
   run("(DB.rank.weekly={},1)");
   const C = run("bilanNoteWeek('2026-11-09')");
   assert.equal(C.pil[1].c[2][2], 0, "shaker non coché = 0");
-  run("(DB.logs.forEach(function(l,i){ l.date=rankAddDays('2026-12-07',i*2); }),DB.rank.weekly={'2026-12-07':{v:3,shaker:7,run:1}},todayStr=function(){ return '2026-12-20'; },1)", { __low: { "2026-12-08": 640 } });
-  assert.equal(run("bilanNoteWeek('2026-12-07').malus.length"), 2, "dès le 07/12 : sans pesée + 1 jour sous 1 000 pas");
+  // mécanisme testé avec une bascule fictive au 07/12 (la vraie date, 04/01, tombe en Sèche : autres seuils nutrition)
+  run("(RUN_REQ_START=STEPS_FULL_START='2026-12-07',DB.logs.forEach(function(l,i){ l.date=rankAddDays('2026-12-07',i*2); }),DB.rank.weekly={'2026-12-07':{v:3,shaker:7,run:1}},todayStr=function(){ return '2026-12-20'; },1)", { __low: { "2026-12-08": 640 } });
+  assert.equal(run("bilanNoteWeek('2026-12-07').malus.length"), 2, "après la bascule : sans pesée + 1 jour sous 1 000 pas");
 });
 
-test("dès le 07/12 : la course compte sur 1, sans malus en plus si elle manque", () => {
+test("après la bascule : la course compte sur 1, les pas sur 2, sans malus en plus si la course manque", () => {
   const run = load();
-  run("(DB.logs.forEach(function(l,i){ l.date=rankAddDays('2026-12-07',i*2); }),DB.rank.weekly={'2026-12-07':{v:3,shaker:7,run:0}},DB.bodyWeight=[{date:'2026-12-08',weight_kg:75}],todayStr=function(){ return '2026-12-20'; },1)");
+  assert.deepEqual(run("[RUN_REQ_START,STEPS_FULL_START]"), ["2027-01-04", "2027-01-04"], "bascule le lundi 04/01 (décision du 09/11)");
+  run("(RUN_REQ_START=STEPS_FULL_START='2026-12-07',DB.logs.forEach(function(l,i){ l.date=rankAddDays('2026-12-07',i*2); }),DB.rank.weekly={'2026-12-07':{v:3,shaker:7,run:0}},DB.bodyWeight=[{date:'2026-12-08',weight_kg:75}],todayStr=function(){ return '2026-12-20'; },1)");
   const B = run("bilanNoteWeek('2026-12-07')");
   assert.equal(B.pil[2].m, 4);
   assert.equal(B.malus.length, 0);

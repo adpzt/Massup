@@ -164,7 +164,10 @@ var NUT_V3_START='2026-10-12';
 // 01/11/2026 (demandes Adrien) — règles datées, jamais rétroactives :
 // · dès la semaine du 02/11 : journée sous 1 000 pas = −0,5 pt sur la note de semaine ; 3 séances = rouge (4 = vert) ;
 // · dès la semaine du 07/12 (1er lundi de décembre) : courir 1×/semaine OBLIGATOIRE (sans sortie : −1 pt de plus).
-var STEP_BLOOD_START='2026-11-02', FREQ_STRICT_START='2026-11-02', RUN_REQ_START='2026-12-07';
+// 09/11 (Adrien : « si je galère à prendre du poids, autant tout commencer en janvier ») : course comptée, malus < 1 000 pas
+// et abdo obligatoire passent du 07/12 au LUNDI 04/01/2027 (début de la sèche) ; d'ici là les pas comptent sur 1 point
+// (STEPS_FULL_START) au lieu de 2, dès la semaine du 09/11 ; la note est ramenée sur 20 selon son maximum.
+var STEP_BLOOD_START='2026-11-02', FREQ_STRICT_START='2026-11-02', RUN_REQ_START='2027-01-04', STEPS_FULL_START='2027-01-04', STEPS_HALF_FROM='2026-11-09';
 // 09/11 (Adrien : « trop sévère — douleurs, corps fragile, je préfère écouter mon corps ») : une séance sous l'objectif
 // = 3,5/5 d'assiduité (avant 2,5) → 3/4 avec une qualité parfaite = 8,5/10 en Salle. Dès la semaine du 02/11 (pas encore
 // gravée le 09/11 ; une note gravée ne change jamais). La barre de fréquence 3/4 redevient grise (fin du « rouge strict »).
@@ -346,26 +349,27 @@ function bilanNoteWeekV5(ws){
   var shk=ans?(ans.shaker||0):nutWeekCount('shaker',ws);
   var pK=kd/7*3, pP=pd/7*2, pS=Math.min(1,shk/7);
   // Activité /4
-  var pSteps=typeof STEPS!=='undefined'?STEPS.weekPts(ws,2):null, sw=typeof STEPS!=='undefined'?STEPS.week(ws):null;
+  var stepMax=(ws>=STEPS_HALF_FROM&&ws<STEPS_FULL_START)?1:2;
+  var pSteps=typeof STEPS!=='undefined'?STEPS.weekPts(ws,stepMax):null, sw=typeof STEPS!=='undefined'?STEPS.week(ws):null;
   var run=ans?(ans.run||0):Math.max(nutWeekCount('run',ws),runWeekAuto(ws));
   var nights=0; for(var n=0;n<7;n++){ var nk=rankAddDays(ws,n-1), e=(DB.sleepLog||{})[nk], m=e&&typeof SLEEP!=='undefined'?SLEEP._duration(e.bed,e.wake):null; if(m!=null&&m>=NOTE_V5.sleepMin) nights++; }
   var pR=run>=1?1:0, pN=nights/7;
   // Malus
   var malus=[];
-  // −0,5 par jour < 1 000 pas : seulement dès la semaine du 07/12, comme la course (Adrien, 03/11)
+  // −0,5 par jour < 1 000 pas : seulement dès la semaine du 04/01 (07/12 → 04/01 le 09/11), comme la course
   if(ws>=RUN_REQ_START&&typeof STEPS!=='undefined'){ for(var s=0;s<7;s++){ var sd=rankAddDays(ws,s); if(sd>=t) break; var sv=STEPS.stepsOf(sd);
     if(sv!=null&&sv<1000) malus.push({l:new Date(sd+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'})+' · '+Math.round(sv).toLocaleString('fr-FR')+' pas',p:0.5}); } }
   var runOn=ws>=RUN_REQ_START, runMiss=runOn&&run<1;
   if(noteWeekClosed(ws)&&!(DB.bodyWeight||[]).some(function(b){ return b.date>=ws&&b.date<=we; })) malus.push({l:'Aucune pesée dans la semaine',p:0.5});
   var mal=malus.reduce(function(a,m){ return a+m.p; },0);
-  var raw=pA+pQ+pK+pP+pS+(pSteps||0)+pN+(runOn?pR:0), tot=runOn?raw:raw*20/19;
+  var maxRaw=10+6+stepMax+1+(runOn?1:0), raw=pA+pQ+pK+pP+pS+(pSteps||0)+pN+(runOn?pR:0), tot=raw*20/maxRaw;
   var pil=[
     {k:'salle',i:'🏋️',l:'Salle',m:10,c:[['Assiduité',fmtSeances(v)+'/'+goal+' séances',pA,5],['Qualité',avg!=null?'moy. '+String(r1(avg)).replace('.',',')+'/20':'pas de note',pQ,5]]},
     {k:'nut',i:'🍽️',l:'Nutrition',m:6,c:[[NZ.kcalHi!=null?'Jours dans le déficit ('+NZ.kcalLo.toLocaleString('fr-FR')+'-'+NZ.kcalHi.toLocaleString('fr-FR')+' kcal)':'Jours ≥ '+NZ.kcalLo.toLocaleString('fr-FR')+' kcal',kd+'/7',pK,3],['Jours ≥ '+NZ.protDay+' g de protéines',pd+'/7',pP,2],['Créatine',shk+'/7',pS,1]]},
-    {k:'act',i:'👟',l:'Activité',m:runOn?4:3,c:[['Pas',sw&&sw.sum?Math.round(sw.sum).toLocaleString('fr-FR')+'/50 000':'non renseignés',pSteps||0,2],['Nuits ≥ 7 h',nights+'/7',pN,1]].concat(runOn?[['Course',(run>=1?1:0)+'/1',pR,1]]:[])}
+    {k:'act',i:'👟',l:'Activité',m:stepMax+1+(runOn?1:0),c:[['Pas',sw&&sw.sum?Math.round(sw.sum).toLocaleString('fr-FR')+'/50 000':'non renseignés',pSteps||0,stepMax],['Nuits ≥ 7 h',nights+'/7',pN,1]].concat(runOn?[['Course',(run>=1?1:0)+'/1',pR,1]]:[])}
   ];
   pil.forEach(function(P){ P.c=P.c.map(function(c){ return [c[0],c[1],r1(c[2]),c[3]]; }); P.p=r1(P.c.reduce(function(a,c){ return a+c[2]; },0)); });
-  return {v:5,sz:SZ?SZ.id:'masse',note:Math.max(0,Math.min(20,Math.round((tot-mal)*2)/2)),pil:pil,malus:malus,scaled:runOn?0:1,
+  return {v:5,sz:SZ?SZ.id:'masse',note:Math.max(0,Math.min(20,Math.round((tot-mal)*2)/2)),pil:pil,malus:malus,scaled:maxRaw<20?1:0,maxRaw:maxRaw,
     salle:v,goal:goal,avg:avg,stepAvg:sw?sw.avg:null,shk:shk,run:run,maison:ans?(ans.maison||0):nutWeekCount('maison',ws),
     kcalDays:kd,protDays:pd,nights:nights,blood:malus.filter(function(m){ return /pas$/.test(m.l); }).length,runReq:runOn,runMiss:runMiss,declared:!!ans};
 }

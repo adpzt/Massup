@@ -47,10 +47,11 @@ test("manque de temps : un exo écourté se juge sur ses séries faites", () => 
   assert.ok(avec >= 19);
 });
 
-test("abdo passé : non noté avant le 07/12, 0 dès le 07/12", () => {
+test("abdo passé : non noté avant le 04/01, 0 dès le 04/01 (décalé le 09/11)", () => {
   const ab = () => ({ key: "crunch_decline", n: 3, reps: 12, status: "skipped", main: true, sets: [] });
   assert.equal(run("asNote20From(__l,null,'2026-11-03')", { __l: [full(), ab()] }), 20);
-  assert.equal(run("asNote20From(__l,null,'2026-12-07')", { __l: [full(), ab()] }), 10);
+  assert.equal(run("asNote20From(__l,null,'2026-12-07')", { __l: [full(), ab()] }), 20);
+  assert.equal(run("asNote20From(__l,null,'2027-01-04')", { __l: [full(), ab()] }), 10);
 });
 
 test("tout exempté : la séance reste notée sur la liste brute", () => {

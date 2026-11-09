@@ -43,7 +43,7 @@ test("export : un jour de pas saisi à la main est lu comme dans l'app", () => {
 
 test("pesées Renpho : ajout seulement, jamais d'écrasement ni de pesée supprimée, rien avant le 01/11 ni dans le futur", () => {
   const t = run("todayStr()"), y = run("rankAddDays(todayStr(),-1)"), y2 = run("rankAddDays(todayStr(),-2)"), f = run("rankAddDays(todayStr(),1)");
-  run("DB.bodyWeight=[{date:__y,weight_kg:74.3,note:''}];DB.deletedBW=[__y2];", { __y: y, __y2: y2 });
+  run("DB.profile=DB.profile||{};DB.profile.bwTomb0911=1;DB.bodyWeight=[{date:__y,weight_kg:74.3,note:''}];DB.deletedBW=[__y2];", { __y: y, __y2: y2 }); // après la levée unique du 09/11
   const m = { "2026-10-31": 74.1 }; m[y] = 73.9; m[y2] = 74.0; m[t] = 74.2; m[f] = 75;
   const n = run("importHealthWeights(__m)", { __m: m });
   assert.equal(n, t >= "2026-11-01" ? 1 : 0);
@@ -75,4 +75,15 @@ test("pesées Renpho : supprimer bloque CETTE valeur seulement — une nouvelle 
   assert.equal(run("importHealthWeights(__m)", { __m: other }), 1);
   assert.equal(run("DB.deletedBW.indexOf(__y)"), -1, "la marque de suppression est levée");
   assert.equal(run("DB.bodyWeight.find(function(b){return b.date===__y;}).weight_kg"), 73.8);
+});
+
+test("pesées Renpho : les suppressions d'avant le correctif (sans valeur, depuis le 01/11) sont levées une fois", () => {
+  const y = run("rankAddDays(todayStr(),-1)");
+  if (y < "2026-11-01") return;
+  run("DB.profile=DB.profile||{};delete DB.profile.bwTomb0911;DB.deletedBWv={};DB.deletedBW=['2026-10-06',__y];DB.bodyWeight=[];", { __y: y });
+  const m = {}; m[y] = 73.9;
+  assert.equal(run("importHealthWeights(__m)", { __m: m }), 1);
+  assert.deepEqual(JSON.parse(run("JSON.stringify(DB.deletedBW)")), ["2026-10-06"], "avant le 01/11 : intouché");
+  run("DB.deletedBW.push(__y);DB.bodyWeight=[];", { __y: y });
+  assert.equal(run("importHealthWeights(__m)", { __m: m }), 0, "une seule fois : une suppression d'après reste respectée");
 });
