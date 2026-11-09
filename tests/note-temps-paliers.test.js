@@ -127,3 +127,11 @@ test("durée > 3 h sans séries horodatées : neutralisée, valeur gardée", () 
   assert.equal(a.durationRaw, 250);
   assert.equal(b.duration_min, 55);
 });
+
+// 09/11 (Adrien : « je choisis 4×10 et au repos il me propose 8 ») : la série terminée propose les reps visées.
+test("série terminée : propose les reps visées de l'intro, sinon le palier auto", () => {
+  run("DB.logs=[]");
+  assert.equal(run("asDefReps({key:'tirage_vert',weight:56,reps:8,rHi:10,gR:10})"), 10);
+  assert.equal(run("asDefReps({key:'tirage_vert',weight:56,reps:8,rHi:10})"), 8, "sans historique ni choix : le bas de la fourchette");
+  assert.equal(run("asDefReps({key:'pallof',weight:10,reps:30,cnt:'s'})"), 30, "exo en secondes : inchangé");
+});

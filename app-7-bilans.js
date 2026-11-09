@@ -253,6 +253,7 @@ function noteGravValid(ws,g){
   if(!g||g.note==null) return false;
   if(ws>=NOTE_V5_START&&g.v!==5) return false;
   if(ws>=NOTE_REGRADE_FROM&&ws<'2026-11-02'&&g.rgv!==2) return false; // gravée avant la regravure du 03/11
+  if(ws>=ASSID_SOFT_START&&ws<'2026-11-09'&&g.asv!==2) return false; // 09/11 (Adrien : « depuis la semaine dernière ») : semaine du 02/11 gravée avec l'ancienne assiduité → regravée une fois
   return true;
 }
 function noteGravOf(ws){
@@ -318,7 +319,7 @@ function bilanNoteWeek(ws){
   var B=ws>=NOTE_V5_START?bilanNoteWeekV5(ws):bilanNoteWeekCalc(ws);
   if(noteWeekClosed(ws)&&noteCanGrave(ws)){
     if(!DB.noteGrav) DB.noteGrav={};
-    var copy=JSON.parse(JSON.stringify(B)); copy.graved=1; copy.at=Date.now(); copy.rgv=2;
+    var copy=JSON.parse(JSON.stringify(B)); copy.graved=1; copy.at=Date.now(); copy.rgv=2; copy.asv=2;
     DB.noteGrav[ws]=copy; saveDB();
     return copy;
   }

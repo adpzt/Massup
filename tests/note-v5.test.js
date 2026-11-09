@@ -142,3 +142,10 @@ test("bilan de la semaine : attend un ↻ après le dimanche 20 h", () => {
   assert.equal(run("wrDataReady('2026-11-09')"), true);
   assert.equal(run("wrDataReady('2026-10-19')"), true, "semaines d'avant la v5 : comme avant");
 });
+
+test("semaine du 02/11 gravée avec l'ancienne assiduité : ignorée puis regravée une fois (asv 2)", () => {
+  const run = load();
+  assert.equal(run("noteGravValid('2026-11-02',{v:5,note:15,rgv:2})"), false);
+  assert.equal(run("noteGravValid('2026-11-02',{v:5,note:15,rgv:2,asv:2})"), true);
+  assert.equal(run("noteGravValid('2026-11-09',{v:5,note:15,rgv:2})"), true, "les semaines suivantes ne sont pas concernées");
+});

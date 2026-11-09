@@ -1666,12 +1666,18 @@ function asRestartRest(){
   asStartRest(x.rest,'rest');
   asRender();
 }
+// 09/11 (Adrien : « je choisis 4×10 et au repos il me propose 8 ») : la série terminée propose les REPS VISÉES de l'intro
+// (x.gR, ou le palier auto du compteur) — avant : toujours le bas de la fourchette (x.reps). Exos en secondes/minutes : inchangé.
+function asDefReps(x){
+  if(x&&!x.repT&&(!x.cnt||x.cnt==='reps')){ var r=null; try{ r=asCurReps(x); }catch(e){} if(r>0) return r; }
+  return x?x.reps:null;
+}
 function asSetDone(){
   var x=AS.exos[AS.cur];
   updateWorkoutPushTimer(null);
   AS.workTimerEnd=null;
   AS.workTimerKey=null;
-  AS.pend={reps:x.reps,feel:null,feelG:null,feelD:null,setNo:AS.setIdx};
+  AS.pend={reps:asDefReps(x),feel:null,feelG:null,feelD:null,setNo:AS.setIdx};
   var isLastSet=!x.bonusMode&&AS.setIdx>=x.n;
   var hasNext=asPendingAfter()>=0;
   asSound('set');
@@ -1716,7 +1722,7 @@ function asStopBonus(){
   else asGotoNextPending();
 }
 function asRenderAsk(x){
-  var p=AS.pend||{reps:x.reps,feel:null};
+  var p=AS.pend||{reps:asDefReps(x),feel:null};
   var h='<div class="as-mini-timer'+(AS.restEnd?'':' off')+'">&#x23F1; <span id="as-mini-rest">'+formatTime(asRestRemain())+'</span> repos</div>';
   h+='<div class="as-exo-kicker">'+x.name+'</div>';
   var _pLbl=p.setNo>x.n?'S&#xE9;rie bonus':'S&#xE9;rie '+p.setNo+'/'+x.n;
