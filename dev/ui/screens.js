@@ -20,6 +20,7 @@ const ADRIEN = [
   ['a_poids', ["BILAN.go('poids')"], { scroll: '#blScreen' }],
   ['a_news', ["localStorage.removeItem('massup_news');BILAN._state.newsShown=0;renderSante()", "new Promise(function(r){ setTimeout(r,700); })"]],
   ['a_force', ["switchView('progression',document.querySelectorAll('.bni')[2])", "document.getElementById('forceIdx').scrollIntoView({block:'start'});window.scrollBy(0,-60)"]],
+  ['a_bilan_obj_full', ["for(var i=0;i<7;i++){var c=nutWeekCount('shaker',rankMonday(todayStr()));if(c>=7)break;nutTapWeek('shaker');}", "var c=document.querySelector('#bilanPage .bl-obj');if(c)c.scrollIntoView({block:'center'})"]], // 10/11 : créatine 7/7 → bouton ↺
   ['a_bilan_notes', ["BILAN.toggle('notes')", "window.scrollTo(0,document.body.scrollHeight)"]],
   ['a_note', ["BILAN.note(rankAddDays(rankMonday(todayStr()),-7))"], { scroll: '#blScreen' }],
   ['a_note_v5', ["NOTE_V5_START=rankAddDays(rankMonday(todayStr()),-7);BILAN.note(rankAddDays(rankMonday(todayStr()),-7))"], { scroll: '#blScreen' }],

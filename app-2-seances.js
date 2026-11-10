@@ -236,6 +236,27 @@ function init(){
     DB.profile.restore1108e=true;
     saveDB();
   }
+  // Restauration 10/11 (dictée par Adrien : « des jours d'avril à juin n'avaient pas été remis après la perte de données ») :
+  // 3 séances sem. 20-26/04 · 2 entre le 27 et le 30/04 · vacances (gel) du 01 au 16/05 · 20 + 23/05 · 28 + 30/05 · 02, 03, 05, 06/06.
+  // Dates d'avril approximatives, alternance PUSH/PULL comme la reconstitution de juin. + gel du mar. 10/11 (épaule gauche).
+  // Ids fixes (re-jouable sur un 2e appareil sans doublon), tombstones respectées par mergeBackupIntoDB,
+  // jamais de 2e séance un jour qui en a déjà une, gel ajouté seulement si aucune pause ne couvre déjà ces dates.
+  if(!DB.profile.restore1011){
+    var _r11=[['2026-04-20','s1'],['2026-04-22','s2'],['2026-04-24','s1'],['2026-04-27','s2'],['2026-04-29','s1'],
+      ['2026-05-20','s2'],['2026-05-23','s1'],['2026-05-28','s2'],['2026-05-30','s1'],
+      ['2026-06-02','s2'],['2026-06-03','s1'],['2026-06-05','s2'],['2026-06-06','s1']];
+    mergeBackupIntoDB({logs:_r11.filter(function(e){ return !(DB.logs||[]).some(function(l){ return l.date===e[0]; }); }).map(function(e){
+      return {id:Number(e[0].replace(/-/g,'')+'203000'),date:e[0],time:'20:30',sessions:[e[1]],comment:'Reconstituée (dicté le 10/11) — '+(e[0]<'2026-05-01'?'date approximative':'date de mémoire'),feeling:null,energy:null,duration_min:null};
+    })});
+    if(!DB.rank) DB.rank={pauses:[]};
+    if(!DB.rank.pauses) DB.rank.pauses=[];
+    [{type:'vacances',start:'2026-05-01',end:'2026-05-16'},{type:'blessure',start:'2026-11-10',end:'2026-11-10'}].forEach(function(p){
+      if(!DB.rank.pauses.some(function(q){ return q.start<=p.end&&p.start<=q.end; })) DB.rank.pauses.push(p);
+    });
+    DB.rank.pauses.sort(function(a,b){ return a.start.localeCompare(b.start); });
+    DB.profile.restore1011=true;
+    saveDB();
+  }
   // Correction ponctuelle : Curl Marteau suit la même courbe que Curl Haltères, moins la dernière hausse (reste à 8kg).
   if(!DB.profile) DB.profile={};
   if(!DB.profile.martoFix){
@@ -1053,7 +1074,21 @@ function getSessionsAtWeight(key){
 // d'une séance = moyenne arrondie de ses séries à la charge ; le palier ACTUEL = le meilleur niveau atteint à cette charge,
 // et on compte depuis la 1re séance qui l'a atteint (les séances moins bonnes d'après comptent : c'est de la stagnation)
 // → passer de × 8 à × 10 relance la barre. Exos comptés en secondes / minutes : pas de palier (comme avant).
-function lcRepLevel(lo,r){ return lo+2*Math.floor((r-lo)/2); }
+// 10/11 (Adrien : « face pull : 26/30 en × 14, jamais en × 15 alors que je fais presque toujours 15 ») : en fourchette
+// IMPAIRE (12-15 : face pull, mollets, abducteurs, adducteurs, crunch lesté), les paliers de 2 depuis le bas donnaient 12 · 14 · 16
+// → ses 15 tombaient dans « × 14 ». Le HAUT de la fourchette est désormais toujours un palier : 12 · 15 · 17 · 19
+// (un palier intermédiaire à moins de 2 reps du haut saute). Fourchettes paires (8-10, 8-12, 10-12) : inchangées.
+function lcRepLevel(lo,r,hi){
+  var lv=lo+2*Math.floor((r-lo)/2);
+  if(hi==null||hi<=lo||(hi-lo)%2===0||r<lo) return lv;
+  if(r>=hi) return hi+2*Math.floor((r-hi)/2);
+  return Math.min(lv,lo+2*Math.floor((hi-2-lo)/2));
+}
+function lcIsLevel(lo,hi,v){ return v>=1&&lcRepLevel(lo,v,hi)===v; }
+// Palier suivant (dir +1) ou précédent (dir −1) — boutons ± des « Reps visées »
+function lcStepLevel(lo,hi,r,dir){ var v=r; for(var i=0;i<6;i++){ v+=dir; if(v<1) return r; if(lcIsLevel(lo,hi,v)) return v; } return Math.max(1,r+2*dir); }
+// Un palier gravé avant le 10/11 qui n'existe plus (× 14 en 12-15) remonte au palier suivant (× 15)
+function lcSnapUp(lo,hi,r){ if(lo<=0||lcIsLevel(lo,hi,r)) return r; for(var v=r+1;v<r+6;v++) if(lcIsLevel(lo,hi,v)) return v; return r; }
 // ── Palier choisi + crédit partiel (06/11, demande Adrien) ──
 // · Le palier = charge × reps VISÉES. En séance, la charge = le poids de travail du jour (avant : la réf.
 //   — « 60 kg aujourd'hui, la barre affichait 56 kg ») et les reps se règlent sur l'intro de l'exo (x.gR).
@@ -1077,12 +1112,13 @@ function loadCount(key,liveX,g){
   var at=function(w){ return w!=null&&(inv?w<=W:w>=W); };
   var setsAt=function(x){ return (x.sets||[]).filter(function(st){ return at(st.w!=null?st.w:(x.w!=null?x.w:x.weight)); }); };
   var lo=(!d.e.repTarget&&REP_RANGE[key])?REP_RANGE[key].r[0]:(d.e.repTarget?0:asParseSerie(d.e).reps);
+  var hi=(!d.e.repTarget&&REP_RANGE[key])?REP_RANGE[key].r[1]:null;
   var byReps=lo>0&&(d.e.cnt||'reps')==='reps';
   var logs=(DB.logs||[]).filter(function(l){ return l.live&&l.live.exos&&(!liveX||(String(l.id)!==String(AS&&AS.savedLogId)&&String(l.id)!==String(AS&&AS.resumeLogId))); })
     .sort(function(a,b){ return b.date.localeCompare(a.date)||(b.time||'').localeCompare(a.time||''); });
   var sessAt=[]; // séances (de la plus récente à la plus ancienne) qui ont des séries à cette charge
   logs.forEach(function(l){
-    var ss=[], gR=null; l.live.exos.forEach(function(x){ if(x.key===key&&liveExoCounted(x)){ ss=ss.concat(setsAt(x)); if(x.gR!=null&&x.w===W) gR=x.gR; } });
+    var ss=[], gR=null; l.live.exos.forEach(function(x){ if(x.key===key&&liveExoCounted(x)){ ss=ss.concat(setsAt(x)); if(x.gR!=null&&x.w===W) gR=lcSnapUp(lo,hi,x.gR); } });
     if(ss.length) sessAt.push({ss:ss,gR:gR});
   });
   var R=null, auto=false;
@@ -1092,7 +1128,7 @@ function loadCount(key,liveX,g){
     if(R==null){
       auto=true;
       var meds=sessAt.slice(0,5).map(function(o){ return lcMed(o.ss.map(function(st){ return st.reps||0; })); });
-      R=meds.length?Math.max(lo,lcRepLevel(lo,Math.round(lcMed(meds)))):lo;
+      R=meds.length?Math.max(lo,lcRepLevel(lo,Math.round(lcMed(meds)),hi)):lo;
     }
   }
   var from=sessAt.length-1;
@@ -1108,7 +1144,7 @@ function loadCount(key,liveX,g){
   if(liveX) done+=cr(setsAt(liveX)); // séance en cours : ses séries vont au palier choisi
   for(var k=0;k<=from;k++) done+=cr(sessAt[k].ss);
   var unite=d.e.unite||'kg';
-  return {w:W,ref:ref,lvl:R,lo:byReps?lo:null,auto:auto,lbl:W+' '+unite+(R!=null?' &#xD7; '+R:''),done:done,doneTxt:lcNum(done),target:target,sess:sess,ratio:done/target,unite:unite};
+  return {w:W,ref:ref,lvl:R,lo:byReps?lo:null,hi:byReps?hi:null,auto:auto,lbl:W+' '+unite+(R!=null?' &#xD7; '+R:''),done:done,doneTxt:lcNum(done),target:target,sess:sess,ratio:done/target,unite:unite};
 }
 // Alerte de stagnation : 75 % de l'objectif = « bientôt », 100 % = « il est temps »
 function getProgressNudge(key){

@@ -19,6 +19,11 @@ var BILAN=(function(){
   // À CHAQUE mise en ligne d'une nouveauté visible : ajouter une entrée EN TÊTE (id = date AAAA-MM-JJ), 3 à 6 lignes courtes.
   // Elle s'affiche une fois par appareil (localStorage massup_news = id déjà vu), sur le Bilan, avant la saisie de la nuit.
   var NEWS=[
+    {id:'2026-11-10',t:'Compteur de séries réparé (10 novembre)',items:[
+      ['🎯','Face pull, mollets, abducteurs, adducteurs, crunch lesté (fourchette 12-15) : tes séries à 15 comptent enfin au palier × 15. Avant, elles étaient rangées en × 14. Paliers : 12 · 15 · 17.'],
+      ['↺','Créatine, plats maison : à 7/7 (ou 14/14), le + devient ↺ pour revenir à 0 si tu as coché par erreur.'],
+      ['📅','Séances d’avril à juin remises (dictées le 10/11) et vacances du 1er au 16 mai gelées. Mardi 10/11 gelé (épaule).']
+    ]},
     {id:'2026-11-09b',t:'Fin de prise : on lève le pied (9 novembre)',items:[
       ['\uD83D\uDCC5','La course comptée, le malus des jours sous 1\u00a0000 pas et l\u2019abdo obligatoire démarrent le lundi 4 janvier, avec la sèche (au lieu du 7 décembre).'],
       ['\uD83D\uDC5F','D\u2019ici là, les pas comptent sur 1 point au lieu de 2. La note est ensuite ramenée sur 20.'],
@@ -168,9 +173,12 @@ var BILAN=(function(){
     return '<section class="bl-obj" aria-label="Objectifs de la semaine">'+rows.map(function(r){
       var k=r[0],v=r[3],g=r[4],done=v>=g, cls=done?'is-done':v===0?'is-zero':'';
       var cap=r[5]?nutTapMax(k):g;
+      // 10/11 (Adrien : « à 7/7 créatine je ne peux plus revenir à 0 », coché sans faire exprès) : au plafond, le + devient ↺
+      var full=r[5]&&nutWeekCount(k,mon)>=cap;
       return '<div class="bl-obj__row"><span class="bl-obj__e" aria-hidden="true">'+r[1]+'</span><div style="min-width:0"><div class="bl-obj__n">'+r[2]+'</div><div class="bl-trk"><i class="'+(done?'is-done':'')+'" style="width:'+Math.min(100,v/g*100).toFixed(0)+'%"></i></div></div>'
         +'<span class="bl-num bl-obj__v '+cls+'">'+String(v).replace('.',',')+u('/'+g)+'</span>'
-        +(r[5]?'<button type="button" class="bl-plus'+(k==='run'?' bl-plus--soft':'')+(S.pop===k?' is-pop':'')+'" onclick="BILAN.inc(\''+k+'\')" aria-label="Ajouter 1 · '+r[2]+' ('+v+' sur '+g+')"'+(v>=cap?' disabled':'')+'>+</button>'
+        +(full?'<button type="button" class="bl-plus bl-plus--soft" onclick="BILAN.reset(\''+k+'\')" aria-label="Remettre à 0 · '+r[2]+' ('+v+' sur '+g+')">↺</button>'
+          :r[5]?'<button type="button" class="bl-plus'+(k==='run'?' bl-plus--soft':'')+(S.pop===k?' is-pop':'')+'" onclick="BILAN.inc(\''+k+'\')" aria-label="Ajouter 1 · '+r[2]+' ('+v+' sur '+g+')"'+(v>=cap?' disabled':'')+'>+</button>'
           :'<span class="bl-obj__auto" aria-label="automatique">'+(done?'✓':'')+'</span>')+'</div>';
     }).join('')+'</section>';
   }
@@ -597,6 +605,12 @@ var BILAN=(function(){
     else if(S.psel!=null&&!e.target.closest('.bl-chart')&&!e.target.closest('.bl-read')&&e.target.closest('#blScreen')){ S.psel=null; renderScreen(); }
   });
   function inc(k){ S.pop=k; nutTapWeek(k); }
+  // Au plafond (7/7…), nutTapWeek repasse à 0 : on demande d'abord (un tap de travers ne vide pas la semaine)
+  function reset(k){
+    var lbl={maison:'Plats maison',shaker:'Créatine',run:'Courir'}[k]||k;
+    if(!confirm('Remettre « '+lbl+' » à 0 pour cette semaine ?\nTu pourras ensuite refaire + autant de fois que nécessaire.')) return;
+    S.pop=null; nutTapWeek(k);
+  }
   function toggle(k){
     S[k]=!S[k];
     if(k==='mel'&&S.mel){ try{ PV.pull(false); }catch(e){} }
@@ -605,6 +619,7 @@ var BILAN=(function(){
 
   return {
     render:render,
+    reset:reset,
     photoDone:function(){ try{ localStorage.setItem('massup_photo_'+today().slice(0,7),'1'); }catch(e){} render(); },
     refresh:function(){ try{ INTAKE.refresh(); }catch(e){ try{ STEPS.refresh(); }catch(e2){} } try{ PV.pull(true); }catch(e){} },
     go:function(s){ S.screen=s; S.psel=null; renderScreen(); document.body.style.overflow='hidden'; },

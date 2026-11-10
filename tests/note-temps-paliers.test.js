@@ -136,3 +136,23 @@ test("série terminée : propose les reps visées de l'intro, sinon le palier au
   assert.equal(run("asDefReps({key:'tirage_vert',weight:56,reps:8,rHi:10})"), 8, "sans historique ni choix : le bas de la fourchette");
   assert.equal(run("asDefReps({key:'pallof',weight:10,reps:30,cnt:'s'})"), 30, "exo en secondes : inchangé");
 });
+
+// 10/11 (Adrien : « face pull : 26/30 en × 14, jamais en × 15 alors que je fais presque toujours 15 ») :
+// en fourchette impaire (12-15), le haut de la fourchette est un palier → 12 · 15 · 17.
+test("paliers 12-15 : le haut de la fourchette est un palier (15, plus 14)", () => {
+  assert.equal(run("lcRepLevel(12,15,15)"), 15);
+  assert.equal(run("lcRepLevel(12,14,15)"), 12);
+  assert.equal(run("lcRepLevel(12,17,15)"), 17);
+  assert.equal(run("lcRepLevel(8,11,12)"), 10, "fourchette paire 8-12 : inchangée");
+  assert.equal(run("lcRepLevel(8,9,10)"), 8, "fourchette 8-10 : inchangée");
+  assert.equal(run("lcStepLevel(12,15,15,-1)"), 12);
+  assert.equal(run("lcStepLevel(12,15,12,1)"), 15);
+  assert.equal(run("lcStepLevel(12,15,15,1)"), 17);
+  assert.equal(run("lcStepLevel(8,10,8,1)"), 10);
+  const F = (id, d, reps, extra) => ({ id, date: d, time: "07:00", sessions: ["s2"], live: { exos: [Object.assign({ key: "face_pull", w: 20, w0: 20, n: 3, reps: 12, rHi: 15, unite: "kg", status: "done", main: true, sets: reps.map((r) => ({ w: 20, reps: r, feel: "dur" })) }, extra || {})] } });
+  run("DB.weights.face_pull=[{date:'2026-11-09',val:20}];DB.logs=__logs", { __logs: [F(1, "2026-08-18", [15, 15, 15]), F(2, "2026-08-21", [15, 15, 15]), F(3, "2026-11-01", [15, 11, 10]), F(4, "2026-11-09", [15, 15, 15], { gR: 14 })] });
+  const lc = run("loadCount('face_pull')");
+  assert.equal(lc.lvl, 15, "le × 14 gravé le 09/11 remonte à × 15");
+  assert.equal(lc.done, 10); // 3 + 3 + 1 (11 et 10 = 0 à 4-5 reps de 15) + 3
+  assert.equal(run("asDefReps({key:'face_pull',weight:20,reps:12,rHi:15})"), 15, "la série terminée propose 15");
+});

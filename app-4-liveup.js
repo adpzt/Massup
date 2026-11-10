@@ -1546,15 +1546,16 @@ function asRepsRow(x){
   if(!lc||lc.lvl==null) return '';
   return '<div id="as-reps-blk"><div class="as-lbl" style="text-align:center;">Reps vis&#xE9;es <span class="as-lbl-hint">'+(x.gR!=null?'ton choix':'auto &#xB7; tes 5 derni&#xE8;res s&#xE9;ances')+' &#xB7; compteur de s&#xE9;ries</span></div>'
     +'<div class="as-wrow small">'
-    +'<button class="as-wbtn" onclick="asChgR(-1)" aria-label="2 reps de moins">&#x2212;</button>'
+    +'<button class="as-wbtn" onclick="asChgR(-1)" aria-label="Palier de reps en dessous">&#x2212;</button>'
     +'<input class="as-winput" id="asR" type="number" step="1" min="1" inputmode="numeric" value="'+lc.lvl+'" onblur="asSetR(this)" onkeydown="if(event.key===\'Enter\')this.blur()"/>'
     +'<span class="as-wunit">reps</span>'
-    +'<button class="as-wbtn plus" onclick="asChgR(1)" aria-label="2 reps de plus">+</button></div></div>';
+    +'<button class="as-wbtn plus" onclick="asChgR(1)" aria-label="Palier de reps au-dessus">+</button></div></div>';
 }
 function asCurReps(x){ var lc=null; try{ lc=loadCount(x.key,{key:x.key,sets:[]},{w:x.weight,r:x.gR}); }catch(e){} return lc?lc.lvl:null; }
 function asChgR(dir){
-  var x=AS.exos[AS.cur]; var r=asCurReps(x); if(r==null) return;
-  x.gR=Math.max(1,r+2*dir); asSave(); asLcRefresh(x);
+  var x=AS.exos[AS.cur]; var lc=null; try{ lc=loadCount(x.key,{key:x.key,sets:[]},{w:x.weight,r:x.gR}); }catch(e){}
+  if(!lc||lc.lvl==null) return;
+  x.gR=lc.lo?lcStepLevel(lc.lo,lc.hi,lc.lvl,dir):Math.max(1,lc.lvl+2*dir); asSave(); asLcRefresh(x); // 10/11 : 12 → 15 → 17 en 12-15
 }
 function asSetR(input){
   var x=AS.exos[AS.cur]; var v=parseInt(input.value,10);
