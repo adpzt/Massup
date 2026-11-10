@@ -5,6 +5,7 @@ function init(){
   loadDB();
   try{ noteRegrade(); }catch(e){ console.warn('[MASSUP] noteRegrade:',e); }
   try{ noteRegradeTemps(); }catch(e){ console.warn('[MASSUP] noteRegradeTemps:',e); }
+  try{ noteFixDouble(); }catch(e){ console.warn('[MASSUP] noteFixDouble:',e); }
   try{ fixLongDurations(); }catch(e){ console.warn('[MASSUP] fixLongDurations:',e); }
   initWeights();
   initHealthLogs();

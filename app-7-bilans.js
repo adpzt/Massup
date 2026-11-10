@@ -302,9 +302,15 @@ function fixLongDurations(){
   if(n) saveDB();
   return n;
 }
+// 11/11 (Adrien : « pourquoi 20 alors que j'ai perdu plein de points ? le bilan dit 18 ») : une séance enregistrée
+// depuis le 04/11 a DÉJÀ ses exemptions dans sa note (asGlobalScore) mais n'avait pas n20x → au boot suivant,
+// cette re-notation ajoutait l'exemption une 2e fois (09/11 : 18 → 20). Désormais n20x=1 à l'enregistrement,
+// et jamais de re-notation d'une séance du 04/11 ou après (appareil resté sur l'ancien code).
+var NOTE_EXEMPT_SAVE_FROM='2026-11-04';
 function noteRegradeTemps(){
   var n=0, ch=0;
   (DB.logs||[]).forEach(function(l){
+    if(l&&l.live&&!l.live.n20x&&l.date>=NOTE_EXEMPT_SAVE_FROM&&l.live.n20v>=6){ l.live.n20x=1; n++; return; }
     if(!l||!l.live||l.live.n20x||l.live.note20==null||!l.live.exos||!liveNotedExos(l.live.exos).length) return;
     var ctx=l.live.context||null;
     if(ctx==='temps') l.live.exos.forEach(function(x){ var d=(x.sets||[]).length; if(d>0&&d<(x.n||3)) x.tc=true; });
@@ -315,6 +321,22 @@ function noteRegradeTemps(){
   });
   if(n) saveDB();
   return ch;
+}
+// Réparation unique (11/11) des notes gonflées par le double ajout : la note gravée à l'enregistrement revient
+// (09/11 : 20 → 18) ; 03/11 : 19 → 18 (14 + 4 de l'exemption « manque de temps », valeur du 04/11 au journal).
+// Ancienne valeur gardée dans live.note20Dbl. Semaine du 02/11 déjà gravée : 14,5 dans les deux cas (inchangée).
+function noteFixDouble(){
+  if(!DB.profile) DB.profile={};
+  if(DB.profile.noteFix1111) return 0;
+  var n=0;
+  (DB.logs||[]).forEach(function(l){
+    var v=l&&l.live; if(!v||v.note20==null||v.note20Prev==null) return;
+    if(l.date>=NOTE_EXEMPT_SAVE_FROM&&v.n20v>=6&&v.note20>v.note20Prev){ v.note20Dbl=v.note20; v.note20=v.note20Prev; delete v.note20Prev; n++; }
+    else if(String(l.id)==='1793702789954'&&v.note20===19&&v.note20Prev===14){ v.note20Dbl=19; v.note20=18; n++; }
+  });
+  DB.profile.noteFix1111=true;
+  saveDB();
+  return n;
 }
 function bilanNoteWeek(ws){
   var g=noteGravOf(ws);

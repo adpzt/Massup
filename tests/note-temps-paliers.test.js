@@ -156,3 +156,25 @@ test("paliers 12-15 : le haut de la fourchette est un palier (15, plus 14)", () 
   assert.equal(lc.done, 10); // 3 + 3 + 1 (11 et 10 = 0 à 4-5 reps de 15) + 3
   assert.equal(run("asDefReps({key:'face_pull',weight:20,reps:12,rHi:15})"), 15, "la série terminée propose 15");
 });
+
+// 11/11 (Adrien : « pourquoi 20 alors que j'ai perdu plein de points ? ») : séance enregistrée avec ses exemptions (09/11 : 18),
+// sans n20x → la re-notation du boot rajoutait l'abdo passé une 2e fois (20). Plus jamais, et la note revient à 18.
+test("re-notation « manque de temps » : jamais sur une séance enregistrée depuis le 04/11 (double exemption)", () => {
+  const S = (w, reps, feel) => ({ w, reps, feel });
+  const E = (key, n, lo, hi, w0, sets, status) => ({ key, n, reps: lo, rHi: hi, w: w0, w0, main: true, unite: "kg", status: status || "done", pain: false, sets });
+  const l = { id: 2, date: "2026-11-09", live: { context: "energie", note20: 18, n20v: 6, exos: [
+    E("tirage_vert", 4, 8, 10, 60, [S(60, 8, "dur"), S(60, 8, "dur"), S(60, 8, "dur"), S(60, 7, "echec")]),
+    E("rowing_pb", 4, 8, 10, 56, [S(56, 8, "dur"), S(56, 8, "echec"), S(56, 8, "echec"), S(56, 7, "echec")]),
+    E("crunch_decline", 3, 12, null, 12, [], "skipped")] } };
+  run("DB.logs=[__l];noteRegradeTemps();", { __l: l });
+  assert.equal(l.live.note20, 18);
+  assert.equal(l.live.n20x, 1);
+  const bad = { id: 3, date: "2026-11-09", live: { note20: 20, note20Prev: 18, n20v: 6, n20x: 1, exos: [] } };
+  const t3 = { id: "1793702789954", date: "2026-11-03", live: { note20: 19, note20Prev: 14, n20v: 6, n20x: 1, exos: [] } };
+  const ok = { id: 4, date: "2026-10-20", live: { note20: 13, note20Prev: 11, n20v: 6, n20x: 1, exos: [] } };
+  run("DB.profile.noteFix1111=false;DB.logs=[__a,__b,__c];noteFixDouble();", { __a: bad, __b: t3, __c: ok });
+  assert.equal(bad.live.note20, 18);
+  assert.equal(bad.live.note20Dbl, 20);
+  assert.equal(t3.live.note20, 18);
+  assert.equal(ok.live.note20, 13, "re-notation légitime d'avant le 04/11 : inchangée");
+});

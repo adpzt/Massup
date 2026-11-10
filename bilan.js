@@ -19,6 +19,10 @@ var BILAN=(function(){
   // À CHAQUE mise en ligne d'une nouveauté visible : ajouter une entrée EN TÊTE (id = date AAAA-MM-JJ), 3 à 6 lignes courtes.
   // Elle s'affiche une fois par appareil (localStorage massup_news = id déjà vu), sur le Bilan, avant la saisie de la nuit.
   var NEWS=[
+    {id:'2026-11-11',t:'Notes de séance corrigées (11 novembre)',items:[
+      ['🛠️','Séance du 9/11 : 18/20, pas 20. L’exemption « abdo passé » était comptée deux fois au redémarrage de l’app. C’est réparé pour de bon.'],
+      ['📝','Séance du 3/11 : 18/20 (et pas 19). La note de la semaine du 2/11 reste à 14,5.']
+    ]},
     {id:'2026-11-10',t:'Compteur de séries réparé (10 novembre)',items:[
       ['🎯','Face pull, mollets, abducteurs, adducteurs, crunch lesté (fourchette 12-15) : tes séries à 15 comptent enfin au palier × 15. Avant, elles étaient rangées en × 14. Paliers : 12 · 15 · 17.'],
       ['↺','Créatine, plats maison : à 7/7 (ou 14/14), le + devient ↺ pour revenir à 0 si tu as coché par erreur.'],

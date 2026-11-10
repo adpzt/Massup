@@ -2558,7 +2558,7 @@ function asPersistLog(){
     // (rituel posture de fin supprimé le 04/08 — abdo obligatoire au setup + routines dans Détente)
     warmup:AS.warmupDone===true
   };
-  try{ if(liveNotedExos(AS.exos).length&&AS.sid!=='sm'){ live.note20=asGlobalScore(); live.n20v=6; } }catch(e){} // n20v 6 = barème du 03/11 (pas de regravure) // la note /20 se grave ici, une fois pour toutes (cardio seul : pas de note, 19/10)
+  try{ if(liveNotedExos(AS.exos).length&&AS.sid!=='sm'){ live.note20=asGlobalScore(); live.n20v=6; live.n20x=1; } }catch(e){} // n20v 6 = barème du 03/11 (pas de regravure) // la note /20 se grave ici, une fois pour toutes (cardio seul : pas de note, 19/10)
   // Reprise après gel (26/08) : contexte figé avec la note — le coach relit la séance avec
   try{ live.reprise=gelRepriseCtx(prevLog?prevLog.date:todayStr()); }catch(e){ live.reprise=null; }
   DB.logs.push({id:logId,date:prevLog?prevLog.date:todayStr(),
