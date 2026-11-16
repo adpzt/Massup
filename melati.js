@@ -2568,56 +2568,21 @@ function asFinishWorkout(){
 // Douleur (07/10, parité MASSUP) : « une douleur ? » non/oui → où + intensité 1-5 → exo raccourci à
 // cause d'elle (optionnel). Un exo coché est jugé sur ses séries faites (−0,5 par série manquante,
 // comme l'arrêt douleur de MASSUP) ; passé sans série à cause de la douleur = zéro malus.
-var PAIN_ZONES=[['poignet','Poignet'],['coude','Coude'],['epaule','Épaule'],['nuque','Nuque / cou'],['hautdos','Haut du dos'],
-  ['basdos','Bas du dos'],['hanche','Hanche'],['genou','Genou'],['cheville','Cheville / pied'],['autre','Autre']];
-function painZoneLabel(z){ for(var i=0;i<PAIN_ZONES.length;i++) if(PAIN_ZONES[i][0]===z) return PAIN_ZONES[i][1]; return z; }
-function painZonesTxt(pains){ return (pains||[]).map(function(p){ return painZoneLabel(p.z).toLowerCase()+(p.lvl?' '+p.lvl+'/5':''); }).join(', '); }
-function asPainAnswered(e){ return e.painAny===false||(e.painAny===true&&(e.pains||[]).length>0&&e.pains.every(function(p){return p.lvl>=1;})); }
-function asPainBlock(e){
-  var h='<div class="as-lbl">🩹 Une douleur pendant la séance ?</div><div class="as-ctx-row">'
-    +'<button class="as-ctx-btn'+(e.painAny===false?' on':'')+'" onclick="asPainAny(false)">👌 Non</button>'
-    +'<button class="as-ctx-btn'+(e.painAny===true?' on':'')+'" onclick="asPainAny(true)">🩹 Oui</button></div>';
-  if(e.painAny!==true) return h;
-  var pains=e.pains||[];
-  h+='<div class="as-lbl">Où ? <span class="as-lbl-hint">plusieurs zones possibles</span></div><div class="as-ctx-row">';
-  PAIN_ZONES.forEach(function(z){
-    var on=pains.some(function(p){return p.z===z[0];});
-    h+='<button class="as-ctx-btn'+(on?' on':'')+'" onclick="asPainZone(\''+z[0]+'\')">'+z[1]+'</button>';
-  });
-  h+='</div>';
-  pains.forEach(function(p){
-    h+='<div class="as-lbl">'+painZoneLabel(p.z)+' — intensité</div><div class="as-scale-hint"><span>Légère</span><span>Forte</span></div><div class="as-scale">';
-    for(var i=1;i<=5;i++) h+='<button class="as-scale-btn'+(p.lvl===i?' on':'')+'" onclick="asPainLvl(\''+p.z+'\','+i+')">'+i+'</button>';
-    h+='</div>';
-  });
-  var cand=AS.exos.map(function(x,i){return {x:x,i:i};}).filter(function(o){
-    var d=o.x.sets.length; if(o.x.pain) return true; if(!d&&o.x.bonus) return false; return d<(o.x.n||3); });
-  h+='<div class="as-lbl">Un exo raccourci à cause de ça ? <span class="as-lbl-hint">optionnel — il sera jugé sur les séries faites</span></div>';
-  if(!cand.length) h+='<div class="as-lbl-hint" style="margin:-.3rem 0 .9rem;">Aucun exo écourté aujourd’hui.</div>';
-  else{
-    h+='<div class="as-ctx-row">';
-    cand.forEach(function(o){ h+='<button class="as-ctx-btn'+(o.x.pain?' on':'')+'" onclick="asPainExo('+o.i+')">'+o.x.name+' <small>'+o.x.sets.length+'/'+(o.x.n||3)+'</small></button>'; });
-    h+='</div>';
-  }
-  return h;
+// 16/11 (parité MASSUP) : catalogue de zones avec recherche + intensité PAR exo → pain_zones.js (module commun).
+function asPainCands(){
+  return AS.exos.map(function(x,i){ return {x:x,i:i,d:x.sets.length,n:x.n||3}; }).filter(function(o){
+    return o.x.pain||o.d>0||!o.x.bonus;
+  }).map(function(o){ o.short=o.d<o.n; return o; });
 }
+function asPainSetStop(x,on){ x.pain=!!on; }
 function asKeepEndNote(){ var note=$id('asEndNote'); if(note) AS.end.note=note.value; }
 function asPainAny(v){
   asKeepEndNote();
   AS.end.painAny=v;
-  if(v===false){ AS.end.pains=[]; AS.exos.forEach(function(x){ x.pain=false; }); }
+  if(v===false) painClearAll();
   else if(!AS.end.pains) AS.end.pains=[];
   asSave(); asRender();
 }
-function asPainZone(z){
-  asKeepEndNote();
-  var pains=AS.end.pains||(AS.end.pains=[]);
-  var i=pains.findIndex(function(p){return p.z===z;});
-  if(i>=0) pains.splice(i,1); else pains.push({z:z,lvl:null});
-  asSave(); asRender();
-}
-function asPainLvl(z,v){ asKeepEndNote(); (AS.end.pains||[]).forEach(function(p){ if(p.z===z) p.lvl=v; }); asSave(); asRender(); }
-function asPainExo(i){ asKeepEndNote(); var x=AS.exos[i]; if(!x) return; x.pain=!x.pain; asSave(); asRender(); }
 function asRenderEnd(){
   var e=AS.end||{};
   var h=asHeader('Séance terminée 💗',asElapsedMin()+' min · '+AS.sname);
@@ -2661,7 +2626,10 @@ function asPersistLog(){
       ws:x.sets.map(function(s){return s.w!=null?s.w:x.weight;}),bonus:x.bonus||undefined,pain:x.pain||undefined};}),
     skip:AS.exos.filter(function(x){return !x.sets.length&&!x.bonus&&!x.pain;}).map(function(x){return x.key;}),
     painSkip:AS.exos.filter(function(x){return !x.sets.length&&x.pain;}).map(function(x){return x.key;}),
-    painAny:AS.end.painAny,pains:(AS.end.pains||[]).filter(function(p){return p.lvl;}),
+    painAny:AS.end.painAny,pains:(AS.end.painAny===true?(painDerive(),AS.end.pains||[]):[]).filter(function(p){return p.lvl;}),
+    // 16/11 : intensité par exo (k = clé, '_hors' = hors exo) et zones de chaque exo
+    painExos:AS.end.painAny===true?AS.exos.filter(function(x){return x.pp&&x.pp.lvl;}).map(function(x){return {k:x.key,lvl:x.pp.lvl,z:(x.pp.z||[]).slice()};})
+      .concat(AS.end.painOut&&AS.end.painOut.lvl?[{k:'_hors',lvl:AS.end.painOut.lvl,z:(AS.end.painOut.z||[]).slice()}]:[]):undefined,
     recs:AS.recs.slice(),energy:AS.end.energy,feeling:AS.end.feeling,note:AS.end.note||''};
   var sess=melSessFromLog(log);
   log.sc=melScore20(sess);
@@ -2768,7 +2736,7 @@ function melSessFromLog(l){
     exos.push(melExoShape(k,{n:pl.n,lo:pl.lo,hi:pl.hi,bonus:false,weight:getW(k),w0:null,status:'skipped',pain:true,sets:[]}));
   });
   return {id:l.id,date:l.date,sid:l.sid,dur:l.dur,recs:l.recs||[],energy:l.energy,feeling:l.feeling,note:l.note||'',exos:exos,
-    painAny:l.painAny,pains:l.pains||[]};
+    painAny:l.painAny,pains:l.pains||[],painExos:l.painExos||[]};
 }
 // Migration douce : les logs d'avant le 28/09 reçoivent leurs notes v2 (une fois — ensuite elles sont figées)
 function melMigrateScores(){
@@ -2895,7 +2863,9 @@ function melCoach(sess){
   var pz=(sess.pains||[]).filter(function(p){return p.lvl;});
   if(pz.length){
     var strong=pz.some(function(p){return p.lvl>=4;});
-    bad.unshift('🩹 Douleur signalée : '+painZonesTxt(pz)+'. '+(strong
+    var pEnt=(sess.painExos||[]).map(function(p){ return {name:p.k==='_hors'?'hors exo':(EXOS[p.k]?EXOS[p.k].name:p.k),lvl:p.lvl,z:p.z}; });
+    var pTxt=pz.map(function(p){ var on=painExosFor(p.z,pEnt); return painZoneLabel(p.z).toLowerCase()+' '+p.lvl+'/5'+(on?' (sur '+on+')':''); }).join(', ');
+    bad.unshift('🩹 Douleur signalée : '+pTxt+'. '+(strong
       ?'Ne charge pas cette zone à la prochaine séance (variante ou autre exo) — et si ça persiste au repos, on consulte.'
       :'Si elle revient au même endroit la prochaine fois, on allège ou on change d’exo.'));
   }

@@ -118,6 +118,8 @@ const ADRIEN = [
   // (19/10) Course dehors / à la salle → LiveUp cardio seul ; séance MAISON (2 haltères, tout en reps)
   ['a_sport_where', ['SPORT.open()', 'SPORT.runWhere()'], { scroll: '#spOverlay .as-scroll' }],
   ['a_cardio_gym', ['SPORT.open()', 'SPORT.runWhere()', "SPORT.gym('course')"], { scroll: '#asOverlay .as-scroll' }],
+  // (16/11) Douleur de fin de séance : recherche de zone + intensité PAR exo (pain_zones.js)
+  ['a_pain_end', ["asOpen();AS.step='end';AS.sname='PULL';AS.startTs=Date.now()-3600000;AS.exos=[asMakeExo('tirage_vert',false),asMakeExo('dev_incline',false)];AS.exos.forEach(function(x,i){x.sets=i?[{reps:10,feel:'ok',w:x.weight}]:[1,2,3,4].map(function(){return {reps:9,feel:'ok',w:x.weight};});x.status=i?'skipped':'done';});AS.end={energy:4,feeling:3};asRender();asPainAny(true)", "asPainQ('bas du biceps proche du coude');asPainPick(0);asPainEx(0);asPainEx(1);asPainExLvl(0,3);asPainExLvl(1,2);asPainQ('coude int');asPainPick(0);asPainExZone(1,1);asPainStop(1)", "document.getElementById('asPainQ').value='epaule';asPainQ('epaule')"], { scroll: '#asOverlay .as-scroll' }],
   ['a_maison_setup', ['asOpen()', "asChooseSeance('sm')"], { scroll: '#asOverlay .as-scroll' }],
   // (01/11) Une séance de salle ne propose jamais les exos de la routine maison (setup + ajout en séance)
   // (01/11) Puce ⏳ : jamais faits (un exo mis puis passé sans série ne compte pas) + pas faits depuis 8 séances
@@ -185,6 +187,7 @@ const MELATI = [
   ['m_nutri_plan_use', ['nutOpen()', "(function(){var st=document.createElement('style');st.textContent='#nutri *{animation:none!important;transition:none!important}';document.head.appendChild(st);})()", tab('#nutri', 'plan'), "window.confirm=function(){return true;};document.querySelector('#n-p-plan [data-pd=\"1\"]').click();document.querySelector('#n-p-plan [data-puse]').click()"], { scroll: '#nutri' }],
   ['m_nutri_semaine', ['nutOpen()', tab('#nutri', 'semaine')], { scroll: '#nutri' }],
   ['m_push_lost', ["DB.reminders.enabled=true;_mlPushState={state:'lost',reason:'subscribe'};mlRenderPushSettings();document.getElementById('mlPushStatus').scrollIntoView()"]],
+  ['m_pain_end', ["asOpen();var ks=Object.keys(EXOS).filter(function(k){return !EXOS[k].time&&!EXOS[k].mins&&!EXOS[k].circuit;}).slice(0,2);AS.step='end';AS.sname='Séance';AS.startTs=Date.now()-3600000;AS.exos=ks.map(function(k){return asMakeExo({key:k});});AS.exos[0].sets=[{reps:10,feel:'ok'},{reps:10,feel:'ok'},{reps:10,feel:'ok'}];AS.exos[0].status='done';AS.end={energy:4,feeling:3};asRender();asPainAny(true)", "asPainQ('genou');asPainPick(0);asPainEx(0);asPainExLvl(0,2);asPainQ('lombaire');asPainPick(0);asPainEx(1);asPainExLvl(1,1);asPainExZone(1,1);asPainExZone(0,1)", "document.getElementById('asPainQ').value='hanche';asPainQ('hanche')"], { scroll: '#asOverlay .as-scroll' }],
   ['m_liveflow', ['asOpen()', "document.querySelector('#asOverlay .as-bigcard').click()"], { scroll: '#asOverlay' }],
 ];
 // Bilan de séance, cartes d'exo DÉPLIÉES (03/11 : une ligne de verdict + 2 alertes max)

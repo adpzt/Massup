@@ -519,7 +519,7 @@ function asResumeLog(id){
     e.weight=(x.w!=null?x.w:e.weight); e.w0=(x.w0!=null?x.w0:e.w0);
     e.n=x.n||e.n; e.reps=x.reps||e.reps; e.rHi=x.rHi||null; // fourchette gravée : une vieille séance garde son barème
     if(x.gR!=null) e.gR=x.gR; // reps visées choisies sur l'intro (06/11)
-    e.status=x.status||'pending'; e.sets=(x.sets||[]).slice(); e.skippedSets=x.sk||0; e.pain=!!x.pain;
+    e.status=x.status||'pending'; e.sets=(x.sets||[]).slice(); e.skippedSets=x.sk||0; e.pain=!!x.pain; if(x.pp) e.pp={lvl:x.pp.lvl,z:(x.pp.z||[]).slice()};
     if(x.main!=null) e.main=x.main; // statut principal/bonus gravé — une reprise ne le perd pas (31/08)
     if(e.status==='skipped'&&e.sets.length>=(e.n||3)) e.status='done'; // état hérité : jamais « écourté » à séries pleines
     exos.push(e);
@@ -531,7 +531,7 @@ function asResumeLog(id){
   AS={createdTs:Date.now(),step:'exo',sel:{sid:sid,chosen:{},extras:[]},sound:true,
     startTs:Date.now()-(l.duration_min||0)*60000,
     exos:exos,cur:0,setIdx:1,phase:'intro',introIdx:0,restEnd:null,restTotal:0,
-    end:{energy:l.energy||null,feeling:l.feeling||null,pain:(l.live.pain!=null?l.live.pain:null),painAny:liveLogPainAny(l.live),pains:liveLogPains(l.live),painNote:l.comment||'',context:l.live.context||null,stretch:l.live.stretch===true},
+    end:{energy:l.energy||null,feeling:l.feeling||null,pain:(l.live.pain!=null?l.live.pain:null),painAny:liveLogPainAny(l.live),pains:liveLogPains(l.live),painOut:l.live.painOut?{lvl:l.live.painOut.lvl,z:(l.live.painOut.z||[]).slice()}:null,painNote:l.comment||'',context:l.live.context||null,stretch:l.live.stretch===true},
     applied:[],repIdx:0,hype:asPick(AS_HYPE),
     sname:sdata?sdata.name:'Exos &#xE0; la carte',sid:sid,stype:sdata?sdata.t:null,
     resumeLogId:l.id};
@@ -563,7 +563,7 @@ function asViewReport(id){
     e.weight=(x.w!=null?x.w:e.weight); e.w0=(x.w0!=null?x.w0:e.w0);
     e.n=x.n||e.n; e.reps=x.reps||e.reps; e.rHi=x.rHi||null; // fourchette gravée : une vieille séance garde son barème
     if(x.gR!=null) e.gR=x.gR; // reps visées choisies sur l'intro (06/11)
-    e.status=x.status||'done'; e.sets=(x.sets||[]).slice(); e.skippedSets=x.sk||0; e.pain=!!x.pain;
+    e.status=x.status||'done'; e.sets=(x.sets||[]).slice(); e.skippedSets=x.sk||0; e.pain=!!x.pain; if(x.pp) e.pp={lvl:x.pp.lvl,z:(x.pp.z||[]).slice()};
     if(x.main!=null) e.main=x.main; // le bilan relu affiche les statuts gravés, pas ceux du programme du jour
     if(e.status==='skipped'&&e.sets.length>=(e.n||3)) e.status='done';
     exos.push(e);
@@ -575,7 +575,7 @@ function asViewReport(id){
   AS={createdTs:Date.now(),step:'report',sel:{sid:sid,chosen:{},extras:[]},sound:true,
     startTs:Date.now()-(l.duration_min||0)*60000,
     exos:exos,cur:0,setIdx:1,phase:'intro',introIdx:0,restEnd:null,restTotal:0,
-    end:{energy:l.energy||null,feeling:l.feeling||null,pain:(l.live.pain!=null?l.live.pain:null),painAny:liveLogPainAny(l.live),pains:liveLogPains(l.live),painNote:l.comment||'',context:l.live.context||null,stretch:l.live.stretch===true},
+    end:{energy:l.energy||null,feeling:l.feeling||null,pain:(l.live.pain!=null?l.live.pain:null),painAny:liveLogPainAny(l.live),pains:liveLogPains(l.live),painOut:l.live.painOut?{lvl:l.live.painOut.lvl,z:(l.live.painOut.z||[]).slice()}:null,painNote:l.comment||'',context:l.live.context||null,stretch:l.live.stretch===true},
     applied:[],repIdx:0,hype:asPick(AS_HYPE),
     sname:sdata?sdata.name:'Exos &#xE0; la carte',sid:sid,stype:sdata?sdata.t:null,
     savedLogId:l.id,viewOnly:true};
@@ -2363,10 +2363,7 @@ function asRenderEnd(){
 // zones possibles) + intensité 1-5 par zone → quel exo a été raccourci à cause d'elle (optionnel).
 // Un exo coché = arrêt douleur (x.pain) : jugé sur ses séries faites, comme le bouton 🩹 en séance.
 // live.pain reste le niveau POIGNET (0 si pas de douleur au poignet) : le journal du poignet continue.
-var PAIN_ZONES=[['poignet','Poignet'],['coude','Coude'],['epaule','&#xC9;paule'],['nuque','Nuque / cou'],['hautdos','Haut du dos'],
-  ['basdos','Bas du dos'],['hanche','Hanche'],['genou','Genou'],['cheville','Cheville / pied'],['autre','Autre']];
-function painZoneLabel(z){ if(z==='nr') return 'zone non notée'; for(var i=0;i<PAIN_ZONES.length;i++) if(PAIN_ZONES[i][0]===z) return PAIN_ZONES[i][1]; return z; }
-function painZonesTxt(pains){ return (pains||[]).map(function(p){ return painZoneLabel(p.z).toLowerCase()+(p.lvl?' '+p.lvl+'/5':''); }).join(', '); }
+// Catalogue des zones, recherche, bloc « Où ? / Sur quels exos ? » : pain_zones.js (commun avec Melati, 16/11).
 // Journal du poignet (04/11, incohérence ③) : UNE entrée par jour (fusion par date inchangée), mais qui COMBINE les
 // séances du jour — avant, une 2e séance le même jour écrasait la douleur de la 1re. byLog = la part de chaque séance
 // (une séance reprise remplace la sienne) ; level = le plus haut, zones réunies (le plus haut par zone), notes à la suite.
@@ -2383,41 +2380,16 @@ function painLogPut(date,logId,part,resumed){
   e.level=lv; e.zones=Object.keys(zm).map(function(z){ return {z:z,lvl:zm[z]}; }); e.note=notes.join(' · ');
   DB.painLog.sort(function(a,b){return a.date.localeCompare(b.date);});
 }
-function asPainAnswered(e){ return e.painAny===false||(e.painAny===true&&(e.pains||[]).length>0&&e.pains.every(function(p){return p.lvl>=1;})); }
-function asPainShortened(){ // exos raccourcis ou passés : candidats « à cause de la douleur »
-  return AS.exos.map(function(x,i){return {x:x,i:i};}).filter(function(o){ var d=(o.x.sets||[]).length; if(o.x.status==='pending') return false; if(o.x.pain) return true; if(!d&&liveExoSide(o.x)) return false; return d<(o.x.n||3); });
+// Hooks du module commun pain_zones.js : exos proposés (tous ceux faits, même complets — 16/11) et arrêt douleur
+function asPainCands(){
+  return AS.exos.map(function(x,i){ return {x:x,i:i,d:(x.sets||[]).length,n:x.n||3}; }).filter(function(o){
+    if(o.x.pain||o.d>0) return true;
+    return o.x.status==='skipped'&&!liveExoSide(o.x);
+  }).map(function(o){ o.short=o.x.status!=='pending'&&o.d<o.n; return o; });
 }
-function asPainBlock(e){
-  // Un arrêt douleur fait pendant la séance (bouton 🩹) répond déjà « oui »
-  if(e.painAny==null&&AS.exos.some(function(x){return x.pain;})) e.painAny=true;
-  var h='<div class="as-lbl">&#x1FA79; Une douleur pendant la s&#xE9;ance&#x202F;?</div><div class="as-ctx-row">'
-    +'<button class="as-ctx-btn'+(e.painAny===false?' on':'')+'" onclick="asPainAny(false)">&#x1F44C; Non</button>'
-    +'<button class="as-ctx-btn'+(e.painAny===true?' on':'')+'" onclick="asPainAny(true)">&#x1FA79; Oui</button></div>';
-  if(e.painAny!==true) return h;
-  var pains=e.pains||[];
-  h+='<div class="as-lbl">O&#xF9;&#x202F;? <span class="as-lbl-hint">plusieurs zones possibles</span></div><div class="as-ctx-row">';
-  PAIN_ZONES.forEach(function(z){
-    var on=pains.some(function(p){return p.z===z[0];});
-    h+='<button class="as-ctx-btn'+(on?' on':'')+'" onclick="asPainZone(\''+z[0]+'\')">'+z[1]+'</button>';
-  });
-  h+='</div>';
-  pains.forEach(function(p){
-    h+='<div class="as-lbl">'+painZoneLabel(p.z)+' &#x2014; intensit&#xE9;</div><div class="as-scale-hint"><span>L&#xE9;g&#xE8;re</span><span>Forte</span></div><div class="as-scale">';
-    for(var i=1;i<=5;i++) h+='<button class="as-scale-btn'+(p.lvl===i?' on':'')+'" onclick="asPainLvl(\''+p.z+'\','+i+')">'+i+'</button>';
-    h+='</div>';
-  });
-  var cand=asPainShortened();
-  h+='<div class="as-lbl">Un exo raccourci &#xE0; cause de &#xE7;a&#x202F;? <span class="as-lbl-hint">optionnel &#x2014; il sera jug&#xE9; sur les s&#xE9;ries faites</span></div>';
-  if(!cand.length) h+='<div class="as-lbl-hint" style="margin:-.3rem 0 .9rem;">Aucun exo &#xE9;court&#xE9; aujourd\'hui.</div>';
-  else{
-    h+='<div class="as-ctx-row">';
-    cand.forEach(function(o){
-      var x=o.x, d=(x.sets||[]).length;
-      h+='<button class="as-ctx-btn'+(x.pain?' on':'')+'" onclick="asPainExo('+o.i+')">'+x.name+' <small>'+d+'/'+(x.n||3)+'</small></button>';
-    });
-    h+='</div>';
-  }
-  return h;
+function asPainSetStop(x,on){
+  if(on){ x.pain=true; if(x.status==='skipped') x.skippedBy='pain'; if(!AS.end.context) AS.end.context='blessure'; }
+  else{ x.pain=false; if(x.skippedBy==='pain') x.skippedBy='user'; }
 }
 function asKeepEndNote(){ var note=document.getElementById('asPainNote'); if(note) AS.end.painNote=note.value; }
 function asPainAny(v){
@@ -2425,29 +2397,9 @@ function asPainAny(v){
   AS.end.painAny=v;
   if(!AS.end.pains) AS.end.pains=[];
   if(v===false){
-    AS.end.pains=[];
-    AS.exos.forEach(function(x){ if(x.pain){ x.pain=false; if(x.skippedBy==='pain') x.skippedBy='user'; } });
+    painClearAll();
     if(AS.end.context==='blessure') AS.end.context=null;
   }
-  asSave(); asRender();
-}
-function asPainZone(z){
-  asKeepEndNote();
-  var pains=AS.end.pains||(AS.end.pains=[]);
-  var i=pains.findIndex(function(p){return p.z===z;});
-  if(i>=0) pains.splice(i,1); else pains.push({z:z,lvl:null});
-  asSave(); asRender();
-}
-function asPainLvl(z,v){
-  asKeepEndNote();
-  (AS.end.pains||[]).forEach(function(p){ if(p.z===z) p.lvl=v; });
-  asSave(); asRender();
-}
-function asPainExo(i){
-  asKeepEndNote();
-  var x=AS.exos[i]; if(!x) return;
-  if(x.pain){ x.pain=false; if(x.skippedBy==='pain') x.skippedBy='user'; }
-  else{ x.pain=true; if(x.status==='skipped') x.skippedBy='pain'; if(!AS.end.context) AS.end.context='blessure'; }
   asSave(); asRender();
 }
 function asEndSet(field,v){
@@ -2547,12 +2499,13 @@ function asPersistLog(){
   var logId=prevLog?prevLog.id:Date.now();
   // Niveau POIGNET (journal du poignet / chirurgien) dérivé de la question générale
   if(AS.end.painAny===false) AS.end.pain=0;
-  else if(AS.end.painAny===true){ var _pw=(AS.end.pains||[]).find(function(p){return p.z==='poignet';}); AS.end.pain=_pw&&_pw.lvl?_pw.lvl:0; }
+  else if(AS.end.painAny===true){ painDerive(); AS.end.pain=(AS.end.pains||[]).reduce(function(m,p){ return painIsWrist(p.z)&&p.lvl>m?p.lvl:m; },0); } // toutes les zones « poignet… » (16/11)
   var live={
     // main = statut principal/bonus FIGÉ au moment de la séance (15/08) : les refontes de
     // programme ne réécrivent plus les notes passées. note20 = la note /20 gravée (idem).
-    exos:AS.exos.map(function(x){return {key:x.key,w:x.weight,w0:x.w0,n:x.n,reps:x.reps,rHi:x.rHi||undefined,gR:x.gR!=null?x.gR:undefined,unite:x.unite,cnt:x.cnt||null,status:x.status,extra:!!(x.extra||x.added),main:!liveExoSide(x),sets:x.sets,sk:x.skippedSets||0,pain:!!x.pain,tc:x.tc||undefined,sz:x.sz||undefined,evo:x.evo?{from:x.evo.from,to:x.evo.to,hi:x.evo.hi}:null,cardio:x.cardio&&(x.sets||[]).length?x.cardio:undefined};}),
+    exos:AS.exos.map(function(x){return {key:x.key,w:x.weight,w0:x.w0,n:x.n,reps:x.reps,rHi:x.rHi||undefined,gR:x.gR!=null?x.gR:undefined,unite:x.unite,cnt:x.cnt||null,status:x.status,extra:!!(x.extra||x.added),main:!liveExoSide(x),sets:x.sets,sk:x.skippedSets||0,pain:!!x.pain,pp:x.pp&&x.pp.lvl?{lvl:x.pp.lvl,z:(x.pp.z||[]).slice()}:undefined,tc:x.tc||undefined,sz:x.sz||undefined,evo:x.evo?{from:x.evo.from,to:x.evo.to,hi:x.evo.hi}:null,cardio:x.cardio&&(x.sets||[]).length?x.cardio:undefined};}),
     pain:AS.end.pain,painAny:AS.end.painAny,pains:(AS.end.pains||[]).filter(function(p){return p.lvl;}),painNote:AS.end.painNote||'',
+    painOut:AS.end.painOut&&AS.end.painOut.lvl?{lvl:AS.end.painOut.lvl,z:(AS.end.painOut.z||[]).slice()}:undefined, // douleur hors exo (16/11)
     context:AS.end.context||null,
     stretch:AS.end.stretch===true,
     // (rituel posture de fin supprimé le 04/08 — abdo obligatoire au setup + routines dans Détente)
@@ -3304,12 +3257,15 @@ function asAnalyzeSession(){
   else if(DB.dz&&DB.dz[todayStr()]&&DB.dz[todayStr()].stretch) notes.push('&#x1F9D8; &#xC9;tirements du jour d&#xE9;j&#xE0; faits dans l\'espace D&#xE9;tente &#x2014; +15 pts au bilan de la semaine, ta posture te dit merci.');
   var _pains=(e.pains||[]).filter(function(p){return p.lvl;});
   if(e.painAny===false||(e.painAny==null&&e.pain===0)) notes.push('&#x1FA79; Z&#xE9;ro douleur aujourd\'hui &#x2014; les prises neutres et l\'&#xE9;chauffement font le job.');
+  // 16/11 : intensité notée PAR exo → le coach dit sur quels exos (« sur Curl marteau 3/5, Rowing 2/5 »)
+  var _pEnt=(AS.exos||[]).filter(function(x){return x.pp&&x.pp.lvl;}).map(function(x){return {name:x.name,lvl:x.pp.lvl,z:x.pp.z||[]};});
+  if(e.painOut&&e.painOut.lvl) _pEnt.push({name:'hors exo',lvl:e.painOut.lvl,z:e.painOut.z||[]});
   _pains.forEach(function(p){
-    var lv=p.lvl, z=painZoneLabel(p.z);
-    if(p.z==='poignet'){
-      if(lv<=2) notes.push('&#x1FA79; Poignet&#x202F;: g&#xEA;ne l&#xE9;g&#xE8;re ('+lv+'/5) &#x2014; dans le cadre pr&#xE9;vu. Continue les prises neutres et surveille que &#xE7;a ne monte pas.');
-      else if(lv===3) notes.push('&#x1FA79; Poignet&#x202F;: douleur moyenne (3/5) &#x2014; all&#xE8;ge les exos de tirage la prochaine fois et gla&#xE7;age 10 min ce soir si &#xE7;a chauffe.');
-      else notes.push('&#x26A0;&#xFE0F; Poignet&#x202F;: douleur forte ('+lv+'/5). Ne force pas dessus&#x202F;: prochaine s&#xE9;ance sans tirage lourd, et mentionne-le au chirurgien. Le journal garde la trace.');
+    var lv=p.lvl, _on=painExosFor(p.z,_pEnt), z=painZoneLabel(p.z)+(_on?' ('+_on+')':'');
+    if(painIsWrist(p.z)){
+      if(lv<=2) notes.push('&#x1FA79; '+z+'&#x202F;: g&#xEA;ne l&#xE9;g&#xE8;re ('+lv+'/5) &#x2014; dans le cadre pr&#xE9;vu. Continue les prises neutres et surveille que &#xE7;a ne monte pas.');
+      else if(lv===3) notes.push('&#x1FA79; '+z+'&#x202F;: douleur moyenne (3/5) &#x2014; all&#xE8;ge les exos de tirage la prochaine fois et gla&#xE7;age 10 min ce soir si &#xE7;a chauffe.');
+      else notes.push('&#x26A0;&#xFE0F; '+z+'&#x202F;: douleur forte ('+lv+'/5). Ne force pas dessus&#x202F;: prochaine s&#xE9;ance sans tirage lourd, et mentionne-le au chirurgien. Le journal garde la trace.');
     }
     else if(lv<=2) notes.push('&#x1FA79; '+z+'&#x202F;: g&#xEA;ne l&#xE9;g&#xE8;re ('+lv+'/5) &#x2014; surveille-la &#xE0; la prochaine s&#xE9;ance, sur les m&#xEA;mes exos.');
     else if(lv===3) notes.push('&#x1FA79; '+z+'&#x202F;: douleur moyenne (3/5) &#x2014; all&#xE8;ge les exos qui la sollicitent la prochaine fois, et glace 10 min ce soir si &#xE7;a chauffe.');

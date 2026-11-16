@@ -1730,7 +1730,7 @@ function exportCoachDossier(opts){
       if(!names.length&&!l.sport) names.push('(détail non saisi)');
       return [l.date,jour(l.date),l.time||'',sessionLabel(l),names.join(' · '),sessionSource(l),logWeight(l),l.duration_min||null,liveLogNote20(l),l.energy||null,l.feeling||null,
         l.live?mainN:null,l.live?bonN:null,l.live?sets:null,l.live?Math.round(ton):null,l.live?(lv.warmup?'oui':'non'):'',lv.context?(CTX[lv.context]||lv.context):'',
-        lv.pains&&lv.pains.length?painZonesTxt(lv.pains):(lv.painAny===false?'aucune':''),txt(l.comment)];
+        lv.pains&&lv.pains.length?painZonesTxt(lv.pains)+(function(){ var d=(lv.exos||[]).filter(function(x){return x.pp&&x.pp.lvl;}).map(function(x){return name(x.key)+' '+x.pp.lvl+'/5';}); return d.length?' — '+d.join(', '):''; })():(lv.painAny===false?'aucune':''),txt(l.comment)];
     })});
 
   // ── Séries ──
@@ -1808,7 +1808,12 @@ function exportCoachDossier(opts){
   var P=[];
   logs.forEach(function(l){
     var lv=l.live||{};
-    (lv.pains||[]).forEach(function(z){ P.push([l.date,'question de fin de séance',txt(painZoneLabel(z.z)),z.lvl||null,'',txt(l.comment)]); });
+    // 16/11 : intensité notée par exo → une ligne par exo douloureux (zones de l'exo) ; avant, une ligne par zone
+    var _pe=(lv.exos||[]).filter(function(x){ return x.pp&&x.pp.lvl; });
+    if(_pe.length||(lv.painOut&&lv.painOut.lvl)){
+      _pe.forEach(function(x){ P.push([l.date,'douleur sur un exercice',txt((x.pp.z||[]).map(painZoneLabel).join(' + ')),x.pp.lvl,name(x.key),txt(l.comment)]); });
+      if(lv.painOut&&lv.painOut.lvl) P.push([l.date,'douleur hors exercice',txt((lv.painOut.z||[]).map(painZoneLabel).join(' + ')),lv.painOut.lvl,'',txt(l.comment)]);
+    } else (lv.pains||[]).forEach(function(z){ P.push([l.date,'question de fin de séance',txt(painZoneLabel(z.z)),z.lvl||null,'',txt(l.comment)]); });
     (lv.exos||[]).forEach(function(x){ if(x.pain) P.push([l.date,'exercice arrêté pour douleur','',null,name(x.key),txt(l.comment)]); });
     if(lv.context==='blessure') P.push([l.date,'séance déclarée « blessure / douleur »','',null,'',txt(l.comment)]);
     if(l.run&&l.run.pain) P.push([l.date,'course',l.run.pain,null,'',txt(l.comment)]);

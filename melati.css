@@ -1267,6 +1267,7 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 .as-scard[data-t=legs].on{border-color:var(--legs);background:rgba(201,123,255,.09);box-shadow:0 0 16px rgba(201,123,255,.14);}
 .as-lbl{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mut);margin:.85rem 0 .45rem;}
 .as-lbl-hint{text-transform:none;letter-spacing:0;font-weight:500;opacity:.7;}
+.as-overlay .as-lbl-hint{opacity:1;} /* 16/11, parité MASSUP (06/11) : en séance, l'indice reste lisible (AA) — --mut seul */
 .as-exo-picks,.as-ready-chips{display:flex;flex-wrap:wrap;gap:.4rem;}
 .as-pick{display:inline-flex;align-items:center;gap:.35rem;padding:.5rem .7rem;background:var(--glass);border:1.5px solid var(--gb);border-radius:var(--x-r-pill);color:var(--mut);font-family:'Manrope',system-ui,sans-serif;font-size:.72rem;font-weight:600;cursor:pointer;transition:all .18s;}
 .as-pick .as-pick-tick{opacity:0;color:var(--acc);font-weight:800;transition:opacity .18s;}
@@ -1378,6 +1379,7 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 .as-scale-btn{padding:.65rem 0;background:rgba(255,255,255,.03);border:1.5px solid var(--gb);border-radius:var(--x-r-sm);color:var(--mut);font-family:'Saira',system-ui,sans-serif;font-style:italic;font-size:.9rem;font-weight:800;cursor:pointer;transition:all .15s;}
 .as-scale-btn.on{border-color:var(--acc);background:rgba(255,126,182,.1);color:var(--acc);transform:scale(1.06);}
 .as-note{width:100%;padding:.6rem .75rem;background:var(--x-glass);box-shadow:var(--x-inset);border:1px solid var(--gb);border-radius:var(--x-r-md);color:var(--txt);font-family:inherit;font-size:.78rem;resize:none;}
+.as-pain-q{margin-bottom:.55rem;} /* 16/11 : recherche de zone de douleur (pain_zones.js) */
 
 /* Rapport */
 .as-rep-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.45rem;margin-bottom:.8rem;}

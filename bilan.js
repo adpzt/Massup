@@ -19,6 +19,11 @@ var BILAN=(function(){
   // À CHAQUE mise en ligne d'une nouveauté visible : ajouter une entrée EN TÊTE (id = date AAAA-MM-JJ), 3 à 6 lignes courtes.
   // Elle s'affiche une fois par appareil (localStorage massup_news = id déjà vu), sur le Bilan, avant la saisie de la nuit.
   var NEWS=[
+    {id:'2026-11-16b',t:'Douleur de fin de séance, en mieux (16 novembre)',items:[
+      ['🔎','« Où ? » : tape la zone (biceps, coude, genou…) et choisis parmi 50 zones précises, par ex. « Biceps — bas (près du coude) ». Rien ne colle ? Tu l’ajoutes telle quelle.'],
+      ['🏋️','« Sur quels exos ? » : coche TOUS les exos où tu as eu mal, même finis, avec une intensité 1 à 5 pour chacun.'],
+      ['✂️','Un exo écourté à cause de la douleur : coche « Écourté à cause de ça », il est jugé sur ses séries faites.']
+    ]},
     {id:'2026-11-16',t:'Nouveau bilan de la semaine (16 novembre)',items:[
       ['🍽️','Nouvelle page Nutrition : calories jour par jour, macros, fibres, sucres, saturées, sel, et des solutions qui changent selon ce qui cloche.'],
       ['😴','Nouvelle page Pas & sommeil : tes 7 jours, ton coucher moyen, et ce qu’il manque en minutes de marche.'],
