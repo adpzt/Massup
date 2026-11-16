@@ -58,7 +58,7 @@ function renderWeeklyRecapWidget(){
     h+='<button class="wr-widget" onclick="wrOpen(\''+wk+'\')">'
       +'<span class="wr-w-ico">&#x1F4CA;</span>'
       +'<span class="wr-w-txt"><strong>Ton bilan de la semaine est pr&#xEA;t</strong><br>'
-      +'<small>Semaine du '+formatDateFr(wk)+' &#x2014; d&#xE9;clare tes plats maison &amp; shakers, d&#xE9;couvre ton score</small></span>'
+      +'<small>Semaine du '+formatDateFr(wk)+' &#x2014; nutrition, pas, sommeil et ta note</small></span>'
       +'<span class="wr-w-arr">&#x203A;</span></button>';
   }
   var mk=null;
@@ -497,6 +497,10 @@ function wrOpen(weekStart,replay){
       maison:prev?(prev.maison!=null?prev.maison:null):(tm>0?tm:null),
       run:prev?(prev.run||0):tr,
       tracked:!prev&&(tp>0||ts>0||tm>0)};
+  // v5 (16/11) : plus de questionnaire bloquant — la créatine et les plats maison sont préremplis par tes « + »
+  // de la semaine (à corriger sur la page Nutrition), la course sur la page Pas & sommeil.
+  WR.v5=weekStart>=NOTE_V5_START;
+  if(WR.v5){ if(WR.shaker==null) WR.shaker=ts; if(WR.maison==null) WR.maison=tm; if(WR.run==null) WR.run=tr; }
   try{ WR.A=wrAnalyze(weekStart); }catch(e){ WR.A=null; console.warn('[MASSUP] wrAnalyze:',e); }
   document.getElementById('wrOverlay').classList.add('open');
   document.body.style.overflow='hidden';
@@ -510,7 +514,7 @@ function wrClose(){
   try{ renderSante(); }catch(e){}
 }
 function wrSetCount(field,v){ WR[field]=v; wrRender(); }
-function wrMissing(){ return WR.v3?(WR.maison===null||WR.shaker===null):(WR.pdj===null||WR.shaker===null); }
+function wrMissing(){ if(WR.v5) return false; return WR.v3?(WR.maison===null||WR.shaker===null):(WR.pdj===null||WR.shaker===null); }
 function wrSubmit(){
   if(wrMissing()){ showToast('R&#xE9;ponds aux deux questions !'); return; }
   if(!DB.rank) DB.rank={pauses:[]};
@@ -520,10 +524,10 @@ function wrSubmit(){
   saveDB();
   WR.saved=true;
   try{ WR.A=wrAnalyze(WR.week); }catch(e){}
-  wrGoto(5);
+  wrGoto(6);
 }
 var _wrDir='fwd';
-function wrGoto(i){ _wrDir=i<WR.idx?'back':'fwd'; WR.idx=Math.max(0,Math.min(5,i)); wrRender(); }
+function wrGoto(i){ _wrDir=i<WR.idx?'back':'fwd'; WR.idx=Math.max(0,Math.min(6,i)); wrRender(); }
 function wrCountRow(field,label,hint,max){
   var h='<div class="as-lbl">'+label+' <span class="as-lbl-hint">'+hint+'</span></div><div class="wr-count-row">';
   for(var i=0;i<=(max||7);i++){
@@ -642,9 +646,9 @@ function wrMessages(w,comp,weekLogs,decayWeek){
   // Nutrition (objectifs v2 depuis le 10/08 : pdj 5 · créatine 5)
   var _on=nutObjectives(WR.week);
   if(WR.v3){
-    if(WR.shaker>=7) msgs.push('&#x1F964; 7/7 shakers &#x2014; whey + cr&#xE9;atine chaque jour : la base est verrouill&#xE9;e.');
-    else if(WR.shaker>=5) msgs.push('&#x1F964; '+WR.shaker+'/7 shakers &#x2014; presque. Cale-le sur un moment FIXE (apr&#xE8;s la s&#xE9;ance ou au r&#xE9;veil) pour ne plus y penser.');
-    else msgs.push('&#x1F6A8; '+WR.shaker+'/7 shakers seulement &#x2014; c\'est ta base de prot&#xE9;ines ET ta cr&#xE9;atine (qui ne marche que satur&#xE9;e). Pr&#xE9;pare-le d&#xE8;s le matin.');
+    if(WR.shaker>=7) msgs.push('&#x1F964; Cr&#xE9;atine 7/7 &#x2014; chaque jour : la base est verrouill&#xE9;e.');
+    else if(WR.shaker>=5) msgs.push('&#x1F964; Cr&#xE9;atine '+WR.shaker+'/7 &#x2014; presque. 5 g &#xE0; heure fixe (au r&#xE9;veil), s&#xE9;ance ou pas.');
+    else msgs.push('&#x1F6A8; Cr&#xE9;atine '+WR.shaker+'/7 seulement &#x2014; elle ne marche que satur&#xE9;e : 5 g chaque jour, &#xE0; heure fixe.');
     if(WR.maison>=_on.maison) msgs.push('&#x1F372; '+WR.maison+'/14 plats maison &#x2014; objectif rempli : tu sais exactement ce que tu manges.');
     else if(WR.maison>=6) msgs.push('&#x1F372; '+WR.maison+'/14 plats maison (objectif '+_on.maison+') &#x2014; un batch le dimanche r&#xE8;gle la moiti&#xE9; de la semaine.');
     else msgs.push('&#x1F6A8; '+WR.maison+'/14 plats maison &#x2014; trop de livraison : moins de prot&#xE9;ines, plus de sel. Un batch cooking dimanche, et 2 plats maison par jour d&#xE8;s lundi.');
@@ -708,8 +712,10 @@ function wrRender(){
   var theme='';
   if(!A){ wrClose(); return; }
   if(i===0) theme=A.v>=5?' wr-th-gold':A.v>=A.goal?' wr-th-blue':'';
-  if(i===5&&!FEATURE_RANK){ try{ var _tn=bilanNoteWeek(WR.week).note; theme=_tn>=18?' wr-th-gold':_tn>=14?' wr-th-blue':''; }catch(e){} }
-  var h='<div class="as-scroll wr-slide'+theme+'" style="padding-top:calc(1.2rem + env(safe-area-inset-top));"><div class="wr-inner">';
+  if(i===6&&!FEATURE_RANK){ try{ var _tn=bilanNoteWeek(WR.week).note; theme=_tn>=18?' wr-th-gold':_tn>=14?' wr-th-blue':''; }catch(e){} }
+  // 16/11 : pages 3 à 6 au format « wk » (semaine.js/.css) — sections à plat, plus de bulle dans la bulle
+  var _wk=i===3||i===5||((i===4||i===6)&&WR.v5);
+  var h='<div class="as-scroll wr-slide'+theme+'" style="padding-top:calc(1.2rem + env(safe-area-inset-top));"><div class="wr-inner'+(_wk?' wk':'')+'">';
   var foot='';
   if(i===0){
     // ── Slide 0 : l'ouverture — le chiffre de la semaine en héros, célébré quand il le mérite ──
@@ -810,21 +816,19 @@ function wrRender(){
     // ── Slide 3 : muscle par muscle ──
     h+='<div class="wr-say">Muscle par muscle, qui a travaill&#xE9;&#x202F;?</div>';
     h+='<div class="wr-volwrap">'+muscleVolumeBarsHtml(A.vol,null,false)+'</div>';
-    h+='<div class="mv-hint" style="display:block;margin-top:.4rem;">12+ s&#xE9;ries = &#xE7;a construit &#xB7; 17+ = zone gold &#xB7; au-del&#xE0; de 25 = trop</div>';
-    if(A.det.length){
-      var _gold=RADAR_GROUPS.map(function(g){return g.label;}).filter(function(lb){var v0=A.vol[lb]||0;return v0>=17&&v0<=25;});
-      if(_gold.length) h+='<div class="as-rep-note tone-gold">&#x1F3C6; Zone gold&#x202F;: <strong>'+_gold.join(', ')+'</strong> &#x2014; le volume des semaines qui font grandir. &#xC0; tenir, pas &#xE0; d&#xE9;passer.</div>';
-      if(A.neglected.length){
-        h+='<div class="as-rep-note tone-warn">&#x1F4A4; D&#xE9;laiss&#xE9;'+(A.neglected.length>1?'s':'')+' cette semaine&#x202F;: <strong>'+A.neglected.join(', ')+'</strong>. Un seul bonus bien plac&#xE9; au prochain LiveUp r&#xE9;pare &#xE7;a &#x2014; le setup te montre ces barres en direct.</div>';
-      }
-      if(A.underWin.length){
-        h+='<div class="as-rep-note">&#x1F50E; Sous la fen&#xEA;tre (6-11 s&#xE9;ries)&#x202F;: <strong>'+A.underWin.join(', ')+'</strong> &#x2014; touch&#xE9;s mais pas nourris. 1 bonus bien plac&#xE9; suffit &#xE0; passer les 12.</div>';
-      }
-      if(!A.neglected.length&&!A.underWin.length){
-        h+='<div class="as-rep-note tone-good">&#x2696;&#xFE0F; Tous les muscles dans la fen&#xEA;tre &#x2014; r&#xE9;partition parfaite, z&#xE9;ro trou. Rare.</div>';
-      }
-    }
+    // 16/11 (Adrien : « écart entre le tableau et la phrase ») : les phrases suivent volTier, comme les barres (seuils du 01/11)
+    h+='<div class="wk-leg">'+WK.volLegend()+'</div>';
+    if(A.det.length) WK.volNotes(A.vol).forEach(function(g){
+      h+='<div class="wk-vol t-'+g.tone+'"><div class="wk-vol__t">'+g.t+' <span>· '+g.l.join(', ')+'</span></div><div class="wk-vol__s">'+g.s+'</div></div>';
+    });
     foot='<button class="as-ghost-btn" onclick="wrGoto(2)">&#x2039;</button><button class="as-cta" onclick="wrGoto(4)">Suivant &#x203A;<span class="as-cta-sub">nutrition &amp; poids</span></button>';
+  } else if(i===4&&WR.v5){
+    h+=WK.nutHtml(WR.week,A);
+    foot='<button class="as-ghost-btn" onclick="wrGoto(3)">&#x2039;</button><button class="as-cta" onclick="wrGoto(5)">Suivant &#x203A;<span class="as-cta-sub">pas &amp; sommeil</span></button>';
+  } else if(i===5){
+    h+=WK.actHtml(WR.week);
+    foot='<button class="as-ghost-btn" onclick="wrGoto(4)">&#x2039;</button>'
+      +'<button class="as-cta" '+(wrMissing()?'disabled':'')+' onclick="wrSubmit()">Le verdict &#x203A;</button>';
   } else if(i===4){
     // ── Slide 4 : nutrition (déclaration) + poids de corps ──
     h+='<div class="wr-say">Le carburant, maintenant. Sois honn&#xEA;te.</div>';
@@ -862,7 +866,10 @@ function wrRender(){
         +'<div class="as-rep-note">'+rMsg+'</div>';
     }
     foot='<button class="as-ghost-btn" onclick="wrGoto(3)">&#x2039;</button>'
-      +'<button class="as-cta" '+(wrMissing()?'disabled':'')+' onclick="wrSubmit()">Le verdict &#x203A;</button>';
+      +'<button class="as-cta" '+(wrMissing()?'disabled':'')+' onclick="wrGoto(5)">Suivant &#x203A;<span class="as-cta-sub">pas &amp; sommeil</span></button>';
+  } else if(WR.v5&&!FEATURE_RANK){
+    h+=WK.verdictHtml(bilanNoteWeek(WR.week),WR.week,A,theme);
+    foot='<button class="as-ghost-btn" onclick="wrGoto(5)">&#x2039;</button><button class="as-cta" onclick="wrClose()">Terminer &#x1F389;</button>';
   } else {
     // ── Slide 5 : LE RÉCAP — à la fin, comme il se doit ──
     // 15/08 : le verdict = LA NOTE /20 (couleurs de son échelle). L'ancien héros en points
@@ -920,10 +927,10 @@ function wrRender(){
         +'</div>';
     }
     h+='<div class="wr-msgs">'+wrMessages(w,A.comp,A.logs,0).slice(0,3).map(function(m){return '<div class="as-rep-note">'+m+'</div>';}).join('')+'</div>';
-    foot='<button class="as-ghost-btn" onclick="wrGoto(4)">&#x2039;</button><button class="as-cta" onclick="wrClose()">Terminer &#x1F389;</button>';
+    foot='<button class="as-ghost-btn" onclick="wrGoto(5)">&#x2039;</button><button class="as-cta" onclick="wrClose()">Terminer &#x1F389;</button>';
   }
   h+='</div></div>';
-  h+=asSlideDots(6,i,'wrGoto');
+  h+=asSlideDots(7,i,'wrGoto');
   h+='<div class="as-foot">'+foot+'</div>';
   body.innerHTML=h;
   body.classList.remove('as-anim-fwd','as-anim-back');

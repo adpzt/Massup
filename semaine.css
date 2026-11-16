@@ -1,0 +1,127 @@
+/* =====================================================================
+   MASSUP · Bilan de la semaine v5 (16/11/2026) · semaine.css — préfixe wk-
+   Retours d'Adrien : « bulles buggées, moches » → plus AUCUNE carte dans une carte : sections séparées
+   par un filet, accents à gauche, chiffres Saira. Jetons de tokens.css seulement (aucune couleur en dur).
+   Chargé après da.css. Mesures à 390 px.
+   ===================================================================== */
+.wr-inner.wk{text-align:left;max-width:440px;margin-left:auto;margin-right:auto}
+.wk *,.wk *:before,.wk *:after{box-sizing:border-box}
+.wk .wr-say,.wk .wr-badge,.wk .wr-hook{text-align:center}
+.wk .wr-badge{align-self:center}
+
+/* ---------- Héros + sections ---------- */
+.wk-hero{display:flex;justify-content:center;align-items:baseline;gap:8px;margin:4px 0 2px;min-width:0}
+.wk-hero__v{font:italic 900 46px/1 'Saira',sans-serif;background-image:var(--x-grad-hero);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
+.wk-hero__u{font-size:13px;font-weight:800;color:var(--mut);white-space:nowrap}
+.wk-sub{text-align:center;font-size:12px;color:var(--mut);font-weight:700;margin:2px 0 12px}
+.wk-sec{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin:24px 0 12px;padding-top:16px;border-top:1px solid var(--bl-line)}
+.wk-sec--first{border-top:0;margin-top:2px;padding-top:0}
+.wk-p{font-size:13.5px;line-height:1.5;font-weight:600;margin:6px 0 0;overflow-wrap:anywhere}
+.wk-p--good{color:var(--acc);text-align:center;margin-top:18px}
+.wk-trk{margin:10px 0 4px}
+
+/* ---------- Mini-graphique 7 jours (géométrie fixe : libellé 16 px + 4 px, piste 96 px — semaine.js) ---------- */
+.wk-bars{position:relative;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin:12px 0 4px}
+.wk-bars__col{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.wk-bars__val{height:16px;font:italic 800 11px/16px 'Saira',sans-serif;color:var(--txt);white-space:nowrap}
+.wk-bars__trk{position:relative;width:100%;max-width:32px;height:96px;border-radius:7px;background:var(--bl-track);overflow:hidden}
+.wk-bars__trk>i{position:absolute;left:0;right:0;bottom:0;border-radius:7px;background:var(--x-grad-prog)}
+.wk-bars__trk>i.is-ok{background:var(--acc)}
+.wk-bars__trk>i.is-warn{background:var(--yellow)}
+.wk-bars__trk>i.is-hot{background:var(--red)}
+.wk-bars__lbl{height:16px;font-size:11px;line-height:16px;font-weight:800;color:var(--mut)}
+.wk-bars__line{position:absolute;left:-2px;right:-2px;height:0;border-top:2px dashed var(--txt);opacity:.5;pointer-events:none}
+.wk-bars__legend{font-size:11.5px;line-height:1.4;color:var(--mut);font-weight:600;margin-top:6px}
+
+/* ---------- Macros ---------- */
+.wk-mac{margin:0 0 14px}
+.wk-mac__top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:7px;min-width:0}
+.wk-mac__n{font-size:14px;font-weight:800}
+.wk-mac__v{font:italic 900 19px/1 'Saira',sans-serif;white-space:nowrap}
+.wk-mac__v small,.wk-pil__p small,.wk-bw__v small,.wk-duo__v small,.wk-mini__v small{font:700 11.5px 'Manrope',sans-serif;color:var(--mut)}
+.wk .bl-trk>i.is-ok{background:var(--acc)}
+.wk-mac__tag{font-size:11.5px;font-weight:800;color:var(--mut);margin-top:5px}
+.wk-mac__tag.is-ok,.wk-mini__v.is-ok{color:var(--acc)}
+.wk-mac__tag.is-warn,.wk-mini__v.is-warn,.wk-bw__d.is-warn{color:var(--yellow)}
+.wk-bw__d.is-ok{color:var(--acc)}
+
+/* ---------- Micros en grille ---------- */
+.wk-mini{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 16px}
+.wk-mini__c{display:flex;flex-direction:column;gap:3px;min-width:0}
+.wk-mini__n{font-size:11px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
+.wk-mini__v{font:italic 900 21px/1.05 'Saira',sans-serif;white-space:nowrap}
+.wk-mini__g{font-size:11.5px;color:var(--mut);font-weight:600}
+
+/* ---------- Constats + solutions : un accent à gauche, pas de bulle ---------- */
+.wk-diag{padding:2px 0 2px 14px;margin:0 0 18px;border-left:3px solid var(--bl-line);min-width:0}
+.wk-diag.is-hot{border-left-color:var(--red)}
+.wk-diag.is-warn{border-left-color:var(--yellow)}
+.wk-diag.is-info{border-left-color:var(--acc2)}
+.wk-diag.is-ok{border-left-color:var(--acc)}
+.wk-diag__t{font-size:15px;font-weight:800;line-height:1.35;overflow-wrap:anywhere}
+.wk-diag__w{font-size:13px;color:var(--mut);font-weight:600;line-height:1.45;margin-top:3px}
+.wk-diag__o{margin:9px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
+.wk-diag__o li{position:relative;padding-left:18px;font-size:13.5px;line-height:1.45;font-weight:600;overflow-wrap:anywhere}
+.wk-diag__o li:before{content:'→';position:absolute;left:0;top:0;color:var(--acc2);font-weight:800}
+
+/* ---------- Compteurs à confirmer ---------- */
+.wk-step{display:grid;grid-template-columns:minmax(0,1fr) 44px 34px 44px;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--bl-line)}
+.wk-step__l{font-size:14px;font-weight:800}
+.wk-step__s{font-size:11.5px;color:var(--mut);font-weight:600;line-height:1.35;margin-top:2px}
+.wk-step__b{appearance:none;-webkit-appearance:none;margin:0;padding:0;width:44px;height:44px;border-radius:22px;border:1px solid var(--gb);background:var(--x-track);color:var(--txt);font:800 20px/1 'Manrope',sans-serif;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.wk-step__b:active{transform:scale(.93)}
+.wk-step__b[disabled]{background:transparent;border-style:dashed;color:var(--mut);pointer-events:none}
+.wk-step__v{text-align:center;font:italic 900 22px/1 'Saira',sans-serif}
+
+/* ---------- Poids, sommeil ---------- */
+.wk-bw{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.wk-bw__v{font:italic 900 32px/1 'Saira',sans-serif;white-space:nowrap}
+.wk-bw__d{font-weight:800;font-size:13px;white-space:nowrap}
+.wk-duo{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;text-align:center;margin:2px 0 6px}
+.wk-duo>div{min-width:0}
+.wk-duo__v{display:block;font:italic 900 22px/1.1 'Saira',sans-serif;white-space:nowrap}
+.wk-duo__l{display:block;font-size:11px;color:var(--mut);font-weight:700;margin-top:4px}
+
+/* ---------- Volume par muscle : phrases aux couleurs des barres ---------- */
+.wk-vol{padding:1px 0 1px 14px;margin:0 0 14px;border-left:3px solid var(--bl-line);text-align:left;min-width:0}
+.wk-vol.t-gold{border-left-color:var(--st-gold)}
+.wk-vol.t-ok{border-left-color:var(--acc2)}
+.wk-vol.t-low{border-left-color:var(--mut)}
+.wk-vol.t-blood{border-left-color:var(--red)}
+.wk-vol.t-over{border-left-color:var(--x-orange)}
+.wk-vol__t{font-size:14px;font-weight:800;line-height:1.4;color:var(--txt);overflow-wrap:anywhere}
+.wk-vol__t span{color:var(--mut);font-weight:700}
+.wk-vol__s{font-size:12.5px;color:var(--mut);font-weight:600;line-height:1.45;margin-top:2px}
+.wk-leg{font-size:11.5px;color:var(--mut);font-weight:600;line-height:1.4;margin:6px 0 18px;text-align:left}
+
+/* ---------- Verdict : piliers à plat ---------- */
+.wk-detail{margin:20px 0 2px}
+.wk-pil{padding:14px 0;border-top:1px solid var(--bl-line)}
+.wk-pil:first-child{border-top:0;padding-top:4px}
+.wk-pil__top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px;min-width:0}
+.wk-pil__l{font-size:15px;font-weight:800}
+.wk-pil__p{font:italic 900 21px/1 'Saira',sans-serif;white-space:nowrap}
+.wk-pil__c{display:flex;flex-direction:column;gap:5px;margin-top:9px}
+.wk-pil__c span{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 6px;font-size:12.5px;color:var(--mut);font-weight:600;min-width:0}
+.wk-pil__c b{color:var(--txt);font-weight:800}
+.wk-pil__c em{margin-left:auto;font-style:normal;font-weight:800;color:var(--txt);white-space:nowrap}
+.wk-malus{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--bl-line);font-size:13px;font-weight:700}
+.wk-malus b{color:var(--x-note-1);white-space:nowrap}
+.wk-foot{font-size:11.5px;color:var(--mut);font-weight:600;margin-top:6px}
+
+/* ---------- Les 3 leviers ---------- */
+.wk-lev{list-style:none;margin:0;padding:0;counter-reset:wklev}
+.wk-lev li{position:relative;padding:12px 0 12px 42px;border-top:1px solid var(--bl-line);counter-increment:wklev}
+.wk-lev li:first-child{border-top:0;padding-top:2px}
+.wk-lev li:before{content:counter(wklev);position:absolute;left:0;top:12px;width:28px;height:28px;border-radius:14px;background:var(--x-grad);color:var(--x-on-grad);font:italic 900 15px/28px 'Saira',sans-serif;text-align:center}
+.wk-lev li:first-child:before{top:2px}
+.wk-lev__top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:14px;font-weight:800;min-width:0}
+.wk-lev__top span{min-width:0;overflow-wrap:anywhere}
+.wk-lev__top b{color:var(--acc);white-space:nowrap}
+.wk-lev__a{font-size:13.5px;line-height:1.45;font-weight:600;margin-top:4px;overflow-wrap:anywhere}
+
+/* ---------- Anciennes semaines (barèmes d'avant le 26/10) : plus de bulle dans la bulle ---------- */
+.wr-breakdown .wr-b-row{background:none;border:0;box-shadow:none;border-radius:0;margin:0;padding:.6rem 0;border-top:1px solid var(--bl-line);gap:10px;text-align:left}
+.wr-breakdown .wr-b-row:first-child{border-top:0}
+.wr-breakdown .wr-b-row span:first-child{min-width:0;overflow-wrap:anywhere}
+.wr-breakdown .wr-b-row span:last-child{white-space:nowrap}

@@ -19,6 +19,12 @@ var BILAN=(function(){
   // À CHAQUE mise en ligne d'une nouveauté visible : ajouter une entrée EN TÊTE (id = date AAAA-MM-JJ), 3 à 6 lignes courtes.
   // Elle s'affiche une fois par appareil (localStorage massup_news = id déjà vu), sur le Bilan, avant la saisie de la nuit.
   var NEWS=[
+    {id:'2026-11-16',t:'Nouveau bilan de la semaine (16 novembre)',items:[
+      ['🍽️','Nouvelle page Nutrition : calories jour par jour, macros, fibres, sucres, saturées, sel, et des solutions qui changent selon ce qui cloche.'],
+      ['😴','Nouvelle page Pas & sommeil : tes 7 jours, ton coucher moyen, et ce qu’il manque en minutes de marche.'],
+      ['📊','Muscles : les phrases suivent enfin les couleurs des barres (12-15 entretient, 16-19 construit, 20+ gold).'],
+      ['🎯','Verdict sans bulles : le détail de ta note, puis tes 3 leviers, classés par points à récupérer.']
+    ]},
     {id:'2026-11-11',t:'Notes de séance corrigées (11 novembre)',items:[
       ['🛠️','Séance du 9/11 : 18/20, pas 20. L’exemption « abdo passé » était comptée deux fois au redémarrage de l’app. C’est réparé pour de bon.'],
       ['📝','Séance du 3/11 : 18/20 (et pas 19). La note de la semaine du 2/11 reste à 14,5.']
