@@ -1631,7 +1631,7 @@ function exportCoachDossier(opts){
     ['Poids','Départ '+(bw[0]?bw[0].weight_kg+' kg le '+bw[0].date:'?')+' · dernier '+(last?last.weight_kg+' kg le '+last.date:'?')+'. Composition (borne de salle, 31/08/2026, conditions non standardisées) : 21,3 % de gras affiché (fourchette réaliste 17-22 %), jambes à 97 % de la norme, bras au-dessus.'],
     ['Blessures','Poignet gauche : ancienne fracture de la styloïde ulnaire → prises neutres, pas de supination jusqu\'à ~novembre 2026. Genou : douleur en flexion chargée par épisodes. Coude gauche : douleur interne signalée fin septembre / début octobre. Détail daté : onglet Douleurs.'],
     ['Programme','Rotation PUSH / PULL / LEGS + exos « à la carte ». Règles de l\'app : depuis le 27/10/2026, 1 exo jambes (PUSH/PULL) et 1 exo abdo ne sont obligatoires que si la séance précédente n\'en avait pas (exo du jour alors principal) ; 5 exos minimum. Détail : onglet Exercices.'],
-    ['Nutrition','Depuis le 02/11/2026 : totaux du jour notés dans Yazio (via l\'app Santé), onglet « Nutrition ». Un jour absent = rien noté dans Yazio ce jour-là (Adrien ne l\'a pas utilisé tous les jours avant fin octobre 2026). Objectifs : 3 000 kcal et 410 g de glucides depuis le 06/11 (avant : 2 900 kcal, 360 g), 150 g protéines, lipides ~70 g (80 max). Les recettes du module nutrition de l\'app ne sont pas exportées.'],
+    ['Nutrition','Depuis le 02/11/2026 : totaux du jour notés dans Yazio (via l\'app Santé), onglet « Nutrition ». Un jour absent = rien noté dans Yazio ce jour-là (Adrien ne l\'a pas utilisé tous les jours avant fin octobre 2026). Objectifs : 3 000 kcal et 410 g de glucides depuis le 06/11 (avant : 2 900 kcal, 360 g), 150 g protéines, lipides ~70 g (80 max). Les recettes du module nutrition de l\'app ne sont pas exportées. Onglets : « Nutrition » (jour par jour : macros, % des kcal, g/kg, micros dont calcium), « Nutrition semaines » (moyennes, jours au-dessus des seuils, créatine / plats maison / vitamine D3 / collagène DÉCLARÉS à la semaine) et « Nutrition synthèse » (7 / 15 / 30 / 90 jours / tout, semaine vs week-end). Une journée « envoyée en cours de journée » est incomplète : exclue des moyennes. Calcium et potassium : Yazio ne les connaît que pour une partie des aliments, le total est sous-estimé.'],
     ['Charges','En kg. Haltères : kg par main (« kg/main », « kg/côté »). Exos au poids du corps ou en temps : la « charge » est l\'objectif (reps, s, min).'],
     ['Assistance','Traction assistée et Dips assistée : la charge est l\'ASSISTANCE de la machine → moins = plus fort (colonne « Assistance (moins = mieux) »).'],
     ['Ressenti','Par série : facile = 4 reps ou plus en réserve · ok = 2-3 en réserve · dur = 1 en réserve · echec = plus une seule possible. Un raté se lit dans « Écart cible » < 0.'],
@@ -1641,7 +1641,7 @@ function exportCoachDossier(opts){
     ['Séries dures','Séries comptées par muscle (1 par série + 0,5 pour le muscle assistant des polyarticulaires). Repère de l\'app par muscle et par semaine : sous 12 rouge, 12-15 gris, 16-19 bleu, 20+ gold, plus de 25 = rendements décroissants (abdos jusqu\'à fin janvier 2027 : sous 8 rouge, 8 gris, 12 bleu, 16 gold).'],
     ['e1RM','Force estimée par série (Epley : charge × (1 + reps / 30)), seulement pour les exos chargés en kg (pas les assistances).'],
     ['Séances anciennes','Février → avril : séances RITM / escalade notées sans détail. Juin → juillet : séances reconstituées après une perte de données (dates approximatives, pas de détail). Détail série par série fiable à partir du 01/08/2026.'],
-    ['Onglets','Synthèse · Semaines · Calendrier (1 ligne par jour : séance, note, pas, nutrition, sommeil, poids) · Séances · Séries · Exercices · Historique charges · Poids · Course & sports · Pas · Nutrition · Sommeil · Douleurs · Mobilité.'],
+    ['Onglets','Synthèse · Semaines · Calendrier (1 ligne par jour : séance, note, pas, nutrition, sommeil, poids) · Séances · Séries · Exercices · Historique charges · Poids · Course & sports · Pas · Nutrition · Nutrition semaines · Nutrition synthèse · Sommeil · Douleurs · Mobilité.'],
     ['Généré le',today+' depuis l\'app MASSUP (données saisies au jour le jour).']
   ];
   sheets.push({name:'Lisez-moi',noFilter:true,cols:[{h:'Rubrique',w:20},{h:'Contenu',w:120,wrap:true}],rows:readme});
@@ -1784,8 +1784,59 @@ function exportCoachDossier(opts){
   var NU=(typeof INTAKE!=='undefined')?INTAKE.days():{};
   function nu(d,k){ var e=NU[d]; return e&&e.kcal>0&&e[k]>0?r1(e[k]):null; }
   var nuDays=Object.keys(NU).filter(function(d){ return NU[d]&&NU[d].kcal>0; }).sort();
-  sheets.push({name:'Nutrition',cols:[{h:'Date',w:11},{h:'Jour',w:6},{h:'Calories (kcal)',w:10},{h:'Glucides (g)',w:9},{h:'Protéines (g)',w:9},{h:'Lipides (g)',w:9},{h:'Fibres (g)',w:8},{h:'Sucres (g)',w:8},{h:'Graisses saturées (g)',w:10},{h:'Sodium (mg)',w:9},{h:'Potassium (mg)',w:10},{h:'Calcium (mg)',w:9},{h:'Objectif kcal atteint (2 900 → 3 000 dès le 06/11)',w:10},{h:'Protéines ≥ 135 g',w:9}],
-    rows:nuDays.map(function(d){ return [d,jour(d),nu(d,'kcal'),nu(d,'glu'),nu(d,'prot'),nu(d,'lip'),nu(d,'fib'),nu(d,'sucre'),nu(d,'sat'),nu(d,'sodium'),nu(d,'potassium'),nu(d,'calcium'),nu(d,'kcal')>=(d>='2026-11-06'?3000:2900)?'oui':'non',nu(d,'prot')>=135?'oui':'non']; })});
+  // 18/11 (demande Adrien : « grosse partie nutrition » pour son coach) : jour par jour + semaines + synthèse.
+  // Créatine / plats maison / D3 / collagène sont des COMPTEURS DE SEMAINE (le + remplit lun→dim) : jamais lus jour par jour.
+  function nzDone(d){ if(d>=today) return false; try{ return INTAKE.complete(d); }catch(e){ return true; } }
+  function nzKGoal(d){ return d>='2026-11-06'?3000:2900; }
+  function nzBw(d){ var v=null; bw.forEach(function(b){ if(b.date<=d) v=b.weight_kg; }); return v; }
+  function nzPct(d,k,f){ var kc=nu(d,'kcal'), v=nu(d,k); return kc&&v!=null?Math.round(v*f/kc*100):null; }
+  function nzBwDay(d){ var v=null; bw.forEach(function(b){ if(b.date===d) v=b.weight_kg; }); return v; }
+  var NZK=['kcal','glu','prot','lip','fib','sucre','sat','sodium','potassium','calcium'];
+  var NZL={kcal:'Calories (kcal)',glu:'Glucides (g)',prot:'Protéines (g)',lip:'Lipides (g)',fib:'Fibres (g)',sucre:'Sucres (g)',sat:'Graisses saturées (g)',sodium:'Sodium (mg)',potassium:'Potassium (mg)',calcium:'Calcium (mg)'};
+  var NZG={kcal:'3 000 (2 900 avant le 06/11) · seuil 2 600',glu:'410 (360 avant le 06/11) · seuil 300',prot:'150 · seuil 130',lip:'75 visés · 85 max',fib:'30 · seuil 20',sucre:'130 max (sucres totaux)',sat:'30 max',sodium:'2 300 max',potassium:'3 500 (repère, Yazio le sous-estime)',calcium:'1 000 (orange sous 800 ; Yazio le sous-estime)'};
+  sheets.push({name:'Nutrition',cols:[{h:'Date',w:11},{h:'Jour',w:6},{h:'Journée complète',w:9},{h:'Calories (kcal)',w:10},{h:'Glucides (g)',w:9},{h:'Protéines (g)',w:9},{h:'Lipides (g)',w:9},{h:'% kcal glucides',w:8},{h:'% kcal protéines',w:8},{h:'% kcal lipides',w:8},{h:'Protéines (g/kg)',w:8},{h:'Fibres (g)',w:8},{h:'Sucres (g)',w:8},{h:'Graisses saturées (g)',w:10},{h:'Sodium (mg)',w:9},{h:'Potassium (mg)',w:10},{h:'Calcium (mg)',w:9},{h:'Objectif kcal du jour',w:9},{h:'Objectif kcal atteint',w:9},{h:'Écart à l\'objectif (kcal)',w:9},{h:'Protéines ≥ 135 g',w:9},{h:'Poids du jour (kg)',w:9}],
+    rows:nuDays.map(function(d){ var kc=nu(d,'kcal'), pr=nu(d,'prot'), w=nzBw(d), g=nzKGoal(d);
+      return [d,jour(d),d>=today?'en cours':nzDone(d)?'oui':'envoyée en cours de journée',kc,nu(d,'glu'),pr,nu(d,'lip'),nzPct(d,'glu',4),nzPct(d,'prot',4),nzPct(d,'lip',9),pr!=null&&w?Math.round(pr/w*100)/100:null,
+        nu(d,'fib'),nu(d,'sucre'),nu(d,'sat'),nu(d,'sodium'),nu(d,'potassium'),nu(d,'calcium'),g,kc>=g?'oui':'non',kc!=null?Math.round(kc-g):null,pr>=135?'oui':'non',nzBwDay(d)]; })});
+
+  // ── Nutrition par semaine (lundi → dimanche, journées complètes seulement) ──
+  var nzW=[];
+  if(nuDays.length){
+    var nzPrevBw=null;
+    for(var nws=rankMonday(nuDays[0]); nws<=rankMonday(today); nws=rankAddDays(nws,7)){
+      var nwe=rankAddDays(nws,6), dd=[];
+      for(var ni=0;ni<7;ni++){ var nd=rankAddDays(nws,ni); if(nu(nd,'kcal')!=null&&nzDone(nd)) dd.push(nd); }
+      var mean=function(k){ var a=dd.map(function(d){ return nu(d,k); }).filter(function(v){ return v!=null; }); return a.length?Math.round(avg(a)*10)/10:null; };
+      var wb=bw.filter(function(b){ return b.date>=nws&&b.date<=nwe; }).map(function(b){ return b.weight_kg; }), wbm=wb.length?r1(avg(wb)):null;
+      var row=[nws,nws===rankMonday(today)?'oui':'',dd.length];
+      NZK.forEach(function(k){ row.push(mean(k)); });
+      row.push(dd.filter(function(d){ return nu(d,'kcal')>=2600; }).length, dd.filter(function(d){ return nu(d,'kcal')>=nzKGoal(d); }).length,
+        dd.filter(function(d){ return nu(d,'prot')>=130; }).length, dd.filter(function(d){ return nu(d,'prot')>=150; }).length,
+        nutWeekCount('shaker',nws), nutWeekCount('maison',nws), nutWeekCount('vitd',nws), nutWeekCount('colla',nws), wbm, wbm!=null&&nzPrevBw!=null?r1(wbm-nzPrevBw):null);
+      if(wbm!=null) nzPrevBw=wbm;
+      nzW.push(row);
+    }
+  }
+  sheets.push({name:'Nutrition semaines',cols:[{h:'Semaine du (lundi)',w:12},{h:'Semaine en cours',w:8},{h:'Journées complètes notées',w:9}]
+    .concat(NZK.map(function(k){ return {h:'Moyenne '+NZL[k].replace(/^./,function(c){return c.toLowerCase();}),w:10}; }))
+    .concat([{h:'Jours ≥ 2 600 kcal',w:8},{h:'Jours ≥ objectif kcal',w:8},{h:'Jours protéines ≥ 130 g',w:8},{h:'Jours protéines ≥ 150 g',w:8},{h:'Créatine (jours /7, déclaré)',w:9},{h:'Plats maison (/14, déclaré)',w:9},{h:'Vitamine D3 (jours /7, dès le 23/11)',w:9},{h:'Collagène (jours /7, dès le 23/11)',w:9},{h:'Poids moyen (kg)',w:8},{h:'Variation vs semaine précédente (kg)',w:10}]),rows:nzW});
+
+  // ── Nutrition : synthèse par période ──
+  var NZS=[], nzAll=nuDays.filter(nzDone);
+  [[7,'7 derniers jours'],[15,'15 derniers jours'],[30,'30 derniers jours'],[90,'90 derniers jours'],[0,'Tout l\'historique']].forEach(function(pp){
+    var lim=pp[0]?rankAddDays(today,-pp[0]):'0000', dd=nzAll.filter(function(d){ return d>=lim; });
+    if(!dd.length) return;
+    NZK.forEach(function(k){
+      var a=dd.map(function(d){ return nu(d,k); }).filter(function(v){ return v!=null; });
+      NZS.push([pp[1],NZL[k],a.length?Math.round(avg(a)*10)/10:null,a.length?Math.min.apply(null,a):null,a.length?Math.max.apply(null,a):null,a.length,dd.length,NZG[k]]);
+    });
+  });
+  var nz30=nzAll.filter(function(d){ return d>=d30; });
+  function nzSplit(k,we){ var a=nz30.filter(function(d){ var j=new Date(d+'T12:00:00').getDay(); return we?(j===0||j===6):(j>0&&j<6); }).map(function(d){ return nu(d,k); }).filter(function(v){ return v!=null; }); return a.length?Math.round(avg(a)):null; }
+  ['kcal','prot'].forEach(function(k){ NZS.push(['30 derniers jours · semaine (lun-ven)',NZL[k],nzSplit(k,false),null,null,null,null,'comparer au week-end']); NZS.push(['30 derniers jours · week-end (sam-dim)',NZL[k],nzSplit(k,true),null,null,null,null,'']); });
+  var nzCa=nzAll.filter(function(d){ return d>=rankAddDays(today,-90); }), nzCa0=nzCa.filter(function(d){ return nu(d,'calcium')==null; }).length;
+  if(nzCa.length) NZS.push(['90 derniers jours','Calcium : jours à 0 ou non renseignés',nzCa0,null,null,null,nzCa.length,'Yazio ne connaît le calcium que d\'une partie des aliments : le vrai apport est plus haut que le chiffre, mais reste bas (peu de laitages)']);
+  sheets.push({name:'Nutrition synthèse',cols:[{h:'Période (journées complètes)',w:30},{h:'Mesure',w:22},{h:'Moyenne',w:10},{h:'Min',w:9},{h:'Max',w:9},{h:'Jours renseignés',w:9},{h:'Jours notés',w:9},{h:'Objectif / repère',w:44,wrap:true}],rows:NZS});
 
   // ── Calendrier (02/11/2026, demande Adrien) : 1 ligne par jour, même sans séance ──
   var calStart=[logs[0]&&logs[0].date,nuDays[0],bw[0]&&bw[0].date].filter(Boolean).sort()[0]||today, CAL=[];
