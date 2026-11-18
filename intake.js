@@ -25,10 +25,9 @@ var INTAKE=(function(){
     {k:'fib',lbl:'Fibres',u:'g',goal:30,low:20,kind:'min',col:'mic'},
     {k:'sucre',lbl:'Sucres',u:'g',goal:130,kind:'max',col:'mic'},
     {k:'sat',lbl:'Graisses saturées',u:'g',goal:30,kind:'max',col:'mic'},
-    {k:'sodium',lbl:'Sodium',u:'mg',goal:2300,kind:'max',col:'mic'},
-    {k:'potassium',lbl:'Potassium',u:'mg',goal:3500,kind:'min',col:'mic',info:1},
-    // 18/11 (Adrien, peu de laitages) : calcium envoyé par le raccourci (nu_calcium) — besoin ~1 000 mg/j à 21 ans, orange sous 800
-    {k:'calcium',lbl:'Calcium',u:'mg',goal:1000,low:800,kind:'min',col:'mic'}
+    {k:'sodium',lbl:'Sodium',u:'mg',goal:2300,kind:'max',col:'mic'}
+    // 18/11 (Adrien) : potassium et calcium RETIRÉS de l'affichage — Yazio ne les connaît que pour une partie des aliments
+    // (étiquettes sans micronutriments → 0), le chiffre trompe. Les données restent reçues (nu_potassium, nu_calcium) et dans l'export.
   ];
   var BY={}; NUT.forEach(function(n){ BY[n.k]=n; });
   // Objectifs de la SAISON affichée (04/11, saison.js) : masse 3 000 kcal (06/11) · 410 G · 150 P · lipides 75/85 ; Sèche 2 450 kcal (2 600 max) ·
