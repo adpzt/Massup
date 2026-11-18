@@ -22,6 +22,7 @@ const KEYS = { steps: 'steps', pas: 'steps', kcal: 'kcal', energie: 'kcal', km: 
 function measureKey(value) {
   const key = String(value || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
   if (KEYS[key]) return KEYS[key];
+  if (/calcium/.test(key)) return 'nu_calcium'; // « Calcium (mg) », « Calcium alimentaire »… (18/11)
   if (/^(nu|bw)_[a-z0-9_]{1,24}$/.test(key)) return key;
   return /^steps_h(?:[01]\d|2[0-3])$/.test(key) ? key : null;
 }
@@ -119,7 +120,8 @@ module.exports = async function handler(req, res) {
     const rows = parsed.filter(function (r) {
       return !/^bw_/.test(r.k) || parseFloat(String(r.v).replace(/[^0-9,.]/g, '').replace(',', '.')) > 0;
     }).slice(0, 20000);
-    if (!rows.length) return res.status(400).json({ ok: false, saved: 0, error: 'aucune ligne lisible' });
+    if (ignored.length) console.log('[health] mesures ignorées :', ignored.join(', ')); // visible dans les logs Vercel
+    if (!rows.length) return res.status(400).json({ ok: false, saved: 0, error: 'aucune ligne lisible', ignore: ignored });
     // Envoi par paquets de 2 000 lignes (import d'une année de nutrition)
     let saved = 0;
     for (let i = 0; i < rows.length; i += 2000) {
