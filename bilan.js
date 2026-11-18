@@ -176,6 +176,7 @@ var BILAN=(function(){
     return '<section class="bl-sit"><div class="bl-sit__top"><h1 class="bl-sit__name">'+esc(name)+'</h1><span class="bl-pill">'+sa.lbl+(prv?' · aperçu':' · J-'+j)+'</span></div><div class="bl-hero">'+poids+kcal+'</div></section>';
   }
 
+  var SUPPL_START=new Date(2026,10,23,7,0,0).getTime(); // lundi 23/11/2026, 7 h (heure locale)
   function objectivesHtml(B0){
     var mon=rankMonday(today()), o=nutObjectives(mon);
     var run=Math.max(nutWeekCount('run',mon),runWeekAuto(mon));
@@ -184,6 +185,9 @@ var BILAN=(function(){
       ['shaker','🥤','Créatine',nutWeekCount('shaker',mon),o.shk||7,true],
       ['run','🏃','Courir',run,o.run||1,true]
     ];
+    // 18/11 (demande Adrien) : vitamine D3 et collagène, 1 par jour, sous la créatine — visibles dès le lundi 23/11 à 7 h.
+    // Simple suivi : ils ne comptent dans AUCUNE note (DB.nutrition[jour].vitd / .colla).
+    if(Date.now()>=SUPPL_START) rows.splice(2,0,['vitd','☀️','Vitamine D3',nutWeekCount('vitd',mon),7,true],['colla','🦴','Collagène',nutWeekCount('colla',mon),7,true]);
     if(seche()){ var ab=0; try{ ab=abdoWeekAuto(mon); }catch(e){} rows.push(['abdos','🔥','Séances avec abdos',ab,SAISON.CFG.seche.abdos,false]); }
     return '<section class="bl-obj" aria-label="Objectifs de la semaine">'+rows.map(function(r){
       var k=r[0],v=r[3],g=r[4],done=v>=g, cls=done?'is-done':v===0?'is-zero':'';
@@ -622,7 +626,7 @@ var BILAN=(function(){
   function inc(k){ S.pop=k; nutTapWeek(k); }
   // Au plafond (7/7…), nutTapWeek repasse à 0 : on demande d'abord (un tap de travers ne vide pas la semaine)
   function reset(k){
-    var lbl={maison:'Plats maison',shaker:'Créatine',run:'Courir'}[k]||k;
+    var lbl={maison:'Plats maison',shaker:'Créatine',vitd:'Vitamine D3',colla:'Collagène',run:'Courir'}[k]||k;
     if(!confirm('Remettre « '+lbl+' » à 0 pour cette semaine ?\nTu pourras ensuite refaire + autant de fois que nécessaire.')) return;
     S.pop=null; nutTapWeek(k);
   }

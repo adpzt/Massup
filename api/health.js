@@ -16,7 +16,7 @@ const KEYS = { steps: 'steps', pas: 'steps', kcal: 'kcal', energie: 'kcal', km: 
   // nutrition (« kcal » seul reste l'énergie ACTIVE de Santé : la nourriture, c'est nu_kcal)
   calories: 'nu_kcal', energie_alimentaire: 'nu_kcal', dietary_energy: 'nu_kcal', proteines: 'nu_prot', proteine: 'nu_prot', protein: 'nu_prot',
   glucides: 'nu_glu', carbs: 'nu_glu', lipides: 'nu_lip', fat: 'nu_lip', fibres: 'nu_fib', fiber: 'nu_fib', sucres: 'nu_sucre', sucre: 'nu_sucre', sugar: 'nu_sucre',
-  graisses_saturees: 'nu_sat', acides_gras_satures: 'nu_sat', sodium: 'nu_sodium', potassium: 'nu_potassium', eau: 'nu_eau',
+  graisses_saturees: 'nu_sat', acides_gras_satures: 'nu_sat', sodium: 'nu_sodium', potassium: 'nu_potassium', calcium: 'nu_calcium', calcium_alimentaire: 'nu_calcium', dietary_calcium: 'nu_calcium', eau: 'nu_eau',
   // pesée
   poids: 'bw_kg', weight: 'bw_kg', graisse: 'bw_fat', masse_grasse: 'bw_fat' };
 function measureKey(value) {
@@ -85,7 +85,7 @@ function parseRows(body) {
   if (txt[0] === '{' || txt[0] === '[') {
     try { const j = JSON.parse(txt); return Array.isArray(j) ? j : (j.rows || j.p_rows || []); } catch (e) { /* on tente le texte */ }
   }
-  const rows = [];
+  const rows = [], ignored = rows.ignored = [];
   txt.split(/\r?\n|\u2028/).forEach(function (line) {
     const p = line.split(/;|\t/).map(function (x) { return x.trim(); });
     if (p.length < 2) return;
@@ -93,6 +93,7 @@ function parseRows(body) {
     if (p.length >= 3) { d = p[0]; k = p[1]; v = p[2]; } else { d = p[0]; k = 'steps'; v = p[1]; }
     const dd = isoDate(d);
     const kk = measureKey(k);
+    if (dd && !kk && k && ignored.indexOf(k) < 0 && ignored.length < 10) ignored.push(k);
     if (!dd || !kk || !v) return;
     rows.push({ d: dd, k: kk, v: String(v) });
   });
@@ -114,7 +115,8 @@ module.exports = async function handler(req, res) {
   }
   try {
     // Une pesée à 0 = jour sans pesée rempli par « Fichier manquant » : jamais enregistrée (02/11)
-    const rows = parseRows(await readRaw(req)).filter(function (r) {
+    const parsed = parseRows(await readRaw(req)), ignored = parsed.ignored || [];
+    const rows = parsed.filter(function (r) {
       return !/^bw_/.test(r.k) || parseFloat(String(r.v).replace(/[^0-9,.]/g, '').replace(',', '.')) > 0;
     }).slice(0, 20000);
     if (!rows.length) return res.status(400).json({ ok: false, saved: 0, error: 'aucune ligne lisible' });
@@ -132,7 +134,9 @@ module.exports = async function handler(req, res) {
     }
     const sum = summarize(rows);
     if (!saved) return res.status(422).json({ ok: false, received: rows.length, saved: 0, error: 'aucune ligne valide enregistrée', recu: sum.keys });
-    return res.status(200).json({ ok: true, received: rows.length, saved: saved, recu: sum.keys, attention: sum.warn });
+    const out = { ok: true, received: rows.length, saved: saved, recu: sum.keys, attention: sum.warn };
+    if (ignored.length) out.ignore = ignored; // mesures non reconnues (nom à corriger dans le raccourci)
+    return res.status(200).json(out);
   } catch (e) {
     return res.status(500).json({ ok: false, error: e.message });
   }

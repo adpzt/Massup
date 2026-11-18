@@ -1068,7 +1068,7 @@ function ensureNutriDay(date){
 function pruneNutriDay(date){
   var d=DB.nutrition[date]; if(!d) return;
   var empty=(d.kcal===null||d.kcal===undefined||d.kcal==='')&&(d.prot===null||d.prot===undefined||d.prot==='')
-    &&!d.petit_dej&&!d.dejeuner&&!d.diner&&!d.shaker&&!d.maison&&!d.run&&!d.cardio;
+    &&!d.petit_dej&&!d.dejeuner&&!d.diner&&!d.shaker&&!d.maison&&!d.run&&!d.cardio&&!d.vitd&&!d.colla;
   if(empty) delete DB.nutrition[date];
 }
 function nutriEntriesInWindow(days){
@@ -1784,8 +1784,8 @@ function exportCoachDossier(opts){
   var NU=(typeof INTAKE!=='undefined')?INTAKE.days():{};
   function nu(d,k){ var e=NU[d]; return e&&e.kcal>0&&e[k]>0?r1(e[k]):null; }
   var nuDays=Object.keys(NU).filter(function(d){ return NU[d]&&NU[d].kcal>0; }).sort();
-  sheets.push({name:'Nutrition',cols:[{h:'Date',w:11},{h:'Jour',w:6},{h:'Calories (kcal)',w:10},{h:'Glucides (g)',w:9},{h:'Protéines (g)',w:9},{h:'Lipides (g)',w:9},{h:'Fibres (g)',w:8},{h:'Sucres (g)',w:8},{h:'Graisses saturées (g)',w:10},{h:'Sodium (mg)',w:9},{h:'Potassium (mg)',w:10},{h:'Objectif kcal atteint (2 900 → 3 000 dès le 06/11)',w:10},{h:'Protéines ≥ 135 g',w:9}],
-    rows:nuDays.map(function(d){ return [d,jour(d),nu(d,'kcal'),nu(d,'glu'),nu(d,'prot'),nu(d,'lip'),nu(d,'fib'),nu(d,'sucre'),nu(d,'sat'),nu(d,'sodium'),nu(d,'potassium'),nu(d,'kcal')>=(d>='2026-11-06'?3000:2900)?'oui':'non',nu(d,'prot')>=135?'oui':'non']; })});
+  sheets.push({name:'Nutrition',cols:[{h:'Date',w:11},{h:'Jour',w:6},{h:'Calories (kcal)',w:10},{h:'Glucides (g)',w:9},{h:'Protéines (g)',w:9},{h:'Lipides (g)',w:9},{h:'Fibres (g)',w:8},{h:'Sucres (g)',w:8},{h:'Graisses saturées (g)',w:10},{h:'Sodium (mg)',w:9},{h:'Potassium (mg)',w:10},{h:'Calcium (mg)',w:9},{h:'Objectif kcal atteint (2 900 → 3 000 dès le 06/11)',w:10},{h:'Protéines ≥ 135 g',w:9}],
+    rows:nuDays.map(function(d){ return [d,jour(d),nu(d,'kcal'),nu(d,'glu'),nu(d,'prot'),nu(d,'lip'),nu(d,'fib'),nu(d,'sucre'),nu(d,'sat'),nu(d,'sodium'),nu(d,'potassium'),nu(d,'calcium'),nu(d,'kcal')>=(d>='2026-11-06'?3000:2900)?'oui':'non',nu(d,'prot')>=135?'oui':'non']; })});
 
   // ── Calendrier (02/11/2026, demande Adrien) : 1 ligne par jour, même sans séance ──
   var calStart=[logs[0]&&logs[0].date,nuDays[0],bw[0]&&bw[0].date].filter(Boolean).sort()[0]||today, CAL=[];

@@ -1,6 +1,6 @@
 /* ═══ 🍽 NUTRITION DU JOUR (02/11/2026) — MASSUP Adrien ═══
    Les totaux du jour viennent de Yazio → app Santé → raccourci « MASSUP Santé » (1 copie par mesure)
-   → /api/health → health_days (clés nu_kcal, nu_glu, nu_prot, nu_lip, nu_fib, nu_sucre, nu_sat, nu_sodium, nu_potassium).
+   → /api/health → health_days (clés nu_kcal, nu_glu, nu_prot, nu_lip, nu_fib, nu_sucre, nu_sat, nu_sodium, nu_potassium, nu_calcium).
    Ces données NE vont PAS dans DB (le snapshot cloud resterait gonflé à chaque sauvegarde) : le serveur est la
    source, l'app en garde une copie locale (localStorage « massup_intake ») pour l'affichage hors ligne.
    Un jour est « noté » si ses calories > 0 ; un 0 sur une autre mesure = non renseigné par Yazio.
@@ -26,7 +26,9 @@ var INTAKE=(function(){
     {k:'sucre',lbl:'Sucres',u:'g',goal:130,kind:'max',col:'mic'},
     {k:'sat',lbl:'Graisses saturées',u:'g',goal:30,kind:'max',col:'mic'},
     {k:'sodium',lbl:'Sodium',u:'mg',goal:2300,kind:'max',col:'mic'},
-    {k:'potassium',lbl:'Potassium',u:'mg',goal:3500,kind:'min',col:'mic',info:1}
+    {k:'potassium',lbl:'Potassium',u:'mg',goal:3500,kind:'min',col:'mic',info:1},
+    // 18/11 (Adrien, peu de laitages) : calcium envoyé par le raccourci (nu_calcium) — besoin ~1 000 mg/j à 21 ans, orange sous 800
+    {k:'calcium',lbl:'Calcium',u:'mg',goal:1000,low:800,kind:'min',col:'mic'}
   ];
   var BY={}; NUT.forEach(function(n){ BY[n.k]=n; });
   // Objectifs de la SAISON affichée (04/11, saison.js) : masse 3 000 kcal (06/11) · 410 G · 150 P · lipides 75/85 ; Sèche 2 450 kcal (2 600 max) ·
