@@ -446,7 +446,9 @@ function renderProgressionTable() {
       var delta=cur.val-start.val;
       var pct=start.val>0?Math.round((delta/start.val)*100):0;
       var sign=delta>0?'+':'';
-      var col=delta>0?'var(--acc)':delta<0?'var(--red)':'var(--mut)';
+      // Assistances (traction/dips assistée) : moins d'assistance = progrès → vert (19/11, demande Adrien)
+      var inv=typeof asIsInverse==='function'&&asIsInverse(e.key), good=inv?delta<0:delta>0;
+      var col=delta===0?'var(--mut)':good?'var(--acc)':'var(--red)';
       var pctStr=pct!==0?(sign+pct+'%'):'=';
       html+='<div class="progtbl-row">'
         +'<div class="progtbl-name">'+e.name+'</div>'
