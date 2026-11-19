@@ -20,10 +20,11 @@ var FORCE=(function(){
   }
   // Meilleur 1RM estimé par exo clé et par semaine (séances LiveUp)
   function weekly(from){
-    var W={};
+    var W={}, cur=monday(todayStr());
     (DB.logs||[]).forEach(function(l){
       if(!l||!l.date||l.date<from||!l.live||!l.live.exos) return;
       var wk=monday(l.date);
+      if(wk>=cur) return; // semaine en cours pas encore finie : comptée à partir du lundi suivant (19/11, demande Adrien)
       l.live.exos.forEach(function(x){
         if(!x||!x.key) return;
         var k=KEYS.find(function(K){ return K[0]===x.key; }); if(!k) return;
@@ -77,14 +78,14 @@ var FORCE=(function(){
   }
   function html(){
     var M=model();
-    if(!M) return '<div class="bl-empty"><span class="bl-empty__t">Pas encore de séance LiveUp sur tes exos clés cette saison.</span></div>';
+    if(!M) return '<div class="bl-empty"><span class="bl-empty__t">Pas encore de semaine complète avec tes exos clés cette saison (la semaine en cours compte à partir de lundi).</span></div>';
     var p=sel!=null&&M.pts[sel]?M.pts[sel]:null;
     var read=p?'<div class="bl-read"><span class="bl-read__d"><span class="bl-mut">Sem. du '+dshort(p.wk)+'</span><span class="bl-num" style="font-size:18px">'+fr(p.v,1)+'</span><span class="bl-mut" style="font-size:12px">'+p.n+' exo'+(p.n>1?'s':'')+'</span></span><button type="button" class="bl-ib" style="margin-right:-10px" onclick="FORCE.unpick()" aria-label="Fermer la lecture">✕</button></div>'
       :'<div class="bl-read"><span>4 dernières semaines</span><span class="'+(M.d4==null?'bl-mut':M.d4>=0?'bl-pos':'bl-neg')+'" style="font-weight:800">'+(M.d4==null?'—':sg(M.d4,1)+NB+'%')+'</span></div>';
     return '<div class="fx-head"><span class="bl-num fx-v"><span class="bl-hero-txt">'+fr(M.cur,1)+'</span></span><span class="fx-s"><b class="'+(M.cur>=100?'bl-pos':'bl-neg')+'">'+sg(M.cur-100,1)+NB+'%</b> depuis le '+dshort(M.start)+'<small>'+M.sa.lbl+' · base 100</small></span></div>'
       +read+chart(M)
       +'<div class="fx-exos">'+M.exos.map(function(e){ return '<div><span>'+e.l+'</span><span class="bl-mut">≈ '+fr(e.v,0)+' kg</span><b class="'+(e.pct>=0?'bl-pos':'bl-neg')+'">'+sg(e.pct,0)+NB+'%</b></div>'; }).join('')+'</div>'
-      +'<p class="fx-note">1RM estimé de ta meilleure série (charge × (1 + reps/30)), moyenne de tes exos clés. La sèche repartira de 100 le 4 janvier.</p>';
+      +'<p class="fx-note">1RM estimé de ta meilleure série (charge × (1 + reps/30)), moyenne de tes exos clés, semaines terminées seulement (la semaine en cours entre lundi). La sèche repartira de 100 le 4 janvier.</p>';
   }
   function render(){ var el=document.getElementById('forceIdx'); if(el) el.innerHTML=html(); }
   return {

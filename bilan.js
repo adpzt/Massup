@@ -19,6 +19,11 @@ var BILAN=(function(){
   // À CHAQUE mise en ligne d'une nouveauté visible : ajouter une entrée EN TÊTE (id = date AAAA-MM-JJ), 3 à 6 lignes courtes.
   // Elle s'affiche une fois par appareil (localStorage massup_news = id déjà vu), sur le Bilan, avant la saisie de la nuit.
   var NEWS=[
+    {id:'2026-11-19',t:'Progression et PULL (19 novembre)',items:[
+      ['🟢','Traction et dips assistées : moins d’assistance s’affiche enfin en vert dans « Toutes les progressions ».'],
+      ['💪','Indice de force : la semaine en cours n’est plus comptée (une semaine pas finie le faisait baisser) ; elle entre le lundi suivant.'],
+      ['🔁','PULL : le Rowing machine (appui pectoral) passe en principal, le Rowing unilatéral en bonus.']
+    ]},
     {id:'2026-11-16b',t:'Douleur de fin de séance, en mieux (16 novembre)',items:[
       ['🔎','« Où ? » : tape la zone (biceps, coude, genou…) et choisis parmi 50 zones précises, par ex. « Biceps — bas (près du coude) ». Rien ne colle ? Tu l’ajoutes telle quelle.'],
       ['🏋️','« Sur quels exos ? » : coche TOUS les exos où tu as eu mal, même finis, avec une intensité 1 à 5 pour chacun.'],

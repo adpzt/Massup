@@ -1034,7 +1034,8 @@ function liveNotedExos(list){
 // Exos passés de PRINCIPAL à BONUS en cours de route : avant cette date, valider la séance
 // entière les incluait — leurs compteurs/historiques doivent continuer à compter ces séances-là.
 // (Bug corrigé 01/08 : rowing_uni affichait 2 séances au lieu de ~15 après son passage en bonus.)
-var BONUS_SINCE={rowing_uni:'2026-08-01',curl_halt:'2026-08-01',mollets:'2026-07-30',hip_thrust:'2026-07-30',
+var BONUS_SINCE={rowing_uni:'2026-11-19', // bonus 01/08, principal 15/08, bonus de nouveau le 19/11
+  curl_halt:'2026-08-01',mollets:'2026-07-30',hip_thrust:'2026-07-30',
   // Refonte PULL 15/08 : ces trois-là étaient PRINCIPAUX avant — leurs séances passées comptent
   rowing_appui:'2026-08-15',curl_marteau:'2026-08-15',curl_corde:'2026-08-15',curl_incline:'2026-08-15'};
 function exoMainForLog(info,key,date){
