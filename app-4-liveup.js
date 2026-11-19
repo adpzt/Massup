@@ -118,7 +118,7 @@ function asIsInverse(key){ return key==='traction_assist'||key==='dips_assist'; 
 // Série 1 à l'échec sous le bas → un cran en dessous. Dans la note, seule la S1 à l'échec coûte.
 // step = 1 cran (kg). Pas de séries d'échauffement affichées (Adrien n'a pas le temps).
 var REP_RANGE={
-  dev_incline:{r:[8,10],step:2}, chestpress_v:{r:[8,10],step:5}, pecdeck:{r:[10,12],step:5},
+  dev_incline:{r:[8,10],step:2}, dev_incline_smith:{r:[8,10],step:2.5}, chestpress_v:{r:[8,10],step:5}, pecdeck:{r:[10,12],step:5},
   elev_lat:{r:[8,12],step:2}, triceps_corde:{r:[10,12],step:2}, triceps_barre:{r:[10,12],step:2}, // élévations : 01/11 (Adrien) retour à 8 kg en 8-12 (6 kg × 15-20 bloquait depuis avril) · 03/11 : ce commentaire avalait les 2 triceps
   shoulder_press:{r:[8,10],step:5}, seated_dips:{r:[8,10],step:5}, dips_assist:{r:[8,10],step:4},
   cable_fly:{r:[10,12],step:1}, dev_militaire:{r:[8,10],step:2},

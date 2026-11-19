@@ -89,7 +89,7 @@ function renderBilanProfile(){
 // ══════════════════════════════════════════════════
 var _radarChart=null;
 var RADAR_GROUPS=[
-  {label:'Pecs',keys:['chestpress_v','pecdeck','dev_incline','cable_fly','seated_dips','dips_assist','m_floor_press']},
+  {label:'Pecs',keys:['chestpress_v','pecdeck','dev_incline','dev_incline_smith','cable_fly','seated_dips','dips_assist','m_floor_press']},
   {label:'Épaules',keys:['elev_lat','shrug_halt','face_pull','shoulder_press','dev_militaire']},
   {label:'Triceps',keys:['triceps_corde','triceps_barre','m_triceps']},
   {label:'Dos',keys:['tirage_vert','rowing_pb','rowing_uni','rowing_appui','tirage_pulldown','traction_assist','m_rowing']},
@@ -105,7 +105,7 @@ var RADAR_GROUPS=[
 var VOL_SECONDARY={
   tirage_vert:{'Biceps':.5},tirage_pulldown:{'Biceps':.5},traction_assist:{'Biceps':.5},
   rowing_pb:{'Biceps':.5},rowing_appui:{'Biceps':.5},rowing_uni:{'Biceps':.5},
-  chestpress_v:{'Épaules':.5,'Triceps':.5},dev_incline:{'Épaules':.5,'Triceps':.5},
+  chestpress_v:{'Épaules':.5,'Triceps':.5},dev_incline:{'Épaules':.5,'Triceps':.5},dev_incline_smith:{'Épaules':.5,'Triceps':.5},
   seated_dips:{'Triceps':.5},dips_assist:{'Triceps':.5},dev_militaire:{'Triceps':.5},shoulder_press:{'Triceps':.5},
   face_pull:{'Dos':.5},
   m_floor_press:{'Triceps':.5},m_rowing:{'Biceps':.5}

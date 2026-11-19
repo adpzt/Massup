@@ -665,6 +665,20 @@ function init(){
     DB.profile.oneLoad2810=true;
     saveDB();
   }
+  // 19/11 (demande Adrien) : triceps corde à 24 kg en août = exécution pas propre ; son vrai max historique ≈ 22.
+  // Ces séances sortent des classements (DB.recHidden, comme le ✕ de la fiche) ; rien n'est effacé, et un
+  // « Remettre » déjà fait n'est jamais écrasé (on ne touche qu'aux séances sans entrée).
+  if(!DB.profile.triCorde24Hide1911){
+    if(!DB.recHidden) DB.recHidden={};
+    var _rh=DB.recHidden.triceps_corde||(DB.recHidden.triceps_corde={});
+    (DB.logs||[]).forEach(function(l){
+      if(!l||!l.live||!l.live.exos||!l.date||l.date>'2026-09-30') return;
+      var hit=l.live.exos.some(function(x){ return x&&x.key==='triceps_corde'&&(x.sets||[]).some(function(s){ return Number(s.w!=null?s.w:x.w)>=24; }); });
+      if(hit&&!_rh[String(l.id)]) _rh[String(l.id)]={h:1,at:Date.now()};
+    });
+    DB.profile.triCorde24Hide1911=true;
+    saveDB();
+  }
   setHeader();
   buildSeances();
   // Mise de côté (15/08) : masque les sections statiques du HTML selon les flags FEATURE_*
@@ -854,7 +868,8 @@ var WEIGHT_HISTORY_SEED = {
   'dev_halt_debout':  [{date:'2026-03-14',val:8}],
   'triceps_barre':    [{date:'2026-03-14',val:18}],
   'vertical_row':     [{date:'2026-04-04',val:35}],
-  'shoulder_press':   [{date:'2026-04-04',val:16}]
+  'shoulder_press':   [{date:'2026-04-04',val:16}],
+  'dev_incline_smith':[{date:'2026-11-19',val:15}] // 19/11 : départ prudent (24 kg/main aux haltères), disques par côté sans la barre
 };
 
 function initWeights(){

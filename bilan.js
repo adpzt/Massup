@@ -22,7 +22,9 @@ var BILAN=(function(){
     {id:'2026-11-19',t:'Progression et PULL (19 novembre)',items:[
       ['🟢','Traction et dips assistées : moins d’assistance s’affiche enfin en vert dans « Toutes les progressions ».'],
       ['💪','Indice de force : la semaine en cours n’est plus comptée (une semaine pas finie le faisait baisser) ; elle entre le lundi suivant.'],
-      ['🔁','PULL : le Rowing machine (appui pectoral) passe en principal, le Rowing unilatéral en bonus.']
+      ['🔁','PULL : le Rowing machine (appui pectoral) passe en principal, le Rowing unilatéral en bonus.'],
+      ['🏋️','PUSH : nouveau « Développé Incliné Smith » dans les bonus, à alterner avec les haltères. Charge = disques par côté, sans la barre (départ 15).'],
+      ['🏆','Triceps corde : les perfs à 24 kg d’août sortent des records (bouton « Remettre » sur la fiche si besoin).']
     ]},
     {id:'2026-11-16b',t:'Douleur de fin de séance, en mieux (16 novembre)',items:[
       ['🔎','« Où ? » : tape la zone (biceps, coude, genou…) et choisis parmi 50 zones précises, par ex. « Biceps — bas (près du coude) ». Rien ne colle ? Tu l’ajoutes telle quelle.'],

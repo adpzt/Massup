@@ -45,7 +45,7 @@ var DZ_DAILY=[
 ];
 // Muscles réellement sollicités par chaque exo (pour le générateur d'étirements)
 var DZ_MUSCLE_OF={
-  dev_incline:['pecs','epaules','triceps'],chestpress_v:['pecs','triceps'],pecdeck:['pecs'],
+  dev_incline:['pecs','epaules','triceps'],dev_incline_smith:['pecs','epaules','triceps'],chestpress_v:['pecs','triceps'],pecdeck:['pecs'],
   cable_fly:['pecs'],seated_dips:['pecs','triceps'],dev_militaire:['epaules','triceps'],
   shoulder_press:['epaules','triceps'],elev_lat:['epaules'],pompes:['pecs','triceps'],
   triceps_corde:['triceps'],poulie_triceps_av:['triceps'],triceps_barre:['triceps'],
