@@ -22,7 +22,9 @@ var BILAN=(function(){
     {id:'2026-11-23',t:'Bilan du lundi matin (23 novembre)',items:[
       ['📊','Le bilan de la semaine arrive le lundi matin, plus le dimanche soir : note ta nuit, fais ↻, et il s’ouvre. Ton dimanche compte enfin en entier (calories, protéines, pas).'],
       ['😴','Les 7 nuits de la semaine vont du lundi soir au dimanche soir. La nuit de dimanche à lundi compte donc dans la semaine qui se termine.'],
-      ['☀️','Vitamine D3 et collagène attendent ton colis : touche « Reçu » le jour où tu l’as, le suivi démarre ce jour-là.']
+      ['☀️','Vitamine D3 et collagène attendent ton colis : touche « Reçu » le jour où tu l’as, le suivi démarre ce jour-là.'],
+      ['🔁','Ta semaine du 16 novembre est recalculée avec ces règles (dimanche complet, nuit du dimanche) dès ton prochain ↻.'],
+      ['🍽️','Nutrition : fibres, sucres, graisses saturées et sodium ne s’affichent plus. Yazio ne les connaît pas pour beaucoup d’aliments, le chiffre trompait. On garde calories, glucides, protéines et lipides.']
     ]},
     {id:'2026-11-19',t:'Progression et PULL (19 novembre)',items:[
       ['🟢','Traction et dips assistées : moins d’assistance s’affiche enfin en vert dans « Toutes les progressions ».'],

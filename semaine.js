@@ -68,10 +68,6 @@ var WK=(function(){
       else out.push({sev:0,t:'Protéines : '+nf(A.prot)+' g/jour',w:N.protDays+'/7 jours au-dessus de '+N.NZ.protDay+' g.',o:[]});
     }
     if(A.lip!=null&&gL&&A.lip>(gL.max||gL.goal)) out.push({sev:2,t:'Lipides : '+nf(A.lip)+' g/jour (max '+nf(gL.max||gL.goal)+')',w:'Le gras prend la place des glucides qui nourrissent tes séances.',o:['Livraison : poulet grillé plutôt que pané, sauce tomate plutôt que crème.','Fromage une fois par jour, pas à chaque repas.','Échange 10 g de lipides (90 kcal) contre 25 g de glucides : même calories, meilleures séances.']});
-    if(A.sat!=null&&gSat&&A.sat>gSat.goal) out.push({sev:1,t:'Graisses saturées : '+nf(A.sat)+' g/jour (max '+gSat.goal+')',w:'Beurre, fromage, charcuterie, fast-food.',o:['Huile d’olive à la place du beurre en cuisine.','Jambon de volaille plutôt que saucisson.']});
-    if(A.fib!=null&&gF&&A.fib<(gF.low||gF.goal)) out.push({sev:1,t:'Fibres : '+nf(A.fib)+' g/jour (objectif '+gF.goal+')',w:'Digestion, satiété, et tu absorbes mieux un gros volume de nourriture.',o:['1 fruit par jour en plus (pomme, poire, banane).','Pain complet à la place du blanc.','Lentilles ou pois chiches 2 fois par semaine.']});
-    if(A.sucre!=null&&gS&&A.sucre>gS.goal) out.push({sev:1,t:'Sucres : '+nf(A.sucre)+' g/jour (max '+gS.goal+')',w:'Céréales sucrées, biscuits, boissons.',o:['Garde le sucré autour de la séance (avant ou juste après).','Avoine + miel plutôt que céréales sucrées le matin.']});
-    if(A.sodium!=null&&N.cnt.sodium>=3&&gNa&&A.sodium>gNa.goal) out.push({sev:1,t:'Sel : '+nf(A.sodium)+' mg de sodium/jour',w:'Souvent les plats livrés et préparés.',o:['Bois 2,5 L d’eau ces jours-là.','Un plat maison de plus par semaine fait déjà baisser la moyenne.']});
     return out.sort(function(a,b){ return b.sev-a.sev; });
   }
 
@@ -209,10 +205,7 @@ var WK=(function(){
       {max:mx,line:N.NZ.kcalLo,lineLbl:'— trait : '+nf(N.NZ.kcalLo)+' kcal, le seuil qui compte dans la note ('+N.kcalDays+'/7 jours)',aria:'Calories par jour'});
     h+='<div class="wk-sec">Macros · moyenne</div>';
     h+=macroRow('glu',N.avg.glu)+macroRow('prot',N.avg.prot)+macroRow('lip',N.avg.lip);
-    h+='<div class="wk-sec">Le reste</div><div class="wk-mini">'
-      +[['fib','Fibres'],['sucre','Sucres'],['sat','Saturées'],['sodium','Sodium']].map(function(p){ var n=goalOf(p[0]), v=N.avg[p[0]];
-        var bad=v!=null&&n&&(n.kind==='max'?v>n.goal:v<(n.low||n.goal));
-        return '<div class="wk-mini__c"><span class="wk-mini__n">'+p[1]+'</span><span class="wk-mini__v '+(v==null?'':bad?'is-warn':'is-ok')+'">'+(v!=null?nf(v):'—')+'<small> '+(n?n.u:'')+'</small></span><span class="wk-mini__g">'+(n?(n.kind==='max'?'max ':'obj. ')+nf(n.goal):'')+'</span></div>'; }).join('')+'</div>';
+    // 23/11 (Adrien) : « Le reste » (fibres, sucres, saturées, sodium) retiré — Yazio ne les connaît pas pour beaucoup d'aliments
     h+='<div class="wk-sec">Ce qu’il faut en retenir</div>'+diagHtml(nutDiag(N));
     h+='<div class="wk-sec">À confirmer</div>';
     h+=stepper('shaker','🥤 Créatine','jours pris · compte 1 pt dans la note',7);

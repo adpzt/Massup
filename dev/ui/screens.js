@@ -11,7 +11,7 @@ const ADRIEN = [
   ['a_bilan_today', ["BILAN.tab('today')", "window.scrollTo(0,document.querySelector('#bilanPage .bl-seg').getBoundingClientRect().top+window.scrollY-200)"]],
   ['a_intake_page', ['INTAKE.open()'], { scroll: '#inOverlay' }],
   ['a_intake_month_prot', ['INTAKE.open()', "INTAKE._mode('month')", "INTAKE._metric('prot')"], { scroll: '#inOverlay' }],
-  ['a_intake_year_sodium', ['INTAKE.open()', "INTAKE._mode('year')", "INTAKE._metric('sodium')"], { scroll: '#inOverlay' }],
+  ['a_intake_year_lip', ['INTAKE.open()', "INTAKE._mode('year')", "INTAKE._metric('lip')"], { scroll: '#inOverlay' }],
   ['a_intake_day_gen', ["(function(){var x=new Date();x.setDate(x.getDate()-2);INTAKE.open(x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'));})()"]],
   ['a_intake_day_prot', ["(function(){var x=new Date();x.setDate(x.getDate()-2);INTAKE.open(x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'));})()", "INTAKE._metric('prot')"]],
   ['a_intake_month_day', ["(function(){var x=new Date();x.setDate(x.getDate()-2);INTAKE.open(x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'));})()", "INTAKE._mode('month')", "INTAKE._select(25)"]],

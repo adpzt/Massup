@@ -94,7 +94,7 @@ test("gravure : seulement le lundi après un ↻ fait après le dimanche 20 h, p
 
 test("fusion : à semaine égale, la 1re gravure gagne", () => {
   const run = load();
-  run("(DB.noteGrav={'2026-11-09':{v:5,note:12,at:9},'2026-11-16':{v:5,note:15,at:3}},mergeBackupIntoDB({noteGrav:{'2026-11-09':{v:5,note:10,at:5},'2026-11-16':{v:5,note:8,at:7},'2026-11-23':{v:5,note:14,at:1}}}),1)");
+  run("(DB.noteGrav={'2026-11-09':{v:5,note:12,at:9},'2026-11-16':{v:5,note:15,at:3,wkv:2}},mergeBackupIntoDB({noteGrav:{'2026-11-09':{v:5,note:10,at:5},'2026-11-16':{v:5,note:8,at:7,wkv:2},'2026-11-23':{v:5,note:14,at:1}}}),1)");
   assert.deepEqual(run("[DB.noteGrav['2026-11-09'].note,DB.noteGrav['2026-11-16'].note,DB.noteGrav['2026-11-23'].note]"), [10, 15, 14]);
 });
 
@@ -165,7 +165,12 @@ test("bilan de la semaine (dès le 23/11) : lundi matin, nuit du dimanche + ↻ 
   run("(localStorage.setItem('massup_refreshAt',String(__r)),1)", { __r: at("2026-11-30T07:50:00"), __sync: at("2026-11-30T07:51:00") });
   assert.equal(run("wrDataReady('2026-11-23')"), true);
   assert.equal(run("wrNightKey('2026-11-23',6)"), "2026-11-29", "la nuit de dimanche à lundi compte");
-  assert.equal(run("wrNightKey('2026-11-16',0)"), "2026-11-15", "semaines d'avant : inchangées");
+  assert.equal(run("wrNightKey('2026-11-16',0)"), "2026-11-16", "dès le 16/11 (regravée)");
+  assert.equal(run("wrNightKey('2026-11-09',0)"), "2026-11-08", "semaines d'avant : inchangées");
+  // Semaine du 16/11 gravée avec l'ancienne règle : ignorée (regravée une fois), puis la nouvelle gravure tient
+  assert.equal(run("noteGravValid('2026-11-16',{v:5,note:16,rgv:2,asv:2})"), false);
+  assert.equal(run("noteGravValid('2026-11-16',{v:5,note:16,rgv:2,asv:2,wkv:2})"), true);
+  assert.equal(run("noteGravValid('2026-11-09',{v:5,note:16,rgv:2,asv:2})"), true, "semaine du 09/11 : intacte");
   // Nuit oubliée : plus d'attente à partir du mardi 5 h
   run("(delete DB.sleepLog['2026-11-29'],Date.now=function(){ return __n; },1)", { __n: at("2026-12-01T06:00:00") });
   assert.equal(run("wrDataReady('2026-11-23')"), true);

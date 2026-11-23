@@ -21,11 +21,10 @@ var INTAKE=(function(){
     {k:'kcal',lbl:'Calories',pick:'G\u00e9n\u00e9ral',short:'kcal',u:'kcal',goal:3000,low:2600,kind:'min',col:'kcal'},
     {k:'glu',lbl:'Glucides',short:'G',u:'g',goal:410,low:300,kind:'min',col:'glu'},
     {k:'prot',lbl:'Protéines',short:'P',u:'g',goal:150,low:130,kind:'min',col:'prot'},
-    {k:'lip',lbl:'Lipides',short:'L',u:'g',goal:75,max:85,kind:'target',col:'lip'},
-    {k:'fib',lbl:'Fibres',u:'g',goal:30,low:20,kind:'min',col:'mic'},
-    {k:'sucre',lbl:'Sucres',u:'g',goal:130,kind:'max',col:'mic'},
-    {k:'sat',lbl:'Graisses saturées',u:'g',goal:30,kind:'max',col:'mic'},
-    {k:'sodium',lbl:'Sodium',u:'mg',goal:2300,kind:'max',col:'mic'}
+    {k:'lip',lbl:'Lipides',short:'L',u:'g',goal:75,max:85,kind:'target',col:'lip'}
+    // 23/11 (Adrien : « avec Yazio, tant de fois les aliments n'ont pas d'infos autres que glucides, protéines, lipides ») :
+    // fibres (30 g min), sucres (130 g max), graisses saturées (30 g max) et sodium (2 300 mg max) RETIRÉS de l'affichage
+    // et des conseils, comme le calcium et le potassium le 18/11. Toujours reçus (nu_fib, nu_sucre, nu_sat, nu_sodium) et exportés.
     // 18/11 (Adrien) : potassium et calcium RETIRÉS de l'affichage — Yazio ne les connaît que pour une partie des aliments
     // (étiquettes sans micronutriments → 0), le chiffre trompe. Les données restent reçues (nu_potassium, nu_calcium) et dans l'export.
   ];
@@ -237,8 +236,8 @@ var INTAKE=(function(){
       +'<div class="in-f__k"><b class="bl-num">'+(kc.v==null?'—':nb(kc.v))+un('/ '+nb(n.goal)+' kcal')+'</b>'+(kt?'<span class="'+kt[1]+'">'+kt[0]+'</span>':'')+'</div>'
       +'<div class="bl-trk"><i class="is-kcal" style="width:'+(kc.v==null?0:Math.min(100,kc.v/n.goal*100)).toFixed(0)+'%"></i></div>'
       +'<div class="in-f__ms">'+MACROS.map(cell).join('')+'</div>'
-      +'<div class="in-f__rest">'+NUT.filter(function(x){ return x.col==='mic'; }).map(function(x){ var a=avg(w.start,w.end,x.k), b=a.v!=null&&stateOf(x,a.v)==='bad';
-        return '<button type="button" onclick="INTAKE._metric(\''+x.k+'\',true)"><span>'+x.lbl+'</span><b class="'+(b?'bl-warn':'')+'">'+(a.v==null?'—':nb(a.v))+'<small> / '+nb(x.goal)+' '+x.u+(x.kind==='max'?' max':'')+'</small>'+'</b></button>'; }).join('')+'</div>'
+      +(NUT.some(function(x){ return x.col==='mic'; })?'<div class="in-f__rest">'+NUT.filter(function(x){ return x.col==='mic'; }).map(function(x){ var a=avg(w.start,w.end,x.k), b=a.v!=null&&stateOf(x,a.v)==='bad';
+        return '<button type="button" onclick="INTAKE._metric(\''+x.k+'\',true)"><span>'+x.lbl+'</span><b class="'+(b?'bl-warn':'')+'">'+(a.v==null?'—':nb(a.v))+'<small> / '+nb(x.goal)+' '+x.u+(x.kind==='max'?' max':'')+'</small>'+'</b></button>'; }).join('')+'</div>':'')
       +'</div></section>';
   }
   function historyHtml(){

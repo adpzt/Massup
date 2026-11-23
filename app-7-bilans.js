@@ -13,7 +13,9 @@ var WR=null;
 // dès la semaine du 23/11, le bilan (et la gravure) attend le LUNDI matin : nuit du dimanche renseignée + ↻ fait
 // après minuit (le dimanche est alors un jour complet : kcal, protéines, pas). Les nuits de la semaine deviennent
 // celles du lundi soir au dimanche soir (avant : du dimanche d'avant au samedi). Semaines d'avant : inchangées.
-var WR_MORNING_FROM='2026-11-23';
+// 23/11 (Adrien : « si tu peux changer et faire maj la semaine dernière ») : appliqué dès la semaine du 16/11,
+// déjà gravée le 23/11 à 10 h 41 (16/20) avec l'ancienne règle → regravée UNE fois (wkv 2, voir noteGravValid).
+var WR_MORNING_FROM='2026-11-16';
 function wrNightKey(ws,n){ return rankAddDays(ws,ws>=WR_MORNING_FROM?n:n-1); } // n = 0…6
 function wrSunNightIn(ws){ var e=(DB.sleepLog||{})[rankAddDays(ws,6)]; return !!(e&&e.bed&&e.wake); }
 // null = prêt · 'time' (avant lundi 5 h) · 'sleep' (nuit du dimanche pas encore notée) · 'refresh' (↻ à faire)
@@ -278,6 +280,7 @@ function noteGravValid(ws,g){
   if(!g||g.note==null) return false;
   if(ws>=NOTE_V5_START&&g.v!==5) return false;
   if(ws>=NOTE_REGRADE_FROM&&ws<'2026-11-02'&&g.rgv!==2) return false; // gravée avant la regravure du 03/11
+  if(ws>=WR_MORNING_FROM&&ws<'2026-11-23'&&g.wkv!==2) return false; // 23/11 (accord d'Adrien) : semaine du 16/11 regravée une fois (dimanche + nuit du dimanche)
   if(ws>=ASSID_SOFT_START&&ws<'2026-11-09'&&g.asv!==2) return false; // 09/11 (Adrien : « depuis la semaine dernière ») : semaine du 02/11 gravée avec l'ancienne assiduité → regravée une fois
   return true;
 }
@@ -366,7 +369,8 @@ function bilanNoteWeek(ws){
   var B=ws>=NOTE_V5_START?bilanNoteWeekV5(ws):bilanNoteWeekCalc(ws);
   if(noteWeekClosed(ws)&&noteCanGrave(ws)){
     if(!DB.noteGrav) DB.noteGrav={};
-    var copy=JSON.parse(JSON.stringify(B)); copy.graved=1; copy.at=Date.now(); copy.rgv=2; copy.asv=2;
+    var copy=JSON.parse(JSON.stringify(B)); copy.graved=1; copy.at=Date.now(); copy.rgv=2; copy.asv=2; copy.wkv=2;
+    var old=DB.noteGrav[ws]; if(old&&old.note!=null&&old.note!==copy.note) copy.notePrev=old.note; // ancienne note gardée (regravure)
     DB.noteGrav[ws]=copy; saveDB();
     return copy;
   }
