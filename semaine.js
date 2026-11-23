@@ -84,7 +84,7 @@ var WK=(function(){
     var best=null; steps.forEach(function(x){ if(x.v!=null&&!x.fut&&(!best||x.v>best.v)) best=x; });
     var nights=[];
     for(var n=0;n<7;n++){
-      var k=day(ws,n-1), e=(DB.sleepLog||{})[k], m=null, bed=null;
+      var k=typeof wrNightKey==='function'?wrNightKey(ws,n):day(ws,n-1), e=(DB.sleepLog||{})[k], m=null, bed=null;
       if(e&&e.bed&&e.wake&&typeof SLEEP!=='undefined'){ m=SLEEP._duration(e.bed,e.wake); var bm=Number(e.bed.slice(0,2))*60+Number(e.bed.slice(3)); bed=bm<18*60?bm+1440:bm; }
       nights.push({k:k,m:m,bed:bed,wake:e&&e.wake||null});
     }
@@ -238,8 +238,10 @@ var WK=(function(){
       {max:mx,line:S.goal/7,lineLbl:'— trait : '+nf(S.goal/7)+' pas/jour pour l’objectif',aria:'Pas par jour'});
     h+='<div class="wk-sec">😴 Sommeil</div>';
     h+='<div class="wk-duo"><div><span class="wk-duo__v">'+dur(S.avgM)+'</span><span class="wk-duo__l">par nuit</span></div><div><span class="wk-duo__v">'+hm(S.avgBed)+'</span><span class="wk-duo__l">coucher moyen</span></div><div><span class="wk-duo__v">'+S.ok7+'<small>/7</small></span><span class="wk-duo__l">nuits ≥ 7 h</span></div></div>';
-    h+=bars(S.nights.map(function(x){ return {lbl:dayLbl(rankAddDays(x.k,1)),v:x.m,cls:x.m==null?'':x.m>=420?'is-ok':x.m>=360?'is-warn':'is-hot',txt:x.m!=null?(Math.round(x.m/6)/10).toString().replace('.',',')+'h':'—'}; }),
-      {max:600,line:420,lineLbl:'— trait : 7 h (nuit du jour d’avant → réveil le jour indiqué)',aria:'Durée de sommeil par nuit'});
+    // Dès la semaine du 23/11 : nuits du lundi soir au dimanche soir, étiquetées par le soir du coucher
+    var eve=typeof WR_MORNING_FROM!=='undefined'&&ws>=WR_MORNING_FROM;
+    h+=bars(S.nights.map(function(x){ return {lbl:dayLbl(eve?x.k:rankAddDays(x.k,1)),v:x.m,cls:x.m==null?'':x.m>=420?'is-ok':x.m>=360?'is-warn':'is-hot',txt:x.m!=null?(Math.round(x.m/6)/10).toString().replace('.',',')+'h':'—'}; }),
+      {max:600,line:420,lineLbl:'— trait : 7 h ('+(eve?'nuit du jour indiqué → réveil le lendemain':'nuit du jour d’avant → réveil le jour indiqué')+')',aria:'Durée de sommeil par nuit'});
     h+='<div class="wk-sec">Ce qu’il faut en retenir</div>'+diagHtml(actDiag(S));
     var runOn=typeof RUN_REQ_START!=='undefined'&&ws>=RUN_REQ_START;
     h+='<div class="wk-sec">À confirmer</div>'+stepper('run','🏃 Course','sorties'+(runOn?' · 1 obligatoire, compte 1 pt':' · comptera dans la note dès le 4 janvier'),3);

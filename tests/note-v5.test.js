@@ -147,6 +147,30 @@ test("bilan de la semaine : attend un ↻ après le dimanche 20 h", () => {
   assert.equal(run("wrDataReady('2026-10-19')"), true, "semaines d'avant la v5 : comme avant");
 });
 
+// 23/11 (Adrien) : dès la semaine du 23/11, le bilan attend le LUNDI matin — nuit du dimanche notée + ↻ après minuit —
+// pour que le dimanche compte en entier ; les nuits de la semaine = du lundi soir au dimanche soir.
+test("bilan de la semaine (dès le 23/11) : lundi matin, nuit du dimanche + ↻ après minuit", () => {
+  const run = load();
+  const at = (s) => new Date(s).getTime();
+  run("(DB.logs.push({id:990,date:'2026-11-24',sessions:['s1'],live:{note20:16}}),todayStr=function(){ return __t; },1)", { __t: "2026-11-29" });
+  run("(Date.now=function(){ return __n; },1)", { __n: at("2026-11-29T21:00:00") });
+  assert.equal(run("wrPendingWeekRaw()"), "2026-11-16", "dimanche soir : la semaine en cours n'est plus proposée");
+  run("(todayStr=function(){ return '2026-11-30'; },DB.rank.weekly['2026-11-16']={v:3},Date.now=function(){ return __n; },1)", { __n: at("2026-11-30T08:00:00") });
+  assert.equal(run("wrPendingWeekRaw()"), "2026-11-23");
+  run("(localStorage.setItem('massup_refreshAt',String(__r)),1)", { __r: at("2026-11-29T21:00:00"), __sync: at("2026-11-29T21:01:00") });
+  assert.equal(run("wrWaitReason('2026-11-23')"), "sleep", "nuit du dimanche pas notée");
+  run("(DB.sleepLog['2026-11-29']={bed:'23:30',wake:'07:30'},1)");
+  assert.equal(run("wrWaitReason('2026-11-23')"), "refresh", "↻ du dimanche soir : dimanche incomplet");
+  assert.equal(run("noteCanGrave('2026-11-23')"), false);
+  run("(localStorage.setItem('massup_refreshAt',String(__r)),1)", { __r: at("2026-11-30T07:50:00"), __sync: at("2026-11-30T07:51:00") });
+  assert.equal(run("wrDataReady('2026-11-23')"), true);
+  assert.equal(run("wrNightKey('2026-11-23',6)"), "2026-11-29", "la nuit de dimanche à lundi compte");
+  assert.equal(run("wrNightKey('2026-11-16',0)"), "2026-11-15", "semaines d'avant : inchangées");
+  // Nuit oubliée : plus d'attente à partir du mardi 5 h
+  run("(delete DB.sleepLog['2026-11-29'],Date.now=function(){ return __n; },1)", { __n: at("2026-12-01T06:00:00") });
+  assert.equal(run("wrDataReady('2026-11-23')"), true);
+});
+
 test("semaine du 02/11 gravée avec l'ancienne assiduité : ignorée puis regravée une fois (asv 2)", () => {
   const run = load();
   assert.equal(run("noteGravValid('2026-11-02',{v:5,note:15,rgv:2})"), false);

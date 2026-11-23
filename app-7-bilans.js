@@ -9,11 +9,35 @@ var WR=null;
 // 09/11 (Adrien : « j'ai eu mon bilan alors que je n'avais pas pu tout rafraîchir ») : une semaine v5 n'est proposée
 // qu'après un ↻ fait après son dimanche 20 h ET Yazio relu après ce ↻ (mêmes conditions que la gravure) — sinon
 // wrWaitWeek() la renvoie et la page Bilan affiche « fais ↻ d'abord ».
-function wrDataReady(ws){
-  if(ws<NOTE_V5_START) return true;
-  var sun20=new Date(rankAddDays(ws,6)+'T20:00:00').getTime(), r=noteRefreshAt();
-  if(r<sun20) return false;
-  return typeof INTAKE!=='undefined'&&INTAKE.ready&&INTAKE.ready()&&INTAKE.syncAt&&INTAKE.syncAt()>=r;
+// 23/11 (Adrien : « attendre le lendemain matin après avoir entré le sommeil + refresh, et compter le dimanche ») :
+// dès la semaine du 23/11, le bilan (et la gravure) attend le LUNDI matin : nuit du dimanche renseignée + ↻ fait
+// après minuit (le dimanche est alors un jour complet : kcal, protéines, pas). Les nuits de la semaine deviennent
+// celles du lundi soir au dimanche soir (avant : du dimanche d'avant au samedi). Semaines d'avant : inchangées.
+var WR_MORNING_FROM='2026-11-23';
+function wrNightKey(ws,n){ return rankAddDays(ws,ws>=WR_MORNING_FROM?n:n-1); } // n = 0…6
+function wrSunNightIn(ws){ var e=(DB.sleepLog||{})[rankAddDays(ws,6)]; return !!(e&&e.bed&&e.wake); }
+// null = prêt · 'time' (avant lundi 5 h) · 'sleep' (nuit du dimanche pas encore notée) · 'refresh' (↻ à faire)
+function wrWaitReason(ws){
+  if(ws<NOTE_V5_START) return null;
+  var r=noteRefreshAt(), now=Date.now();
+  if(ws<WR_MORNING_FROM){ if(r<new Date(rankAddDays(ws,6)+'T20:00:00').getTime()) return 'refresh'; }
+  else{
+    var mon=rankAddDays(ws,7);
+    if(now<new Date(mon+'T05:00:00').getTime()) return 'time';
+    // Nuit oubliée : on n'attend plus à partir du mardi 5 h (le bilan ne reste jamais bloqué)
+    if(!wrSunNightIn(ws)&&now<new Date(rankAddDays(ws,8)+'T05:00:00').getTime()) return 'sleep';
+    if(r<new Date(mon+'T00:00:00').getTime()) return 'refresh';
+  }
+  if(!(typeof INTAKE!=='undefined'&&INTAKE.ready&&INTAKE.ready()&&INTAKE.syncAt&&INTAKE.syncAt()>=r)) return 'refresh';
+  return null;
+}
+function wrDataReady(ws){ return !wrWaitReason(ws); }
+// Libellé + action de l'alerte d'attente (page Bilan)
+function wrWaitInfo(ws){
+  var w=wrWaitReason(ws);
+  if(w==='time') return {lbl:'lundi dès 5 h',act:'BILAN.refresh()'};
+  if(w==='sleep') return {lbl:'ta nuit d’abord',act:"BILAN.sheet('nuit')"};
+  return {lbl:'↻ d’abord',act:'BILAN.refresh()'};
 }
 function wrPendingWeek(){ var w=wrPendingWeekRaw(); return w&&wrDataReady(w)?w:null; }
 function wrWaitWeek(){ var w=wrPendingWeekRaw(); return w&&!wrDataReady(w)?w:null; }
@@ -23,8 +47,7 @@ function wrPendingWeekRaw(){
   if(today<season.start) return null;
   var lastMonday=rankMonday(today);
   var target=rankAddDays(lastMonday,-7); // la semaine précédente, close dimanche soir
-  var _d=getNow();
-  if(_d.getDay()===0&&_d.getHours()>=20) target=lastMonday; // dimanche 20h+ : la semaine en cours se déclare
+  // (avant le 23/11 : dès le dimanche 20 h, la semaine en cours se déclarait — supprimé, le bilan attend le lundi matin)
   if(target<rankMonday(season.start)) return null;
   // il faut au moins une séance salle dans la saison avant/pendant cette semaine
   var hasSalle=(DB.logs||[]).some(function(l){return l.date>=season.start&&l.date<=rankAddDays(target,6)&&rankLogIsSalle(l);});
@@ -236,6 +259,7 @@ function bilanNoteWeekCalc(ws){
 // gravures d'un autre barème sont ignorées, voir noteGravOf). Avant le 26/10 : barèmes d'époque (v1-v3), gravés tels quels.
 // GRAVURE v5 : le LUNDI matin (≥ 5 h) qui suit la semaine, et seulement si un ↻ (raccourci Santé : Yazio + pas) a été
 // fait après le dimanche 20 h ET que Yazio a été relu après ce ↻ ; ensuite la note ne bouge PLUS JAMAIS.
+// Dès la semaine du 23/11 : ↻ après lundi 0 h + nuit du dimanche notée (voir wrWaitReason).
 // Jamais gravée avant que les données cloud soient chargées (pas de zéros gravés sur un appareil neuf).
 var NOTE_V5_START='2026-10-26';
 var NOTE_V5={kcalDay:2600,protDay:135,sleepMin:420};
@@ -246,10 +270,8 @@ function noteCanGrave(ws){
   if(typeof SAISON!=='undefined'&&SAISON.previewAt(ws)) return false; // aperçu de la Sèche : rien ne se grave (04/11)
   if(ws<NOTE_V5_START) return true; // anciennes semaines : stables, gravées dès que le cloud est chargé
   if(Date.now()<new Date(rankAddDays(ws,7)+'T05:00:00').getTime()) return false; // à partir du lundi matin
-  var sun20=new Date(rankAddDays(ws,6)+'T20:00:00').getTime(), r=noteRefreshAt();
-  if(r<sun20) return false; // il faut un ↻ fait après le dimanche 20 h
-  if(!(typeof INTAKE!=='undefined'&&INTAKE.ready&&INTAKE.ready()&&INTAKE.syncAt&&INTAKE.syncAt()>=r)) return false; // Yazio relu après ce ↻
-  return true;
+  // ↻ après le dimanche 20 h (après lundi 0 h + nuit du dimanche dès la semaine du 23/11) et Yazio relu après ce ↻
+  return wrDataReady(ws);
 }
 // Gravure valable : pour une semaine v5, seule une gravure v5 compte (une gravure d'un autre barème est ignorée)
 function noteGravValid(ws,g){
@@ -374,7 +396,7 @@ function bilanNoteWeekV5(ws){
   var stepMax=(ws>=STEPS_HALF_FROM&&ws<STEPS_FULL_START)?1:2;
   var pSteps=typeof STEPS!=='undefined'?STEPS.weekPts(ws,stepMax):null, sw=typeof STEPS!=='undefined'?STEPS.week(ws):null;
   var run=ans?(ans.run||0):Math.max(nutWeekCount('run',ws),runWeekAuto(ws));
-  var nights=0; for(var n=0;n<7;n++){ var nk=rankAddDays(ws,n-1), e=(DB.sleepLog||{})[nk], m=e&&typeof SLEEP!=='undefined'?SLEEP._duration(e.bed,e.wake):null; if(m!=null&&m>=NOTE_V5.sleepMin) nights++; }
+  var nights=0; for(var n=0;n<7;n++){ var nk=wrNightKey(ws,n), e=(DB.sleepLog||{})[nk], m=e&&typeof SLEEP!=='undefined'?SLEEP._duration(e.bed,e.wake):null; if(m!=null&&m>=NOTE_V5.sleepMin) nights++; }
   var pR=run>=1?1:0, pN=nights/7;
   // Malus
   var malus=[];

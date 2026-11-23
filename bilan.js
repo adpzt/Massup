@@ -19,6 +19,11 @@ var BILAN=(function(){
   // À CHAQUE mise en ligne d'une nouveauté visible : ajouter une entrée EN TÊTE (id = date AAAA-MM-JJ), 3 à 6 lignes courtes.
   // Elle s'affiche une fois par appareil (localStorage massup_news = id déjà vu), sur le Bilan, avant la saisie de la nuit.
   var NEWS=[
+    {id:'2026-11-23',t:'Bilan du lundi matin (23 novembre)',items:[
+      ['📊','Le bilan de la semaine arrive le lundi matin, plus le dimanche soir : note ta nuit, fais ↻, et il s’ouvre. Ton dimanche compte enfin en entier (calories, protéines, pas).'],
+      ['😴','Les 7 nuits de la semaine vont du lundi soir au dimanche soir. La nuit de dimanche à lundi compte donc dans la semaine qui se termine.'],
+      ['☀️','Vitamine D3 et collagène attendent ton colis : touche « Reçu » le jour où tu l’as, le suivi démarre ce jour-là.']
+    ]},
     {id:'2026-11-19',t:'Progression et PULL (19 novembre)',items:[
       ['🟢','Traction et dips assistées : moins d’assistance s’affiche enfin en vert dans « Toutes les progressions ».'],
       ['💪','Indice de force : la semaine en cours n’est plus comptée (une semaine pas finie le faisait baisser) ; elle entre le lundi suivant.'],
@@ -159,7 +164,7 @@ var BILAN=(function(){
     }
     var wk=null; try{ wk=wrPendingWeek(); }catch(e){}
     if(wk) L.push(['📊','Bilan de la semaine prêt',dshort(wk),"wrOpen('"+wk+"')"]);
-    else { var ww=null; try{ ww=wrWaitWeek(); }catch(e){} if(ww) L.push(['📊','Bilan de la semaine','↻ d’abord','BILAN.refresh()']); } // 09/11
+    else { var ww=null; try{ ww=wrWaitWeek(); }catch(e){} if(ww){ var wi=wrWaitInfo(ww); L.push(['📊','Bilan de la semaine',wi.lbl,wi.act]); } } // 09/11 · 23/11 : nuit du dimanche puis ↻
     var mk=null; try{ mk=mrPendingMonth(); }catch(e){}
     if(mk) L.push(['🗓️','Bilan du mois prêt',mrMonthLabel(mk).split(' ')[0],"mrOpen('"+mk+"')"]);
     if(!L.length) return '';
@@ -183,7 +188,11 @@ var BILAN=(function(){
     return '<section class="bl-sit"><div class="bl-sit__top"><h1 class="bl-sit__name">'+esc(name)+'</h1><span class="bl-pill">'+sa.lbl+(prv?' · aperçu':' · J-'+j)+'</span></div><div class="bl-hero">'+poids+kcal+'</div></section>';
   }
 
-  var SUPPL_START=new Date(2026,10,23,7,0,0).getTime(); // lundi 23/11/2026, 7 h (heure locale)
+  // 23/11 (Adrien : « attendre pour collagène et vitamine D3, je n'ai pas encore reçu ») : chaque complément démarre le
+  // jour où Adrien touche « Reçu » (date gardée dans DB.profile.suppl[k], synchronisée avec le profil). La semaine de
+  // la réception, l'objectif = les jours restants jusqu'au dimanche (reçu jeudi → 4).
+  function supplStart(k){ var p=DB.profile||{}; return p.suppl&&p.suppl[k]||null; }
+  function supplGoal(k,mon){ var d=supplStart(k); if(!d||d>addD(mon,6)) return 0; return d<=mon?7:7-days(mon,d); }
   function objectivesHtml(B0){
     var mon=rankMonday(today()), o=nutObjectives(mon);
     var run=Math.max(nutWeekCount('run',mon),runWeekAuto(mon));
@@ -194,10 +203,14 @@ var BILAN=(function(){
     ];
     // 18/11 (demande Adrien) : vitamine D3 et collagène, 1 par jour, sous la créatine — visibles dès le lundi 23/11 à 7 h.
     // Simple suivi : ils ne comptent dans AUCUNE note (DB.nutrition[jour].vitd / .colla).
-    if(Date.now()>=SUPPL_START) rows.splice(2,0,['vitd','☀️','Vitamine D3',nutWeekCount('vitd',mon),7,true],['colla','🦴','Collagène',nutWeekCount('colla',mon),7,true]);
+    // 23/11 : seulement après « Reçu » ; avant, une ligne « pas encore reçu » avec le bouton.
+    var sup=[['vitd','☀️','Vitamine D3'],['colla','🦴','Collagène']].map(function(x){ var g=supplGoal(x[0],mon); return g?[x[0],x[1],x[2],nutWeekCount(x[0],mon),g,true]:[x[0],x[1],x[2],0,0,'wait']; });
+    rows.splice.apply(rows,[2,0].concat(sup));
     if(seche()){ var ab=0; try{ ab=abdoWeekAuto(mon); }catch(e){} rows.push(['abdos','🔥','Séances avec abdos',ab,SAISON.CFG.seche.abdos,false]); }
     return '<section class="bl-obj" aria-label="Objectifs de la semaine">'+rows.map(function(r){
       var k=r[0],v=r[3],g=r[4],done=v>=g, cls=done?'is-done':v===0?'is-zero':'';
+      if(r[5]==='wait') return '<div class="bl-obj__row bl-obj__row--wait"><span class="bl-obj__e" aria-hidden="true">'+r[1]+'</span><div style="min-width:0"><div class="bl-obj__n">'+r[2]+'</div><div class="bl-obj__s">pas encore reçu</div></div>'
+        +'<button type="button" class="bl-btn bl-btn--ghost bl-btn--sm bl-obj__got" onclick="BILAN.supplGot(\''+k+'\')" aria-label="'+r[2]+' reçu : démarrer le suivi">Reçu</button></div>';
       var cap=r[5]?nutTapMax(k):g;
       // 10/11 (Adrien : « à 7/7 créatine je ne peux plus revenir à 0 », coché sans faire exprès) : au plafond, le + devient ↺
       var full=r[5]&&nutWeekCount(k,mon)>=cap;
@@ -367,7 +380,7 @@ var BILAN=(function(){
     var ws=rankAddDays(curWs,-7), B=bilanNoteWeek(ws);
     if(B.salle){
       var pend=null; try{ pend=wrPendingWeekRaw(); }catch(e){}
-      if(pend===ws){ var rdy=false; try{ rdy=wrDataReady(ws); }catch(e){} rows.push(['Sem. du '+dshort(ws),rdy?'bilan à découvrir':'↻ d’abord, puis ton bilan',0,rdy?"wrOpen('"+ws+"')":'BILAN.refresh()',true]); }
+      if(pend===ws){ var rdy=false; try{ rdy=wrDataReady(ws); }catch(e){} var wi=rdy?null:wrWaitInfo(ws); rows.push(['Sem. du '+dshort(ws),rdy?'bilan à découvrir':wi.lbl+', puis ton bilan',0,rdy?"wrOpen('"+ws+"')":wi.act,true]); }
       else rows.push(['Sem. du '+dshort(ws),det(B)+(B.graved?' · gravée':''),B.note,"BILAN.note('"+ws+"')"]);
     }
     var t=today(), pm=new Date(parseInt(t.slice(0,4),10),parseInt(t.slice(5,7),10)-2,1), pmk=pm.getFullYear()+'-'+String(pm.getMonth()+1).padStart(2,'0');
@@ -479,7 +492,7 @@ var BILAN=(function(){
   /* ══════════ DÉTAIL DE LA NOTE (« pourquoi j'ai X », notation v5 — 03/11) ══════════ */
   function noteHtml(ws){
     var B=bilanNoteWeek(ws), D=noteWeekDetail(B), tot=B.note, n=noteN(tot), cur=ws===rankMonday(today());
-    var sun=rankAddDays(ws,6), mon=rankAddDays(ws,7), foot=(B.graved?'Gravée le '+(B.at?new Date(B.at).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'short'}):dlab(mon))+' · elle ne changera plus.':B.v===5?(Date.now()>=new Date(mon+'T05:00:00').getTime()?'Sera gravée dès ton prochain \u21bb (Yazio + pas).':'Sera gravée lundi '+dshort(mon)+' au matin, après ton \u21bb (Yazio + pas) fait après dimanche 20 h.'):'Gravée avec le barème de l\u2019époque.')+(B.scaled?' Note sur '+(B.maxRaw||19)+' ramenée à 20 : la course compte dès le 4 janvier'+((B.maxRaw||19)<19?', les pas sur 1 point d’ici là':'')+'.':'');
+    var sun=rankAddDays(ws,6), mon=rankAddDays(ws,7), foot=(B.graved?'Gravée le '+(B.at?new Date(B.at).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'short'}):dlab(mon))+' · elle ne changera plus.':B.v===5?(Date.now()>=new Date(mon+'T05:00:00').getTime()?'Sera gravée dès ton prochain \u21bb (Yazio + pas).':'Sera gravée lundi '+dshort(mon)+' au matin, après '+(ws>=WR_MORNING_FROM?'ta nuit du dimanche et ton \u21bb (Yazio + pas) du lundi.':'ton \u21bb (Yazio + pas) fait après dimanche 20 h.')):'Gravée avec le barème de l\u2019époque.')+(B.scaled?' Note sur '+(B.maxRaw||19)+' ramenée à 20 : la course compte dès le 4 janvier'+((B.maxRaw||19)<19?', les pas sur 1 point d’ici là':'')+'.':'');
     var mt=D.malus.reduce(function(a,m){ return a+m.p; },0);
     var h=top('\uD83C\uDFC6 Ta note',(cur?'Cette semaine':'Semaine du '+dshort(ws))+(B.v===5?'':' · barème d\u2019époque'))
       +'<section class="bl-sec"><div class="bl-lbl">'+(cur?'En cours':'Semaine du '+dshort(ws)+' \u2192 '+dshort(sun))+'</div>'
@@ -646,6 +659,12 @@ var BILAN=(function(){
   return {
     render:render,
     reset:reset,
+    supplGot:function(k){
+      var lbl={vitd:'la vitamine D3',colla:'le collagène'}[k]; if(!lbl) return;
+      if(!confirm('Tu as reçu '+lbl+' ?\nLe suivi démarre aujourd’hui (1 par jour, hors de toute note).')) return;
+      if(!DB.profile) DB.profile={}; if(!DB.profile.suppl) DB.profile.suppl={};
+      DB.profile.suppl[k]=today(); saveDB(); render();
+    },
     photoDone:function(){ try{ localStorage.setItem('massup_photo_'+today().slice(0,7),'1'); }catch(e){} render(); },
     refresh:function(){ try{ INTAKE.refresh(); }catch(e){ try{ STEPS.refresh(); }catch(e2){} } try{ PV.pull(true); }catch(e){} },
     go:function(s){ S.screen=s; S.psel=null; renderScreen(); document.body.style.overflow='hidden'; },

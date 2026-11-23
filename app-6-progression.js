@@ -1058,7 +1058,7 @@ function openSeasonModal(id){
         return;
       }
       var col=w.rp>0?'var(--acc)':w.rp<0?'var(--red)':'var(--mut)';
-      var canReplay=(DB.rank&&DB.rank.weekly&&DB.rank.weekly[w.start])||(cur&&w.start<=_avail);
+      var canReplay=(DB.rank&&DB.rank.weekly&&DB.rank.weekly[w.start])||(cur&&w.start<=_avail&&(w.start<WR_MORNING_FROM||wrDataReady(w.start))); // 23/11 : pas avant le lundi matin (nuit + ↻)
       h+='<div class="sn2-wrow">'
         +'<span class="sn2-w-date">'+formatDateShort(w.start)+'</span>'
         +'<span class="sn2-w-se">'+fmtSeances(w.v)+' s&#xE9;ance'+(w.v>1?'s':'')+(w.streak>=2?' &#x1F525;':'')+(w.nut?' <small style="color:var(--yellow)">&#x1F37D;</small>':'')+'</span>'

@@ -96,6 +96,10 @@
 .bl-obj__v.is-done{color:var(--acc)}
 .bl-obj__v.is-zero{color:var(--mut)}
 .bl-obj__auto{width:44px;text-align:center;color:var(--acc);font-weight:800}
+/* 23/11 : complément pas encore reçu (D3, collagène) — bouton « Reçu » sur les 2 dernières colonnes */
+.bl-obj__row--wait .bl-obj__n{margin-bottom:2px}
+.bl-obj__s{font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bl-obj__got{grid-column:3 / span 2;justify-self:end}
 
 /* ---------- 6. Sections ---------- */
 .bl-sec__head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;color:var(--txt);text-decoration:none}
