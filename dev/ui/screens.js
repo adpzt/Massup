@@ -20,10 +20,16 @@ const ADRIEN = [
   ['a_poids', ["BILAN.go('poids')"], { scroll: '#blScreen' }],
   ['a_news', ["localStorage.removeItem('massup_news');BILAN._state.newsShown=0;renderSante()", "new Promise(function(r){ setTimeout(r,700); })"]],
   ['a_force', ["switchView('progression',document.querySelectorAll('.bni')[2])", "document.getElementById('forceIdx').scrollIntoView({block:'start'});window.scrollBy(0,-60)"]],
-  ['a_bilan_obj_full', ["for(var i=0;i<7;i++){var c=nutWeekCount('shaker',rankMonday(todayStr()));if(c>=7)break;nutTapWeek('shaker');}", "var c=document.querySelector('#bilanPage .bl-obj');if(c)c.scrollIntoView({block:'center'})"]], // 10/11 : créatine 7/7 → bouton ↺
+  ['a_bilan_obj_full', ["BILAN._state.obj=true;for(var i=0;i<7;i++){var c=nutWeekCount('shaker',rankMonday(todayStr()));if(c>=7)break;nutTapWeek('shaker');}", "var c=document.querySelector('#bilanPage .bl-obj');if(c)c.scrollIntoView({block:'center'})"]], // 10/11 : créatine 7/7 → bouton ↺
   // (23/11) D3 / collagène : « pas encore reçu » + bouton Reçu, puis suivi démarré (reçu aujourd'hui)
-  ['a_bilan_obj_suppl', ["if(DB.profile)delete DB.profile.suppl", "BILAN.render()", "window.scrollTo(0,document.querySelector('#bilanPage .bl-obj').getBoundingClientRect().top+window.scrollY-200)"]],
-  ['a_bilan_obj_suppl_ok', ["DB.profile=DB.profile||{};DB.profile.suppl={vitd:rankMonday(todayStr()),colla:todayStr()}", "BILAN.render()", "window.scrollTo(0,document.querySelector('#bilanPage .bl-obj').getBoundingClientRect().top+window.scrollY-200)"]],
+  ['a_bilan_obj_suppl', ["if(DB.profile)delete DB.profile.suppl;BILAN._state.obj=true", "BILAN.render()", "window.scrollTo(0,document.querySelector('#bilanPage .bl-obj').getBoundingClientRect().top+window.scrollY-200)"]],
+  ['a_bilan_obj_suppl_ok', ["DB.profile=DB.profile||{};DB.profile.suppl={vitd:rankMonday(todayStr()),colla:todayStr(),zinc:todayStr()};BILAN._state.obj=true", "BILAN.render()", "window.scrollTo(0,document.querySelector('#bilanPage .bl-obj').getBoundingClientRect().top+window.scrollY-200)"]],
+  // 26/11 : objectifs pliés (défaut) · réservoir de créatine plein / bas · feuille Créatine (graphique + correction)
+  ['a_bilan_obj_fold', ["var c=document.querySelector('#bilanPage .bl-obj');if(c)c.scrollIntoView({block:'center'})"]],
+  ['a_crea_full', ["DB.profile=DB.profile||{};DB.profile.creaStart={date:rankAddDays(todayStr(),-40),pct:100};for(var i=40;i>=0;i-=2)ensureNutriDay(rankAddDays(todayStr(),-i)).crea=5;BILAN._state.obj=true;BILAN.render()", "var c=document.querySelector('#bilanPage .bl-crea');if(c)c.scrollIntoView({block:'center'})"]],
+  ['a_crea_low', ["DB.profile=DB.profile||{};DB.profile.creaStart={date:rankAddDays(todayStr(),-12),pct:90};BILAN._state.obj=true;BILAN.render()", "var c=document.querySelector('#bilanPage .bl-crea');if(c)c.scrollIntoView({block:'center'})"]],
+  ['a_shk_open', ["DB.profile=DB.profile||{};DB.profile.suppl={vitd:rankMonday(todayStr())};nutTapWeek('shaker');nutTapWeek('shaker');nutTapWeek('kiwi');BILAN._state.obj=true;BILAN._state.shk=true;BILAN.render()", "var c=document.querySelector('#bilanPage .bl-shk');if(c)c.scrollIntoView({block:'center'})"]],
+  ['a_crea_sheet', ["DB.profile=DB.profile||{};DB.profile.creaStart={date:rankAddDays(todayStr(),-50),pct:60};for(var i=50;i>=0;i--)if(i%3)ensureNutriDay(rankAddDays(todayStr(),-i)).crea=i>30?10:5;BILAN.sheet('crea')"], { scroll: '.bl-sheet' }],
   ['a_bilan_notes', ["BILAN.toggle('notes')", "window.scrollTo(0,document.body.scrollHeight)"]],
   ['a_note', ["BILAN.note(rankAddDays(rankMonday(todayStr()),-7))"], { scroll: '#blScreen' }],
   ['a_note_v5', ["NOTE_V5_START=rankAddDays(rankMonday(todayStr()),-7);BILAN.note(rankAddDays(rankMonday(todayStr()),-7))"], { scroll: '#blScreen' }],

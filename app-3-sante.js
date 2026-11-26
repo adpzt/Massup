@@ -743,6 +743,8 @@ function openSettings(){
   var a=document.getElementById('settingsAge'); if(a) a.value=p.age||'';
   var g=document.getElementById('settingsGoal'); if(g) g.value=p.goal||'masse';
   var wg=document.getElementById('settingsWeekGoal'); if(wg) wg.value=String(getWeekGoal());
+  var cs=p.creaStart||null, cp=document.getElementById('settingsCreaPct'), cd=document.getElementById('settingsCreaDate');
+  if(cp) cp.value=cs&&cs.pct!=null?cs.pct:''; if(cd){ cd.value=cs&&cs.date?cs.date:todayStr(); cd.max=todayStr(); }
   renderSettingsSeason();
   try{ renderRankPauses(); }catch(e){}
   renderReminderSettings();
@@ -757,8 +759,16 @@ function saveSettings(){
   DB.profile.goal=document.getElementById('settingsGoal').value;
   var wgEl=document.getElementById('settingsWeekGoal');
   if(wgEl) DB.profile.weekGoal=parseInt(wgEl.value)||4;
+  // 26/11 : point de départ du réservoir de créatine (vide = estimation depuis l'historique)
+  var cpEl=document.getElementById('settingsCreaPct'), cdEl=document.getElementById('settingsCreaDate');
+  if(cpEl){
+    var cpv=cpEl.value.trim(), cdv=cdEl&&cdEl.value||todayStr();
+    if(cpv===''){ if(DB.profile.creaStart) DB.profile.creaStart=null; }
+    else { var cpn=Math.max(0,Math.min(100,parseFloat(cpv.replace(',','.')))); if(!isNaN(cpn)) DB.profile.creaStart={date:cdv>todayStr()?todayStr():cdv,pct:cpn,at:Date.now()}; }
+  }
   saveDB();
   closeSettings();
+  try{ if(typeof BILAN!=='undefined') BILAN.render(); }catch(e){}
   renderDashboard();
   try{ renderGymGreet(); }catch(e){}
   showToast('\u2705 Profil sauvegardé');
@@ -961,8 +971,8 @@ function renderReminderBanner(banner){
 // Valide le shaker du jour depuis la bannière (l'onglet Nutrition étant mis de côté)
 function markShakerDone(){
   var d=ensureNutriDay(todayStr());
-  d.shaker=true; saveDB();
-  showToast('&#x1F964; Créatine validée !');
+  d.shaker=true; if(typeof creaDose==='function'&&creaDose(todayStr())<5){ d.crea=5; d.creaAuto=1; } saveDB(); // 26/11 : 5 g dans la réserve
+  showToast('&#x1F964; Shaker validé · 5 g de créatine');
   try{ checkReminders(); }catch(e){}
 }
 function switchToSeances(){
@@ -1070,7 +1080,8 @@ function ensureNutriDay(date){
 function pruneNutriDay(date){
   var d=DB.nutrition[date]; if(!d) return;
   var empty=(d.kcal===null||d.kcal===undefined||d.kcal==='')&&(d.prot===null||d.prot===undefined||d.prot==='')
-    &&!d.petit_dej&&!d.dejeuner&&!d.diner&&!d.shaker&&!d.maison&&!d.run&&!d.cardio&&!d.vitd&&!d.colla;
+    &&!d.petit_dej&&!d.dejeuner&&!d.diner&&!d.shaker&&!d.maison&&!d.run&&!d.cardio&&!d.vitd&&!d.colla&&!d.zinc&&!d.lait&&!d.kiwi
+    &&d.crea==null; // 26/11 : créatine en grammes — un 0 saisi exprès est gardé (il remplace le « shaker » d'avant le 26/11)
   if(empty) delete DB.nutrition[date];
 }
 function nutriEntriesInWindow(days){
@@ -1643,7 +1654,10 @@ function exportCoachDossier(opts){
     ['Séries dures','Séries comptées par muscle (1 par série + 0,5 pour le muscle assistant des polyarticulaires). Repère de l\'app par muscle et par semaine : sous 12 rouge, 12-15 gris, 16-19 bleu, 20+ gold, plus de 25 = rendements décroissants (abdos jusqu\'à fin janvier 2027 : sous 8 rouge, 8 gris, 12 bleu, 16 gold).'],
     ['e1RM','Force estimée par série (Epley : charge × (1 + reps / 30)), seulement pour les exos chargés en kg (pas les assistances).'],
     ['Séances anciennes','Février → avril : séances RITM / escalade notées sans détail. Juin → juillet : séances reconstituées après une perte de données (dates approximatives, pas de détail). Détail série par série fiable à partir du 01/08/2026.'],
-    ['Onglets','Synthèse · Semaines · Calendrier (1 ligne par jour : séance, note, pas, nutrition, sommeil, poids) · Séances · Séries · Exercices · Historique charges · Poids · Course & sports · Pas · Nutrition · Nutrition semaines · Nutrition synthèse · Sommeil · Douleurs · Mobilité.'],
+    ['Créatine (26/11/2026)','Réservoir modélisé par l\'app (estimation, pas une mesure) : réserve en % de la capacité ajoutée par la supplémentation (35 g ; les ~120 g de base ne sont pas comptés). Chaque jour −3 points (≈ −1 g, fixe : sport, eau et jours gelés n\'y changent rien), puis + la dose : gain = 1,4 × min(g, 5) + 1,0 × min(max(g − 5, 0), 5) points (5 g = +7, 10 g = +12, rien au-delà de 10 g), borné 0-100. Dose saisie en grammes (0 / 5 / 10, corrigeable) ; chaque shaker compte 5 g ; avant le 26/11, un jour de l\'ancien compteur « créatine » = 5 g. Point de départ : '+(creaStartOf().set?Math.round(creaStartOf().pct)+' % au début du '+creaStartOf().date+' (réglé dans Profil)':'estimé à 0 % le 01/08/2026 puis simulé (aucun point de départ réglé)')+'. Onglet « Créatine » = jour par jour ; « Nutrition semaines » = mode, réserves, notes.'],
+    ['Shaker (26/11/2026)','Un shaker = lait Alpro riche en protéines et calcium + kiwi (vitamine C) + collagène + 5 g de créatine. Objectif 5 par semaine (note /1). Un shaker coche les 4 ; chacun peut aussi être noté seul (ex. un kiwi sans shaker). Colonnes « Lait », « Kiwi », « Collagène », « Zinc », « Vitamine D3 » de « Nutrition semaines » = jours par semaine (suivi, hors note).'],
+    ['Note créatine (dès le 30/11/2026)','Mode fixé le lundi 0 h : PLEIN si réserve ≥ 95 % → note /2 = 2 si ≥ 95 % le dimanche soir, sinon max(0, (réserve − 80) / 15) × 2. REMPLISSAGE sinon → 2 si +25 points sur la semaine OU 95 % atteint, sinon max(0, gain / 25) × 2. Jours gelés : leur perte de 3 points est retirée du calcul de la note (pas de la jauge) et l\'objectif +25 est réduit au prorata des jours non gelés. Shaker /1 = min(1, shakers / 5). Nutrition passe de /6 à /8 (kcal /3 · protéines /2 · créatine /2 · shaker /1), la note reste ramenée sur 20. Semaines d\'avant : inchangées (gravées).'],
+    ['Onglets','Synthèse · Semaines · Calendrier (1 ligne par jour : séance, note, pas, nutrition, sommeil, poids) · Séances · Séries · Exercices · Historique charges · Poids · Course & sports · Pas · Nutrition · Nutrition semaines · Créatine · Nutrition synthèse · Sommeil · Douleurs · Mobilité.'],
     ['Généré le',today+' depuis l\'app MASSUP (données saisies au jour le jour).']
   ];
   sheets.push({name:'Lisez-moi',noFilter:true,cols:[{h:'Rubrique',w:20},{h:'Contenu',w:120,wrap:true}],rows:readme});
@@ -1801,6 +1815,16 @@ function exportCoachDossier(opts){
       return [d,jour(d),d>=today?'en cours':nzDone(d)?'oui':'envoyée en cours de journée',kc,nu(d,'glu'),pr,nu(d,'lip'),nzPct(d,'glu',4),nzPct(d,'prot',4),nzPct(d,'lip',9),pr!=null&&w?Math.round(pr/w*100)/100:null,
         nu(d,'fib'),nu(d,'sucre'),nu(d,'sat'),nu(d,'sodium'),nu(d,'potassium'),nu(d,'calcium'),g,kc>=g?'oui':'non',kc!=null?Math.round(kc-g):null,pr>=135?'oui':'non',nzBwDay(d)]; })});
 
+  // Colonnes créatine d'une semaine : mode, réserve lundi 0 h / dimanche soir, jours gelés, notes (gravées si la semaine l'est)
+  function creaWeekCols(ws){
+    var w=null; try{ w=creaWeek(ws); }catch(e){}
+    var g=ws>=CREA.NOTE_FROM&&typeof noteGravOf==='function'?noteGravOf(ws):null, gc=g&&g.crea;
+    var nc=null, ns=null;
+    if(ws>=CREA.NOTE_FROM){ var B=null; try{ B=bilanNoteWeek(ws); }catch(e){}
+      (B&&B.pil||[]).forEach(function(P){ (P.c||[]).forEach(function(c){ if(c[0]==='Créatine') nc=c[2]; if(c[0]==='Shaker') ns=c[2]; }); }); }
+    var x=gc||w; if(!x) return ['','','','',nc,ns];
+    return [x.mode==='plein'?'Plein':'Remplissage',x.mon,x.done===false&&!gc?x.sun+' (en cours)':x.sun,x.frozen||'',nc,ns];
+  }
   // ── Nutrition par semaine (lundi → dimanche, journées complètes seulement) ──
   var nzW=[];
   if(nuDays.length){
@@ -1814,14 +1838,22 @@ function exportCoachDossier(opts){
       NZK.forEach(function(k){ row.push(mean(k)); });
       row.push(dd.filter(function(d){ return nu(d,'kcal')>=2600; }).length, dd.filter(function(d){ return nu(d,'kcal')>=nzKGoal(d); }).length,
         dd.filter(function(d){ return nu(d,'prot')>=130; }).length, dd.filter(function(d){ return nu(d,'prot')>=150; }).length,
-        nutWeekCount('shaker',nws), nutWeekCount('maison',nws), nutWeekCount('vitd',nws), nutWeekCount('colla',nws), wbm, wbm!=null&&nzPrevBw!=null?r1(wbm-nzPrevBw):null);
+        nutWeekCount('shaker',nws), nutWeekCount('maison',nws), nutWeekCount('vitd',nws), nutWeekCount('colla',nws), nutWeekCount('zinc',nws), nutWeekCount('lait',nws), nutWeekCount('kiwi',nws), wbm, wbm!=null&&nzPrevBw!=null?r1(wbm-nzPrevBw):null);
+      row=row.concat(creaWeekCols(nws));
       if(wbm!=null) nzPrevBw=wbm;
       nzW.push(row);
     }
   }
   sheets.push({name:'Nutrition semaines',cols:[{h:'Semaine du (lundi)',w:12},{h:'Semaine en cours',w:8},{h:'Journées complètes notées',w:9}]
     .concat(NZK.map(function(k){ return {h:'Moyenne '+NZL[k].replace(/^./,function(c){return c.toLowerCase();}),w:10}; }))
-    .concat([{h:'Jours ≥ 2 600 kcal',w:8},{h:'Jours ≥ objectif kcal',w:8},{h:'Jours protéines ≥ 130 g',w:8},{h:'Jours protéines ≥ 150 g',w:8},{h:'Créatine (jours /7, déclaré)',w:9},{h:'Plats maison (/14, déclaré)',w:9},{h:'Vitamine D3 (jours /7, dès le 23/11)',w:9},{h:'Collagène (jours /7, dès le 23/11)',w:9},{h:'Poids moyen (kg)',w:8},{h:'Variation vs semaine précédente (kg)',w:10}]),rows:nzW});
+    .concat([{h:'Jours ≥ 2 600 kcal',w:8},{h:'Jours ≥ objectif kcal',w:8},{h:'Jours protéines ≥ 130 g',w:8},{h:'Jours protéines ≥ 150 g',w:8},{h:'Shaker (/7 ; avant le 26/11 : jours de créatine)',w:11},{h:'Plats maison (/14, déclaré)',w:9},{h:'Vitamine D3 (jours /7, dès le 23/11)',w:9},{h:'Collagène (jours /7, dès le 23/11)',w:9},{h:'Zinc (jours /7)',w:8},{h:'Lait Alpro riche en calcium (jours /7, dès le 26/11)',w:10},{h:'Kiwi (jours /7, dès le 26/11)',w:8},{h:'Poids moyen (kg)',w:8},{h:'Variation vs semaine précédente (kg)',w:10},
+      {h:'Mode créatine (fixé lundi 0 h)',w:11},{h:'Réserve créatine lundi 0 h (%)',w:10},{h:'Réserve créatine dimanche soir (%)',w:10},{h:'Jours gelés',w:7},{h:'Note créatine /2 (dès le 30/11)',w:10},{h:'Note shaker /1 (dès le 30/11, obj. 5)',w:10}]),rows:nzW});
+
+  // ── Créatine jour par jour (26/11) : dose saisie, réserve modélisée (estimation, pas une mesure) ──
+  var CS=creaSeries(), csRows=[];
+  Object.keys(CS.e).sort().forEach(function(d){ var e=DB.nutrition[d]||{}, g=creaDose(d);
+    csRows.push([d,jour(d),g,e.crea!=null?(e.creaAuto?'shaker (5 g auto)':'saisie'):(g?'ancien compteur créatine (5 g)':''),r1(CS.e[d]),r1(CS.e[d]*CREA.CAP/100),Math.round(CREA.BASE+CS.e[d]*CREA.CAP/100),rankInPause(d)?'oui':'',e.shaker?'oui':'']); });
+  sheets.push({name:'Créatine',cols:[{h:'Date',w:11},{h:'Jour',w:6},{h:'Créatine (g)',w:9},{h:'Source',w:22},{h:'Réserve créatine (%)',w:10},{h:'Réserve créatine (g, sur 35)',w:10},{h:'Total estimé dans le corps (g, ~120 de base)',w:12},{h:'Jour gelé',w:7},{h:'Shaker ce jour (compteur de semaine)',w:11}],rows:csRows});
 
   // ── Nutrition : synthèse par période ──
   var NZS=[], nzAll=nuDays.filter(nzDone);

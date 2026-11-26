@@ -111,16 +111,34 @@ function nutWeekCount(field,weekStart){
 }
 // Plafond du compteur hebdo par case (12/10) : 14 plats maison (2/jour), 3 sorties course, 7 sinon
 function nutTapMax(field){ return field==='maison'?14:field==='run'?3:7; }
+// Remplit un compteur de semaine à n (jours lun→dim ; `maison` : 2 par jour)
+function nutWeekFill(field,monday,n){
+  var per=field==='maison'?2:1;
+  for(var i=0;i<7;i++){
+    var d=rankAddDays(monday,i), v=Math.max(0,Math.min(per,n-i*per));
+    if(v>0){ ensureNutriDay(d)[field]=per>1?v:true; }
+    else if(DB.nutrition[d]){ DB.nutrition[d][field]=per>1?0:false; pruneNutriDay(d); }
+  }
+}
 // Tap = +1 sur la semaine (stocké en remplissant les jours lun→dim) · après 7, retour à 0.
 function nutTapWeek(field){
   var monday=rankMonday(todayStr());
   var max=nutTapMax(field), per=field==='maison'?2:1;
-  var next=(nutWeekCount(field,monday)+1)%(max+1);
-  for(var i=0;i<7;i++){
-    var d=rankAddDays(monday,i);
-    var v=Math.max(0,Math.min(per,next-i*per));
-    if(v>0){ ensureNutriDay(d)[field]=per>1?v:true; }
-    else if(DB.nutrition[d]){ DB.nutrition[d][field]=per>1?0:false; pruneNutriDay(d); }
+  var prev=nutWeekCount(field,monday), next=(prev+1)%(max+1);
+  nutWeekFill(field,monday,next);
+  // 26/11 (Adrien) : un shaker = lait Alpro (calcium) + kiwi (vitamine C) + collagène + 5 g de créatine, toujours.
+  // +1 shaker → chaque élément monte jusqu'au nombre de shakers (un kiwi pris seul avant n'est pas compté deux fois),
+  // le collagène seulement s'il a démarré, et 5 g comptés AUJOURD'HUI dans le réservoir (si rien de plus n'est noté).
+  // Shaker remis à 0 → seuls les 5 g ajoutés automatiquement cette semaine sont retirés (jamais une saisie à la main).
+  if(field==='shaker'){
+    var t=todayStr();
+    if(next>prev){
+      var et=ensureNutriDay(t); if(creaDose(t)<5){ et.crea=5; et.creaAuto=1; }
+      var cs=DB.profile&&DB.profile.suppl&&DB.profile.suppl.colla;
+      ['lait','kiwi'].concat(cs&&cs<=t?['colla']:[]).forEach(function(f){ if(nutWeekCount(f,monday)<next) nutWeekFill(f,monday,nutWeekCount(f,monday)+1); });
+    } else if(next===0){
+      for(var j=0;j<7;j++){ var dj=rankAddDays(monday,j), ej=DB.nutrition[dj]; if(ej&&ej.creaAuto){ delete ej.crea; delete ej.creaAuto; pruneNutriDay(dj); } }
+    }
   }
   saveDB();
   renderBilanWeekNut();
@@ -198,7 +216,8 @@ var STEP_BLOOD_START='2026-11-02', FREQ_STRICT_START='2026-11-02', RUN_REQ_START
 // gravée le 09/11 ; une note gravée ne change jamais). La barre de fréquence 3/4 redevient grise (fin du « rouge strict »).
 var ASSID_SOFT_START='2026-11-02';
 function nutObjectives(ws){
-  if(!ws||ws>=NUT_V3_START) return {v:3,maison:10,maisonMax:14,shk:7,shkLbl:'cr&#xE9;atine',shkIco:'&#x1F964;',run:1,pdj:0,cardio:0};
+  if(!ws||ws>=CREA.NOTE_FROM) return {v:3,maison:10,maisonMax:14,shk:CREA.SHK_GOAL,shkLbl:'shaker',shkIco:'&#x1F964;',run:1,pdj:0,cardio:0}; // 26/11 : Shaker obj. 5
+  if(ws>=NUT_V3_START) return {v:3,maison:10,maisonMax:14,shk:7,shkLbl:'cr&#xE9;atine',shkIco:'&#x1F964;',run:1,pdj:0,cardio:0};
   var v2=ws>=NUT_V2_START;
   return v2?{v:2,pdj:5,shk:5,shkLbl:'cr&#xE9;atine',shkIco:'&#x1F9EA;',cardio:3}
            :{v:1,pdj:4,shk:2,shkLbl:'shakers',shkIco:'&#x1F964;',cardio:2};
@@ -265,6 +284,67 @@ function bilanNoteWeekCalc(ws){
 // Jamais gravée avant que les données cloud soient chargées (pas de zéros gravés sur un appareil neuf).
 var NOTE_V5_START='2026-10-26';
 var NOTE_V5={kcalDay:2600,protDay:135,sleepMin:420};
+// ── RÉSERVOIR DE CRÉATINE (26/11/2026, demande Adrien) ──
+// Réserve en % de la capacité AJOUTÉE par la supplémentation (35 g ; les ~120 g de base ne sont pas dedans).
+// Chaque jour : −3 points (≈ −1 g, fixe : sport, eau et jours gelés n'y changent rien), puis + la dose du jour :
+// gain = 1,4 × min(g, 5) + 1,0 × min(max(g − 5, 0), 5) → 5 g = +7 (net +4) · 10 g = +12 (net +9) · rien au-delà de 10 g.
+// Borné 0-100. Contrôle : à 100 %, 5 g un jour sur deux tient entre 97 et 100 %.
+// Dose du jour = DB.nutrition[jour].crea (g, saisie 0 / 5 / 10, corrigeable) ; avant le 26/11, un jour « shaker » (ancien
+// compteur créatine) = 5 g. Point de départ : DB.profile.creaStart {date, pct} = réserve au DÉBUT de ce jour (Profil) ;
+// sans lui, estimation depuis le 01/08 à 0 %. Un shaker compte toujours 5 g (nutTapWeek). Note : dès la semaine du 30/11.
+var CREA={CAP:35,BASE:120,LOSS:3,FULL:95,ORANGE:85,FROM:'2026-11-26',NOTE_FROM:'2026-11-30',EST_FROM:'2026-08-01',SHK_GOAL:5,FILL_GOAL:25};
+function creaGain(g){ g=Math.max(0,Number(g)||0); return 1.4*Math.min(g,5)+1.0*Math.min(Math.max(g-5,0),5); }
+function creaClamp(r){ return Math.max(0,Math.min(100,r)); }
+function creaDose(d){
+  var e=DB.nutrition&&DB.nutrition[d];
+  if(e&&e.crea!=null) return Math.max(0,Number(e.crea)||0);
+  return (d<CREA.FROM&&e&&e.shaker)?5:0;
+}
+function creaStartOf(){ var s=DB.profile&&DB.profile.creaStart; return s&&/^\d{4}-\d{2}-\d{2}$/.test(s.date||'')&&s.pct!=null&&!isNaN(+s.pct)?{date:s.date,pct:creaClamp(+s.pct),set:true}:{date:CREA.EST_FROM,pct:0,set:false}; }
+// Série jour par jour jusqu'à aujourd'hui : m[d] = réserve à 0 h, e[d] = en fin de journée (dose du jour comprise)
+function creaSeries(){
+  var s=creaStartOf(), t=todayStr(), r=s.pct, m={}, e={};
+  for(var d=s.date; d<=t; d=rankAddDays(d,1)){ m[d]=r; r=creaClamp(r-CREA.LOSS+creaGain(creaDose(d))); e[d]=r; }
+  return {start:s,m:m,e:e};
+}
+function creaAt(d){ var S=creaSeries(); return S.e[d]!=null?S.e[d]:null; }
+function creaColor(p){ return p>=CREA.FULL?'ok':p>=CREA.ORANGE?'mid':'low'; }
+// Projection : sans prise → jours avant de passer sous 95 % ; à 5 g/jour (net +4) → jours pour atteindre 95 %
+function creaProj(p){
+  if(p>=CREA.FULL) return {kind:'drop',days:Math.floor((p-CREA.FULL)/CREA.LOSS)+1};
+  return {kind:'fill',days:Math.ceil((CREA.FULL-p)/(creaGain(5)-CREA.LOSS)),days10:Math.ceil((CREA.FULL-p)/(creaGain(10)-CREA.LOSS))};
+}
+// Conseil du jour (jamais plus de 10 g) : ≥ 2 jours sans prise → 10 g aujourd'hui ; sous 95 % → 2 × 5 g jusqu'à 95 %
+function creaAdvice(){
+  var t=todayStr(), S=creaSeries(), p=S.e[t], g=creaDose(t);
+  var gap=creaDose(rankAddDays(t,-1))===0&&creaDose(rankAddDays(t,-2))===0;
+  if(g>=10) return {k:'done',t:'10 g pris aujourd’hui : c’est le maximum utile.'};
+  if(gap) return {k:'gap',t:'2 jours sans prise : 10 g aujourd’hui (2 × 5 g).'};
+  if(S.m[t]!=null&&S.m[t]<CREA.FULL) return {k:'fill',t:'Prends 2 × 5 g (matin + soir) jusqu’à 95 %.'};
+  return {k:'keep',t:g>=5?'5 g pris : la réserve reste pleine.':'5 g aujourd’hui (ou un shaker) garde la réserve pleine.'};
+}
+// Semaine : mode fixé le LUNDI 0 h (≥ 95 % → Plein, sinon Remplissage) ; note créatine /2.
+// Jours gelés : leurs 3 points de perte sont retirés du calcul de la note (pas de la jauge) et l'objectif +25 est
+// réduit au prorata des jours non gelés. Semaine en cours : valeurs à ce jour (provisoire).
+function creaWeek(ws){
+  var S=creaSeries(), t=todayStr(), mon0=S.m[ws];
+  if(mon0==null) return null;
+  var r=mon0, frozen=0, last=null;
+  for(var i=0;i<7;i++){ var d=rankAddDays(ws,i); if(d>t) break;
+    var fz=typeof rankInPause==='function'&&rankInPause(d); if(fz) frozen++;
+    r=creaClamp(r-(fz?0:CREA.LOSS)+creaGain(creaDose(d))); last=d; }
+  var sun=S.e[last], mode=mon0>=CREA.FULL?'plein':'remp', gain=r-mon0, target=CREA.FILL_GOAL*(7-frozen)/7, pts, ok;
+  if(mode==='plein'){ ok=r>=CREA.FULL; pts=ok?2:Math.max(0,(r-80)/15)*2; }
+  else { ok=gain>=target||r>=CREA.FULL; pts=ok?2:(target>0?Math.max(0,gain/target)*2:2); }
+  var r1=function(x){ return Math.round(x*10)/10; };
+  return {mode:mode,mon:r1(mon0),sun:r1(sun),noteSun:r1(r),gain:r1(gain),target:r1(target),frozen:frozen,ok:ok,pts:Math.min(2,Math.round(pts*100)/100),done:last===rankAddDays(ws,6)};
+}
+// Saisie : tap = 0 → 5 → 10 → 0 g pour aujourd'hui (ou un jour passé, depuis la feuille « Créatine »)
+function creaSetDay(d,g){
+  var e=ensureNutriDay(d); e.crea=Math.max(0,Math.min(10,Number(g)||0)); delete e.creaAuto;
+  pruneNutriDay(d); saveDB(); renderBilanWeekNut();
+}
+function creaTapToday(){ var t=todayStr(), g=creaDose(t); creaSetDay(t,g>=10?0:g>=5?10:5); }
 function noteWeekClosed(ws){ return Date.now()>=new Date(rankAddDays(ws,6)+'T20:00:00').getTime(); }
 function noteRefreshAt(){ try{ return Number(localStorage.getItem('massup_refreshAt'))||0; }catch(e){ return 0; } }
 function noteCanGrave(ws){
@@ -395,7 +475,11 @@ function bilanNoteWeekV5(ws){
     var k=typeof INTAKE!=='undefined'?INTAKE.val(day,'kcal'):null, p=typeof INTAKE!=='undefined'?INTAKE.val(day,'prot'):null;
     if(k!=null&&k>=NZ.kcalLo&&(NZ.kcalHi==null||k<=NZ.kcalHi)) kd++; if(p!=null&&p>=NZ.protDay) pd++; }
   var shk=ans?(ans.shaker||0):nutWeekCount('shaker',ws);
-  var pK=kd/7*3, pP=pd/7*2, pS=Math.min(1,shk/7);
+  // 26/11 : dès la semaine du 30/11, Créatine /2 (réservoir, creaWeek) + Shaker /1 (objectif 5). Semaine du 23/11
+  // (en cours au lancement) : ancien barème, mais un jour de créatine saisi en grammes compte comme avant (avec ou sans shaker).
+  var creaOn=ws>=CREA.NOTE_FROM, cw=creaOn?creaWeek(ws):null;
+  if(!creaOn&&!ans&&ws>=rankMonday(CREA.FROM)){ var cd=0; for(var ci=0;ci<7;ci++){ var cdd=rankAddDays(ws,ci); if(creaDose(cdd)>=5) cd++; } shk=Math.max(shk,cd); }
+  var pK=kd/7*3, pP=pd/7*2, pS=creaOn?Math.min(1,shk/CREA.SHK_GOAL):Math.min(1,shk/7), pC=cw?cw.pts:0;
   // Activité /4
   var stepMax=(ws>=STEPS_HALF_FROM&&ws<STEPS_FULL_START)?1:2;
   var pSteps=typeof STEPS!=='undefined'?STEPS.weekPts(ws,stepMax):null, sw=typeof STEPS!=='undefined'?STEPS.week(ws):null;
@@ -410,16 +494,18 @@ function bilanNoteWeekV5(ws){
   var runOn=ws>=RUN_REQ_START, runMiss=runOn&&run<1;
   if(noteWeekClosed(ws)&&!(DB.bodyWeight||[]).some(function(b){ return b.date>=ws&&b.date<=we; })) malus.push({l:'Aucune pesée dans la semaine',p:0.5});
   var mal=malus.reduce(function(a,m){ return a+m.p; },0);
-  var maxRaw=10+6+stepMax+1+(runOn?1:0), raw=pA+pQ+pK+pP+pS+(pSteps||0)+pN+(runOn?pR:0), tot=raw*20/maxRaw;
+  var maxRaw=10+6+(creaOn?2:0)+stepMax+1+(runOn?1:0), raw=pA+pQ+pK+pP+pS+pC+(pSteps||0)+pN+(runOn?pR:0), tot=raw*20/maxRaw;
+  var nf1=function(x){ return String(Math.round(x)).replace('.',','); };
+  var creaLbl=!cw?'pas de donnée':cw.mode==='plein'?'Plein · '+(cw.done?'dim. ':'')+nf1(cw.noteSun)+' %':'Remplissage · '+(cw.gain>=0?'+':'')+nf1(cw.gain)+'/'+nf1(cw.target)+' pts';
   var pil=[
     {k:'salle',i:'🏋️',l:'Salle',m:10,c:[['Assiduité',fmtSeances(v)+'/'+goal+' séances',pA,5],['Qualité',avg!=null?'moy. '+String(r1(avg)).replace('.',',')+'/20':'pas de note',pQ,5]]},
-    {k:'nut',i:'🍽️',l:'Nutrition',m:6,c:[[NZ.kcalHi!=null?'Jours dans le déficit ('+NZ.kcalLo.toLocaleString('fr-FR')+'-'+NZ.kcalHi.toLocaleString('fr-FR')+' kcal)':'Jours ≥ '+NZ.kcalLo.toLocaleString('fr-FR')+' kcal',kd+'/7',pK,3],['Jours ≥ '+NZ.protDay+' g de protéines',pd+'/7',pP,2],['Créatine',shk+'/7',pS,1]]},
+    {k:'nut',i:'🍽️',l:'Nutrition',m:creaOn?8:6,c:[[NZ.kcalHi!=null?'Jours dans le déficit ('+NZ.kcalLo.toLocaleString('fr-FR')+'-'+NZ.kcalHi.toLocaleString('fr-FR')+' kcal)':'Jours ≥ '+NZ.kcalLo.toLocaleString('fr-FR')+' kcal',kd+'/7',pK,3],['Jours ≥ '+NZ.protDay+' g de protéines',pd+'/7',pP,2]].concat(creaOn?[['Créatine',creaLbl,pC,2],['Shaker',shk+'/'+CREA.SHK_GOAL,pS,1]]:[['Créatine',shk+'/7',pS,1]])},
     {k:'act',i:'👟',l:'Activité',m:stepMax+1+(runOn?1:0),c:[['Pas',sw&&sw.sum?Math.round(sw.sum).toLocaleString('fr-FR')+'/50 000':'non renseignés',pSteps||0,stepMax],['Nuits ≥ 7 h',nights+'/7',pN,1]].concat(runOn?[['Course',(run>=1?1:0)+'/1',pR,1]]:[])}
   ];
   pil.forEach(function(P){ P.c=P.c.map(function(c){ return [c[0],c[1],r1(c[2]),c[3]]; }); P.p=r1(P.c.reduce(function(a,c){ return a+c[2]; },0)); });
   return {v:5,sz:SZ?SZ.id:'masse',note:Math.max(0,Math.min(20,Math.round((tot-mal)*2)/2)),pil:pil,malus:malus,scaled:maxRaw<20?1:0,maxRaw:maxRaw,
     salle:v,goal:goal,avg:avg,stepAvg:sw?sw.avg:null,shk:shk,run:run,maison:ans?(ans.maison||0):nutWeekCount('maison',ws),
-    kcalDays:kd,protDays:pd,nights:nights,blood:malus.filter(function(m){ return /pas$/.test(m.l); }).length,runReq:runOn,runMiss:runMiss,declared:!!ans};
+    kcalDays:kd,protDays:pd,nights:nights,crea:cw,blood:malus.filter(function(m){ return /pas$/.test(m.l); }).length,runReq:runOn,runMiss:runMiss,declared:!!ans};
 }
 // Détail commun à toutes les versions (écran « pourquoi j'ai X ») : 3 piliers + malus
 function noteWeekDetail(B){

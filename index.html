@@ -215,6 +215,14 @@
         <option value="5">5 / semaine</option>
       </select>
     </div>
+    <!-- (26/11) Réservoir de créatine : point de départ donné par le coach (réserve en % au début du jour choisi) -->
+    <div class="form-row">
+      <label class="form-lbl" for="settingsCreaPct">Réserve de créatine au départ <span style="color:var(--mut);font-weight:600;">(% des 35 g, vide = estimation)</span></label>
+      <div style="display:flex;gap:.5rem;">
+        <input class="form-input" style="flex:1;min-width:0;" type="number" id="settingsCreaPct" placeholder="ex. 90" min="0" max="100" inputmode="numeric"/>
+        <input class="form-input" style="flex:1.4;min-width:0;" type="date" id="settingsCreaDate" aria-label="Date du point de départ"/>
+      </div>
+    </div>
     <!-- (04/11) Saison Sèche : construite d'avance, active le lundi 4 janvier 2027 ; aperçu par appareil, rien n'est gravé -->
     <div class="form-row">
       <label class="form-lbl">Saison Sèche <span style="color:var(--mut);font-weight:600;">(dès le lundi 4 janvier)</span></label>

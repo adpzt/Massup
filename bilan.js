@@ -19,6 +19,13 @@ var BILAN=(function(){
   // À CHAQUE mise en ligne d'une nouveauté visible : ajouter une entrée EN TÊTE (id = date AAAA-MM-JJ), 3 à 6 lignes courtes.
   // Elle s'affiche une fois par appareil (localStorage massup_news = id déjà vu), sur le Bilan, avant la saisie de la nuit.
   var NEWS=[
+    {id:'2026-11-26',t:'Réservoir de créatine (26 novembre)',items:[
+      ['💊','Nouvelle jauge en tête des objectifs : ta réserve de créatine en grammes et en %. Un toucher sur +5 = 5 g aujourd’hui, 2 = 10 g, 3 = retour à 0. Touche la jauge pour le graphique et corriger un jour passé.'],
+      ['🥤','« Shaker » : objectif 5 par semaine. Un + remplit lait Alpro, kiwi, collagène et 5 g de créatine. Touche « Shaker › » pour voir les 4 et en ajouter un seul (un kiwi sans shaker, par exemple).'],
+      ['🎯','Les objectifs de la semaine sont pliés à l’ouverture de l’app : touche la ligne pour les ouvrir.'],
+      ['📊','Dès lundi 30/11, la note compte la créatine sur 2 (Plein : ≥ 95 % dimanche soir ; Remplissage : +25 points) et le shaker sur 1.'],
+      ['🛡️','Zinc : une ligne « Démarrer » pour le jour où tu commences (1 par jour, hors note). Le collagène passe dans le Shaker.']
+    ]},
     {id:'2026-11-23',t:'Bilan du lundi matin (23 novembre)',items:[
       ['📊','Le bilan de la semaine arrive le lundi matin, plus le dimanche soir : note ta nuit, fais ↻, et il s’ouvre. Ton dimanche compte enfin en entier (calories, protéines, pas).'],
       ['😴','Les 7 nuits de la semaine vont du lundi soir au dimanche soir. La nuit de dimanche à lundi compte donc dans la semaine qui se termine.'],
@@ -120,7 +127,7 @@ var BILAN=(function(){
       ['\uD83C\uDF19','Sommeil : au lit avant minuit, réveil entre 7\u00a0h et 9\u00a0h.']
     ]}
   ];
-  var S={tab:'today',notes:false,sel:null,psel:null,per:'3w',pall:false,conf:null,mconf:null,mOpen:false,allw:false,mel:false,pop:null,screen:null,sheet:null};
+  var S={obj:false,shk:false,tab:'today',notes:false,sel:null,psel:null,per:'3w',pall:false,conf:null,mconf:null,mOpen:false,allw:false,mel:false,pop:null,screen:null,sheet:null};
 
   /* ── Format français ── */
   function fr(v,d){ return Number(v).toFixed(d).replace('.',','); }
@@ -195,33 +202,86 @@ var BILAN=(function(){
   // la réception, l'objectif = les jours restants jusqu'au dimanche (reçu jeudi → 4).
   function supplStart(k){ var p=DB.profile||{}; return p.suppl&&p.suppl[k]||null; }
   function supplGoal(k,mon){ var d=supplStart(k); if(!d||d>addD(mon,6)) return 0; return d<=mon?7:7-days(mon,d); }
+  // ── Réservoir de créatine (26/11, demande Adrien) : jauge en tête des objectifs. Modèle : CREA / creaSeries (app-7-bilans.js).
+  var CREA_CLS={ok:'is-ok',mid:'is-mid',low:'is-low'};
+  function creaG(p){ return fr(p*CREA.CAP/100,0); }
+  function creaHtml(){
+    var t=today(), S0=creaSeries(), p=S0.e[t], g=creaDose(t);
+    if(p==null) return '';
+    var c=CREA_CLS[creaColor(p)], W=creaWeek(rankMonday(t)), P=creaProj(p), A=creaAdvice();
+    var proj=P.kind==='drop'?'Sans prise : sous 95 % dans '+P.days+NB+'jour'+(P.days>1?'s':''):'À 5 g/jour : 95 % dans '+P.days+NB+'jour'+(P.days>1?'s':'');
+    var next=g>=10?0:g>=5?10:5;
+    return '<div class="bl-crea">'
+      +'<button type="button" class="bl-crea__tw '+c+'" onclick="BILAN.sheet(\'crea\')" aria-label="Réserve de créatine '+Math.round(p)+' % : voir le détail"><span class="bl-crea__tank"><i style="height:'+Math.round(p)+'%"></i><b aria-hidden="true"></b></span><span class="bl-crea__pct">'+Math.round(p)+NB+'%</span></button>'
+      +'<button type="button" class="bl-crea__info" onclick="BILAN.sheet(\'crea\')">'
+        +'<span class="bl-crea__top"><span class="bl-crea__n">💊 Créatine</span>'+(W?'<span class="bl-crea__mode">'+(W.mode==='plein'?'Plein':'Remplissage')+'</span>':'')+'</span>'
+        +'<span class="bl-num bl-crea__v '+c+'">'+creaG(p)+u('/ '+CREA.CAP+NB+'g')+' · '+Math.round(p)+NB+'%</span>'
+        +'<span class="bl-crea__s">Total dans le corps ≈ '+nf(CREA.BASE+p*CREA.CAP/100)+NB+'g (dont ~'+CREA.BASE+NB+'g de base) · estimation, pas une mesure</span>'
+        +'<span class="bl-crea__s">'+proj+'</span>'
+        +'<span class="bl-crea__tip '+(A.k==='gap'||A.k==='fill'?'is-act':'')+'">'+A.t+'</span>'
+      +'</button>'
+      +'<div class="bl-crea__day"><span class="bl-num bl-crea__g'+(g>0?'':' is-zero')+'">'+fr(g,0)+u('g')+'</span>'
+        +'<button type="button" class="bl-plus'+(g>=10?' bl-plus--soft':'')+(S.pop==='crea'?' is-pop':'')+'" onclick="BILAN.crea()" aria-label="Créatine aujourd’hui : '+fr(g,0)+' g. Toucher pour passer à '+next+' g">'+(g>=10?'↺':'+5')+'</button></div>'
+      +'</div>';
+  }
+  function objSummary(rows){
+    var t=today(), p=creaAt(t), ok=rows.filter(function(r){ return r[5]!=='wait'&&r[4]>0&&r[3]>=r[4]; }).length, n=rows.filter(function(r){ return r[5]!=='wait'&&r[4]>0; }).length;
+    return (p!=null?'💊 '+Math.round(p)+NB+'% · ':'')+ok+'/'+n+' atteints';
+  }
+  function waitRow(r){
+    var k=r[0], z=k==='zinc';
+    return '<div class="bl-obj__row bl-obj__row--wait"><span class="bl-obj__e" aria-hidden="true">'+r[1]+'</span><div style="min-width:0"><div class="bl-obj__n">'+r[2]+'</div><div class="bl-obj__s">'+(z?'pas encore commencé':'pas encore reçu')+'</div></div>'
+      +'<button type="button" class="bl-btn bl-btn--ghost bl-btn--sm bl-obj__got" onclick="BILAN.supplGot(\''+k+'\')" aria-label="'+r[2]+' : démarrer le suivi">'+(z?'Démarrer':'Reçu')+'</button></div>';
+  }
+  // Contenu du shaker (26/11) : chaque élément compte ses jours de la semaine (sur 7). Un « + Shaker » les monte tous ;
+  // ici on en monte un seul (ex. un kiwi sans shaker). Créatine = jours avec ≥ 5 g (le réservoir, au-dessus).
+  function shakerSubHtml(mon){
+    var t=today(), cd=0; for(var i=0;i<7;i++){ var d=addD(mon,i); if(d<=t&&creaDose(d)>=5) cd++; }
+    var collaOn=supplGoal('colla',mon)>0;
+    var items=[['lait','🥛','Lait Alpro','calcium',nutWeekCount('lait',mon)],['kiwi','🥝','Kiwi','vitamine C',nutWeekCount('kiwi',mon)],
+      ['colla','🦴','Collagène',collaOn?'':'pas reçu',collaOn?nutWeekCount('colla',mon):null],['crea','💊','Créatine','jours ≥ 5 g',cd]];
+    return '<div class="bl-shk" id="blShk">'+items.map(function(x){
+      var k=x[0], v=x[4], lbl=x[2]+(x[3]?' <span class="bl-shk__h">· '+x[3]+'</span>':'');
+      var btn=v==null?'<button type="button" class="bl-btn bl-btn--ghost bl-btn--sm bl-shk__got" onclick="BILAN.supplGot(\'colla\')" aria-label="Collagène reçu : démarrer le suivi">Reçu</button>'
+        :k==='crea'?'<button type="button" class="bl-plus bl-shk__p" onclick="BILAN.shkCrea()" aria-label="Créatine : 5 g aujourd’hui"'+(creaDose(t)>=5?' disabled':'')+'>'+(creaDose(t)>=5?'✓':'+')+'</button>'
+        :v>=7?'<button type="button" class="bl-plus bl-plus--soft bl-shk__p" onclick="BILAN.reset(\''+k+'\')" aria-label="Remettre à 0 · '+x[2]+'">↺</button>'
+        :'<button type="button" class="bl-plus bl-shk__p'+(S.pop===k?' is-pop':'')+'" onclick="BILAN.inc(\''+k+'\')" aria-label="Ajouter 1 · '+x[2]+' ('+v+' sur 7)">+</button>';
+      return '<div class="bl-shk__r"><span aria-hidden="true">'+x[1]+'</span><span class="bl-shk__n">'+lbl+'</span>'+(v==null?'':'<span class="bl-num bl-shk__v'+(v?'':' is-zero')+'">'+v+u('/7')+'</span>')+btn+'</div>';
+    }).join('')+'</div>';
+  }
   function objectivesHtml(B0){
     var mon=rankMonday(today()), o=nutObjectives(mon);
     var run=Math.max(nutWeekCount('run',mon),runWeekAuto(mon));
+    // 26/11 : la créatine sort des compteurs (jauge du réservoir en tête) ; « Shaker » tout court (kiwi + lait Alpro + collagène
+    // + 5 g de créatine), objectif 5 dès le 30/11 (7 la semaine du 23/11, ancien barème).
+    // 26/11 (Adrien, 2e message) : ordre = réservoir de créatine (carte à part) · Plats maison · Shaker (dépliable : lait,
+    // kiwi, collagène, créatine — un shaker les remplit tous, chacun peut aussi monter seul) · Zinc · Vitamine D3 · Courir.
+    // D3 / zinc / collagène : 1 par jour, hors note, démarrés par « Reçu » / « Démarrer » (DB.profile.suppl[k]).
+    var supRow=function(k,e,l){ var g=supplGoal(k,mon); return g?[k,e,l,nutWeekCount(k,mon),g,true]:[k,e,l,0,0,'wait']; };
     var rows=[
       ['maison','🍲','Plats maison',nutWeekCount('maison',mon),o.maison||10,true],
-      ['shaker','🥤','Créatine',nutWeekCount('shaker',mon),o.shk||7,true],
+      ['shaker','🥤','Shaker',nutWeekCount('shaker',mon),o.shk||7,true],
+      supRow('zinc','🛡️','Zinc'),
+      supRow('vitd','☀️','Vitamine D3'),
       ['run','🏃','Courir',run,o.run||1,true]
     ];
-    // 18/11 (demande Adrien) : vitamine D3 et collagène, 1 par jour, sous la créatine — visibles dès le lundi 23/11 à 7 h.
-    // Simple suivi : ils ne comptent dans AUCUNE note (DB.nutrition[jour].vitd / .colla).
-    // 23/11 : seulement après « Reçu » ; avant, une ligne « pas encore reçu » avec le bouton.
-    var sup=[['vitd','☀️','Vitamine D3'],['colla','🦴','Collagène']].map(function(x){ var g=supplGoal(x[0],mon); return g?[x[0],x[1],x[2],nutWeekCount(x[0],mon),g,true]:[x[0],x[1],x[2],0,0,'wait']; });
-    rows.splice.apply(rows,[2,0].concat(sup));
     if(seche()){ var ab=0; try{ ab=abdoWeekAuto(mon); }catch(e){} rows.push(['abdos','🔥','Séances avec abdos',ab,SAISON.CFG.seche.abdos,false]); }
-    return '<section class="bl-obj" aria-label="Objectifs de la semaine">'+rows.map(function(r){
+    // 26/11 (Adrien) : section repliable, PLIÉE à chaque ouverture de l'app (état en mémoire seulement)
+    var head='<button type="button" class="bl-fold bl-obj__fold" aria-expanded="'+S.obj+'" aria-controls="blObj" onclick="BILAN.toggle(\'obj\')"><span aria-hidden="true" style="font-size:20px">🎯</span><span class="bl-obj__ft"><span>Objectifs de la semaine</span>'+(S.obj?'':'<span class="bl-obj__sum">'+objSummary(rows)+'</span>')+'</span><span class="bl-fold__i" aria-hidden="true">›</span></button>';
+    if(!S.obj) return '<section class="bl-obj bl-obj--fold" aria-label="Objectifs de la semaine">'+head+'</section>';
+    return '<section class="bl-obj bl-obj--fold" aria-label="Objectifs de la semaine">'+head+'<div id="blObj">'+creaHtml()+rows.map(function(r){
       var k=r[0],v=r[3],g=r[4],done=v>=g, cls=done?'is-done':v===0?'is-zero':'';
-      if(r[5]==='wait') return '<div class="bl-obj__row bl-obj__row--wait"><span class="bl-obj__e" aria-hidden="true">'+r[1]+'</span><div style="min-width:0"><div class="bl-obj__n">'+r[2]+'</div><div class="bl-obj__s">pas encore reçu</div></div>'
-        +'<button type="button" class="bl-btn bl-btn--ghost bl-btn--sm bl-obj__got" onclick="BILAN.supplGot(\''+k+'\')" aria-label="'+r[2]+' reçu : démarrer le suivi">Reçu</button></div>';
+      if(r[5]==='wait') return waitRow(r);
       var cap=r[5]?nutTapMax(k):g;
       // 10/11 (Adrien : « à 7/7 créatine je ne peux plus revenir à 0 », coché sans faire exprès) : au plafond, le + devient ↺
       var full=r[5]&&nutWeekCount(k,mon)>=cap;
-      return '<div class="bl-obj__row"><span class="bl-obj__e" aria-hidden="true">'+r[1]+'</span><div style="min-width:0"><div class="bl-obj__n">'+r[2]+'</div><div class="bl-trk"><i class="'+(done?'is-done':'')+'" style="width:'+Math.min(100,v/g*100).toFixed(0)+'%"></i></div></div>'
+      var nm=k==='shaker'?'<button type="button" class="bl-obj__n bl-obj__nb" aria-expanded="'+S.shk+'" aria-controls="blShk" onclick="BILAN.toggle(\'shk\')">'+r[2]+'<span class="bl-fold__i" aria-hidden="true">›</span><span class="bl-sr"> : voir lait, kiwi, collagène, créatine</span></button>':'<div class="bl-obj__n">'+r[2]+'</div>';
+      return '<div class="bl-obj__row"><span class="bl-obj__e" aria-hidden="true">'+r[1]+'</span><div style="min-width:0">'+nm+'<div class="bl-trk"><i class="'+(done?'is-done':'')+'" style="width:'+Math.min(100,v/g*100).toFixed(0)+'%"></i></div></div>'
         +'<span class="bl-num bl-obj__v '+cls+'">'+String(v).replace('.',',')+u('/'+g)+'</span>'
         +(full?'<button type="button" class="bl-plus bl-plus--soft" onclick="BILAN.reset(\''+k+'\')" aria-label="Remettre à 0 · '+r[2]+' ('+v+' sur '+g+')">↺</button>'
           :r[5]?'<button type="button" class="bl-plus'+(k==='run'?' bl-plus--soft':'')+(S.pop===k?' is-pop':'')+'" onclick="BILAN.inc(\''+k+'\')" aria-label="Ajouter 1 · '+r[2]+' ('+v+' sur '+g+')"'+(v>=cap?' disabled':'')+'>+</button>'
-          :'<span class="bl-obj__auto" aria-label="automatique">'+(done?'✓':'')+'</span>')+'</div>';
-    }).join('')+'</section>';
+          :'<span class="bl-obj__auto" aria-label="automatique">'+(done?'✓':'')+'</span>')+'</div>'+(k==='shaker'&&S.shk?shakerSubHtml(mon):'');
+    }).join('')+'</div></section>';
   }
 
   // Étiquette d'une macro (règles d'INTAKE : min, cible 70 g / 80 g max pour les lipides, max)
@@ -537,6 +597,36 @@ var BILAN=(function(){
           +'<button type="button" class="bl-step" onclick="BILAN.step(\''+M.k+'\',0.5)" aria-label="'+M.l+' plus 0,5 cm">+</button></div>';
       }).join('')+'</div><button type="button" class="bl-btn bl-btn--primary bl-btn--block" style="margin-top:26px;min-height:56px;font-size:16px" onclick="BILAN.save()">Enregistrer ✓</button>';
     }
+    if(S.sheet==='crea'){
+      var t=today(), CS=creaSeries(), p=CS.e[t], W=creaWeek(rankMonday(t)), st=CS.start;
+      if(p==null) return head('💊 Créatine')+'<p class="bl-meta">Point de départ après aujourd’hui : règle-le dans Profil.</p>';
+      // Graphique : % en fin de journée sur les 8 dernières semaines (56 jours), repères 95 % et 85 %
+      var pts=[], d0=addD(t,-55), W0=320, H0=120;
+      for(var i=0;i<56;i++){ var dd=addD(d0,i), v=CS.e[dd]; if(v!=null) pts.push((i/55*W0).toFixed(1)+','+(H0-v/100*H0).toFixed(1)); }
+      var yl=function(v){ return (H0-v/100*H0).toFixed(1); };
+      var chart='<svg class="bl-crea-ch" viewBox="0 0 '+W0+' '+H0+'" preserveAspectRatio="none" role="img" aria-label="Réserve de créatine sur 8 semaines : '+Math.round(p)+' % aujourd’hui">'
+        +'<line x1="0" x2="'+W0+'" y1="'+yl(95)+'" y2="'+yl(95)+'" class="is-ok"/><line x1="0" x2="'+W0+'" y1="'+yl(85)+'" y2="'+yl(85)+'" class="is-mid"/>'
+        +(pts.length>1?'<polyline points="'+pts.join(' ')+'"/>':'')+'</svg>'
+        +'<div class="bl-crea-ch__x"><span>'+dshort(d0)+'</span><span>— 95 % · - - 85 %</span><span>aujourd’hui</span></div>';
+      var wk=!W?'':W.mode==='plein'
+        ?'Plein (≥ 95 % lundi 0 h, '+Math.round(W.mon)+NB+'%) : objectif ≥ 95 % dimanche soir. À ce jour : '+Math.round(W.noteSun)+NB+'%.'
+        :'Remplissage (lundi 0 h : '+Math.round(W.mon)+NB+'%) : objectif +'+Math.round(W.target)+' points ou 95 %. À ce jour : '+(W.gain>=0?'+':'')+Math.round(W.gain)+' points.';
+      var list='';
+      for(var j=0;j<14;j++){ var dj=addD(t,-j); if(CS.e[dj]==null) break;
+        var gj=creaDose(dj), ej=DB.nutrition[dj]||{}, src=ej.crea==null&&gj?' · ancien compteur':ej.creaAuto?' · shaker':'', fz=typeof rankInPause==='function'&&rankInPause(dj);
+        list+='<div class="bl-crea-day"><div style="min-width:0"><div class="bl-crea-day__d">'+(j===0?'Aujourd’hui':dlab(dj))+'</div><div class="bl-meta">'+Math.round(CS.e[dj])+NB+'% en fin de journée'+src+(fz?' · gelé':'')+'</div></div>'
+          +'<div class="bl-crea-seg" role="group" aria-label="Créatine '+(j===0?'aujourd’hui':dlab(dj))+'">'+[0,5,10].map(function(gg){ return '<button type="button" aria-pressed="'+(gj===gg)+'" onclick="BILAN.creaDay(\''+dj+'\','+gg+')">'+gg+NB+'g</button>'; }).join('')+'</div></div>';
+      }
+      return head('💊 Créatine')
+        +'<div class="bl-crea-big"><span class="bl-num '+CREA_CLS[creaColor(p)]+'">'+creaG(p)+u('/ '+CREA.CAP+NB+'g')+' · '+Math.round(p)+NB+'%</span></div>'
+        +'<p class="bl-meta bl-crea-p">Total dans le corps ≈ '+nf(CREA.BASE+p*CREA.CAP/100)+NB+'g (dont ~'+CREA.BASE+NB+'g de base) · estimation, pas une mesure.</p>'
+        +(wk?'<p class="bl-crea-p">'+wk+'</p>':'')
+        +'<p class="bl-crea-p"><b>'+creaAdvice().t+'</b></p>'
+        +'<div class="bl-lbl" style="margin-top:18px">8 dernières semaines</div>'+chart
+        +'<div class="bl-lbl" style="margin-top:20px">Corriger un jour</div>'+list
+        +'<p class="bl-meta bl-crea-p" style="margin-top:16px">Chaque jour la réserve perd 3 points (≈ 1 g), quoi qu’il arrive. 5 g = +7 points, 10 g = +12 ; au-delà de 10 g, rien de plus. Un shaker compte toujours 5 g. '
+        +(st.set?'Point de départ : '+Math.round(st.pct)+NB+'% le '+dshort(st.date)+' (Profil).':'Point de départ : estimé depuis ton historique (règle-le dans Profil quand le coach te le donne).')+'</p>';
+    }
     if(S.sheet==='news'){
       // Toutes les nouveautés pas encore vues sur cet appareil (la plus récente en premier)
       var seenId=newsSeen(), unseen=NEWS.filter(function(x){ return x.id>seenId; }), N={t:(unseen[0]||NEWS[0]).t,items:[].concat.apply([],(unseen.length?unseen:[NEWS[0]]).map(function(x){ return x.items; }))};
@@ -562,7 +652,7 @@ var BILAN=(function(){
     if(!S.sheet){ if(L) L.remove(); document.removeEventListener('keydown',onKey); return; }
     var fresh=!L;
     if(fresh){ L=document.createElement('div'); L.id='blSheet'; L.className='bl-layer'; document.body.appendChild(L); document.addEventListener('keydown',onKey); }
-    var lbl={pesee:'Nouvelle pesée',mensu:'Mensurations',nuit:'Saisie de la nuit',news:'Nouveautés'}[S.sheet];
+    var lbl={pesee:'Nouvelle pesée',mensu:'Mensurations',nuit:'Saisie de la nuit',news:'Nouveautés',crea:'Réserve de créatine'}[S.sheet];
     L.innerHTML='<div class="bl-scrim'+(fresh?'':' is-still')+'" onclick="BILAN.close()"></div><div class="bl-sheet bl-page-font'+(fresh?'':' is-still')+'" role="dialog" aria-modal="true" aria-label="'+lbl+'">'+sheetHtml()+'</div>';
   }
   function onKey(e){ if(e.key==='Escape') close(); }
@@ -577,7 +667,7 @@ var BILAN=(function(){
     if(kind==='pesee') F={date:today(),kg:last?Math.round((parseFloat(last.weight_kg)+0.1)*10)/10:70};
     else if(kind==='mensu'){ var L=bodyMeasList(), lv=L.length?L[L.length-1].v:{}; F={date:today(),m:{},prev:{}}; BODY_MEAS.forEach(function(M){ F.prev[M.k]=lv[M.k]!=null?lv[M.k]:null; F.m[M.k]=lv[M.k]!=null?lv[M.k]:null; }); }
     else if(kind==='nuit') loadNight(SLEEP._night());
-    else if(kind!=='news') return;
+    else if(kind!=='news'&&kind!=='crea') return;
     S.sheet=kind; renderSheet();
   }
   function close(){ if(S.sheet==='news'){ markNews(); setTimeout(autoNight,400); } S.sheet=null; renderSheet(); }
@@ -648,7 +738,7 @@ var BILAN=(function(){
   function inc(k){ S.pop=k; nutTapWeek(k); }
   // Au plafond (7/7…), nutTapWeek repasse à 0 : on demande d'abord (un tap de travers ne vide pas la semaine)
   function reset(k){
-    var lbl={maison:'Plats maison',shaker:'Créatine',vitd:'Vitamine D3',colla:'Collagène',run:'Courir'}[k]||k;
+    var lbl={maison:'Plats maison',shaker:'Shaker',vitd:'Vitamine D3',colla:'Collagène',zinc:'Zinc',lait:'Lait Alpro',kiwi:'Kiwi',run:'Courir'}[k]||k;
     if(!confirm('Remettre « '+lbl+' » à 0 pour cette semaine ?\nTu pourras ensuite refaire + autant de fois que nécessaire.')) return;
     S.pop=null; nutTapWeek(k);
   }
@@ -662,8 +752,8 @@ var BILAN=(function(){
     render:render,
     reset:reset,
     supplGot:function(k){
-      var lbl={vitd:'la vitamine D3',colla:'le collagène'}[k]; if(!lbl) return;
-      if(!confirm('Tu as reçu '+lbl+' ?\nLe suivi démarre aujourd’hui (1 par jour, hors de toute note).')) return;
+      var lbl={vitd:'la vitamine D3',colla:'le collagène',zinc:'le zinc'}[k]; if(!lbl) return;
+      if(!confirm((k==='zinc'?'Tu commences le zinc ?':'Tu as reçu '+lbl+' ?')+'\nLe suivi démarre aujourd’hui (1 par jour, hors de toute note).')) return;
       if(!DB.profile) DB.profile={}; if(!DB.profile.suppl) DB.profile.suppl={};
       DB.profile.suppl[k]=today(); saveDB(); render();
     },
@@ -679,6 +769,9 @@ var BILAN=(function(){
     tab:function(v){ S.tab=v; render(); },
     per:function(v){ S.per=v; S.psel=null; renderScreen(); },
     pick:pick, unpick:unpick, inc:inc, toggle:toggle,
+    crea:function(){ S.pop='crea'; creaTapToday(); },
+    shkCrea:function(){ if(creaDose(today())<5) creaSetDay(today(),5); },
+    creaDay:function(d,g){ creaSetDay(d,g); renderSheet(); },
     conf:function(d){ S.conf=d; renderScreen(); },
     delW:function(d){ S.conf=null; deleteBodyWeightEntry(d); showToast('Pesée supprimée'); },
     mconf:function(d){ S.mconf=d; renderScreen(); },

@@ -134,7 +134,8 @@ var WK=(function(){
       else if(lb==='Qualité'){ var e=A&&A.topErrs&&A.topErrs[0]; act=e?'Sur '+e.name+' : S1 à OK, S2 à DUR, l’échec seulement à la dernière série.':'Garde 2 reps en réserve en S1 : c’est l’échec trop tôt qui coûte le plus.'; }
       else if(/kcal|déficit/.test(lb)){ var g=goalOf('kcal'); act=N&&N.noted?(N.missing?N.missing+' jour'+(N.missing>1?'s':'')+' sans Yazio comptent comme ratés : note-les, même approximatifs. ':'')+(N.low&&N.low.kcal<N.NZ.kcalLo?'Ton jour le plus bas : '+dayLbl(N.low.d)+' ('+nf(N.low.kcal)+' kcal). Ces jours-là, ajoute un shaker de 650 kcal (lait entier, whey, avoine, banane).':''):'Note Yazio chaque jour : un jour vide compte comme raté.'; if(!act) act='Garde au moins '+nf(N.NZ.kcalLo)+' kcal chaque jour.'; }
       else if(/protéines/.test(lb)) act='+1 dose de whey ou 250 g de skyr chaque jour = +20 à 25 g.';
-      else if(lb==='Créatine') act='5 g chaque jour, à heure fixe (au réveil ou avec le café), séance ou pas.';
+      else if(lb==='Créatine') act=B.crea&&B.crea.mode==='remp'?'Réserve à remplir : 2 × 5 g par jour (matin + soir) jusqu’à 95 %, jamais plus de 10 g.':B.crea?'Réserve pleine à garder : 5 g par jour (ou un shaker), au moins un jour sur deux.':'5 g chaque jour, à heure fixe (au réveil ou avec le café), séance ou pas.';
+      else if(lb==='Shaker') act='Vise 5 shakers dans la semaine : kiwi, lait Alpro, collagène et 5 g de créatine dedans.';
       else if(lb==='Pas') act=S?'Il manque '+nf(Math.max(0,S.goal-S.sum))+' pas : ~'+nf(Math.max(0,S.goal-S.sum)/700)+' min de marche par jour.':'Marche 20 min par jour.';
       else if(/Nuits/.test(lb)) act=S&&S.avgBed!=null?'Coucher moyen '+hm(S.avgBed)+' : vise 45 min plus tôt, lever à heure fixe.':'Note tes nuits et vise 7 h.';
       else if(lb==='Course') act='20-25 min faciles une fois dans la semaine.';
@@ -208,7 +209,9 @@ var WK=(function(){
     // 23/11 (Adrien) : « Le reste » (fibres, sucres, saturées, sodium) retiré — Yazio ne les connaît pas pour beaucoup d'aliments
     h+='<div class="wk-sec">Ce qu’il faut en retenir</div>'+diagHtml(nutDiag(N));
     h+='<div class="wk-sec">À confirmer</div>';
-    h+=stepper('shaker','🥤 Créatine','jours pris · compte 1 pt dans la note',7);
+    // 26/11 : dès la semaine du 30/11, « Shaker » (objectif 5, /1) ; la créatine vient du réservoir (/2), rien à confirmer
+    if(ws>=CREA.NOTE_FROM){ var cw=creaWeek(ws); if(cw) h+='<div class="wk-p">💊 Créatine : '+(cw.mode==='plein'?'semaine en mode Plein, '+nf(cw.noteSun)+' % dimanche soir':'semaine en mode Remplissage, '+(cw.gain>=0?'+':'')+nf(cw.gain)+' points (objectif +'+nf(cw.target)+')')+'.</div>'; h+=stepper('shaker','🥤 Shaker','sur 7 · objectif 5 · compte 1 pt dans la note',7); }
+    else h+=stepper('shaker','🥤 Créatine','jours pris · compte 1 pt dans la note',7);
     h+=stepper('maison','🍲 Plats maison','sur 14 repas · ne compte plus dans la note, juste le suivi',14);
     // Poids : la conséquence directe des calories
     if(A&&A.bwDelta!=null&&A.bwEnd){

@@ -100,6 +100,60 @@
 .bl-obj__row--wait .bl-obj__n{margin-bottom:2px}
 .bl-obj__s{font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bl-obj__got{grid-column:3 / span 2;justify-self:end}
+/* 26/11 : objectifs repliables (pliés à l'ouverture) + réservoir de créatine en tête */
+.bl-obj--fold{padding-top:0}
+.bl-obj__fold{padding:0}
+.bl-obj__ft{display:flex;flex-direction:column;min-width:0;gap:2px}
+.bl-obj__ft>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bl-obj__sum{font:700 12px 'Manrope',sans-serif;color:var(--mut)}
+.bl-crea{display:grid;grid-template-columns:52px minmax(0,1fr) 52px;gap:12px;align-items:center;padding:14px 12px;margin:2px 0 8px;border-radius:20px;background:var(--x-track);border:1px solid var(--bl-line)}
+.bl-crea__tw{appearance:none;position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 0 0;border:0;background:transparent;cursor:pointer;font:inherit}
+.bl-crea__tw:before{content:'';position:absolute;top:2px;left:50%;width:20px;height:7px;margin-left:-10px;border-radius:3px 3px 0 0;background:currentColor;opacity:.9}
+.bl-crea__tank{position:relative;display:block;width:44px;height:84px;border:2px solid currentColor;border-radius:12px;overflow:hidden;background:repeating-linear-gradient(to top,transparent 0 calc(25% - 1px),var(--bl-line) calc(25% - 1px) 25%)}
+.bl-crea__tank i{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(to top,currentColor 55%,transparent 260%);opacity:.9;border-top:2px solid currentColor}
+.bl-crea__tank b{position:absolute;left:0;right:0;bottom:95%;border-top:2px dashed var(--txt);opacity:.5}
+.bl-crea__pct{font:italic 900 13px 'Saira',sans-serif;line-height:1}
+.bl-crea__info{appearance:none;border:0;background:transparent;padding:0;text-align:left;color:var(--txt);display:flex;flex-direction:column;gap:3px;min-width:0;cursor:pointer;font:inherit}
+.bl-crea__top{display:flex;align-items:center;gap:8px;min-width:0}
+.bl-crea__n{font-size:14px;font-weight:800;white-space:nowrap}
+.bl-crea__mode{font:800 10px 'Manrope',sans-serif;padding:3px 8px;border-radius:10px;border:1px solid var(--bl-line);color:var(--mut);white-space:nowrap}
+.bl-crea__v{font-size:22px;overflow-wrap:anywhere}
+.bl-crea__s{font-size:11px;font-weight:700;color:var(--mut);line-height:1.3;overflow-wrap:anywhere}
+.bl-crea__tip{font-size:12px;font-weight:800;line-height:1.3;color:var(--txt);overflow-wrap:anywhere}
+.bl-crea__tip.is-act{color:var(--x-orange)}
+.bl-crea__day{display:flex;flex-direction:column;align-items:center;gap:6px}
+.bl-crea__g{font-size:18px}
+.bl-crea__g.is-zero{color:var(--mut)}
+.bl-crea__day .bl-plus{font-size:16px}
+.bl-crea .is-ok,.bl-crea-big .is-ok{color:var(--acc)}
+.bl-crea .is-mid,.bl-crea-big .is-mid{color:var(--x-orange)}
+.bl-crea .is-low,.bl-crea-big .is-low{color:var(--st-red)}
+.bl-crea-big{margin-top:14px}
+.bl-crea-big .bl-num{font-size:38px;overflow-wrap:anywhere}
+.bl-crea-p{margin:8px 0 0;font-size:13px;line-height:1.4;overflow-wrap:anywhere}
+.bl-crea-p.bl-meta,.bl-crea-day .bl-meta{white-space:normal}
+.bl-crea-ch{display:block;width:100%;height:120px;margin-top:8px;border-bottom:1px solid var(--bl-line)}
+.bl-crea-ch polyline{fill:none;stroke:var(--acc);stroke-width:2.5;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+.bl-crea-ch line{stroke-width:1;vector-effect:non-scaling-stroke}
+.bl-crea-ch line.is-ok{stroke:var(--acc);opacity:.6}
+.bl-crea-ch line.is-mid{stroke:var(--x-orange);stroke-dasharray:4 4}
+.bl-crea-ch__x{display:flex;justify-content:space-between;gap:6px;margin-top:4px;font-size:10px;font-weight:700;color:var(--mut)}
+.bl-crea-day{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--bl-line)}
+.bl-crea-day__d{font-size:14px;font-weight:800}
+.bl-crea-seg{display:flex;gap:4px}
+.bl-crea-seg button{appearance:none;min-width:46px;height:44px;padding:0 6px;border-radius:12px;border:1px solid var(--bl-line);background:transparent;color:var(--txt);font:800 13px 'Manrope',sans-serif;cursor:pointer;white-space:nowrap}
+.bl-obj__nb{appearance:none;border:0;background:transparent;padding:0;color:var(--txt);font:inherit;font-size:14px;font-weight:800;display:inline-flex;align-items:center;gap:6px;min-height:28px;cursor:pointer;max-width:100%}
+.bl-obj__nb .bl-fold__i{display:inline-block}
+.bl-obj__nb[aria-expanded="true"] .bl-fold__i{transform:rotate(90deg)}
+.bl-shk{margin:-4px 0 6px 42px;padding:2px 0 2px 12px;border-left:2px solid var(--bl-line)}
+.bl-shk__r{display:grid;grid-template-columns:22px minmax(0,1fr) 44px 40px;gap:8px;align-items:center;min-height:46px}
+.bl-shk__n{font-size:13px;font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bl-shk__h{font-weight:700;color:var(--mut)}
+.bl-shk__v{font-size:16px;text-align:right}
+.bl-shk__v.is-zero{color:var(--mut)}
+.bl-shk__p{width:40px;height:40px;border-radius:20px;font-size:18px}
+.bl-shk__got{grid-column:3 / span 2;justify-self:end}
+.bl-crea-seg button[aria-pressed="true"]{background:var(--x-grad-fill);color:var(--x-on-grad);border-color:transparent}
 
 /* ---------- 6. Sections ---------- */
 .bl-sec__head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;color:var(--txt);text-decoration:none}
