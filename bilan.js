@@ -19,6 +19,9 @@ var BILAN=(function(){
   // À CHAQUE mise en ligne d'une nouveauté visible : ajouter une entrée EN TÊTE (id = date AAAA-MM-JJ), 3 à 6 lignes courtes.
   // Elle s'affiche une fois par appareil (localStorage massup_news = id déjà vu), sur le Bilan, avant la saisie de la nuit.
   var NEWS=[
+    {id:'2026-11-27',t:'Zinc et oméga 3 (27 novembre)',items:[
+      ['🛡️','Zinc et 🐟 huile (oméga 3) : suivis dès lundi 30/11, 1 par jour, dans les objectifs de la semaine (hors note).']
+    ]},
     {id:'2026-11-26',t:'Réservoir de créatine (26 novembre)',items:[
       ['💊','Nouvelle jauge en tête des objectifs : ta réserve de créatine en grammes et en %. Un toucher sur +5 = 5 g aujourd’hui, 2 = 10 g, 3 = retour à 0. Touche la jauge pour le graphique et corriger un jour passé.'],
       ['🥤','« Shaker » : objectif 5 par semaine. Un + remplit lait Alpro, kiwi, collagène et 5 g de créatine. Touche « Shaker › » pour voir les 4 et en ajouter un seul (un kiwi sans shaker, par exemple).'],
@@ -200,7 +203,9 @@ var BILAN=(function(){
   // 23/11 (Adrien : « attendre pour collagène et vitamine D3, je n'ai pas encore reçu ») : chaque complément démarre le
   // jour où Adrien touche « Reçu » (date gardée dans DB.profile.suppl[k], synchronisée avec le profil). La semaine de
   // la réception, l'objectif = les jours restants jusqu'au dimanche (reçu jeudi → 4).
-  function supplStart(k){ var p=DB.profile||{}; return p.suppl&&p.suppl[k]||null; }
+  // 27/11 (Adrien : « zinc activé à partir de lundi et huile aussi ») : zinc et huile (oméga 3) démarrent d'office le lundi 30/11
+  var SUPPL_FROM={zinc:'2026-11-30',huile:'2026-11-30'};
+  function supplStart(k){ var p=DB.profile||{}; return p.suppl&&p.suppl[k]||SUPPL_FROM[k]||null; }
   function supplGoal(k,mon){ var d=supplStart(k); if(!d||d>addD(mon,6)) return 0; return d<=mon?7:7-days(mon,d); }
   // ── Réservoir de créatine (26/11, demande Adrien) : jauge en tête des objectifs. Modèle : CREA / creaSeries (app-7-bilans.js).
   var CREA_CLS={ok:'is-ok',mid:'is-mid',low:'is-low'};
@@ -229,7 +234,8 @@ var BILAN=(function(){
     return (p!=null?'💊 '+Math.round(p)+NB+'% · ':'')+ok+'/'+n+' atteints';
   }
   function waitRow(r){
-    var k=r[0], z=k==='zinc';
+    var k=r[0], z=k==='zinc', f=SUPPL_FROM[k];
+    if(f&&f>today()) return '<div class="bl-obj__row bl-obj__row--wait"><span class="bl-obj__e" aria-hidden="true">'+r[1]+'</span><div style="min-width:0"><div class="bl-obj__n">'+r[2]+'</div><div class="bl-obj__s">démarre lundi '+dshort(f)+'</div></div></div>';
     return '<div class="bl-obj__row bl-obj__row--wait"><span class="bl-obj__e" aria-hidden="true">'+r[1]+'</span><div style="min-width:0"><div class="bl-obj__n">'+r[2]+'</div><div class="bl-obj__s">'+(z?'pas encore commencé':'pas encore reçu')+'</div></div>'
       +'<button type="button" class="bl-btn bl-btn--ghost bl-btn--sm bl-obj__got" onclick="BILAN.supplGot(\''+k+'\')" aria-label="'+r[2]+' : démarrer le suivi">'+(z?'Démarrer':'Reçu')+'</button></div>';
   }
@@ -262,6 +268,7 @@ var BILAN=(function(){
       ['maison','🍲','Plats maison',nutWeekCount('maison',mon),o.maison||10,true],
       ['shaker','🥤','Shaker',nutWeekCount('shaker',mon),o.shk||7,true],
       supRow('zinc','🛡️','Zinc'),
+      supRow('huile','🐟','Huile · oméga 3'),
       supRow('vitd','☀️','Vitamine D3'),
       ['run','🏃','Courir',run,o.run||1,true]
     ];
@@ -738,7 +745,7 @@ var BILAN=(function(){
   function inc(k){ S.pop=k; nutTapWeek(k); }
   // Au plafond (7/7…), nutTapWeek repasse à 0 : on demande d'abord (un tap de travers ne vide pas la semaine)
   function reset(k){
-    var lbl={maison:'Plats maison',shaker:'Shaker',vitd:'Vitamine D3',colla:'Collagène',zinc:'Zinc',lait:'Lait Alpro',kiwi:'Kiwi',run:'Courir'}[k]||k;
+    var lbl={maison:'Plats maison',shaker:'Shaker',vitd:'Vitamine D3',colla:'Collagène',zinc:'Zinc',huile:'Huile (oméga 3)',lait:'Lait Alpro',kiwi:'Kiwi',run:'Courir'}[k]||k;
     if(!confirm('Remettre « '+lbl+' » à 0 pour cette semaine ?\nTu pourras ensuite refaire + autant de fois que nécessaire.')) return;
     S.pop=null; nutTapWeek(k);
   }
@@ -752,7 +759,7 @@ var BILAN=(function(){
     render:render,
     reset:reset,
     supplGot:function(k){
-      var lbl={vitd:'la vitamine D3',colla:'le collagène',zinc:'le zinc'}[k]; if(!lbl) return;
+      var lbl={vitd:'la vitamine D3',colla:'le collagène',zinc:'le zinc',huile:'l’huile (oméga 3)'}[k]; if(!lbl) return;
       if(!confirm((k==='zinc'?'Tu commences le zinc ?':'Tu as reçu '+lbl+' ?')+'\nLe suivi démarre aujourd’hui (1 par jour, hors de toute note).')) return;
       if(!DB.profile) DB.profile={}; if(!DB.profile.suppl) DB.profile.suppl={};
       DB.profile.suppl[k]=today(); saveDB(); render();

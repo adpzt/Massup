@@ -1080,7 +1080,7 @@ function ensureNutriDay(date){
 function pruneNutriDay(date){
   var d=DB.nutrition[date]; if(!d) return;
   var empty=(d.kcal===null||d.kcal===undefined||d.kcal==='')&&(d.prot===null||d.prot===undefined||d.prot==='')
-    &&!d.petit_dej&&!d.dejeuner&&!d.diner&&!d.shaker&&!d.maison&&!d.run&&!d.cardio&&!d.vitd&&!d.colla&&!d.zinc&&!d.lait&&!d.kiwi
+    &&!d.petit_dej&&!d.dejeuner&&!d.diner&&!d.shaker&&!d.maison&&!d.run&&!d.cardio&&!d.vitd&&!d.colla&&!d.zinc&&!d.huile&&!d.lait&&!d.kiwi
     &&d.crea==null; // 26/11 : créatine en grammes — un 0 saisi exprès est gardé (il remplace le « shaker » d'avant le 26/11)
   if(empty) delete DB.nutrition[date];
 }
@@ -1655,7 +1655,7 @@ function exportCoachDossier(opts){
     ['e1RM','Force estimée par série (Epley : charge × (1 + reps / 30)), seulement pour les exos chargés en kg (pas les assistances).'],
     ['Séances anciennes','Février → avril : séances RITM / escalade notées sans détail. Juin → juillet : séances reconstituées après une perte de données (dates approximatives, pas de détail). Détail série par série fiable à partir du 01/08/2026.'],
     ['Créatine (26/11/2026)','Réservoir modélisé par l\'app (estimation, pas une mesure) : réserve en % de la capacité ajoutée par la supplémentation (35 g ; les ~120 g de base ne sont pas comptés). Chaque jour −3 points (≈ −1 g, fixe : sport, eau et jours gelés n\'y changent rien), puis + la dose : gain = 1,4 × min(g, 5) + 1,0 × min(max(g − 5, 0), 5) points (5 g = +7, 10 g = +12, rien au-delà de 10 g), borné 0-100. Dose saisie en grammes (0 / 5 / 10, corrigeable) ; chaque shaker compte 5 g ; avant le 26/11, un jour de l\'ancien compteur « créatine » = 5 g. Point de départ : '+(creaStartOf().set?Math.round(creaStartOf().pct)+' % au début du '+creaStartOf().date+' (réglé dans Profil)':'estimé à 0 % le 01/08/2026 puis simulé (aucun point de départ réglé)')+'. Onglet « Créatine » = jour par jour ; « Nutrition semaines » = mode, réserves, notes.'],
-    ['Shaker (26/11/2026)','Un shaker = lait Alpro riche en protéines et calcium + kiwi (vitamine C) + collagène + 5 g de créatine. Objectif 5 par semaine (note /1). Un shaker coche les 4 ; chacun peut aussi être noté seul (ex. un kiwi sans shaker). Colonnes « Lait », « Kiwi », « Collagène », « Zinc », « Vitamine D3 » de « Nutrition semaines » = jours par semaine (suivi, hors note).'],
+    ['Shaker (26/11/2026)','Un shaker = lait Alpro riche en protéines et calcium + kiwi (vitamine C) + collagène + 5 g de créatine. Objectif 5 par semaine (note /1). Un shaker coche les 4 ; chacun peut aussi être noté seul (ex. un kiwi sans shaker). Colonnes « Lait », « Kiwi », « Collagène », « Zinc », « Huile oméga 3 », « Vitamine D3 » de « Nutrition semaines » = jours par semaine (suivi, hors note).'],
     ['Note créatine (dès le 30/11/2026)','Mode fixé le lundi 0 h : PLEIN si réserve ≥ 95 % → note /2 = 2 si ≥ 95 % le dimanche soir, sinon max(0, (réserve − 80) / 15) × 2. REMPLISSAGE sinon → 2 si +25 points sur la semaine OU 95 % atteint, sinon max(0, gain / 25) × 2. Jours gelés : leur perte de 3 points est retirée du calcul de la note (pas de la jauge) et l\'objectif +25 est réduit au prorata des jours non gelés. Shaker /1 = min(1, shakers / 5). Nutrition passe de /6 à /8 (kcal /3 · protéines /2 · créatine /2 · shaker /1), la note reste ramenée sur 20. Semaines d\'avant : inchangées (gravées).'],
     ['Onglets','Synthèse · Semaines · Calendrier (1 ligne par jour : séance, note, pas, nutrition, sommeil, poids) · Séances · Séries · Exercices · Historique charges · Poids · Course & sports · Pas · Nutrition · Nutrition semaines · Créatine · Nutrition synthèse · Sommeil · Douleurs · Mobilité.'],
     ['Généré le',today+' depuis l\'app MASSUP (données saisies au jour le jour).']
@@ -1838,7 +1838,7 @@ function exportCoachDossier(opts){
       NZK.forEach(function(k){ row.push(mean(k)); });
       row.push(dd.filter(function(d){ return nu(d,'kcal')>=2600; }).length, dd.filter(function(d){ return nu(d,'kcal')>=nzKGoal(d); }).length,
         dd.filter(function(d){ return nu(d,'prot')>=130; }).length, dd.filter(function(d){ return nu(d,'prot')>=150; }).length,
-        nutWeekCount('shaker',nws), nutWeekCount('maison',nws), nutWeekCount('vitd',nws), nutWeekCount('colla',nws), nutWeekCount('zinc',nws), nutWeekCount('lait',nws), nutWeekCount('kiwi',nws), wbm, wbm!=null&&nzPrevBw!=null?r1(wbm-nzPrevBw):null);
+        nutWeekCount('shaker',nws), nutWeekCount('maison',nws), nutWeekCount('vitd',nws), nutWeekCount('colla',nws), nutWeekCount('zinc',nws), nutWeekCount('huile',nws), nutWeekCount('lait',nws), nutWeekCount('kiwi',nws), wbm, wbm!=null&&nzPrevBw!=null?r1(wbm-nzPrevBw):null);
       row=row.concat(creaWeekCols(nws));
       if(wbm!=null) nzPrevBw=wbm;
       nzW.push(row);
@@ -1846,7 +1846,7 @@ function exportCoachDossier(opts){
   }
   sheets.push({name:'Nutrition semaines',cols:[{h:'Semaine du (lundi)',w:12},{h:'Semaine en cours',w:8},{h:'Journées complètes notées',w:9}]
     .concat(NZK.map(function(k){ return {h:'Moyenne '+NZL[k].replace(/^./,function(c){return c.toLowerCase();}),w:10}; }))
-    .concat([{h:'Jours ≥ 2 600 kcal',w:8},{h:'Jours ≥ objectif kcal',w:8},{h:'Jours protéines ≥ 130 g',w:8},{h:'Jours protéines ≥ 150 g',w:8},{h:'Shaker (/7 ; avant le 26/11 : jours de créatine)',w:11},{h:'Plats maison (/14, déclaré)',w:9},{h:'Vitamine D3 (jours /7, dès le 23/11)',w:9},{h:'Collagène (jours /7, dès le 23/11)',w:9},{h:'Zinc (jours /7)',w:8},{h:'Lait Alpro riche en calcium (jours /7, dès le 26/11)',w:10},{h:'Kiwi (jours /7, dès le 26/11)',w:8},{h:'Poids moyen (kg)',w:8},{h:'Variation vs semaine précédente (kg)',w:10},
+    .concat([{h:'Jours ≥ 2 600 kcal',w:8},{h:'Jours ≥ objectif kcal',w:8},{h:'Jours protéines ≥ 130 g',w:8},{h:'Jours protéines ≥ 150 g',w:8},{h:'Shaker (/7 ; avant le 26/11 : jours de créatine)',w:11},{h:'Plats maison (/14, déclaré)',w:9},{h:'Vitamine D3 (jours /7, dès le 23/11)',w:9},{h:'Collagène (jours /7, dès le 23/11)',w:9},{h:'Zinc (jours /7, dès le 30/11)',w:8},{h:'Huile oméga 3 (jours /7, dès le 30/11)',w:9},{h:'Lait Alpro riche en calcium (jours /7, dès le 26/11)',w:10},{h:'Kiwi (jours /7, dès le 26/11)',w:8},{h:'Poids moyen (kg)',w:8},{h:'Variation vs semaine précédente (kg)',w:10},
       {h:'Mode créatine (fixé lundi 0 h)',w:11},{h:'Réserve créatine lundi 0 h (%)',w:10},{h:'Réserve créatine dimanche soir (%)',w:10},{h:'Jours gelés',w:7},{h:'Note créatine /2 (dès le 30/11)',w:10},{h:'Note shaker /1 (dès le 30/11, obj. 5)',w:10}]),rows:nzW});
 
   // ── Créatine jour par jour (26/11) : dose saisie, réserve modélisée (estimation, pas une mesure) ──
