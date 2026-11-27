@@ -1655,6 +1655,7 @@ function exportCoachDossier(opts){
     ['e1RM','Force estimée par série (Epley : charge × (1 + reps / 30)), seulement pour les exos chargés en kg (pas les assistances).'],
     ['Séances anciennes','Février → avril : séances RITM / escalade notées sans détail. Juin → juillet : séances reconstituées après une perte de données (dates approximatives, pas de détail). Détail série par série fiable à partir du 01/08/2026.'],
     ['Créatine (26/11/2026)','Réservoir modélisé par l\'app (estimation, pas une mesure) : réserve en % de la capacité ajoutée par la supplémentation (35 g ; les ~120 g de base ne sont pas comptés). Chaque jour −3 points (≈ −1 g, fixe : sport, eau et jours gelés n\'y changent rien), puis + la dose : gain = 1,4 × min(g, 5) + 1,0 × min(max(g − 5, 0), 5) points (5 g = +7, 10 g = +12, rien au-delà de 10 g), borné 0-100. Dose saisie en grammes (0 / 5 / 10, corrigeable) ; chaque shaker compte 5 g ; avant le 26/11, un jour de l\'ancien compteur « créatine » = 5 g. Point de départ : '+(creaStartOf().set?Math.round(creaStartOf().pct)+' % au début du '+creaStartOf().date+' (réglé dans Profil)':'estimé à 0 % le 01/08/2026 puis simulé (aucun point de départ réglé)')+'. Onglet « Créatine » = jour par jour ; « Nutrition semaines » = mode, réserves, notes.'],
+    ['Moyennes de protéines (27/11/2026)','Dans les MOYENNES (« Nutrition semaines », « Nutrition synthèse » et l\'app), un jour de protéines est plafonné à 2,2 g/kg de poids de corps (≈ 165 g à 75 kg) : au-delà, la prise de muscle n\'augmente plus (le surplus sert d\'énergie, il reste dans les calories). L\'onglet « Nutrition » jour par jour garde le vrai chiffre. Calories, glucides, lipides : jamais plafonnés.'],
     ['Shaker (26/11/2026)','Un shaker = lait Alpro riche en protéines et calcium + kiwi (vitamine C) + collagène + 5 g de créatine. Objectif 5 par semaine (note /1). Un shaker coche les 4 ; chacun peut aussi être noté seul (ex. un kiwi sans shaker). Colonnes « Lait », « Kiwi », « Collagène », « Zinc », « Huile oméga 3 », « Vitamine D3 » de « Nutrition semaines » = jours par semaine (suivi, hors note).'],
     ['Note créatine (dès le 30/11/2026)','Mode fixé le lundi 0 h : PLEIN si réserve ≥ 95 % → note /2 = 2 si ≥ 95 % le dimanche soir, sinon max(0, (réserve − 80) / 15) × 2. REMPLISSAGE sinon → 2 si +25 points sur la semaine OU 95 % atteint, sinon max(0, gain / 25) × 2. Jours gelés : leur perte de 3 points est retirée du calcul de la note (pas de la jauge) et l\'objectif +25 est réduit au prorata des jours non gelés. Shaker /1 = min(1, shakers / 5). Nutrition passe de /6 à /8 (kcal /3 · protéines /2 · créatine /2 · shaker /1), la note reste ramenée sur 20. Semaines d\'avant : inchangées (gravées).'],
     ['Onglets','Synthèse · Semaines · Calendrier (1 ligne par jour : séance, note, pas, nutrition, sommeil, poids) · Séances · Séries · Exercices · Historique charges · Poids · Course & sports · Pas · Nutrition · Nutrition semaines · Créatine · Nutrition synthèse · Sommeil · Douleurs · Mobilité.'],
@@ -1832,7 +1833,7 @@ function exportCoachDossier(opts){
     for(var nws=rankMonday(nuDays[0]); nws<=rankMonday(today); nws=rankAddDays(nws,7)){
       var nwe=rankAddDays(nws,6), dd=[];
       for(var ni=0;ni<7;ni++){ var nd=rankAddDays(nws,ni); if(nu(nd,'kcal')!=null&&nzDone(nd)) dd.push(nd); }
-      var mean=function(k){ var a=dd.map(function(d){ return nu(d,k); }).filter(function(v){ return v!=null; }); return a.length?Math.round(avg(a)*10)/10:null; };
+      var mean=function(k){ var a=dd.map(function(d){ var v=nu(d,k); return v!=null&&INTAKE.capVal?INTAKE.capVal(d,k,v):v; }).filter(function(v){ return v!=null; }); return a.length?Math.round(avg(a)*10)/10:null; };
       var wb=bw.filter(function(b){ return b.date>=nws&&b.date<=nwe; }).map(function(b){ return b.weight_kg; }), wbm=wb.length?r1(avg(wb)):null;
       var row=[nws,nws===rankMonday(today)?'oui':'',dd.length];
       NZK.forEach(function(k){ row.push(mean(k)); });
@@ -1861,8 +1862,9 @@ function exportCoachDossier(opts){
     var lim=pp[0]?rankAddDays(today,-pp[0]):'0000', dd=nzAll.filter(function(d){ return d>=lim; });
     if(!dd.length) return;
     NZK.forEach(function(k){
-      var a=dd.map(function(d){ return nu(d,k); }).filter(function(v){ return v!=null; });
-      NZS.push([pp[1],NZL[k],a.length?Math.round(avg(a)*10)/10:null,a.length?Math.min.apply(null,a):null,a.length?Math.max.apply(null,a):null,a.length,dd.length,NZG[k]]);
+      var a=dd.map(function(d){ var v=nu(d,k); return v!=null&&INTAKE.capVal?INTAKE.capVal(d,k,v):v; }).filter(function(v){ return v!=null; });
+      var raw=dd.map(function(d){ return nu(d,k); }).filter(function(v){ return v!=null; }); // min / max : vrais chiffres
+      NZS.push([pp[1],NZL[k],a.length?Math.round(avg(a)*10)/10:null,raw.length?Math.min.apply(null,raw):null,raw.length?Math.max.apply(null,raw):null,a.length,dd.length,NZG[k]]);
     });
   });
   var nz30=nzAll.filter(function(d){ return d>=d30; });

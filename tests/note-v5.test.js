@@ -293,3 +293,15 @@ test("gravure (27/11) : dès le 30/11, la note attend la validation du bilan (fi
   assert.equal(run("creaWeek('2026-12-07').mon"), 88);
   assert.equal(run("creaWeek('2026-12-07').mode"), "remp");
 });
+
+test("moyennes de protéines (27/11) : un jour plafonné à 2,2 g/kg, le chiffre du jour reste vrai", () => {
+  const fs2 = require("node:fs"), vm2 = require("node:vm");
+  const src = fs2.readFileSync("intake.js", "utf8");
+  assert.match(src, /PROT_CAP_GKG=2\.2/);
+  const ctx = { DB: { bodyWeight: [{ date: "2026-11-01", weight_kg: 75 }] }, console, Date, Math, JSON, localStorage: { getItem() { return null; }, setItem() {} }, document: { getElementById() { return null; }, addEventListener() {} }, addEventListener() {}, setTimeout() {}, fetch: () => Promise.resolve({}) };
+  ctx.window = ctx; vm2.createContext(ctx);
+  vm2.runInContext(src, ctx);
+  assert.equal(vm2.runInContext("INTAKE.capVal('2026-11-26','prot',240)", ctx), 165);
+  assert.equal(vm2.runInContext("INTAKE.capVal('2026-11-26','prot',140)", ctx), 140);
+  assert.equal(vm2.runInContext("INTAKE.capVal('2026-11-26','kcal',5000)", ctx), 5000, "calories jamais plafonnées");
+});

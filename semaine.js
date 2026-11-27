@@ -28,7 +28,7 @@ var WK=(function(){
     for(var i=0;i<7;i++){
       var d=day(ws,i), fut=d>=today(), ok=!fut&&typeof INTAKE!=='undefined'&&INTAKE.complete(d);
       var row={d:d,fut:fut,ok:ok};
-      keys.forEach(function(k){ var v=ok?INTAKE.val(d,k):null; row[k]=v; if(v!=null){ sums[k]+=v; cnt[k]++; } });
+      keys.forEach(function(k){ var v=ok?INTAKE.val(d,k):null; row[k]=v; if(v!=null){ sums[k]+=INTAKE.capVal?INTAKE.capVal(d,k,v):v; cnt[k]++; } }); // moyenne : protéines plafonnées (27/11), le jour garde son vrai chiffre
       days.push(row);
     }
     var avg={}; keys.forEach(function(k){ avg[k]=cnt[k]?sums[k]/cnt[k]:null; });

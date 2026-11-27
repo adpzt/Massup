@@ -108,9 +108,17 @@ var INTAKE=(function(){
   // envoyés APRÈS minuit (un ↻ fait pendant la journée donne un jour à moitié rempli). Aujourd'hui ne l'est jamais.
   function complete(d){ if(d>=today()) return false; var e=cache.days[d]; if(!e||e._u==null) return true; return e._u>=new Date(addD(d,1)+'T00:00:00').getTime(); }
   // Moyenne d'une mesure sur [start, end] : jours NOTÉS et COMPLETS seulement (n = nb de jours comptés, total = jours écoulés)
+  // 27/11 (Adrien : « un jour à 240 g de protéines fausse toute la moyenne, le corps n'en profite pas ») : dans les MOYENNES
+  // (jamais dans le chiffre du jour), les protéines sont plafonnées à 2,2 g/kg de poids de corps (≈ 165 g à 75 kg) — le haut
+  // de la fourchette au-delà de laquelle la prise de muscle n'augmente plus. Le surplus sert d'énergie : il reste compté dans
+  // les calories. Calories, glucides, lipides : pas de plafond (un excès est stocké, il compte pour le poids).
+  var PROT_CAP_GKG=2.2;
+  function bwAt(d){ var bw=(typeof DB!=='undefined'&&DB.bodyWeight)||[], v=null; for(var i=0;i<bw.length;i++){ if(bw[i]&&bw[i].date<=d&&parseFloat(bw[i].weight_kg)>0) v=parseFloat(bw[i].weight_kg); } return v||75; }
+  function capOf(d,k){ return k==='prot'?Math.round(PROT_CAP_GKG*bwAt(d)):null; }
+  function capVal(d,k,v){ var c=v==null?null:capOf(d,k); return c!=null&&v>c?c:v; }
   function avg(start,end,k){
     var s=0,n=0,total=0;
-    for(var d=start;d<=end&&d<=today();d=addD(d,1)){ total++; var v=val(d,k); if(v!=null&&complete(d)){ s+=v; n++; } }
+    for(var d=start;d<=end&&d<=today();d=addD(d,1)){ total++; var v=capVal(d,k,val(d,k)); if(v!=null&&complete(d)){ s+=v; n++; } }
     return {v:n?s/n:null,n:n,total:total};
   }
   // Les 7 derniers jours COMPLETS (hier et les 6 d'avant) : aujourd'hui, encore en cours, fausserait la moyenne
@@ -346,7 +354,7 @@ var INTAKE=(function(){
 
   function init(adapter){ A=adapter; load(); }
   // ready() : la lecture serveur de CETTE session a réussi (la gravure de la note v5 l'attend — 03/11)
-  return {init:init,ready:function(){ return _status==='ok'; },syncAt:function(){ return cache.syncAt||0; },complete:complete,renderCard:renderCard,open:open,close:close,refresh:refresh,pull:pull,day:day,val:val,avg:avg,last7:last7,last15:last15,NUT:NUT,syncGoals:syncGoals,
+  return {capOf:capOf,capVal:capVal,PROT_CAP_GKG:PROT_CAP_GKG,init:init,ready:function(){ return _status==='ok'; },syncAt:function(){ return cache.syncAt||0; },complete:complete,renderCard:renderCard,open:open,close:close,refresh:refresh,pull:pull,day:day,val:val,avg:avg,last7:last7,last15:last15,NUT:NUT,syncGoals:syncGoals,
     dayCardHtml:dayCardHtml,days:function(){ return cache.days; },
     _metric:setMetric,_mode:setMode,_select:select,_page:page};
 })();
