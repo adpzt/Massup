@@ -120,19 +120,31 @@
 .bl-plus--txt{font-size:15px}
 .bl-cbar{appearance:none;border:0;background:transparent;width:100%;padding:0;margin:4px 0 2px;min-height:56px;display:grid;grid-template-columns:30px minmax(0,1fr) 66px;align-items:center;gap:12px;color:var(--txt);cursor:pointer;font:inherit}
 .bl-cbar__trk{position:relative;display:block;height:20px;border-radius:10px;background:var(--x-track);border:1px solid var(--bl-line);overflow:hidden}
-.bl-cbar__trk i{position:absolute;left:0;top:0;bottom:0;border-radius:10px;background:var(--x-grad-fill);box-shadow:var(--x-glow-fill);overflow:hidden;transition:width .6s cubic-bezier(.2,.8,.2,1)}
-.bl-cbar.is-mid .bl-cbar__trk i{background:var(--x-orange);box-shadow:none}
-.bl-cbar.is-low .bl-cbar__trk i{background:var(--st-red);box-shadow:none}
-.bl-cbar__trk i:before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.28) 0 6px,transparent 6px 16px);background-size:34px 100%;animation:bl-flow 1.1s linear infinite}
-.bl-cbar__trk i:after{content:'';position:absolute;top:0;bottom:0;width:40%;left:-40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.65),transparent);animation:bl-spark 2.4s ease-in-out infinite}
+.bl-cbar__trk i{position:absolute;top:0;bottom:0;overflow:hidden}
+.bl-cbar__base{left:0;border-radius:10px 0 0 10px;background:var(--x-grad-fill);box-shadow:var(--x-glow-fill)}
+.bl-cbar.is-mid .bl-cbar__base{background:var(--x-orange);box-shadow:none}
+.bl-cbar.is-low .bl-cbar__base{background:var(--st-red);box-shadow:none}
+/* gain de la semaine : dégradé holo de l'hypertrophie, rayures qui défilent + éclair (3 passages puis fixe : batterie iOS) */
+.bl-cbar__up{background:var(--x-holo);box-shadow:0 0 10px rgba(179,140,255,.55),inset 0 0 4px rgba(255,255,255,.4);border-radius:0 10px 10px 0}
+.bl-cbar__up:before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.35) 0 6px,transparent 6px 16px);background-size:34px 100%;animation:bl-flow 1.1s linear 3}
+.bl-cbar__up:after{content:'';position:absolute;top:0;bottom:0;width:60%;left:-60%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.8),transparent);animation:bl-spark 1.8s ease-in-out 3}
+/* perte de la semaine : rouge rayé qui recule (le morceau de réserve perdu depuis lundi) */
+.bl-cbar__down{background:repeating-linear-gradient(115deg,var(--st-red) 0 6px,transparent 6px 12px);background-size:26px 100%;opacity:.9;border-right:2px solid var(--st-red);border-radius:0 10px 10px 0;animation:bl-flow-back 1.2s linear 3}
 .bl-cbar__trk b{position:absolute;top:-1px;bottom:-1px;left:95%;width:2px;background:var(--txt);opacity:.55}
-.bl-cbar__v{font-size:24px;text-align:right}
+.bl-cbar__vv{display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:0}
+.bl-cbar__v{font-size:24px;text-align:right;line-height:1}
+.bl-cbar__d{font:900 12px 'Manrope',sans-serif;line-height:1}
+.bl-cbar__d.is-down{color:var(--st-red)}
 .bl-cbar.is-ok .bl-cbar__v{color:var(--acc)}
 .bl-cbar.is-mid .bl-cbar__v{color:var(--x-orange)}
 .bl-cbar.is-low .bl-cbar__v{color:var(--st-red)}
+.bl-obj__vb{appearance:none;border:0;background:transparent;padding:0;min-height:44px;cursor:pointer;color:inherit;font-family:inherit}
+.bl-obj__v.bl-obj__vb.is-zero{color:var(--mut)}
+.bl-shk__r.is-off>span:first-child{filter:grayscale(1)}
 @keyframes bl-flow{from{background-position:0 0}to{background-position:34px 0}}
-@keyframes bl-spark{0%{left:-40%}60%,100%{left:110%}}
-@media (prefers-reduced-motion:reduce){.bl-cbar__trk i:before,.bl-cbar__trk i:after{animation:none}.bl-cbar__trk i{transition:none}}
+@keyframes bl-flow-back{from{background-position:26px 0}to{background-position:0 0}}
+@keyframes bl-spark{0%{left:-60%}70%,100%{left:110%}}
+@media (prefers-reduced-motion:reduce){.bl-cbar__up:before,.bl-cbar__up:after,.bl-cbar__down{animation:none}}
 .bl-crea-big{margin-top:14px}
 .bl-crea-big .bl-num{font-size:38px;overflow-wrap:anywhere}
 .bl-crea-p{margin:8px 0 0;font-size:13px;line-height:1.4;overflow-wrap:anywhere}

@@ -195,6 +195,14 @@ var WK=(function(){
       +'<span class="wk-step__v" aria-live="polite">'+v+'</span>'
       +'<button type="button" class="wk-step__b" aria-label="Plus" onclick="wrSetCount(\''+field+'\','+Math.min(max,v+1)+')"'+(v>=max?' disabled':'')+'>+</button></div>';
   }
+  function creaWeekEditor(ws){
+    var cw=ws>=CREA.NOTE_FROM?creaWeek(ws):null, t=todayStr(), h='';
+    h+='<div class="wk-p">💊 Créatine'+(cw?' · '+(cw.mode==='plein'?'mode Plein : '+nf(cw.noteSun)+' % dimanche soir (objectif 95 %)':'mode Remplissage : '+(cw.gain>=0?'+':'')+nf(cw.gain)+' points (objectif +'+nf(cw.target)+')')+' · '+nf(cw.pts,2).replace('.',',')+'/2':' · '+creaDaysWeek(ws)+'/7 jours avec 5 g ou plus (compte 1 pt)')+'</div>';
+    for(var i=0;i<7;i++){ var d=rankAddDays(ws,i); if(d>t) break; var g=creaDose(d);
+      h+='<div class="bl-crea-day"><div style="min-width:0"><div class="bl-crea-day__d">'+dayLbl(d)+'</div></div><div class="bl-crea-seg" role="group" aria-label="Créatine '+dayLbl(d)+'">'
+        +[0,5,10].map(function(gg){ return '<button type="button" aria-pressed="'+(g===gg)+'" onclick="creaSetDay(\''+d+'\','+gg+');wrRender()">'+gg+NB+'g</button>'; }).join('')+'</div></div>'; }
+    return h;
+  }
   function nutHtml(ws,A){
     var N=nut(ws), gK=goalOf('kcal'), h='';
     h+='<div class="wr-say">Ton carburant, jour par jour.</div>';
@@ -209,9 +217,12 @@ var WK=(function(){
     // 23/11 (Adrien) : « Le reste » (fibres, sucres, saturées, sodium) retiré — Yazio ne les connaît pas pour beaucoup d'aliments
     h+='<div class="wk-sec">Ce qu’il faut en retenir</div>'+diagHtml(nutDiag(N));
     h+='<div class="wk-sec">À confirmer</div>';
-    // 26/11 : dès la semaine du 30/11, « Shaker » (objectif 5, /1) ; la créatine vient du réservoir (/2), rien à confirmer
-    if(ws>=CREA.NOTE_FROM){ var cw=creaWeek(ws); if(cw) h+='<div class="wk-p">💊 Créatine : '+(cw.mode==='plein'?'semaine en mode Plein, '+nf(cw.noteSun)+' % dimanche soir':'semaine en mode Remplissage, '+(cw.gain>=0?'+':'')+nf(cw.gain)+' points (objectif +'+nf(cw.target)+')')+'.</div>'; h+=stepper('shaker','🥤 Shaker','sur 7 · objectif 5 · compte 1 pt dans la note',7); }
+    // 27/11 (Adrien : « corriger la barre et/ou la note si au bilan j'ajoute quelque chose ») : dès la semaine du 23/11, la
+    // créatine se corrige ICI jour par jour (0 / 5 / 10 g) → la réserve et la note se recalculent tout de suite ; la note ne
+    // se fige qu'après la validation de ce bilan. Shaker : compteur seulement s'il est activé (lait Alpro + collagène).
+    if(ws>=CREA.LEGACY_TO) h+=creaWeekEditor(ws);
     else h+=stepper('shaker','🥤 Créatine','jours pris · compte 1 pt dans la note',7);
+    if(ws>=CREA.NOTE_FROM&&shakerOnWeek(ws)) h+=stepper('shaker','🥤 Shaker','sur 7 · objectif 5 · compte 1 pt dans la note',7);
     h+=stepper('maison','🍲 Plats maison','sur 14 repas · ne compte plus dans la note, juste le suivi',14);
     // Poids : la conséquence directe des calories
     if(A&&A.bwDelta!=null&&A.bwEnd){

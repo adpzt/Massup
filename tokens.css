@@ -105,6 +105,7 @@
   --x-track:rgba(255,255,255,0.08);       /* fond de jauge */
   --x-seg-on:rgba(255,255,255,0.14);      /* segment actif */
   --x-grad-prog:linear-gradient(90deg,#71FFB4,#3FD9FF);           /* jauge en cours */
+  --x-holo:linear-gradient(100deg,#8BE9FD 0%,#B38CFF 26%,#FF8CC8 52%,#FFE9A0 76%,#8BFFC9 100%); /* holo (hypertrophie) : gain de la semaine, créatine (27/11) */
   --x-grad-kbar:linear-gradient(90deg,#3FD9FF,#5B7CFF);           /* jauge kcal */
   --x-grad-hero:linear-gradient(100deg,#71FFB4,#3FD9FF 70%,#7FA0FF); /* texte des chiffres-héros */
   --x-grad-gold:linear-gradient(180deg,#FFE9A0,#E8B23A 70%);        /* texte note gold */

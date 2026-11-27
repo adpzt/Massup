@@ -72,7 +72,7 @@ test("v5 : malus −0,5 sans pesée ; les jours sous 1 000 pas ne comptent qu'à
 test("après la bascule : la course compte sur 1, les pas sur 2, sans malus en plus si la course manque", () => {
   const run = load();
   assert.deepEqual(run("[RUN_REQ_START,STEPS_FULL_START]"), ["2027-01-04", "2027-01-04"], "bascule le lundi 04/01 (décision du 09/11)");
-  run("(RUN_REQ_START=STEPS_FULL_START='2026-12-07',DB.logs.forEach(function(l,i){ l.date=rankAddDays('2026-12-07',i*2); }),DB.rank.weekly={'2026-12-07':{v:3,shaker:7,run:0}},DB.bodyWeight=[{date:'2026-12-08',weight_kg:75}],todayStr=function(){ return '2026-12-20'; },1)");
+  run("(RUN_REQ_START=STEPS_FULL_START='2026-12-07',DB.logs.forEach(function(l,i){ l.date=rankAddDays('2026-12-07',i*2); }),DB.rank.weekly={'2026-12-07':{v:3,shaker:7,run:0}},DB.bodyWeight=[{date:'2026-12-08',weight_kg:75}],todayStr=function(){ return '2026-12-20'; },DB.profile.suppl={lait:'2026-12-01',colla:'2026-12-01'},1)");
   const B = run("bilanNoteWeek('2026-12-07')");
   assert.equal(B.pil[2].m, 4);
   assert.equal(B.malus.length, 0);
@@ -81,6 +81,11 @@ test("après la bascule : la course compte sur 1, les pas sur 2, sans malus en p
   assert.equal(B.note, 15.5, "9 + kcal 3 + prot 2 + créatine 0 + shaker 1 + pas 2 + nuits 0 + course 0 = 17/22, aucun malus en plus");
   run("(DB.profile.creaStart={date:'2026-12-07',pct:100},(function(){ for(var i=0;i<7;i++) ensureNutriDay(rankAddDays('2026-12-07',i)).crea=5; })(),1)");
   assert.equal(run("bilanNoteWeek('2026-12-07').note"), 17.5, "réserve pleine tenue : créatine 2/2 → 19/22 → 17,5");
+  // Shaker désactivé (lait / collagène pas reçus) : hors note → 18/21 → 17
+  run("(DB.profile.suppl={},DB.noteGrav={},1)");
+  const D = run("bilanNoteWeek('2026-12-07')");
+  assert.equal(D.maxRaw, 21); assert.equal(D.note, 17);
+  assert.equal(D.pil[1].c.some(function (c) { return c[0] === "Shaker"; }), false);
 });
 
 test("gravure : seulement le lundi après un ↻ fait après le dimanche 20 h, puis la note ne bouge plus", () => {
@@ -231,12 +236,16 @@ test("créatine (26/11) : mode fixé lundi 0 h, note Plein / Remplissage, jours 
 
 test("créatine (26/11) : tap 0 → 5 → 10 → 0 ; un shaker ajoute 5 g aujourd'hui, retirés si le shaker revient à 0", () => {
   const run = load();
-  run("(todayStr=function(){ return '2026-12-09'; },DB.nutrition={},renderBilanWeekNut=function(){},1)");
+  run("(todayStr=function(){ return '2026-12-09'; },DB.nutrition={},renderBilanWeekNut=function(){},showToast=function(){},DB.profile.suppl={lait:'2026-12-01',colla:'2026-12-01'},1)");
   assert.deepEqual(run("(function(){ var a=[]; for(var i=0;i<3;i++){ creaTapToday(); a.push(creaDose('2026-12-09')); } return a; })()"), [5, 10, 0]);
   run("(DB.nutrition={},nutTapWeek('shaker'),1)");
   assert.equal(run("creaDose('2026-12-09')"), 5, "shaker → 5 g");
-  run("(creaSetDay('2026-12-09',10),nutTapWeek('shaker'),1)");
-  assert.equal(run("creaDose('2026-12-09')"), 10, "une saisie à 10 g n'est pas rabaissée");
+  run("(DB.nutrition={},creaSetDay('2026-12-09',5),nutTapWeek('shaker'),1)");
+  assert.equal(run("creaDose('2026-12-09')"), 10, "5 g dans l'eau + un shaker = 10 g (27/11 : ça s'ajoute)");
+  run("(nutTapWeek('shaker'),1)");
+  assert.equal(run("creaDose('2026-12-09')"), 10, "plafond 10 g");
+  run("(nutUntapWeek('shaker'),1)");
+  assert.equal(run("[nutWeekCount('shaker','2026-12-07'),creaDose('2026-12-09')]").join(), "1,5", "−1 shaker : les 5 g automatiques repartent, les 5 g saisis restent");
   run("(DB.nutrition={},nutTapWeek('shaker'),1)");
   for (let i = 0; i < 7; i++) run("(nutTapWeek('shaker'),1)"); // 1 → 7 puis retour à 0
   assert.equal(run("nutWeekCount('shaker','2026-12-07')"), 0);
@@ -248,11 +257,39 @@ test("créatine (26/11) : tap 0 → 5 → 10 → 0 ; un shaker ajoute 5 g aujour
 
 test("shaker (26/11) : un shaker remplit lait, kiwi et collagène (démarré) ; un kiwi pris seul n'est pas compté deux fois", () => {
   const run = load();
-  run("(todayStr=function(){ return '2026-12-09'; },DB.nutrition={},renderBilanWeekNut=function(){},DB.profile.suppl={colla:'2026-12-01'},1)");
+  run("(todayStr=function(){ return '2026-12-09'; },DB.nutrition={},renderBilanWeekNut=function(){},showToast=function(){},DB.profile.suppl={lait:'2026-12-01',colla:'2026-12-01'},1)");
   run("(nutTapWeek('kiwi'),nutTapWeek('shaker'),1)");
   assert.deepEqual(run("['shaker','lait','kiwi','colla'].map(function(f){ return nutWeekCount(f,'2026-12-07'); })"), [1, 1, 1, 1]);
   run("(nutTapWeek('shaker'),1)");
   assert.deepEqual(run("['shaker','lait','kiwi','colla'].map(function(f){ return nutWeekCount(f,'2026-12-07'); })"), [2, 2, 2, 2]);
   run("(DB.nutrition={},DB.profile.suppl={},nutTapWeek('shaker'),1)");
-  assert.equal(run("nutWeekCount('colla','2026-12-07')"), 0, "collagène pas encore reçu : rien");
+  assert.equal(run("nutWeekCount('shaker','2026-12-07')"), 0, "Shaker désactivé sans lait ni collagène : le + ne fait rien");
+  run("(nutTapWeek('kiwi'),1)");
+  assert.equal(run("nutWeekCount('kiwi','2026-12-07')"), 1, "le kiwi seul se coche");
+  assert.deepEqual(run("[supplOn('vitd','2026-11-29'),supplOn('vitd','2026-11-30'),supplOn('zinc','2026-11-30'),supplOn('huile','2026-11-30')]"), [false, true, true, true]);
+});
+
+test("semaine du 23/11 (27/11) : l'ancien compteur devient 2 × 5 g de créatine, Shaker à 0 ; note créatine /1 = jours saisis", () => {
+  const run = load();
+  run("(todayStr=function(){ return '2026-11-27'; },DB.nutrition={'2026-11-23':{shaker:true},'2026-11-24':{shaker:true},'2026-11-20':{shaker:true}},1)");
+  run("(creaFixWeek1123(),creaFixWeek1123(),1)");
+  assert.deepEqual(run("[nutWeekCount('shaker','2026-11-23'),creaDose('2026-11-23'),creaDose('2026-11-24'),creaDose('2026-11-25'),creaDaysWeek('2026-11-23')]"), [0, 5, 5, 0, 2]);
+  assert.equal(run("creaDose('2026-11-20')"), 5, "semaines d'avant : l'ancien compteur reste 5 g");
+  run("(DB.rank.weekly={'2026-11-23':{v:3,shaker:0,maison:0,run:0}},DB.noteGrav={},1)");
+  assert.equal(run("bilanNoteWeek('2026-11-23').shk"), 2, "un « 0 » déclaré au bilan ne cache pas les jours saisis");
+});
+
+test("gravure (27/11) : dès le 30/11, la note attend la validation du bilan (filet : mercredi suivant) ; le départ suivant = dimanche gravé", () => {
+  const run = load();
+  run("(_cloudPullOk=true,wrDataReady=function(){ return true; },noteWeekClosed=function(){ return true; },DB.noteGrav={},DB.rank.weekly={},DB.profile.creaStart={date:'2026-11-30',pct:100},1)");
+  const ok = (now) => run("(Date.now=function(){ return new Date('" + now + "').getTime(); },noteCanGrave('2026-11-30'))");
+  assert.equal(ok("2026-12-07T09:00:00"), false, "lundi : bilan pas validé → pas gravée");
+  run("(DB.rank.weekly={'2026-11-30':{v:3,shaker:0,maison:0,run:0}},1)");
+  assert.equal(ok("2026-12-07T09:00:00"), true, "bilan validé → gravée");
+  run("(DB.rank.weekly={},1)");
+  assert.equal(ok("2026-12-09T00:30:00"), true, "filet : mercredi 0 h");
+  // départ de la semaine suivante = réserve du dimanche gravée, même si un vieux jour est corrigé après
+  run("(todayStr=function(){ return '2026-12-08'; },DB.nutrition={},DB.noteGrav={'2026-11-30':{v:5,note:15,crea:{sun:88,done:true}}},1)");
+  assert.equal(run("creaWeek('2026-12-07').mon"), 88);
+  assert.equal(run("creaWeek('2026-12-07').mode"), "remp");
 });
